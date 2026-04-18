@@ -41,3 +41,4 @@ git push origin main
 - The primary application is WordPress.
 - The active customizations are centered around the `martfury` theme stack and the `hide-price-until-login` plugin.
 - If additional custom plugins or MU plugins should be versioned later, update `.gitignore` first so tracking stays deliberate.
+- If Elementor styling appears different for guests vs logged-in users, check for stale generated CSS in `wp-content/uploads/elementor/css/` before tracing theme/plugin logic. The verified fix here was `Elementor Plugin -> Tools -> Elementor Cache -> Clear Files & Data`, followed by cache/CDN purge if needed.

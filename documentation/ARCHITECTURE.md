@@ -214,6 +214,14 @@ Observed listeners:
 - No explicit fastcgi_cache/proxy_cache configuration detected in inspected nginx configs.
 - Long expires policy detected for uploads/files PHP-blocking location in one alternate vhost file.
 
+### 4.4 Elementor Generated CSS Caveat
+
+- Elementor page-specific CSS is generated under `wp-content/uploads/elementor/css/`.
+- A stale or missing generated file can make frontend styling appear inconsistent between guest and logged-in sessions, especially when caches/CDN or version-stripped asset URLs produce different cache keys.
+- Symptom pattern observed on 2026-04-18: page rendered correct `elementor-element-*` classes, but custom Elementor button styling was missing for guests until the stale Elementor CSS cache was cleared.
+- Verified remediation on 2026-04-18: `Elementor Plugin -> Tools -> Elementor Cache -> Clear Files & Data`, then purge any site/CDN caches that may still hold stale asset responses.
+- Validate the fix against the actual generated asset response, not only the page HTML.
+
 ## 5) Cloudflare Setup
 
 ### 5.1 DNS / Edge Evidence
