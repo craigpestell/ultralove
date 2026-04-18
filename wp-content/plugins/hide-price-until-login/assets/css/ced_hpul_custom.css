@@ -1,0 +1,250 @@
+/*===========================================
+=            PROMOTIONAL SIDEBAR            =
+===========================================*/
+.ced_hpul_main_wrapper{
+	float: left;
+	width: 57%;
+	margin-right: 2%;
+}
+.ced_hpul_email_image {
+	float: right;
+	width: 30%;
+}
+.ced_hpul_email_main_content{
+	background-color: #ffffff;
+	padding: 10px;
+	width: 100%;
+	box-shadow: 0 3px 9px -4px rgba(0,0,0,0.5);
+	position: relative;
+	margin: 0px auto 0;
+	border-radius:5px;
+}
+.ced_hpul_email_main_content .ced-recom h4 {
+	margin: 0;
+	font-size: 14px;
+}
+.wramvp_main_content__col a {
+	display: block;
+}
+.wramvp_main_content__col a img {
+	width: 100%;
+}
+.button-primary.ced_hpul_cross_image {
+	border-radius: 50%;
+	height: 20px;
+	width: 20px;
+	padding: 0px;
+	position: absolute;
+	top: 6px;
+	padding: 3px 16px 8px 8px!important;
+	display: block;
+	text-align: center;
+	line-height: 16px;
+	box-shadow: none;
+}
+.ced_hpul_cross_image  > a {
+	display: block;
+	position: relative;
+}
+.wramvp-support::after,
+.wramvp-support ul li::after,
+.wramvp_main_wrapper::after{
+	content: "";
+	display: table;
+	clear: both;
+}
+.wramvp-support {
+	padding: 15px 13px;
+    background: #000;
+    color: #fff;
+	margin-top:20px;
+}
+.wramvp-support span a {
+	display: block;
+}
+.wramvp-support .wramvp-support__left {
+	float: left;
+	width: 43%;
+}
+.wramvp-support .wramvp-support__right {
+	float: left;
+	width: 57%;
+}
+.ced_hpul_email_image + .submit ,
+.ced_hpul_main_wrapper + .submit {
+    float: left;
+    width: 56%;
+}
+/*=====  End of PROMOTIONAL SIDEBAR  ======*/
+
+/*new css*/
+.ced_hpul_main_wrapper {
+    background: #fff;
+    width: 100%;
+    padding: 10px;
+    box-shadow: 7px 3px 12px #d7d8d9;
+}
+.subsubsub a {
+    line-height: 3;
+    padding: 8px;
+    text-decoration: none;
+    border: 1px solid #cccccc;
+    background: #d7d8d9;
+    color: #000;
+    font-weight: 600;
+}
+.subsubsub a:hover {
+    background: #fff;
+}
+.subsubsub li {
+    display: inline-block;
+    margin: 0;
+    padding: 2px;
+    white-space: nowrap;
+    background: #f1f1f1;
+}
+.ced_hpul_main_wrapper {
+	background: #fff;
+	width: 66%;
+	padding: 10px;
+	border-radius: 4px;
+}
+
+.form-table th {
+    
+    /*width: 376px!important;*/
+    
+}
+.wp-core-ui .button-primary {
+	font-size: 17px;
+    /*padding: 0px 11px 1px 14px!important;*/
+}
+#ced-hpul-loading-image{
+		width:100%;
+
+	object-fit:fill;
+	
+}
+.woocommerce table.form-table .select2-container {
+    min-width: 330px!important; 
+}
+.ced_hpul_banner img{
+	width:100%;
+
+	object-fit:fill;
+}
+#ced_hpul_loader{
+ /*margin-top: 30px;*/
+}
+#ced_hpul_register_submit_text,#ced_hpul_login_submit_text{
+width:346px!important;
+}
+p.submit {
+    text-align: left;
+    max-width: 100%;
+    margin-top: 20px;
+    padding-top: 10px;
+    float: left;
+    position: absolute;
+    bottom: 0;
+}
+
+
+
+
+.ced_menu_content, .ced_menu_button {
+background: slateblue;
+border-radius: 100%;
+border: 1px solid #ccc;
+width: 60px;
+height: 60px;
+margin-left: -40px;
+position: absolute;
+color: #FFFFFF;
+text-align: center;
+line-height: 60px;
+-webkit-transform: translate3d(0, 0, 0);
+transform: translate3d(0, 0, 0);
+-webkit-transition: -webkit-transform ease-out 200ms;
+transition: -webkit-transform ease-out 200ms;
+transition: transform ease-out 200ms;
+transition: transform ease-out 200ms, -webkit-transform ease-out 200ms;
+cursor: pointer !important;
+}
+.ced_menu_open {
+display: none;
+}
+.ced_contact_menu_wrap {
+margin: auto;
+position: fixed;
+bottom: 6px;
+right: 20px;
+width: 60px;
+height: 60px;
+text-align: center;
+box-sizing: border-box;
+font-size: 26px;
+z-index: 99999;
+}
+.ced_menu_content:hover {
+background: #EEEEEE;
+color: #3290B1;
+}
+.ced_menu_content:nth-child(3) {
+-webkit-transition-duration: 180ms;
+transition-duration: 180ms;
+}
+.ced_menu_content:nth-child(4) {
+-webkit-transition-duration: 180ms;
+transition-duration: 180ms;
+}
+.ced_menu_button {
+z-index: 2;
+-webkit-transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+transition-timing-function: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+-webkit-transition-duration: 400ms;
+transition-duration: 400ms;
+-webkit-transform: scale(1.1, 1.1) translate3d(0, 0, 0);
+transform: scale(1.1, 1.1) translate3d(0, 0, 0);
+cursor: pointer;
+box-shadow: 3px 3px 0 0 rgba(0, 0, 0, 0.14);
+}
+.ced_menu_open:checked ~ .ced_menu_content:nth-child(3) {
+transition-duration: 180ms;
+-webkit-transition-duration: 180ms;
+-webkit-transform: translate3d(80px, 104.99997px, 0);
+transform: translate3d(-13px, -100px, 0);
+}
+.ced_menu_open:checked ~ .ced_menu_content:nth-child(4) {
+transition-duration: 280ms;
+-webkit-transition-duration: 280ms;
+-webkit-transform: translate3d(-90.9466px, -52.47586px, 0);
+transform: translate3d(-101.053px, -30.524px, 0);
+}
+.ced_skype {
+background-color: #0073aa;
+box-shadow: 3px 3px 0 0 rgba(0, 0, 0, 0.14);
+text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.12);
+}
+.ced_skype:hover {
+color: #669AE1;
+text-shadow: none;
+}
+.ced_whatsapp {
+background-color: green;
+box-shadow: 3px 3px 0 0 rgba(0, 0, 0, 0.14);
+text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.12);
+}
+.ced_whatsapp:hover {
+color: #70CC72;
+text-shadow: none;
+}
+.ced_hpul_cross_image{
+display:none;
+}
+.ced-recom {
+	padding: 20px;
+	background: black;
+	color: white;
+	border-radius: 5px;
+}

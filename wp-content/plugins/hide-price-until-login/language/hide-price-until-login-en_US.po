@@ -1,0 +1,541 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Hide Price until Login 1.0.8\n"
+"POT-Creation-Date: 2017-11-21 11:51+0530\n"
+"PO-Revision-Date: 2017-11-21 11:52+0530\n"
+"Last-Translator: \n"
+"Language-Team: CedCommerce <plugins@cedcommerce.com>\n"
+"Language: English\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.5.4\n"
+"X-Poedit-KeywordsList: __;_e\n"
+"X-Poedit-Basepath:\n"
+"Plural-Forms: nplurals=2; plural=n == 1 ? 0 : 1;\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: hide-price.php:75
+msgid "Captcha doesn't match, please try again."
+msgstr ""
+
+#: hide-price.php:177
+msgid "Documentation"
+msgstr ""
+
+#: hide-price.php:178
+msgid "More plugins by CedCommerce"
+msgstr ""
+
+#: hide-price.php:193
+msgid "Settings"
+msgstr ""
+
+#: hide-price.php:254
+msgid ""
+"Soon you will receive the more details of this extension on the given mail."
+msgstr ""
+
+#: hide-price.php:258 hide-price.php:263
+msgid "Sorry,an error occured.Please try again."
+msgstr ""
+
+#: hide-price.php:289
+msgid ""
+"WooCommerce is not activated. Please install WooCommerce first, to use the "
+"hide plugin !!!"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:44
+msgid "Hide Price"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:64
+msgid "General Settings"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:65
+#: includes/hide-price-until-login-class.php:464
+msgid "Captcha Settings"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:99
+msgid "enter your e-mail address"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:100
+msgid "Know More"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:167
+msgid "Settings of Hide Price"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:172
+msgid "Hiding Feature"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:173
+msgid "It control which feature you wan to use"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:178
+msgid "Hide Price Until Login Features"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:179
+msgid "Hide Price using Password Features"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:180
+msgid "Hide Price According to Role of User"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:181
+msgid "Disable Hide Price"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:193
+msgid "Hide Price Until Login Settings"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:196
+msgid "These settings are mendatory when using Hide Price Until Login Feature."
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:200
+msgid "Empty User Name Text"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:206
+msgid ""
+"Text to be shown when user name is not entered and pressed submit button to "
+"show price on login and registration form"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:209 includes/main.php:273
+msgid "Register/Login Form"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:210
+msgid "This setting for your desired registration form."
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:215
+msgid "Plugin's Form"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:216
+msgid "Custom Form"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:217
+#: includes/hide-price-until-login-class.php:477
+msgid "Disable"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:224
+#: includes/hide-price-until-login-class.php:242
+msgid "Text Before Register/Login Link"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:230
+msgid ""
+"Text to show before login/register link, when user is logged out or current "
+"user is not registered"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:233
+msgid "Text for Register/Login Link"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:239
+msgid ""
+"Text to show for login/register link, when user is logged out or current "
+"user is not registered"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:248
+msgid ""
+"Text to show after login/register link, when user is logged out or current "
+"user is not registered"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:251
+msgid "Link of your Regeister/Login form"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:256
+msgid ""
+"You've disabled plugin's form it means you need to enter you cutom login/"
+"register form link. By doing this, the login link will open your given form. "
+"If this field is empty then default regisration popup will open."
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:259
+msgid "Register form applicable at"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:260
+msgid ""
+"Enable Registration form only at specific woocommerce pages. If you do not "
+"choose any of these pages the Registration for will be visible to all of "
+"these pages."
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:265
+msgid "Shop Page"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:266
+msgid "Product Single Page"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:267
+msgid "Cart Page"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:268
+msgid "Checkout Page"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:275
+#: includes/hide-price-until-login-class.php:282
+msgid "Hide price in customer order email"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:279
+msgid ""
+"Hide price in email sent when customer places order. Prices will be hidden "
+"from email if user is not logged-in while placing an order."
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:286
+msgid ""
+"Hide price in email sent when customer order places. Prices will be hidden "
+"from email if user is logged-in while placing an order."
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:289
+msgid "Empty Email Text"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:295
+msgid ""
+"Text to be shown when email is not entered and pressed submit button to show "
+"price on registration form"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:298
+#: includes/hide-price-until-login-class.php:409
+msgid "Empty Password Text"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:303
+msgid ""
+"Text to be shown when password is not entered and pressed submit button to "
+"show price on login and registration form."
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:306
+msgid "Empty Confirmed Password Text"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:312
+msgid ""
+"Text to be shown when confirmed password is not entered and pressed submit "
+"button to show price on registration form"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:315
+msgid "Mis-matched Password Text"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:321
+msgid ""
+"Text to be shown when password and confirmed password entered don't match on "
+"registration form."
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:324
+msgid "Successfull Registration Text"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:330
+msgid "Text to be shown if new user successfully registered on the site."
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:333
+msgid "Successfull Login Text"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:339
+msgid "Text to be shown if new user successfully logged-in on the site."
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:342
+msgid "Register Submit Text"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:347
+msgid "Text for submit button on Registration form"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:350
+msgid "Login Submit Text"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:355
+msgid "Text for submit button on Login form"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:363
+msgid "Hide Price Using Password Settings"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:365
+msgid "These settings are mandatory when using Hide Price Password Feature."
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:369
+msgid "Summary Text"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:374
+msgid "This text will be shown under the products' summary"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:377
+msgid "Password to show the price"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:382
+msgid ""
+"Enter some password in the field which will be needed to show the price of "
+"product"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:385
+msgid "Order Now Button Text"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:390
+msgid "This is the text of Order Now. You can change it from here"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:393
+msgid "Submit Text"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:398
+msgid "This is the text to be shown in submit button."
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:401
+msgid "Password Field Placeholder"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:406
+msgid "This is the placeholder, will be shown to password field"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:414
+msgid ""
+"Text to be shown when password is not entered and pressed submit button to "
+"show price"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:417
+msgid "Wrong Password Text"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:422
+msgid "Text to be shown when wrong password is entered"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:425
+msgid "Matched Password Text"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:430
+msgid "text to be shown if password is matched, Price is going to be show"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:438
+msgid "Hide Price Using Role Settings"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:440
+msgid "These settings are mandatory when using Hide Price Role Feature."
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:444
+msgid "Select User Roles "
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:450
+msgid "Select user roles to show the price"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:466 includes/main.php:268
+msgid "Please"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:466
+msgid "register you domain"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:466
+msgid " with Google to obtain the API keys and enter them below."
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:470
+msgid "Captcha"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:471
+msgid "Enable captcha to prevent spams."
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:476
+msgid "Enable"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:484
+msgid "Site key"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:489
+msgid "Enter you site key"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:490
+msgid "Enter your site key got from google recpatcha"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:493
+msgid "Secret key"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:498
+msgid "Enter you secret key"
+msgstr ""
+
+#: includes/hide-price-until-login-class.php:499
+msgid "Enter your secret key got from google recpatcha"
+msgstr ""
+
+#: includes/cart-total.php:68
+msgid "Cart Totals"
+msgstr ""
+
+#: includes/cart-total.php:77
+msgid "Subtotal"
+msgstr ""
+
+#: includes/cart-total.php:99
+msgid "Shipping"
+msgstr ""
+
+#: includes/cart-total.php:117
+#, php-format
+msgid "estimated for %s"
+msgstr ""
+
+#: includes/cart-total.php:138
+msgid "Total"
+msgstr ""
+
+#: includes/template-registration-login.php:18
+msgid "Registration Form"
+msgstr ""
+
+#: includes/template-registration-login.php:22
+#: includes/template-registration-login.php:95
+msgid "User name : "
+msgstr ""
+
+#: includes/template-registration-login.php:25
+#: includes/template-registration-login.php:98
+msgid "Enter user name"
+msgstr ""
+
+#: includes/template-registration-login.php:30
+msgid "Email : "
+msgstr ""
+
+#: includes/template-registration-login.php:33
+msgid "Enter user email"
+msgstr ""
+
+#: includes/template-registration-login.php:38
+#: includes/template-registration-login.php:103
+msgid "Password : "
+msgstr ""
+
+#: includes/template-registration-login.php:41
+#: includes/template-registration-login.php:106
+msgid "Enter password"
+msgstr ""
+
+#: includes/template-registration-login.php:46
+msgid "Confirm Password : "
+msgstr ""
+
+#: includes/template-registration-login.php:49
+msgid "Enter password again"
+msgstr ""
+
+#: includes/template-registration-login.php:62
+msgid "Already Registered ! Click "
+msgstr ""
+
+#: includes/template-registration-login.php:63
+#: includes/template-registration-login.php:92
+msgid "Login Form"
+msgstr ""
+
+#: includes/template-registration-login.php:64
+msgid " Here"
+msgstr ""
+
+#: includes/template-registration-login.php:66
+msgid " to login."
+msgstr ""
+
+#: includes/main.php:269
+msgid "Register/Login"
+msgstr ""
+
+#: includes/main.php:270
+msgid "to see the prices of products."
+msgstr ""
+
+#: includes/main.php:487
+msgid "Robot test error: we suggest a new try."
+msgstr ""
+
+#: includes/main.php:493
+msgid "Please enter a valid email address."
+msgstr ""
+
+#: includes/main.php:510
+msgid "Something went worng, please try again later."
+msgstr ""
+
+#: includes/main.php:513
+msgid "You've successfully registred with us."
+msgstr ""
+
+#: includes/main.php:547
+msgid "Successfully registered and login"
+msgstr ""
+
+#: includes/main.php:549
+msgid "Invalid login detail, please try again."
+msgstr ""
+
+#: includes/main.php:682
+msgid "success"
+msgstr ""
