@@ -680,7 +680,7 @@ function ultralove_convert_url_to_cloudinary($url) {
     if (empty($url) || !is_string($url) || strpos($url, 'wp-content/uploads/') === false) {
         return $url;
     }
-    
+
     // Extract the file path from the URL
     if (preg_match('/wp-content\/uploads\/(.+)$/', $url, $matches)) {
         $file_path = $matches[1];
@@ -712,6 +712,56 @@ function ultralove_convert_url_to_cloudinary($url) {
     }
     
     return $url;
+}
+
+/**
+ * Rewrite Revolution Slider media URLs to Cloudinary when attachment mapping exists.
+ *
+ * This keeps global attachment overrides disabled while covering slider attributes
+ * like data-lazyload/data-thumb that Cloudinary's generic tag parser does not rewrite.
+ */
+add_filter( 'do_shortcode_tag', 'ultralove_rewrite_revslider_to_cloudinary', 20, 4 );
+
+function ultralove_rewrite_revslider_to_cloudinary( $output, $tag, $attr, $m ) {
+    if ( 'rev_slider' !== $tag || empty( $output ) || ! is_string( $output ) ) {
+        return $output;
+    }
+
+    if ( false === strpos( $output, 'wp-content/uploads/' ) ) {
+        return $output;
+    }
+
+    $pattern = "#(?:https?:)?//[^\"'\\s>]+/wp-content/uploads/[^\"'\\s>]+\\.(?:jpg|jpeg|png|webp|gif)#i";
+
+    if ( ! preg_match_all( $pattern, $output, $matches ) || empty( $matches[0] ) ) {
+        return $output;
+    }
+
+    $replacements = array();
+    foreach ( array_unique( $matches[0] ) as $found_url ) {
+        $normalized = $found_url;
+        if ( 0 === strpos( $normalized, '//' ) ) {
+            $normalized = 'https:' . $normalized;
+        }
+
+        $attachment_id = attachment_url_to_postid( $normalized );
+        if ( empty( $attachment_id ) ) {
+            continue;
+        }
+
+        $cloudinary_meta = get_post_meta( $attachment_id, '_cloudinary', true );
+        if ( empty( $cloudinary_meta ) || ! is_array( $cloudinary_meta ) || empty( $cloudinary_meta['_cloudinary_url'] ) ) {
+            continue;
+        }
+
+        $replacements[ $found_url ] = $cloudinary_meta['_cloudinary_url'];
+    }
+
+    if ( empty( $replacements ) ) {
+        return $output;
+    }
+
+    return strtr( $output, $replacements );
 }
 
 
