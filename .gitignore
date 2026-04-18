@@ -2,6 +2,7 @@
 !.gitignore
 !.htaccess
 !README.md
+!/documentation/
 !/wp-content/
 
 /wp-content/*
