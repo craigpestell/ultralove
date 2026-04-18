@@ -31,4 +31,5 @@
 
 *.zip
 /wp-content/themes/martfury/desktop.ini
+/wp-content/themes/martfury/inc/frontend/woocommerce.php.bak
 /wp-content/themes/martfury/js/scripts.js.bak
