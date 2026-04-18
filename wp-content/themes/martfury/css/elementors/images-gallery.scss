@@ -1,0 +1,151 @@
+.mf-images-gallery {
+	.image-item {
+		.image-item__wrapper {
+			padding: 10px;
+			width: 100%;
+		}
+
+		a {
+			display: block;
+			width: 100%;
+			text-align: center;
+		}
+	}
+}
+
+.mf-images-gallery--grid  {
+	.images-list {
+		display: flex;
+		align-items: stretch;
+		flex-wrap: wrap;
+		border-color: rgba(0, 0, 0, 0.15);
+		border-width: 1px 0 0 0;
+		border-style: solid;
+	}
+
+	.image-item {
+		display: flex;
+		margin-bottom: 0;
+		justify-content: center;
+		align-items: center;
+		text-align: center;
+
+		.image-item__wrapper {
+			border-width: 0 1px 1px 0;
+			border-color: rgba(0, 0, 0, 0.15);
+			border-style: solid;
+			display: flex;
+			align-items: center;
+			height: 100%;
+		}
+	}
+}
+
+.mf-images-gallery--slide {
+	text-align: center;
+
+	.image-item {
+		float: left;
+
+		img {
+			margin: auto;
+		}
+	}
+
+	.slick-track {
+		display: flex;
+		align-items: center;
+	}
+
+	.slick-dots {
+		margin-bottom: 0;
+		margin-top: 20px;
+
+		li {
+			button {
+				background-color: #ccc;
+				border: none;
+			}
+
+			&:hover,
+			&.slick-active {
+				button {
+					background-color: var(--mf-background-primary-color);
+				}
+			}
+		}
+
+	}
+}
+
+@media (min-width: 1025px) {
+	.elementor-widget-martfury-images-grid {
+		$i: 6;
+		@while $i > 0 {
+			&.columns-#{$i} {
+				.mf-images-gallery--grid  {
+					.image-item {
+						flex: 0 0 1 / $i * 100%;
+						max-width: 1 / $i * 100%;
+
+						&:nth-child(#{$i}n+1) {
+							.image-item__wrapper {
+								border-left-width: 1px;
+							}
+						}
+					}
+				}
+			}
+
+			$i: $i - 1;
+		}
+	}
+}
+
+@media (max-width: 1024px) and (min-width: 768px) {
+	.elementor-widget-martfury-images-grid {
+		$i: 6;
+		@while $i > 0 {
+			&.columns--tablet#{$i} {
+				.mf-images-gallery--grid  {
+					.image-item {
+						flex: 0 0 1 / $i * 100%;
+						max-width: 1 / $i * 100%;
+
+						&:nth-child(#{$i}n+1) {
+							.image-item__wrapper {
+								border-left-width: 1px;
+							}
+						}
+					}
+				}
+			}
+
+			$i: $i - 1;
+		}
+	}
+}
+
+@media (max-width: 767px) {
+	.elementor-widget-martfury-images-grid {
+		$i: 6;
+		@while $i > 0 {
+			&.columns--mobile#{$i} {
+				.mf-images-gallery--grid  {
+					.image-item {
+						flex: 0 0 1 / $i * 100%;
+						max-width: 1 / $i * 100%;
+
+						&:nth-child(#{$i}n+1) {
+							.image-item__wrapper {
+								border-left-width: 1px;
+							}
+						}
+					}
+				}
+			}
+
+			$i: $i - 1;
+		}
+	}
+}

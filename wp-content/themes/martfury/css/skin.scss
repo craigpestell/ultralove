@@ -1,0 +1,53 @@
+.mf-light-skin {
+    --mf-background-primary-text-color: #fff;
+
+    &.header-layout-3,
+    &.header-layout-4 {
+        .site-header {
+            --mf-gray-color: #fff;
+            --mf-dark-color: #fff;
+
+            .main-menu {
+                border-color: rgba(255, 255, 255, 0.15);
+            }
+
+            .products-cats-menu:before {
+                background-color: #fff;
+            }
+        }
+        .topbar.topbar-dark {
+            --mf-gray-color: #fff;
+            --mf-dark-color: #fff;
+        }
+
+        .topbar .widget:after {
+            background-color: rgba(255, 255, 255, 0.45);
+        }
+
+        .topbar ul.menu > li.menu-item-has-children > a:after {
+            color: #fff;
+        }
+
+        .products-cats-menu .menu > li.menu-item-has-children:hover > a:after {
+            color: #fff;
+        }
+
+
+    }
+
+    &.woocommerce #respond input#submit.loading,
+    &.woocommerce a.button.loading,
+    &.woocommerce button.button.loading,
+    &.woocommerce input.button.loading {
+        &:after {
+            border-color: #fff #fff #fff transparent;
+        }
+    }
+
+    .wcfm-membership-wrapper #wcfm_membership_container input.wcfm_submit_button,
+    .wcfm-membership-wrapper #wcfm_membership_container input.wcfm_submit_button:hover,
+    &.wcfmmp-store-page #wcfmmp-store .add_review button, &.wcfmmp-store-page #wcfmmp-store .user_rated, &.wcfmmp-store-page #wcfmmp-stores-wrap a.wcfmmp-visit-store,
+    &.wcfmmp-store-page #wcfmmp-store .add_review button:hover, &.wcfmmp-store-page #wcfmmp-store .user_rated:hover, &.wcfmmp-store-page #wcfmmp-stores-wrap a.wcfmmp-visit-store:hover {
+        color: $light !important;
+    }
+}

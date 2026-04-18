@@ -1,0 +1,109 @@
+/*
+Theme Name: Martfury
+Theme URI: http://demo2.drfuri.com/martfury
+Author: DrFuri
+Author URI: http://demo2.drfuri.com
+Description: WooCommerce Marketplace WordPress Theme
+Version: 2.6.8
+Requires at least: 5.0
+Tested up to: 5.4.2
+Requires PHP: 7.0.0
+License: GNU General Public License v2+
+License URI: http://www.gnu.org/licenses/gpl-2.0.html
+Text Domain: martfury
+Domain Path: /lang/
+Tags: one-column, two-columns, left-sidebar, right-sidebar, full-width-template, post-formats, theme-options, threaded-comments, translation-ready
+*/
+
+/*--------------------------------------------------------------
+>>> TABLE OF CONTENTS:
+----------------------------------------------------------------
+1.0 - Normalize
+2.0 - Typography
+3.0 - Elements
+	3.1 - Common Elements
+	3.2 - WordPress Elements
+	3.3 - Theme's Elements
+4.0 - Header
+5.0 - Navigations
+6.0 - Content
+	6.1 - Posts and pages
+	5.2 - Comments
+7.0 - Widgets
+8.0 - Footer
+9.0 - Skin
+10.0 - Media Queries
+--------------------------------------------------------------*/
+@import 'variables';
+@import 'mixins';
+@import 'slick';
+@import 'nprogress';
+/*--------------------------------------------------------------
+Flex Columns
+--------------------------------------------------------------*/
+@import 'columns';
+/*--------------------------------------------------------------
+1.0 - Normalize
+--------------------------------------------------------------*/
+@import 'normalize';
+/*--------------------------------------------------------------
+2.0 - Typography
+--------------------------------------------------------------*/
+@import 'typography';
+/*--------------------------------------------------------------
+3.0 - Elements
+--------------------------------------------------------------*/
+/**
+ * 3.1 - Common Elements
+ */
+@import 'modal';
+/**
+ * 3.2 - WordPress Elements
+ */
+@import 'wordpress';
+/*--------------------------------------------------------------
+4.0 - Header
+--------------------------------------------------------------*/
+@import 'header';
+@import 'page-header';
+/*--------------------------------------------------------------
+5.0 - Navigations
+--------------------------------------------------------------*/
+@import 'nav';
+/*--------------------------------------------------------------
+6.0 - Content
+--------------------------------------------------------------*/
+/**
+ * 6.1 Posts and Pages
+ */
+@import 'content';
+@import 'woocommerce';
+@import 'elements';
+@import 'elementors/elementor';
+@import 'blocks';
+/**
+ * 6.3 Comments
+ */
+@import 'comments';
+/*--------------------------------------------------------------
+7.0 - Widgets
+--------------------------------------------------------------*/
+@import 'widgets';
+
+/*--------------------------------------------------------------
+7.1 - Socials
+--------------------------------------------------------------*/
+@import 'socials';
+/*--------------------------------------------------------------
+8.0 - Footer
+--------------------------------------------------------------*/
+@import 'footer';
+/*--------------------------------------------------------------
+8.0 - Skin
+--------------------------------------------------------------*/
+@import 'skin';
+/*--------------------------------------------------------------
+10.0 - Media Queries
+--------------------------------------------------------------*/
+@import 'mobile';
+@import 'responsive';

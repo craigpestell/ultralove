@@ -24,7 +24,11 @@
 
 !/wp-content/themes/
 /wp-content/themes/*
+!/wp-content/themes/martfury/
+!/wp-content/themes/martfury/**
 !/wp-content/themes/martfury-child/
 !/wp-content/themes/martfury-child/**
 
 *.zip
+/wp-content/themes/martfury/desktop.ini
+/wp-content/themes/martfury/js/scripts.js.bak
