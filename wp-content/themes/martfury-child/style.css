@@ -82,6 +82,14 @@ Template: martfury
     }
 }
 
+@media (min-width: 1024px) {
+    #mf-navigation-mobile,
+    .mf-navigation-mobile,
+    .mf-els-modal-mobile {
+        display: none !important;
+    }
+}
+
 .entry-summary .single_add_to_cart_button {
     height: 42px!important;
     line-height: 42px!important;

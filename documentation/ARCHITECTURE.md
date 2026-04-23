@@ -1,6 +1,6 @@
 # Infrastructure Architecture Runbook
 
-Last updated: 2026-04-18 (UTC)
+Last updated: 2026-04-22 (UTC)
 Source of truth for this document:
 - Live inspection on host: ubuntu-s-4vcpu-8gb-sfo2
 - WordPress runtime and DB option introspection
@@ -218,6 +218,37 @@ Observed listeners:
 
 - Elementor page-specific CSS is generated under `wp-content/uploads/elementor/css/`.
 - A stale or missing generated file can make frontend styling appear inconsistent between guest and logged-in sessions, especially when caches/CDN or version-stripped asset URLs produce different cache keys.
+
+### 4.5 RevSlider Cloudinary Image Optimization
+
+As of 2026-04-22, Slider Revolution slide background images are normalized to include Cloudinary delivery transforms before the browser loads them.
+
+Implementation details:
+- File modified: `/var/www/html/wp-content/plugins/revslider/includes/output.class.php`
+- Default transform inserted: `f_auto,q_auto:eco`
+- Supported Cloudinary URL shapes:
+  - `https://res.cloudinary.com/<cloud>/images/...`
+  - `https://res.cloudinary.com/<cloud>/image/upload/...`
+
+Current behavior:
+- Slide background image URLs emitted by RevSlider PHP are rewritten to inject the Cloudinary transform before the version segment.
+- Slide thumbnail URLs emitted by RevSlider are rewritten the same way.
+- A small runtime normalizer is also injected into the slider init script so existing `.rev-slidebg` and `rs-sbg` nodes have `src`, `data-lazyload`, and `data-src-rs-ref` normalized even when frontend markup is rebuilt by RevSlider JS.
+- Slide link targets such as `data-link="//ultralove.ca/product/..."` are not rewritten for Cloudinary delivery. They remain navigation URLs.
+
+Key code locations in `output.class.php`:
+- `get_cloudinary_image_transform()`
+- `maybe_optimize_cloudinary_image_url()`
+- `js_get_cloudinary_runtime_normalizer()`
+
+Operational notes:
+- This is a direct vendor-plugin modification inside Slider Revolution. A plugin update may overwrite it.
+- If the optimization appears missing on the frontend after deploy, purge any page cache/CDN cache first, then verify rendered `data-lazyload` / `data-src-rs-ref` values in the browser.
+- PHP and nginx were restarted after the change during live verification.
+
+Example transformation:
+- From: `//res.cloudinary.com/dp4dg7god/image/upload/v1776479952/ultralove/catalog/WavesofPleasure-1.jpg`
+- To: `//res.cloudinary.com/dp4dg7god/image/upload/f_auto,q_auto:eco/v1776479952/ultralove/catalog/WavesofPleasure-1.jpg`
 - Symptom pattern observed on 2026-04-18: page rendered correct `elementor-element-*` classes, but custom Elementor button styling was missing for guests until the stale Elementor CSS cache was cleared.
 - Verified remediation on 2026-04-18: `Elementor Plugin -> Tools -> Elementor Cache -> Clear Files & Data`, then purge any site/CDN caches that may still hold stale asset responses.
 - Validate the fix against the actual generated asset response, not only the page HTML.

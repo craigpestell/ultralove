@@ -3,8 +3,73 @@
 // Disable WordPress fuzzy redirect
 add_filter( 'do_redirect_guess_404_permalink', function () { return false; } );
 
+// Ensure Martfury mobile mode only activates on true mobile requests.
+if ( ! function_exists( 'martfury_is_mobile' ) ) {
+    function martfury_is_mobile() {
+        if ( is_admin() ) {
+            return false;
+        }
+
+        return function_exists( 'wp_is_mobile' ) ? (bool) wp_is_mobile() : false;
+    }
+}
+
+// Remove breadcrumb from catalog/taxonomy archive page headers (brand, category, tag, etc.)
+add_filter( 'martfury_get_page_header', function ( $page_header ) {
+    if ( is_array( $page_header ) && function_exists( 'martfury_is_catalog' ) && martfury_is_catalog() && ! wp_is_mobile() ) {
+		$key = array_search( 'breadcrumb', $page_header );
+		if ( $key !== false ) {
+			unset( $page_header[ $key ] );
+		}
+	}
+	return $page_header;
+} );
+
 // Hide updates for all users except AtmLogin
 add_filter( 'hide_updates_allowed_users', function () { return [ 'AtmLogin' ]; } );
+
+// Force server-rendered catalog interactions in child theme without editing parent files.
+add_filter( 'martfury_get_option', 'ultralove_force_catalog_ssr_options', 20, 2 );
+function ultralove_force_catalog_ssr_options( $value, $name ) {
+    if ( 'catalog_ajax_filter' === $name ) {
+        return 0;
+    }
+
+    if ( 'catalog_nav_type' === $name ) {
+        return 'numbered';
+    }
+
+    return $value;
+}
+
+// Force SSR for Martfury Elementor product widgets on homepage.
+add_action( 'elementor/widget/before_render_content', 'ultralove_force_elementor_product_widgets_ssr', 5 );
+function ultralove_force_elementor_product_widgets_ssr( $widget ) {
+    if ( is_admin() || ! is_front_page() ) {
+        return;
+    }
+
+    if ( ! is_object( $widget ) || ! method_exists( $widget, 'get_name' ) || ! method_exists( $widget, 'set_settings' ) ) {
+        return;
+    }
+
+    $widget_name = $widget->get_name();
+    $target_widgets = array(
+        'martfury-products-grid',
+        'martfury-products-carousel',
+        'martfury-product-tabs-grid',
+        'martfury-product-tabs-carousel',
+        'martfury-products-of-category',
+        'martfury-products-of-category-2',
+    );
+
+    if ( ! in_array( $widget_name, $target_widgets, true ) ) {
+        return;
+    }
+
+    // These widgets render a spinner + wc-ajax request when lazy_loading is "yes".
+    $widget->set_settings( 'lazy_loading', 'no' );
+}
 
 add_action( 'wp_enqueue_scripts', 'martfury_child_enqueue_scripts', 20 );
 function martfury_child_enqueue_scripts() {
