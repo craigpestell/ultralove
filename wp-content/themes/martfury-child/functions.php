@@ -1,5 +1,42 @@
 <?php
 
+function limit_search_query_characters( $query ) {
+    // Only run on the front-end and for the main search query
+    if ( ! is_admin() && $query->is_main_query() && $query->is_search() ) {
+
+        $search_query = $query->get( 's' );
+	
+        if (preg_match('/[^\x20-\x7E]/u', $search_query)) {
+            // Return 410 Gone to tell search engines this page is intentionally removed
+	    $query->set('s', '');
+            //http_response_code(410);
+            //exit('Search query contains restricted characters.');
+        }
+	
+    }
+}
+add_action( 'pre_get_posts', 'limit_search_query_characters' );
+
+
+function limit_search_query_length( $query ) {
+    // Only run on the front-end and for the main search query
+    if ( ! is_admin() && $query->is_main_query() && $query->is_search() ) {
+
+        $search_query = $query->get( 's' );
+	
+	$max_length = 50; // Set your desired character limit here
+
+        if ( strlen( $search_query ) > $max_length ) {
+            // Truncate the search string to the limit
+            $truncated_query = substr( $search_query, 0, $max_length );
+            $query->set( 's', $truncated_query );
+            //http_response_code(410);
+            //exit('Search query too long');
+        }
+    }
+}
+add_action( 'pre_get_posts', 'limit_search_query_length' );
+
 // Disable WordPress fuzzy redirect
 add_filter( 'do_redirect_guess_404_permalink', function () { return false; } );
 
@@ -68,10 +105,45 @@ function ultralove_force_elementor_product_widgets_ssr( $widget ) {
     }
 
     // These widgets render a spinner + wc-ajax request when lazy_loading is "yes".
+    // These widgets render a spinner + wc-ajax request when lazy_loading is "yes".
     $widget->set_settings( 'lazy_loading', 'no' );
+
+    // Flag the products-grid for paginated shortcode rendering (consumed in shortcode_atts_products filter).
+    if ( 'martfury-products-grid' === $widget_name ) {
+        $GLOBALS['_ultralove_products_paginate'] = true;
+    }
 }
 
 add_action( 'wp_enqueue_scripts', 'martfury_child_enqueue_scripts', 20 );
+// Inject paginate=true into the [products] shortcode rendered by the products-grid widget.
+// The flag is set once per widget render in ultralove_force_elementor_product_widgets_ssr.
+add_filter( 'shortcode_atts_products', 'ultralove_products_shortcode_inject_paginate', 10, 4 );
+function ultralove_products_shortcode_inject_paginate( $out, $pairs, $atts, $shortcode ) {
+    if ( empty( $GLOBALS['_ultralove_products_paginate'] ) ) {
+        return $out;
+    }
+    $GLOBALS['_ultralove_products_paginate'] = false; // one-shot: reset after first use
+    $out['paginate'] = true;
+    return $out;
+}
+
+// Fix the pagination base URL to use ?product-page=N (the query arg WC shortcode reads).
+// Only applies on the front page when rendering a shortcode loop (not a catalog page).
+// add_filter( 'woocommerce_pagination_args', 'ultralove_fix_products_pagination_url' );
+function ultralove_fix_products_pagination_url( $args ) {
+    if ( ! is_front_page() || ! wc_get_loop_prop( 'is_shortcode' ) ) {
+        return $args;
+    }
+    // phpcs:ignore WordPress.Security.NonceVerification.Recommended
+    $current_page    = max( 1, absint( ! empty( $_GET['product-page'] ) ? $_GET['product-page'] : 1 ) );
+    $base_url        = remove_query_arg( 'product-page', get_home_url( null, '/' ) );
+    $sep             = strpos( $base_url, '?' ) !== false ? '&' : '?';
+    $args['base']    = $base_url . $sep . 'product-page=%#%';
+    $args['format']  = '';
+    $args['current'] = $current_page;
+    return $args;
+}
+
 function martfury_child_enqueue_scripts() {
 	wp_enqueue_style( 'martfury-child-style', get_stylesheet_uri() );
 	if ( is_rtl() ) {
@@ -518,6 +590,9 @@ function ultralove_extract_shopify_title( $product_title ) {
 function ultralove_generate_all_exports() {
     ultralove_export_products_to_csv( 'default' );
     ultralove_export_products_to_csv( 'shopify' );
+
+    // Keep a simple heartbeat for diagnostics in admin or CLI.
+    update_option( 'ultralove_last_product_export_generated_at', time(), false );
 }
 
 function am_add_export_page() {
@@ -556,6 +631,36 @@ function ultralove_export_page_callback() {
 }
 
 // Update CSV files when an order is placed
+add_action( 'ultralove_refresh_product_exports', 'ultralove_generate_all_exports' );
+
+function ultralove_queue_product_export_refresh( $unused = null ) {
+    if ( ! wp_next_scheduled( 'ultralove_refresh_product_exports' ) ) {
+        wp_schedule_single_event( time() + 60, 'ultralove_refresh_product_exports' );
+    }
+}
+
+// Debounced export refresh after stock levels change from any order flow.
+add_action( 'woocommerce_reduce_order_stock', 'ultralove_queue_product_export_refresh', 10, 1 );
+add_action( 'woocommerce_restore_order_stock', 'ultralove_queue_product_export_refresh', 10, 1 );
+
+// Also refresh when stock is edited directly in WooCommerce admin/imports.
+add_action( 'woocommerce_product_set_stock', 'ultralove_queue_product_export_refresh', 10, 1 );
+add_action( 'woocommerce_variation_set_stock', 'ultralove_queue_product_export_refresh', 10, 1 );
+
+add_action( 'ultralove_refresh_product_exports_hourly', 'ultralove_generate_all_exports' );
+
+function ultralove_schedule_recurring_export_refresh() {
+    if ( ! wp_next_scheduled( 'ultralove_refresh_product_exports_hourly' ) ) {
+        wp_schedule_event( time() + 300, 'hourly', 'ultralove_refresh_product_exports_hourly' );
+    }
+}
+add_action( 'init', 'ultralove_schedule_recurring_export_refresh' );
+
+function ultralove_clear_export_schedules_on_switch() {
+    wp_clear_scheduled_hook( 'ultralove_refresh_product_exports' );
+    wp_clear_scheduled_hook( 'ultralove_refresh_product_exports_hourly' );
+}
+add_action( 'switch_theme', 'ultralove_clear_export_schedules_on_switch' );
 
 /**
  * Cloudinary URL overrides are opt-in.
@@ -785,7 +890,7 @@ function ultralove_convert_url_to_cloudinary($url) {
  * This keeps global attachment overrides disabled while covering slider attributes
  * like data-lazyload/data-thumb that Cloudinary's generic tag parser does not rewrite.
  */
-add_filter( 'do_shortcode_tag', 'ultralove_rewrite_revslider_to_cloudinary', 20, 4 );
+// ßadd_filter( 'do_shortcode_tag', 'ultralove_rewrite_revslider_to_cloudinary', 20, 4 );
 
 function ultralove_rewrite_revslider_to_cloudinary( $output, $tag, $attr, $m ) {
     if ( 'rev_slider' !== $tag || empty( $output ) || ! is_string( $output ) ) {
@@ -828,5 +933,6 @@ function ultralove_rewrite_revslider_to_cloudinary( $output, $tag, $attr, $m ) {
 
     return strtr( $output, $replacements );
 }
+
 
 

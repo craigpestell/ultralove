@@ -62,5 +62,7 @@ foreach ( $items as $item_id => $item ) :
 	if ( $show_purchase_note && $purchase_note ) {
 		echo "\n" . do_shortcode( wp_kses_post( $purchase_note ) );
 	}
-	echo "\n\n";
+	echo "\n";
+	// echo "\n\n";
 endforeach;
+echo "\n";

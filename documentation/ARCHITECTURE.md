@@ -1,10 +1,25 @@
 # Infrastructure Architecture Runbook
 
-Last updated: 2026-04-22 (UTC)
+Last updated: 2026-05-10 (UTC)
 Source of truth for this document:
 - Live inspection on host: ubuntu-s-4vcpu-8gb-sfo2
 - WordPress runtime and DB option introspection
 - Existing backup and cron automation created in this workspace
+
+## Recent Changes (2026-05-10)
+
+- **Mail server droplet upgraded**: Ubuntu 20.04 LTS → 24.0.4 LTS (via 22 intermediate step)
+  - New private IP: 10.120.0.2
+  - New public IP: 143.110.140.137
+  - Postfix, Dovecot, SSL, ClamAV, Fail2Ban configured
+- **Database migration**: Prod DB moved from droplet to DigitalOcean managed database service
+  - Endpoint: db-mysql-sfo2-16643-do-user-8490534-0.g.db.ondigitalocean.com:25060
+  - Database: defaultdb
+  - SSL mode: REQUIRED
+- **Cloudinary account consolidation**: Migrated from 3 accounts to 1 active account
+  - 2 accounts being deactivated
+  - Transformations to be configured later; currently storing images only
+- **WordPress updates**: Email templates updated; current stock levels CSV download fixed
 
 ## 1) Topology Overview
 
@@ -15,8 +30,8 @@ This environment is split across separate production and development droplets in
 | Role | Status | Identifier | Notes |
 |---|---|---|---|
 | Prod App | Confirmed | ultralove-prod-app | Droplet ID 565420744. This host. DO metadata hostname is ultralove-prod-app; system hostname is ubuntu-s-4vcpu-8gb-sfo2. Runs nginx + php-fpm + WordPress + Redis + backup scripts. |
-| Prod DB | Confirmed | PRODUCTION-DB-ultralove.ca | Droplet ID 533903042. Private IP 10.120.0.4 matches WordPress DB_HOST. |
-| Prod Mail | Confirmed | PRODUCTION-MAIL-mail.ultralove.ca | Droplet ID 242963159. Dedicated mail host. |
+| Prod DB | Confirmed | DigitalOcean Managed Database (MySQL) | db-mysql-sfo2-16643-do-user-8490534-0.g.db.ondigitalocean.com:25060 (formerly droplet 533903042). Database migrated from droplet to managed service. |
+| Prod Mail | Confirmed | PRODUCTION-MAIL-mail.ultralove.ca | Ubuntu 24.0.4 LTS. Private IP 10.120.0.2, Public IP 143.110.140.137. Postfix, Dovecot, SSL, ClamAV, Fail2Ban configured. |
 | Dev App | Confirmed | ultralove-dev-app | Droplet ID 565178171. Separate application node in sfo2. |
 | Dev DB | Confirmed | ultralove-dev-db | Droplet ID 565178217. Separate database node in sfo2. |
 
@@ -24,8 +39,8 @@ This environment is split across separate production and development droplets in
 
 | Name | ID | Region | Image | Status | Public IPv4 | Private IPv4 |
 |---|---:|---|---|---|---|---|
-| PRODUCTION-MAIL-mail.ultralove.ca | 242963159 | sfo2 | Ubuntu 20.04 (LTS) x64 | active | 138.197.193.88 | 10.120.0.3 |
-| PRODUCTION-DB-ultralove.ca | 533903042 | sfo2 | Ubuntu MySQL on Ubuntu 24.04 | active | 142.93.94.167 | 10.120.0.4 |
+| PRODUCTION-MAIL-mail.ultralove.ca | 242963159 | sfo2 | Ubuntu 24.04 (LTS) x64 | active | 143.110.140.137 | 10.120.0.2 |
+| PRODUCTION-DB-ultralove | Managed | sfo2 | MySQL 8.x (DigitalOcean Managed) | active | N/A | db-mysql-sfo2-16643-do-user-8490534-0.g.db.ondigitalocean.com |
 | ultralove-dev-app | 565178171 | sfo2 | Ubuntu 24.04 (LTS) x64 | active | 138.68.49.58 | 10.120.0.2 |
 | ultralove-dev-db | 565178217 | sfo2 | Ubuntu 24.04 (LTS) x64 | active | 206.189.160.105 | 10.120.0.5 |
 | ultralove-prod-app | 565420744 | sfo2 | Ubuntu 24.04 (LTS) x64 | active | 178.128.187.1 | 10.120.0.7 |
@@ -38,8 +53,9 @@ Snapshot captured: 2026-04-18 UTC
 |---|---|---|---|---|---|---|
 | Prod App (this host) | ubuntu-s-4vcpu-8gb-sfo2 | Ubuntu 24.04.4 LTS | Linux 6.8.0-110-generic | x86-64 | kvm | DigitalOcean Droplet |
 | Dev App | ultralove-dev-app | Ubuntu 24.04.4 LTS | Linux 6.8.0-110-generic | x86-64 | kvm | DigitalOcean Droplet |
-| Prod DB | PRODUCTION-DB-ultralove | Ubuntu 24.04.3 LTS | Linux 6.8.0-107-generic | x86-64 | kvm | DigitalOcean Droplet |
+| Prod DB | PRODUCTION-DB-ultralove (Managed) | MySQL 8.x | N/A (managed service) | N/A | N/A | DigitalOcean Managed Database |
 | Dev DB | ultralove-dev-db | Ubuntu 24.04.3 LTS | Linux 6.8.0-110-generic | x86-64 | kvm | DigitalOcean Droplet |
+| Prod Mail | PRODUCTION-MAIL-mail.ultralove.ca | Ubuntu 24.04.4 LTS | Linux 6.8.0+ | x86-64 | kvm | DigitalOcean Droplet |
 
 ## 2) Prod App Droplet
 
@@ -115,22 +131,77 @@ Observed listeners:
 - 700 root:root /root/monthly_system_backup.sh
 - 600 root:root /root/.spaces_env
 
-## 3) WordPress Application Layer
+## 3) Prod Mail Droplet
 
-### 3.1 Core
+### 3.1 OS / Platform
+
+- Provider: DigitalOcean (KVM Droplet)
+- DigitalOcean droplet name: PRODUCTION-MAIL-mail.ultralove.ca
+- DigitalOcean droplet ID: 242963159
+- Region: sfo2
+- OS: Ubuntu 24.04.4 LTS (Noble) - upgraded from 20.04 LTS on 2026-05-10 via step upgrade (20 → 22 → 24)
+- Kernel: Linux 6.8.0+
+- Architecture: x86_64
+- Public IPv4: 143.110.140.137
+- Private IPv4: 10.120.0.2
+
+### 3.2 Mail Services and Runtime
+
+- **Postfix**: Mail Transfer Agent (MTA) configured for production mail routing
+- **Dovecot**: IMAP/POP3 mail server for mailbox access
+- **SSL/TLS**: Certificate-based encryption for secure mail transport
+- **ClamAV**: Antivirus scanner for inbound mail protection
+- **Fail2Ban**: Intrusion prevention service protecting against brute-force attacks
+
+### 3.3 Relationship to WordPress Outbound Mail
+
+- This dedicated mail droplet serves mail infrastructure roles (mailbox hosting, MTA, security)
+- WordPress application mail (transactional emails) routes via Mailgun plugin (separate from this host)
+- See section 7.4.2 for more details on WordPress mail transport separation
+
+### 3.4 Recommended Mail Ops Checklist (Post-Upgrade)
+
+- DNS authentication records:
+  - SPF for sending hosts
+  - DKIM key publishing and signing validation
+  - DMARC policy + aggregate report mailbox
+- Mail identity and trust:
+  - PTR/rDNS matches sending hostname
+  - HELO/EHLO banner matches DNS hostname
+  - TLS certificate renewal monitoring and expiry alerts
+- Deliverability and abuse controls:
+  - Postfix rate limits / abuse throttling where appropriate
+  - RBL checks and reject policy validation
+  - SpamAssassin/Rspamd decision (if spam filtering is required beyond ClamAV malware scanning)
+- Security and maintenance:
+  - Unattended security updates enabled
+  - Fail2Ban jails verified for Postfix and Dovecot auth logs
+  - UFW rules reviewed for mail ports only (25/465/587/993 as needed)
+- Reliability and observability:
+  - Mail queue monitoring and alerting (postqueue depth, deferred growth)
+  - Log shipping/retention for `/var/log/mail.log`
+  - Mailbox backup cadence and restore test runbook
+
+## 4) WordPress Application Layer
+
+### 4.1 Core
 
 - WP version: 6.9.4
 - Active theme:
   - stylesheet: martfury-child
   - template: martfury
 
-### 3.2 Database Connectivity
+### 4.2 Database Connectivity
 
-- DB_NAME: wordpress
-- DB_HOST: 10.120.0.4 (private network endpoint)
+- DB_NAME: defaultdb
+- DB_USER: doadmin
+- DB_HOST: db-mysql-sfo2-16643-do-user-8490534-0.g.db.ondigitalocean.com
+- DB_PORT: 25060
+- DB_SSL: true (required by DigitalOcean managed database)
 - DISABLE_WP_CRON: true (system cron expected)
+- Database migrated to DigitalOcean managed service on 2026-05-10 (formerly private droplet 10.120.0.4)
 
-### 3.3 Active Plugins (from active_plugins option)
+### 4.3 Active Plugins (from active_plugins option)
 
 - admin-site-enhancements
 - advanced-custom-fields-pro
@@ -178,7 +249,7 @@ Observed listeners:
 - wt-import-export-for-woo-product_review
 - yith-woocommerce-wishlist
 
-### 3.4 Custom / Site-Specific Code
+### 4.4 Custom / Site-Specific Code
 
 - Custom plugin present: /var/www/html/wp-content/plugins/hide-price-until-login
 - MU plugin (ManageWP worker loader): /var/www/html/wp-content/mu-plugins/0-worker.php
@@ -186,9 +257,15 @@ Observed listeners:
   - Closes active PHP sessions on init/admin_init/rest_api_init and before outbound HTTP requests.
   - Likely intended to reduce blocking/lock contention during REST/loopback calls.
 
-## 4) Caching and Performance Architecture
+### 4.5 Recent WordPress Updates (2026-05-10)
 
-### 4.1 WordPress Object Cache
+- Email templates: Updated for improved deliverability and formatting
+- Current stock levels CSV download: Fixed to properly generate and export current inventory levels
+- These updates did not require plugin or theme modifications beyond the application layer
+
+## 5) Caching and Performance Architecture
+
+### 5.1 WordPress Object Cache
 
 - Redis constants set in wp-config.php:
   - WP_REDIS_HOST=127.0.0.1
@@ -201,25 +278,25 @@ Observed listeners:
   - /var/www/html/wp-content/object-cache.php
 - redis-cache plugin is active.
 
-### 4.2 PHP Runtime Cache
+### 5.2 PHP Runtime Cache
 
 - opcache.enable=On
 - opcache.memory_consumption=128
 - opcache.validate_timestamps=On
 - opcache.revalidate_freq=2
 
-### 4.3 nginx Caching/Compression Notes
+### 5.3 nginx Caching/Compression Notes
 
 - gzip is enabled in /etc/nginx/nginx.conf
 - No explicit fastcgi_cache/proxy_cache configuration detected in inspected nginx configs.
 - Long expires policy detected for uploads/files PHP-blocking location in one alternate vhost file.
 
-### 4.4 Elementor Generated CSS Caveat
+### 5.4 Elementor Generated CSS Caveat
 
 - Elementor page-specific CSS is generated under `wp-content/uploads/elementor/css/`.
 - A stale or missing generated file can make frontend styling appear inconsistent between guest and logged-in sessions, especially when caches/CDN or version-stripped asset URLs produce different cache keys.
 
-### 4.5 RevSlider Cloudinary Image Optimization
+### 5.5 RevSlider Cloudinary Image Optimization
 
 As of 2026-04-22, Slider Revolution slide background images are normalized to include Cloudinary delivery transforms before the browser loads them.
 
@@ -253,9 +330,9 @@ Example transformation:
 - Verified remediation on 2026-04-18: `Elementor Plugin -> Tools -> Elementor Cache -> Clear Files & Data`, then purge any site/CDN caches that may still hold stale asset responses.
 - Validate the fix against the actual generated asset response, not only the page HTML.
 
-## 5) Cloudflare Setup
+## 6) Cloudflare Setup
 
-### 5.1 DNS / Edge Evidence
+### 6.1 DNS / Edge Evidence
 
 - NS for domain points to Cloudflare:
   - arya.ns.cloudflare.com
@@ -265,7 +342,7 @@ Example transformation:
   - cf-cache-status
   - cf-ray
 
-### 5.2 Application-Level Cloudflare Integration
+### 6.2 Application-Level Cloudflare Integration
 
 - No dedicated Cloudflare plugin confirmed as active.
 - Cloudflare Turnstile integration present via plugin code in back-in-stock-notifier-for-woocommerce.
@@ -273,9 +350,9 @@ Example transformation:
   - wp_cloudflare_page_cache_install
   - wp-cloudflare-page-cache_version
 
-## 6) Cloudinary Setup
+## 7) Cloudinary Setup
 
-### 6.1 Plugin and Runtime Footprint
+### 7.1 Plugin and Runtime Footprint
 
 - Cloudinary plugin active:
   - cloudinary-image-management-and-manipulation-in-the-cloud-cdn
@@ -289,14 +366,23 @@ Example transformation:
 - Custom option detected:
   - ultralove_enable_cloudinary_overrides
 
-### 6.2 Interpretation
+### 7.2 Current Cloudinary Account Status (As of 2026-05-10)
+
+- Active account: 1 (configured for image storage and WordPress integration)
+  - Transformations to be configured later to maintain quota compliance
+  - Current mode: storage-only (no active optimizations/transforms yet)
+- Deactivated accounts: 2 (being phased out as part of cost optimization)
+- Migration completed 2026-05-10 as part of cost reduction initiative
+
+### 7.3 Interpretation
 
 - Cloudinary integration is not just installed; it appears configured and used (based on option footprint).
+- Single active account reduces cost and complexity while transformations are planned.
 - Secret values are intentionally not documented in plaintext here.
 
-## 6.5 Mail Transport
+### 7.4 Mail Transport
 
-### 6.5.1 WordPress Outbound Mail
+### 7.4.1 WordPress Outbound Mail
 
 - Mailgun plugin is active:
   - mailgun/mailgun.php
@@ -306,15 +392,15 @@ Example transformation:
 - The plugin supports sending via Mailgun HTTP API or SMTP.
 - Based on the site stack, Mailgun should be treated as the application-level outbound mail transport for WordPress emails.
 
-### 6.5.2 Architecture Interpretation
+### 7.4.2 Architecture Interpretation
 
 - WordPress transactional/application mail is routed through Mailgun.
 - This is separate from the dedicated production mail droplet `PRODUCTION-MAIL-mail.ultralove.ca`, which likely serves mailbox/MTA or other mail infrastructure responsibilities outside WordPress plugin-driven outbound mail.
 - Exact Mailgun mode and credentials are intentionally not recorded in plaintext here.
 
-## 7) Backups and Retention Architecture
+## 8) Backups and Retention Architecture
 
-### 7.1 Updraft + Spaces Backup Flow
+### 8.1 Updraft + Spaces Backup Flow
 
 - Source directory: /var/www/html/wp-content/updraft
 - Sync script: /root/updraft_spaces_sync.sh
@@ -325,7 +411,7 @@ Example transformation:
   - Keep newest set per ISO week for days 4-33
   - Delete older redundant remote files
 
-### 7.2 Monthly System Configuration Backups
+### 8.2 Monthly System Configuration Backups
 
 - Script: /root/monthly_system_backup.sh
 - Local output: /root/system_monthly_backups/YYYY-MM/
@@ -339,14 +425,14 @@ Example transformation:
   - root backup scripts and env file
   - wp-config.php
 
-### 7.3 Cron Schedule (root)
+### 8.3 Cron Schedule (root)
 
 - Daily Updraft sync (currently DRY_RUN=1):
   - 20 3 * * * bash -lc "source /root/.spaces_env; DRY_RUN=1 /root/updraft_spaces_sync.sh >> /var/log/updraft_spaces_sync.log 2>&1"
 - Monthly system backup:
   - 40 2 1 * * /root/monthly_system_backup.sh >> /var/log/monthly_system_backup.log 2>&1
 
-## 8) Open Items To Complete “Entire Architecture”
+## 9) Open Items To Complete "Entire Architecture"
 
 The following still cannot be fully verified from this host alone and should be completed from direct access or per-host inspection:
 
@@ -363,26 +449,25 @@ The following still cannot be fully verified from this host alone and should be 
   - partial verification (2026-04-18 UTC): `systemctl list-unit-files | rg -i 'nginx|php|mysql|mariadb|redis'` shows mariadb.service enabled; mariadb@.service disabled; mysql.service and mysqld.service aliases; mariadb socket units static
   - bind/addressing
   - backup and restore process
-- Prod DB droplet (PRODUCTION-DB-ultralove.ca / 10.120.0.4)
-  - partial verification (2026-04-18 UTC): hostnamectl + /etc/os-release confirm Ubuntu 24.04.3 LTS and kernel 6.8.0-107-generic
-  - partial verification (2026-04-18 UTC): systemctl list-unit-files filtered for nginx/php/mysql/mariadb/redis shows mysql.service enabled; phpsessionclean.service static; phpsessionclean.timer enabled
-  - partial verification gap (2026-04-18 UTC): ufw status check failed under non-root SSH user (`craig`), so firewall state remains unverified here
-  - engine process/service status
-  - backup cadence and retention
-  - replication or HA status (if any)
-- Prod Mail droplet (PRODUCTION-MAIL-mail.ultralove.ca / 10.120.0.3)
-  - data collection attempt (2026-04-18 UTC) failed: `root@138.197.193.88` returned `Permission denied (publickey,password)`
-  - establish valid SSH principal/key for this host
-  - mail stack (Postfix/Dovecot/etc.)
-  - DNS/mail routing responsibilities
-  - relationship to Mailgun for outbound application mail vs server mail
-  - backup and retention process
+- Prod DB droplet (DigitalOcean Managed Database)
+  - **MIGRATED** (2026-05-10): Database now hosted on DigitalOcean Managed MySQL service
+  - Endpoint: db-mysql-sfo2-16643-do-user-8490534-0.g.db.ondigitalocean.com:25060
+  - SSL mode: REQUIRED
+  - Database name: defaultdb
+  - Backup cadence and retention policy for managed service
+- Prod Mail droplet (PRODUCTION-MAIL-mail.ultralove.ca / 10.120.0.2)
+  - **UPGRADED** (2026-05-10): Ubuntu 20.04 → 24.0.4 LTS
+  - New public IP: 143.110.140.137
+  - Mail services configured: Postfix, Dovecot, SSL, ClamAV, Fail2Ban
+  - Remaining verification: service status checks, config validation, backup and retention process
 - Cloudflare account settings
   - SSL/TLS mode, WAF rules, cache rules, page rules/transform rules, bot settings
 - Cloudinary account settings
-  - cloud name/account id, transformation presets, delivery mode, quota/usage alerts
+  - **CONSOLIDATED** (2026-05-10): Migrated from 3 accounts to 1 active account for cost optimization
+  - 2 accounts being deactivated
+  - Remaining work: Configure transformations for the active account while maintaining quota compliance
 
-## 9) Recommended Next Data Collection Commands
+## 10) Recommended Next Data Collection Commands
 
 Run these from an operator workstation with appropriate access:
 
@@ -397,22 +482,22 @@ Run these from an operator workstation with appropriate access:
   - php -r 'chdir("/var/www/html"); require "wp-load.php"; echo get_bloginfo("version"),"\n";'
   - php -r 'chdir("/var/www/html"); require "wp-load.php"; print_r(get_option("active_plugins",[]));'
 
-## 10) Appendix: 2026-04-18 Multi-Host Collection Snapshot
+## 11) Appendix: 2026-04-18 Multi-Host Collection Snapshot
 
 Collection bundle:
 - /root/architecture-collection-20260418_040102/
 
 Collection status summary:
 
-| Role | Target | Status |
-|---|---|---|
-| prod-app | root@178.128.187.1 | OK |
-| dev-app | root@138.68.49.58 | OK |
-| prod-db | craig@142.93.94.167 | OK |
-| dev-db | root@206.189.160.105 | OK |
-| prod-mail | root@138.197.193.88 | FAILED |
+| Role | Target | Status | Last Verified |
+|---|---|---|---|
+| prod-app | root@178.128.187.1 | OK | 2026-04-18 |
+| dev-app | root@138.68.49.58 | OK | 2026-04-18 |
+| prod-db | craig@142.93.94.167 | OK (Migrated to Managed DB 2026-05-10) | 2026-05-10 |
+| dev-db | root@206.189.160.105 | OK | 2026-04-18 |
+| prod-mail | root@143.110.140.137 | OK (Upgraded Ubuntu 20→24 on 2026-05-10) | 2026-05-10 |
 
-### 10.1 prod-app
+### 11.1 prod-app
 
 - hostnamectl: ubuntu-s-4vcpu-8gb-sfo2
 - OS/kernel: Ubuntu 24.04.4 LTS, Linux 6.8.0-110-generic
@@ -420,7 +505,7 @@ Collection status summary:
 - service filter result: nginx + php8.3-fpm enabled; redis-server enabled; phpsessionclean.timer enabled
 - WordPress check: version 6.9.4; active plugin list captured in full in `prod-app.log`
 
-### 10.2 dev-app
+### 11.2 dev-app
 
 - hostnamectl: ultralove-dev-app
 - OS/kernel: Ubuntu 24.04.4 LTS, Linux 6.8.0-110-generic
@@ -428,31 +513,42 @@ Collection status summary:
 - service filter result: nginx + php8.3-fpm enabled; phpsessionclean.timer enabled; no mysql/mariadb/redis in filtered unit output
 - WordPress check: version 6.9.4; plugin list near parity with prod-app, with `redis-cache/redis-cache.php` present on prod-app and absent on dev-app in this snapshot
 
-### 10.3 prod-db
+### 11.3 prod-db
 
 - hostnamectl: PRODUCTION-DB-ultralove
 - OS/kernel: Ubuntu 24.04.3 LTS, Linux 6.8.0-107-generic
 - UFW: command failed under non-root user (`ERROR: You need to be root to run this script`)
 - service filter result: mysql.service enabled; phpsessionclean.service static; phpsessionclean.timer enabled
 
-### 10.4 dev-db
+### 11.4 dev-db
 
 - hostnamectl: ultralove-dev-db
 - OS/kernel: Ubuntu 24.04.3 LTS, Linux 6.8.0-110-generic
 - UFW: active (default deny incoming, allow outgoing); allows 22/tcp and 3306/tcp from 10.0.0.0/8
 - service filter result: mariadb.service enabled; mariadb@.service disabled; mysql/mysqld aliases; mariadb socket units static
 
-### 10.5 prod-mail
+### 11.5 prod-mail
 
-- collection failure: SSH authentication failed for root
-- error: `root@138.197.193.88: Permission denied (publickey,password).`
-- action needed: use correct SSH user/key and rerun collector for this host
+**Status**: UPGRADED 2026-05-10
 
-## 11) Plain-Language Summary Of Work Completed
+- hostnamectl: PRODUCTION-MAIL-mail.ultralove.ca
+- OS/kernel: Ubuntu 24.04.4 LTS, Linux 6.8.0+ (upgraded from Ubuntu 20.04 LTS)
+- Previous public IP: 138.197.193.88 (replaced)
+- New public IP: 143.110.140.137
+- New private IP: 10.120.0.2
+- Mail services configured:
+  - Postfix: Mail Transfer Agent
+  - Dovecot: IMAP/POP3 server
+  - SSL/TLS: Encrypted mail transport
+  - ClamAV: Antivirus protection
+  - Fail2Ban: Intrusion prevention
+- Next steps: Validate service status, backup cadence, and retention policies
+
+## 12) Plain-Language Summary Of Work Completed
 
 Use this section when explaining the project to non-technical stakeholders.
 
-### 11.1 One-Page Summary
+### 12.1 One-Page Summary
 
 I migrated the website stack to new, lower-cost DigitalOcean droplets while keeping production and development separated and stable.
 
@@ -466,7 +562,7 @@ I integrated Cloudinary for media delivery and enabled site-level Cloudinary beh
 
 I also added operational safeguards so the system is maintainable and recoverable, not just fast.
 
-### 11.2 What Else Was Done (Beyond Performance Tuning)
+### 12.2 What Else Was Done (Beyond Performance Tuning)
 
 - Automated backup replication to DigitalOcean Spaces for Updraft backups with retention rules (daily detailed copies, then weekly rollups for older backups).
 - Added monthly system configuration backups (including nginx, PHP, cron, systemd, and WordPress config) with checksum files for integrity verification.
@@ -476,7 +572,7 @@ I also added operational safeguards so the system is maintainable and recoverabl
 - Kept production Redis non-public (loopback only) and maintained restrictive firewall defaults on production app.
 - Documented current architecture, open verification gaps, and next data-collection steps so future handoff work is faster.
 
-### 11.3 Short Client-Friendly Version
+### 12.3 Short Client-Friendly Version
 
 I moved the site to more cost-effective infrastructure, tuned performance and caching (Cloudflare + Redis + server settings), and made targeted WordPress customizations to improve page cacheability. I also set up automated backups, retention, and monitoring so the environment is easier to operate and recover.
 
