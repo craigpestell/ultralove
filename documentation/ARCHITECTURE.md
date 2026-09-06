@@ -265,7 +265,13 @@ Example transformation:
   - cf-cache-status
   - cf-ray
 
-### 5.2 Application-Level Cloudflare Integration
+### 5.2 WAF Geo-Challenge Rule
+
+- Custom rule `Challenge outsiders` applies a Managed Challenge to non-Canadian traffic while excluding Cloudflare-verified bots:
+  - `(ip.src.country ne "CA" and not cf.client.bot)`
+- The verified-bot exclusion is required for Googlebot and other legitimate crawlers to fetch the public WordPress sitemap and indexed pages without weakening the challenge for unverified traffic.
+
+### 5.3 Application-Level Cloudflare Integration
 
 - No dedicated Cloudflare plugin confirmed as active.
 - Cloudflare Turnstile integration present via plugin code in back-in-stock-notifier-for-woocommerce.
