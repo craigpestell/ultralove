@@ -3,6 +3,24 @@
 // Disable WordPress fuzzy redirect
 add_filter( 'do_redirect_guess_404_permalink', function () { return false; } );
 
+add_filter( 'pre_get_document_title', 'ultralove_homepage_document_title' );
+function ultralove_homepage_document_title( $title ) {
+    if ( is_front_page() ) {
+        return 'Adult Wholesale Canada | Adult Toys for Retailers | UltraLove';
+    }
+
+    return $title;
+}
+
+add_action( 'wp_head', 'ultralove_homepage_meta_description', 1 );
+function ultralove_homepage_meta_description() {
+    if ( ! is_front_page() ) {
+        return;
+    }
+
+    echo '<meta name="description" content="UltraLove is a Canadian adult wholesale distributor serving retailers with adult toys, intimate wellness products, competitive pricing, and wholesale account support.">' . "\n";
+}
+
 // Ensure Martfury mobile mode only activates on true mobile requests.
 if ( ! function_exists( 'martfury_is_mobile' ) ) {
     function martfury_is_mobile() {
