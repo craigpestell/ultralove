@@ -3,6 +3,34 @@
 // Disable WordPress fuzzy redirect
 add_filter( 'do_redirect_guess_404_permalink', function () { return false; } );
 
+// Include UPC fields in Relevanssi indexing/search for product lookups.
+add_filter( 'relevanssi_custom_fields', 'ultralove_relevanssi_add_upc_fields' );
+add_filter( 'relevanssi_index_custom_fields', 'ultralove_relevanssi_add_upc_fields' );
+function ultralove_relevanssi_add_upc_fields( $fields ) {
+    $upc_fields = array(
+        'hwp_product_gtin',
+        '_upc',
+        'upc',
+        '_alg_ean',
+        '_wpm_gtin_code',
+        '_barcode',
+    );
+
+    if ( 'all' === $fields ) {
+        return $fields;
+    }
+
+    if ( is_string( $fields ) ) {
+        $fields = array_filter( array_map( 'trim', explode( ',', $fields ) ) );
+    }
+
+    if ( ! is_array( $fields ) ) {
+        $fields = array();
+    }
+
+    return array_values( array_unique( array_merge( $fields, $upc_fields ) ) );
+}
+
 // Ensure Martfury mobile mode only activates on true mobile requests.
 if ( ! function_exists( 'martfury_is_mobile' ) ) {
     function martfury_is_mobile() {

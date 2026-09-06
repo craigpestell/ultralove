@@ -1,6 +1,6 @@
 # Infrastructure Architecture Runbook
 
-Last updated: 2026-04-22 (UTC)
+Last updated: 2026-06-24 (UTC)
 Source of truth for this document:
 - Live inspection on host: ubuntu-s-4vcpu-8gb-sfo2
 - WordPress runtime and DB option introspection
@@ -185,6 +185,7 @@ Observed listeners:
 - MU plugin (session close helper): /var/www/html/wp-content/mu-plugins/00-close-php-session-for-rest.php
   - Closes active PHP sessions on init/admin_init/rest_api_init and before outbound HTTP requests.
   - Likely intended to reduce blocking/lock contention during REST/loopback calls.
+- Child theme search enhancement: /var/www/html/wp-content/themes/martfury-child/functions.php adds Relevanssi custom-field hooks so product UPC meta fields (including `hwp_product_gtin`) are indexed/searchable. Rebuild the Relevanssi index after deployment so existing products are searchable by UPC.
 
 ## 4) Caching and Performance Architecture
 

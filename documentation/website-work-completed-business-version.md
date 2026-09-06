@@ -1,6 +1,6 @@
 # Website Infrastructure Upgrade Summary (Business Version)
 
-Last updated: 2026-04-27 (UTC)
+Last updated: 2026-06-24 (UTC)
 
 ## Executive Summary
 
@@ -57,6 +57,12 @@ It also included follow-up work to ensure Slider Revolution images use Cloudinar
 - Added monthly system configuration backups with checksum files for verification.
 - Added recurring cron-based automation for backup tasks.
 - Added repeatable monitoring workflow for PHP-FPM and Redis to validate performance tuning against measured data.
+
+### 6) Product Search Relevance Improvement
+
+- Extended website product search to include UPC code matching.
+- Implemented in the WordPress child theme by adding UPC-related product meta keys to Relevanssi custom-field indexing/search hooks.
+- Added operational requirement: rebuild the Relevanssi index after deployment so historical products are immediately searchable by UPC.
 
 ## Short Client-Facing Version
 

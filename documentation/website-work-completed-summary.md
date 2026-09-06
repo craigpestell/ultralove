@@ -1,6 +1,6 @@
 # Website Work Completed Summary
 
-Last updated: 2026-04-27 (UTC)
+Last updated: 2026-06-24 (UTC)
 
 ## One-Page Summary
 
@@ -37,6 +37,8 @@ I also added operational safeguards so the system is maintainable and recoverabl
 - Uploads audit (largest original images found): several files in `wp-content/uploads` are still very large, mostly GIFs around 8 to 10 MB each. Representative examples include `Womanize-Compare.gif` (~9.93 MB), `L9141A.gif` (~9.58 MB), `WE8450I.gif` (~9.32 MB), and `ST3025C.gif` (~9.22 MB).
 - Documented the RevSlider/Cloudinary implementation and the vendor-update caveat in the architecture runbook.
 - Added Cloudflare WAF managed challenge rule for all non-Canadian traffic. In the first 24 hours: 107,000 challenges issued, 33 solved (~0.03% solve rate), blocking approximately 99.97% of international automated traffic before it reaches PHP, MySQL, or WordPress on the origin.
+- Extended storefront product search to include UPC values by adding UPC-related product meta keys to Relevanssi custom-field indexing/search hooks in the child theme.
+- Added deployment note for UPC search: run a Relevanssi index rebuild after release so existing products become searchable by UPC immediately.
 
 ## Short Client-Friendly Version
 
