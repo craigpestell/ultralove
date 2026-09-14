@@ -349,6 +349,22 @@ Followed up the same day after noticing the homepage was still loading ~79-87 in
 
 **Separate finding, not part of this work:** the sitewide inline "CSV export" script referenced above throws a console error on every page because its target elements don't exist outside whatever admin/reporting page it was written for. Harmless to shoppers (self-contained, doesn't block other scripts) but worth a cleanup pass — likely just needs to check the elements exist before attaching the listener, or be scoped to load only on the intended page.
 
+### 4.10 Important Caveat: JS Optimization Looks "Off" When Logged In (2026-09-14)
+
+Came up the same day when checking shop/product pages and initially appearing to see no optimized JS there at all, unlike the homepage. Root cause: **Autoptimize disables all JS optimization sitewide for any logged-in user who can edit posts**, on every page — not just page-specific, and not just inside the Elementor editor.
+
+This comes from Autoptimize's own built-in compatibility shim for Elementor (`wp-content/plugins/autoptimize/classes/autoptimizeCompatibility.php`, line ~35):
+
+```php
+if ( defined( 'ELEMENTOR_VERSION' ) && is_user_logged_in() && current_user_can( 'edit_posts' ) && apply_filters( 'autoptimize_filter_compatibility_editelementor_active', true ) ) {
+    add_filter( 'autoptimize_filter_js_noptimize', '__return_true' );
+}
+```
+
+The plugin's own comment explains the intent: *"Edit with Elementor in frontend admin menu (so for editors/administrators) needs JS opt. disabled to appear & function."* It fires whenever a logged-in, edit-capable user views **any** frontend page — simply so the "Edit with Elementor" link in the admin toolbar always works, regardless of which page they're currently viewing. It is unrelated to the separate Elementor-side shim in `elementor/includes/compatibility.php`, which is scoped only to actual Elementor edit-mode.
+
+**Practical implication:** if you (or any admin/editor account) check the site's JS optimization while logged into wp-admin, it will look completely absent — on every page, homepage included — even though it's fully active. This is expected, by design, and not a bug. **Verified as a logged-out visitor** (the actual shopper experience) that home, `/shop/`, and a product page all correctly serve their own aggregated/minified JS bundle. Always verify Autoptimize's output using a logged-out session (incognito window, or `curl` without cookies) — checking while logged in will give a false negative.
+
 ## 5) Cloudflare Setup
 
 ### 5.1 DNS / Edge Evidence
