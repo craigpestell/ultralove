@@ -404,6 +404,16 @@ Followed up on the audit's "Improve image delivery" finding (~451 KiB estimated 
 
 **Rollback for 4.12:** delete or rename `wp-content/mu-plugins/30-woocommerce-loop-image-sizes.php` and restart PHP-FPM to fully revert the `sizes` fix (no database changes involved). The lazy-load setting is already reverted (`use_lazy_load` = `off`) as the shipped state of this change.
 
+### 4.13 Correction: "Animated Elements" Finding Is Not Elementor, and Is Deprioritized (2026-09-14)
+
+Earlier entries in this document (4.6, 4.11) referred to "62 Elementor-animated elements" / "61 animated elements found" as a next-phase opportunity, inferred from the PageSpeed "Avoid non-composited animations" diagnostic count without opening its detail. That inference was wrong and is corrected here.
+
+Actually inspecting the audit's element list (via the report's accessibility tree, not Elementor at all): of the ~59-61 flagged elements, only **one** is a slider element (a RevSlider slide link); the rest are ordinary WooCommerce product-grid elements — product title links, thumbnail links, the "quick view" overlay button, and "Add to cart" buttons — repeated across every product card on the page. Every flagged element shares the same reason: `Unsupported CSS Property: visibility`.
+
+Root cause: `wp-content/themes/martfury/style.css` uses the broad `transition: all 0.5s` shorthand in roughly 30 places instead of listing specific animatable properties. Because `transition: all` applies to every property change, and `visibility` specifically cannot be GPU-composited, any element under one of these rules that also changes `visibility` on hover (e.g. the product-card "quick view"/"add to cart" overlay, which is hidden via `visibility` until hovered) gets flagged — even though nothing actually plays a visible animation; it's a routine, imperceptible hover-state CSS transition, not an entrance animation or autoplay effect. This is consistent with there being no visible animation on the site to notice.
+
+**Decision: deprioritized.** Fixing this properly would mean auditing which of the ~30 `transition: all` rules in a 28,000+ line theme stylesheet actually touch `visibility`, and narrowing each to an explicit property list (or delaying the `visibility` change to the end of the transition instead of animating it) without breaking legitimate hover transitions elsewhere in the theme. The payoff is mostly a Lighthouse score/CLS book-keeping improvement, not a change visitors would notice, so it's not worth the risk/effort relative to the remaining render-blocking CSS opportunity. Left as a documented, low-priority item; not scheduled.
+
 ## 5) Cloudflare Setup
 
 ### 5.1 DNS / Edge Evidence
