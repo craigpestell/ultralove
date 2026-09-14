@@ -330,6 +330,25 @@ Followed up the same day on the largest remaining finding from 4.6 (no CSS/JS mi
 
 **Still open / not yet done:** aggregation (combining multiple CSS/JS files into fewer requests) remains off — the biggest additional win still available from Autoptimize, deferred pending a monitoring period on the current conservative configuration. Re-run PageSpeed Insights after a monitoring period to quantify the actual improvement.
 
+### 4.9 Autoptimize JS Aggregation Enabled (2026-09-14)
+
+Followed up the same day after noticing the homepage was still loading ~79-87 individual JS requests despite 4.8's minification work — expected, since aggregation had deliberately been left off in the initial conservative rollout (minification reduces file size per request, not request count).
+
+**Change made:** enabled `autoptimize_js_aggregate` (combines eligible JS files into one bundle). Also enabled `autoptimize_js_trycatch`, which wraps each aggregated script segment in its own `try/catch` so one broken script can't take down the rest of the bundle — an extra safety net specifically for this first aggregation rollout. Elementor's own JS remains excluded from the bundle (unaffected by this change, still served untouched from its original path).
+
+**Result:** homepage script requests dropped from 79 distinct `<script src>` tags to 14 — one aggregated bundle (~593KB, minified) covering jQuery, WordPress core dist scripts, Gravity Forms, and Slider Revolution, plus the still-separately-served Elementor files and one individually-minified theme file (`martfury-addons/elementor.js`, excluded from the bundle by name-match but still minified standalone, unchanged from 4.8's behavior).
+
+**Verification performed:**
+- Downloaded the aggregated bundle and syntax-checked it with `node --check` — valid, not truncated (confirmed the trailing `try/catch` wrapper closes cleanly).
+- Checked every script/asset URL referenced on the live homepage via `curl` — all return `200`.
+- Loaded the site in a real browser (homepage, a product page, and the shop archive) and read the console for errors. Found one recurring `TypeError: Cannot read properties of null (reading 'addEventListener')`, present identically on all three pages tested, at a fixed line in an inline footer script that looks for `document.getElementById('exportMe')` / `getElementById('export')` (an unrelated CSV-export feature apparently enqueued sitewide rather than only where those elements exist). Confirmed via git-independent evidence (identical error, same code shape, present on every page including ones untouched by today's changes) that this is a **pre-existing bug unrelated to the Autoptimize/aggregation change**, not a regression — it's a self-contained inline script that doesn't depend on or interact with any bundled/aggregated file, so it fails the same way with or without aggregation. Not fixed as part of this work since it's outside the scope of the performance task; flagged below as a separate item for the client/dev team to address.
+- Visually confirmed the "On Sale" and "Latest Adult Products" carousels, product image galleries, and product detail pages all render correctly with the aggregated bundle in place.
+- Could not fully test the add-to-cart/checkout JS flow end-to-end, since this is a login-gated wholesale site (pricing and cart require a registered account) and no test credentials were available in this session. Nothing observed suggests cart JS is affected — the add-to-cart button markup and handlers are unrelated to the files now being aggregated — but this should be spot-checked with a real login when convenient.
+
+**Rollback:** identical to 4.8 — `wp plugin deactivate autoptimize --allow-root` fully reverts both minification and aggregation in one step. To back out only aggregation while keeping minification, set `autoptimize_js_aggregate` back to empty via `wp option update autoptimize_js_aggregate "" --allow-root` and clear Autoptimize's cache.
+
+**Separate finding, not part of this work:** the sitewide inline "CSV export" script referenced above throws a console error on every page because its target elements don't exist outside whatever admin/reporting page it was written for. Harmless to shoppers (self-contained, doesn't block other scripts) but worth a cleanup pass — likely just needs to check the elements exist before attaching the listener, or be scoped to load only on the intended page.
+
 ## 5) Cloudflare Setup
 
 ### 5.1 DNS / Edge Evidence
