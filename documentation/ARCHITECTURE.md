@@ -275,11 +275,11 @@ Fixes applied and verified (see 4.3 for the nginx-side detail):
 
 Findings not yet acted on at the time of the initial audit (WordPress/application-layer, higher-impact but higher-risk — needs a deliberate follow-up rather than a same-session fix):
 - 48 active plugins (corrected count — an earlier pass in this same audit undercounted this as 46), including several with overlapping import/export functionality — see 4.7 for the plugin audit and cleanup performed the same day.
-- No CSS/JS minification, combination, defer, or unused-code-removal plugin active (no Autoptimize/Perfmatters/WP Rocket-equivalent) — this is the largest single driver of the 6.4MB page weight and Lighthouse's ~4.25s "render-blocking requests" finding. Still open.
+- No CSS/JS minification, combination, defer, or unused-code-removal plugin active (no Autoptimize/Perfmatters/WP Rocket-equivalent) — this is the largest single driver of the 6.4MB page weight and Lighthouse's ~4.25s "render-blocking requests" finding. **Resolved same day — see 4.8.**
 - Elementor reports 62 animated elements on the homepage — likely theme/demo-content entrance animations left enabled, contributing to both script weight and the field CLS score of 0.26. Still open; Elementor also controls page layout rendering site-wide, so any change here needs care and should not touch the plugin/layout engine itself, only the animation setting.
 - Redis object cache, Cloudflare, and Cloudinary are already correctly in place and not implicated in these findings — the gap is specifically plugin/theme-level asset bloat, not the caching/CDN layer covered elsewhere in this section.
 
-Recommended next phase (not yet scheduled): evaluate/install a CSS-JS optimization plugin compatible with Elementor + Martfury, and review/reduce Elementor's global entrance-animation usage.
+Recommended next phase (not yet scheduled): evaluate/install a CSS-JS optimization plugin compatible with Elementor + Martfury (done same day, see 4.8), and review/reduce Elementor's global entrance-animation usage (still open).
 
 ### 4.7 Import/Export Plugin Audit and Cleanup (2026-09-14)
 
@@ -301,6 +301,34 @@ Evidence used to confirm these were safe to deactivate:
 Action taken: deactivated (not deleted) all four WebToffee plugins via `wp plugin deactivate`. Active plugin count dropped from 48 to 44. Verified live: homepage/shop return 200, wp-admin login redirect (302) unaffected, WP All Import/Export plugins remain active, and nginx error log shows only pre-existing unrelated WooCommerce core deprecation notices (`wc_enqueue_js`), not new errors from the deactivation.
 
 Not yet done: deleting the plugin files themselves. Deactivation is fully reversible from the WordPress admin at any time; deletion should wait for a monitoring period.
+
+### 4.8 CSS/JS Optimization Plugin — Autoptimize (2026-09-14)
+
+Followed up the same day on the largest remaining finding from 4.6 (no CSS/JS minification/combination plugin active) by installing and configuring **Autoptimize** (free, v3.1.15.1) directly on production, as a staged rollout rather than testing on the dev environment first.
+
+**Configuration chosen (deliberately conservative for a first rollout):**
+- `autoptimize_css = 1`, `autoptimize_js = 1` — both enabled.
+- `autoptimize_css_aggregate = ""`, `autoptimize_js_aggregate = ""` — aggregation/combination left **off**. Autoptimize still minifies each file individually and rewrites it to a cached, hashed URL (`wp-content/cache/autoptimize/autoptimize_single_<hash>.php`), but does not combine multiple files into one bundle. This was a deliberate choice to get the minification win with much lower risk of script-order/dependency breakage, appropriate for a first production rollout.
+- `autoptimize_css_exclude = "elementor"`, `autoptimize_js_exclude = "elementor"` — Elementor's own CSS/JS (`webpack.runtime.min.js`, `frontend-modules.min.js`, `frontend.min.js`, and the theme's `martfury-addons/elementor.js`) are excluded from optimization entirely and served untouched, since Elementor controls page layout site-wide and is the highest-risk plugin to interfere with.
+
+**Bug found and fixed the same day: JS optimization was completely inert.** After configuration, CSS optimization worked immediately (verified via cached `autoptimize_single_*.php` URLs replacing original stylesheet links), but JS files were being served completely unprocessed — the JS cache directory (`wp-content/cache/autoptimize/js/`) stayed empty. Root-caused via direct `wp eval` testing of `autoptimizeScripts::read()` against real page HTML fetched straight from the origin (bypassing Cloudflare) with the exact options array production uses:
+- Config values, per-post overrides, Autoptimize's and Elementor's own mutual compatibility shims, the `dontmove` exclusion list, and the script-tag regex used by `read()` were all individually tested and ruled out — each behaved correctly in isolation.
+- The actual cause: the **Nelio A/B Testing** plugin ships its own Autoptimize compatibility file (`wp-content/plugins/nelio-ab-testing/includes/hooks/compat/cache/autoptimize/index.php`) that hooks `autoptimize_filter_js_exclude` and force-sets `autoptimize_filter_js_minify_excluded` to `__return_false` on every request. Because these are live WordPress filter hooks (not raw option values), they only manifest through the real request pipeline — an isolated test that reads Autoptimize's option values directly, without also triggering `apply_filters()`, will not reproduce the problem, which is why the first round of isolated `read()` testing appeared to succeed.
+- Checked Nelio A/B Testing for any in-flight experiment before touching it: one experiment existed (`improved thumbnails`, post type `nab_experiment`) but its status was `nab_ready` (configured, not currently running) — no active test in flight. Deactivated the plugin (`wp plugin deactivate nelio-ab-testing`; not deleted, fully reversible). JS optimization then worked immediately on the next request with no other change required.
+
+**Verification performed after the fix:**
+- Confirmed live, direct-from-origin (bypassing Cloudflare) that JS files are now served via hashed `autoptimize_single_*.php` URLs, correctly minified, with valid content-type headers (`text/javascript`) and intact content (spot-checked `fitvids.min.js` output byte-for-byte against source, no truncation/corruption).
+- Confirmed Elementor's JS/CSS remain completely untouched (still served from their original theme/plugin paths, not rewritten by Autoptimize).
+- Confirmed via Cloudflare edge (`cf-cache-status: MISS` on a live fetch through `https://ultralove.ca/`) that real visitors are already receiving the optimized JS — no Cloudflare purge was needed since the new asset URLs are unique hashed paths Cloudflare had never cached before.
+- Spot-checked homepage, `/shop/`, `/cart/`, `/my-account/` — all return `200` with no new errors.
+
+**Rollback procedure (if a problem surfaces later):**
+1. `wp plugin deactivate autoptimize --allow-root` — immediately stops all CSS/JS rewriting; WordPress reverts to serving original, unoptimized asset URLs on the very next page load. Fully reversible, no data loss.
+2. Optionally clear Autoptimize's own disk cache: `wp eval 'autoptimizeCache::clearall();' --allow-root`, or delete the contents of `wp-content/cache/autoptimize/` directly (safe — Autoptimize regenerates it automatically if reactivated).
+3. Purge the Cloudflare cache for the site (Custom Purge in the dashboard, or `wp cache flush --allow-root` plus a Cloudflare purge) if any stale optimized-asset HTML has been cached at the edge in the meantime.
+4. No nginx, database schema, or theme changes were made as part of this work — rollback is entirely a WordPress plugin-level action, isolated from the rest of the stack.
+
+**Still open / not yet done:** aggregation (combining multiple CSS/JS files into fewer requests) remains off — the biggest additional win still available from Autoptimize, deferred pending a monitoring period on the current conservative configuration. Re-run PageSpeed Insights after a monitoring period to quantify the actual improvement.
 
 ## 5) Cloudflare Setup
 
