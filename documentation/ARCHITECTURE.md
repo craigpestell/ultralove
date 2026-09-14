@@ -365,6 +365,26 @@ The plugin's own comment explains the intent: *"Edit with Elementor in frontend 
 
 **Practical implication:** if you (or any admin/editor account) check the site's JS optimization while logged into wp-admin, it will look completely absent — on every page, homepage included — even though it's fully active. This is expected, by design, and not a bug. **Verified as a logged-out visitor** (the actual shopper experience) that home, `/shop/`, and a product page all correctly serve their own aggregated/minified JS bundle. Always verify Autoptimize's output using a logged-out session (incognito window, or `curl` without cookies) — checking while logged in will give a false negative.
 
+### 4.11 JS Aggregation Reverted — Caused a Measurable Performance Regression (2026-09-14)
+
+Ran a fresh PageSpeed Insights pass after 4.9/4.10 to get an updated baseline and pick the next optimization target. Result was worse than expected: **Performance score 33/100** (down from the post-audit baseline of ~47-53), driven by **Total Blocking Time of 1,030ms** — LCP had actually improved to 13.8s (from 17.7s originally), but the TBT spike was severe enough to tank the composite score.
+
+Hypothesis: combining ~65 separate script files into one ~593KB bundle (4.9) meant the browser had to execute that much JavaScript as a much larger, more continuous block of main-thread work. Under Lighthouse's mobile CPU throttling (4x slowdown), this shows up as a large Total Blocking Time increase — a known tradeoff of file aggregation that doesn't always pay off, especially on a page with this much third-party/plugin JS. Fewer requests does not necessarily mean less main-thread cost.
+
+**Confirmed via controlled A/B test:** disabled `autoptimize_js_aggregate` (kept minification, `autoptimize_js` and `autoptimize_js_exclude` unchanged), cleared Autoptimize's cache and the object cache, and re-ran PageSpeed Insights on the same URL immediately after:
+
+| | Aggregation ON (4.9) | Aggregation OFF |
+|---|---|---|
+| Performance score | 33 | 53 |
+| Total Blocking Time | 1,030 ms | 170 ms |
+| LCP | 13.8 s | 16.6 s |
+
+TBT dropped by ~86% and the overall score improved by 20 points with aggregation off; LCP was noisier between runs (both lab tests, some run-to-run variance expected) but stayed in the same poor range either way, so it wasn't the deciding factor.
+
+**Decision: JS aggregation is reverted and left off going forward.** Per-file minification (4.8) stays enabled and is unaffected by this — it was never implicated in the TBT regression and remains a clean, verified win. `autoptimize_js_trycatch` was left enabled (harmless, no-op without aggregation). This changes the "still open" item at the end of 4.8/4.9: aggregation is not simply deferred pending monitoring, it's a **tested and rejected** option for this specific site, given its current JS footprint (48 active plugins, Elementor, WooCommerce). It could be revisited later only alongside real reduction in total JS volume (e.g. after plugin cleanup), not as a request-count optimization on its own.
+
+**Lesson for future performance work on this site:** always re-run PageSpeed Insights immediately after any change and compare Total Blocking Time specifically, not just the headline score or LCP — a change that looks like a clear win (79→14 requests) can still be a net loss if it concentrates execution cost. Rollback for this specific change was a single `wp option update autoptimize_js_aggregate ""` plus a cache clear; no plugin deactivation was needed.
+
 ## 5) Cloudflare Setup
 
 ### 5.1 DNS / Edge Evidence
