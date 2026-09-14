@@ -1,6 +1,6 @@
 # Website Work Completed Summary
 
-Last updated: 2026-04-27 (UTC)
+Last updated: 2026-09-14 (UTC)
 
 ## One-Page Summary
 
@@ -17,6 +17,8 @@ I added a Cloudflare WAF custom rule to issue a managed challenge to all traffic
 I integrated Cloudinary for media delivery and enabled site-level Cloudinary behavior in WordPress.
 
 I added targeted Slider Revolution image delivery optimization so slider background images also receive Cloudinary transformation parameters instead of bypassing the optimized media path. The homepage loads 10 large slide images and 7 smaller slide images. The large banner images were roughly 900 KB or more each, the smaller images were around 300 KB each, and the optimized versions are now under 100 KB each.
+
+I ran a Lighthouse/PageSpeed Insights performance audit and fixed a real gap at the nginx layer: compression (`gzip_types`) had been left entirely commented out, so only HTML was being compressed — CSS, JS, and other assets were shipped uncompressed on every request Cloudflare doesn't cache (cart, checkout, my-account, wp-admin, AJAX/API calls). I also added long-lived browser cache headers for static assets, which had none before, and enabled HTTP/2 on the origin listener.
 
 I also added operational safeguards so the system is maintainable and recoverable, not just fast.
 
@@ -37,7 +39,10 @@ I also added operational safeguards so the system is maintainable and recoverabl
 - Uploads audit (largest original images found): several files in `wp-content/uploads` are still very large, mostly GIFs around 8 to 10 MB each. Representative examples include `Womanize-Compare.gif` (~9.93 MB), `L9141A.gif` (~9.58 MB), `WE8450I.gif` (~9.32 MB), and `ST3025C.gif` (~9.22 MB).
 - Documented the RevSlider/Cloudinary implementation and the vendor-update caveat in the architecture runbook.
 - Added Cloudflare WAF managed challenge rule for all non-Canadian traffic. In the first 24 hours: 107,000 challenges issued, 33 solved (~0.03% solve rate), blocking approximately 99.97% of international automated traffic before it reaches PHP, MySQL, or WordPress on the origin.
+- Ran a PageSpeed Insights / Lighthouse audit: mobile lab score ~47-53/100 (17.7s LCP, 6.4MB page weight), real-user field Core Web Vitals failing (LCP 4.1s, TTFB 3.5s, CLS 0.26).
+- Fixed nginx `gzip_types` (was fully commented out — only HTML was compressed), added `Cache-Control: public, max-age=31536000, immutable` for static assets (previously no browser-cache headers at all), and enabled HTTP/2 on the origin TLS listener. Verified live with `nginx -t` before reload and confirmed cart/checkout/my-account still correctly stay uncached.
+- Identified, but did not yet change, the larger remaining performance lever: 46 active plugins (including 9 overlapping import/export plugins), no CSS/JS minification or unused-code-removal plugin, and 62 Elementor-animated elements on the homepage — flagged as the next optimization phase pending a plugin-level decision.
 
 ## Short Client-Friendly Version
 
-I moved the site to more cost-effective infrastructure, tuned performance and caching (Cloudflare + Redis + server settings), made targeted WordPress customizations to improve page cacheability, extended Cloudinary optimization to slider images that were previously bypassing those delivery settings, and added a Cloudflare geo-challenge rule that blocked ~99.97% of non-Canadian bot and scanner traffic from ever reaching the origin server. On the homepage, that work covered 10 large slide images and 7 smaller slide images, reducing the large banners from roughly 900 KB+ each and the smaller images from roughly 300 KB each to under 100 KB each. I also set up automated backups, retention, and monitoring so the environment is easier to operate and recover.
+I moved the site to more cost-effective infrastructure, tuned performance and caching (Cloudflare + Redis + server settings), made targeted WordPress customizations to improve page cacheability, extended Cloudinary optimization to slider images that were previously bypassing those delivery settings, and added a Cloudflare geo-challenge rule that blocked ~99.97% of non-Canadian bot and scanner traffic from ever reaching the origin server. On the homepage, that work covered 10 large slide images and 7 smaller slide images, reducing the large banners from roughly 900 KB+ each and the smaller images from roughly 300 KB each to under 100 KB each. I also set up automated backups, retention, and monitoring so the environment is easier to operate and recover. Most recently, I ran a performance audit and fixed a compression/caching gap at the server level, and identified WordPress plugin bloat as the next, larger optimization opportunity.

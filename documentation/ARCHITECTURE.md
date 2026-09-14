@@ -1,6 +1,6 @@
 # Infrastructure Architecture Runbook
 
-Last updated: 2026-04-22 (UTC)
+Last updated: 2026-09-14 (UTC)
 Source of truth for this document:
 - Live inspection on host: ubuntu-s-4vcpu-8gb-sfo2
 - WordPress runtime and DB option introspection
@@ -210,9 +210,14 @@ Observed listeners:
 
 ### 4.3 nginx Caching/Compression Notes
 
-- gzip is enabled in /etc/nginx/nginx.conf
-- No explicit fastcgi_cache/proxy_cache configuration detected in inspected nginx configs.
-- Long expires policy detected for uploads/files PHP-blocking location in one alternate vhost file.
+- gzip is enabled in /etc/nginx/nginx.conf.
+- As of 2026-09-14: `gzip_types` was previously commented out entirely in `/etc/nginx/nginx.conf`, so only nginx's default `text/html` was being compressed — CSS, JS, JSON, SVG, and font responses were served uncompressed. Fixed by setting an explicit `gzip_types` list (css, js, json, xml, svg, fonts, wasm), enabling `gzip_vary on` and `gzip_proxied any`, and raising `gzip_comp_level` from 3 to 5.
+- As of 2026-09-14: added a dedicated static-asset `location` block in `/etc/nginx/sites-available/ultralove.ca.conf` matching css/js/mjs/images/fonts, sending `Cache-Control: public, max-age=31536000, immutable` and `expires 365d`. Previously no static assets had any explicit browser-cache headers set at the origin.
+- As of 2026-09-14: enabled HTTP/2 on the origin TLS listener (`listen 443 ssl http2;`). Note this nginx build is 1.24.0, which predates the newer `http2 on;` directive syntax (introduced in 1.25.1) — that syntax fails `nginx -t` on this host. Real-user traffic already gets HTTP/2/3 from Cloudflare's edge regardless of the origin listener; this change mainly benefits direct-origin access and Cloudflare-to-origin efficiency.
+- Scope note: `cart/`, `checkout/`, `my-account/`, and `wp-admin/` routes are explicitly excluded from caching in this same vhost (`Cache-Control: no-store, no-cache, must-revalidate, max-age=0`), so those are exactly the requests that bypass Cloudflare's edge cache and hit the origin directly. The gzip fix benefits those WooCommerce hot paths most — Cloudflare already recompresses/serves cached anonymous pages (e.g. the homepage) at the edge regardless of the origin `gzip_types` gap, so that fix has limited effect on the anonymous homepage experience specifically.
+- Config backups from immediately before this change are kept at `/root/nginx-backups/` on prod-app (timestamped copies of `nginx.conf` and `ultralove.ca.conf`).
+- No explicit fastcgi_cache/proxy_cache configuration detected in inspected nginx configs (unchanged — Cloudflare APO/edge cache handles anonymous HTML caching instead; see 5.1).
+- Long expires policy detected for uploads/files PHP-blocking location in one alternate vhost file (pre-existing note, unchanged).
 
 ### 4.4 Elementor Generated CSS Caveat
 
@@ -252,6 +257,26 @@ Example transformation:
 - Symptom pattern observed on 2026-04-18: page rendered correct `elementor-element-*` classes, but custom Elementor button styling was missing for guests until the stale Elementor CSS cache was cleared.
 - Verified remediation on 2026-04-18: `Elementor Plugin -> Tools -> Elementor Cache -> Clear Files & Data`, then purge any site/CDN caches that may still hold stale asset responses.
 - Validate the fix against the actual generated asset response, not only the page HTML.
+
+### 4.6 Performance Audit (2026-09-14)
+
+Ran a Lighthouse/PageSpeed Insights audit against `https://ultralove.ca/` to identify low-hanging performance fixes.
+
+Baseline results:
+- CrUX field data (real users, desktop, 28-day window): Core Web Vitals **Failed** — LCP 4.1s, TTFB 3.5s, CLS 0.26, INP 45ms.
+- Lighthouse lab data (mobile, Moto G Power emulation, Slow 4G throttling): Performance score ~47-53/100, LCP 17.7s, total page weight 6.4MB.
+
+Fixes applied and verified (see 4.3 for the nginx-side detail):
+- nginx `gzip_types` fix, static-asset `Cache-Control`/`expires` headers, HTTP/2 on the origin listener.
+- Verified live via `nginx -t` before reload, then `curl` checks confirming `content-encoding: gzip` on JS/CSS, `cache-control: public, max-age=31536000, immutable` on static assets, and that `cart/`, `my-account/` responses still correctly send `no-store`/`private` (unaffected by the new caching rule).
+
+Findings not yet acted on (WordPress/application-layer, higher-impact but higher-risk — needs a deliberate follow-up rather than a same-session fix):
+- 46 active plugins, including 9 with overlapping import/export functionality (`wt-import-export-for-woo`, `wt-import-export-for-woo-product`, `wt-import-export-for-woo-product_review`, `product-import-export-for-woo`, `wp-all-export-pro`, `wp-all-import-pro`, `woocommerce-xml-csv-product-import`, `wpae-woocommerce-add-on`, `ultralove-product-export-sync`, `ultralove-product-stock-export`) — candidate for an audit of which are actually still in use.
+- No CSS/JS minification, combination, defer, or unused-code-removal plugin active (no Autoptimize/Perfmatters/WP Rocket-equivalent) — this is the largest single driver of the 6.4MB page weight and Lighthouse's ~4.25s "render-blocking requests" finding.
+- Elementor reports 62 animated elements on the homepage — likely theme/demo-content entrance animations left enabled, contributing to both script weight and the field CLS score of 0.26.
+- Redis object cache, Cloudflare, and Cloudinary are already correctly in place and not implicated in these findings — the gap is specifically plugin/theme-level asset bloat, not the caching/CDN layer covered elsewhere in this section.
+
+Recommended next phase (not yet scheduled): evaluate/install a CSS-JS optimization plugin compatible with Elementor + Martfury, audit and consolidate the import/export plugin set, and review/reduce Elementor's global entrance-animation usage.
 
 ## 5) Cloudflare Setup
 

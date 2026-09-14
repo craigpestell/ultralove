@@ -1,6 +1,6 @@
 # Website Infrastructure Upgrade Summary (Business Version)
 
-Last updated: 2026-04-27 (UTC)
+Last updated: 2026-09-14 (UTC)
 
 ## Executive Summary
 
@@ -9,6 +9,8 @@ We modernized and optimized the website platform to reduce monthly infrastructur
 The project covered infrastructure migration, caching and performance tuning, application-level cacheability improvements in WordPress, media CDN integration, and backup/monitoring automation.
 
 It also included follow-up work to ensure Slider Revolution images use Cloudinary optimization consistently, including cases where slider markup is rebuilt on the frontend. On the homepage, this covered 10 large slide images and 7 smaller slide images. The large banners were roughly 900 KB+ each, the smaller images were roughly 300 KB each, and the optimized versions are now under 100 KB each.
+
+Most recently, a Lighthouse/PageSpeed audit surfaced a server-side compression and caching gap that was fixed and verified live, and identified WordPress plugin/page-builder bloat as the next, higher-impact performance opportunity (see section 6 and Optional Next-Phase Opportunities below).
 
 ## Business Outcomes
 
@@ -58,12 +60,24 @@ It also included follow-up work to ensure Slider Revolution images use Cloudinar
 - Added recurring cron-based automation for backup tasks.
 - Added repeatable monitoring workflow for PHP-FPM and Redis to validate performance tuning against measured data.
 
+### 6) Performance Audit and Origin Caching Fixes (2026-09-14)
+
+- Ran a Lighthouse/PageSpeed Insights audit against the live site to establish a baseline and find low-hanging fixes. Real-user data showed Core Web Vitals failing (LCP 4.1s, TTFB 3.5s, CLS 0.26); the mobile lab test scored ~47-53/100 with a 6.4MB page weight.
+- Found that server-level compression (`gzip_types`) had been left entirely disabled, so only page HTML was compressed — CSS, JS, and similar assets were served uncompressed on every request that Cloudflare's edge cache doesn't cover (cart, checkout, account pages, and API/AJAX calls). Fixed and verified live.
+- Found that static assets (images, CSS, JS, fonts) had no browser-cache headers at all, meaning repeat visitors re-downloaded roughly 1MB of unchanged assets on every page load. Added a one-year cache policy and verified it live.
+- Enabled HTTP/2 on the origin server connection as a supporting best practice.
+- All changes were backed up before applying, syntax-validated, and confirmed live without any service interruption; checkout/cart/account pages were confirmed to still correctly bypass caching as intended.
+- Identified a larger, second-phase opportunity: the WordPress plugin and page-builder layer (46 active plugins, no CSS/JS optimization plugin, and heavy use of Elementor entrance animations) is the main remaining driver of page weight and load time. This is flagged for a deliberate follow-up phase rather than an in-session change, since it touches live plugin behavior and needs proper testing.
+
 ## Short Client-Facing Version
 
-    We reduced infrastructure spend, improved website speed and stability, and made the platform easier to operate. This included server migration, Cloudflare and Redis caching improvements, WordPress cacheability customizations, Cloudinary media CDN integration, improved optimization coverage for Slider Revolution images, and stronger backup/monitoring automation. A Cloudflare geo-challenge rule was also added to block non-Canadian bot and scanner traffic at the edge before it reaches the server — in the first 24 hours alone it intercepted 107,000 requests with a solve rate of only 0.03%, meaning the overwhelming majority never touched the origin. As part of that media work, the homepage's 10 large slider images and 7 smaller slider images dropped from roughly 900 KB+ each and roughly 300 KB each respectively to under 100 KB each.
+    We reduced infrastructure spend, improved website speed and stability, and made the platform easier to operate. This included server migration, Cloudflare and Redis caching improvements, WordPress cacheability customizations, Cloudinary media CDN integration, improved optimization coverage for Slider Revolution images, stronger backup/monitoring automation, and a performance audit that found and fixed a server-side compression/caching gap. As part of that media work, the homepage's 10 large slider images and 7 smaller slider images dropped from roughly 900 KB+ each and roughly 300 KB each respectively to under 100 KB each. A Cloudflare geo-challenge rule was also added to block non-Canadian bot and scanner traffic at the edge before it reaches the server — in the first 24 hours alone it intercepted 107,000 requests with a solve rate of only 0.03%, meaning the overwhelming majority never touched the origin.
 
 ## Optional Next-Phase Opportunities
 
+- Evaluate and roll out a CSS/JS optimization plugin (minify, combine, remove unused code) compatible with the current Elementor/Martfury setup — the single biggest remaining lever for page speed.
+- Audit the 9 currently active import/export plugins for overlap and consolidate to what's actually still used.
+- Review and reduce Elementor's site-wide entrance-animation usage (62 animated elements currently detected on the homepage), which affects both load time and layout stability.
 - Finalize outstanding cross-host verification items (mail node access, database firewall verification under correct privilege).
 - Define baseline SLOs and monthly performance/cost reporting.
 - Formalize disaster recovery test cadence (backup restore drills).
