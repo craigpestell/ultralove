@@ -270,13 +270,34 @@ Fixes applied and verified (see 4.3 for the nginx-side detail):
 - nginx `gzip_types` fix, static-asset `Cache-Control`/`expires` headers, HTTP/2 on the origin listener.
 - Verified live via `nginx -t` before reload, then `curl` checks confirming `content-encoding: gzip` on JS/CSS, `cache-control: public, max-age=31536000, immutable` on static assets, and that `cart/`, `my-account/` responses still correctly send `no-store`/`private` (unaffected by the new caching rule).
 
-Findings not yet acted on (WordPress/application-layer, higher-impact but higher-risk — needs a deliberate follow-up rather than a same-session fix):
-- 46 active plugins, including 9 with overlapping import/export functionality (`wt-import-export-for-woo`, `wt-import-export-for-woo-product`, `wt-import-export-for-woo-product_review`, `product-import-export-for-woo`, `wp-all-export-pro`, `wp-all-import-pro`, `woocommerce-xml-csv-product-import`, `wpae-woocommerce-add-on`, `ultralove-product-export-sync`, `ultralove-product-stock-export`) — candidate for an audit of which are actually still in use.
-- No CSS/JS minification, combination, defer, or unused-code-removal plugin active (no Autoptimize/Perfmatters/WP Rocket-equivalent) — this is the largest single driver of the 6.4MB page weight and Lighthouse's ~4.25s "render-blocking requests" finding.
-- Elementor reports 62 animated elements on the homepage — likely theme/demo-content entrance animations left enabled, contributing to both script weight and the field CLS score of 0.26.
+Findings not yet acted on at the time of the initial audit (WordPress/application-layer, higher-impact but higher-risk — needs a deliberate follow-up rather than a same-session fix):
+- 48 active plugins (corrected count — an earlier pass in this same audit undercounted this as 46), including several with overlapping import/export functionality — see 4.7 for the plugin audit and cleanup performed the same day.
+- No CSS/JS minification, combination, defer, or unused-code-removal plugin active (no Autoptimize/Perfmatters/WP Rocket-equivalent) — this is the largest single driver of the 6.4MB page weight and Lighthouse's ~4.25s "render-blocking requests" finding. Still open.
+- Elementor reports 62 animated elements on the homepage — likely theme/demo-content entrance animations left enabled, contributing to both script weight and the field CLS score of 0.26. Still open; Elementor also controls page layout rendering site-wide, so any change here needs care and should not touch the plugin/layout engine itself, only the animation setting.
 - Redis object cache, Cloudflare, and Cloudinary are already correctly in place and not implicated in these findings — the gap is specifically plugin/theme-level asset bloat, not the caching/CDN layer covered elsewhere in this section.
 
-Recommended next phase (not yet scheduled): evaluate/install a CSS-JS optimization plugin compatible with Elementor + Martfury, audit and consolidate the import/export plugin set, and review/reduce Elementor's global entrance-animation usage.
+Recommended next phase (not yet scheduled): evaluate/install a CSS-JS optimization plugin compatible with Elementor + Martfury, and review/reduce Elementor's global entrance-animation usage.
+
+### 4.7 Import/Export Plugin Audit and Cleanup (2026-09-14)
+
+Followed up the same day on the plugin-count finding in 4.6 by auditing the active import/export plugins for overlap.
+
+Of the 10 plugins with import/export-adjacent naming, most turned out not to be redundant:
+- `wp-all-import-pro`, `wp-all-export-pro`, `woocommerce-xml-csv-product-import` (WP All Import's WooCommerce add-on), and `wpae-woocommerce-add-on` (WP All Export's WooCommerce add-on) are four parts of one Soflyy system, all required companions of each other. Confirmed actively used by the client — kept.
+- `ultralove-product-export-sync` and `ultralove-product-stock-export` are custom in-house plugins (author: UltraLove) purpose-built for CSV export automation and fast direct-DB stock export — kept.
+
+The remaining four were a separate, dormant **WebToffee** toolchain doing the same WooCommerce product/review import-export job as the Soflyy suite above:
+- `wt-import-export-for-woo` (wrapper), `wt-import-export-for-woo-product` (product add-on), `wt-import-export-for-woo-product_review` (review add-on), and `product-import-export-for-woo` (WebToffee's own separate standalone/basic edition of the same tool — a third overlapping WebToffee install).
+
+Evidence used to confirm these were safe to deactivate:
+- DB table `wp_wt_iew_action_history`: last action **2026-07-20** (~2 months before this audit).
+- DB table `wp_wt_iew_cron`: 0 rows — no active scheduled WebToffee jobs.
+- By contrast, `wp_pmxi_history` (WP All Import): last run **2026-09-10**. `wp_pmxe_exports.last_activity` (WP All Export): **2026-09-11**. Both in active, current use.
+- Checked the WebToffee plugins' front-end-facing code (`public/class-wt-import-export-for-woo-public.php`): the JS enqueue is explicitly commented out with the note *"For the time being this file is not needed as we are not doing any front end activities."* — confirms these never affected front-end page weight/performance; the value in removing them is wp-admin clutter, background PHP overhead on every request, and not keeping three stale, unpatched commercial plugins active.
+
+Action taken: deactivated (not deleted) all four WebToffee plugins via `wp plugin deactivate`. Active plugin count dropped from 48 to 44. Verified live: homepage/shop return 200, wp-admin login redirect (302) unaffected, WP All Import/Export plugins remain active, and nginx error log shows only pre-existing unrelated WooCommerce core deprecation notices (`wc_enqueue_js`), not new errors from the deactivation.
+
+Not yet done: deleting the plugin files themselves. Deactivation is fully reversible from the WordPress admin at any time; deletion should wait for a monitoring period.
 
 ## 5) Cloudflare Setup
 
@@ -290,7 +311,13 @@ Recommended next phase (not yet scheduled): evaluate/install a CSS-JS optimizati
   - cf-cache-status
   - cf-ray
 
-### 5.2 Application-Level Cloudflare Integration
+### 5.2 WAF Geo-Challenge Rule
+
+- Custom rule `Challenge outsiders` applies a Managed Challenge to non-Canadian traffic while excluding Cloudflare-verified bots:
+  - `(ip.src.country ne "CA" and not cf.client.bot)`
+- The verified-bot exclusion is required for Googlebot and other legitimate crawlers to fetch the public WordPress sitemap and indexed pages without weakening the challenge for unverified traffic.
+
+### 5.3 Application-Level Cloudflare Integration
 
 - No dedicated Cloudflare plugin confirmed as active.
 - Cloudflare Turnstile integration present via plugin code in back-in-stock-notifier-for-woocommerce.
