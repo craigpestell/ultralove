@@ -7,7 +7,12 @@ load_env "${1:?Usage: deploy/smoke-test.sh <dev|prod>}"
 fail=0
 for path in / /shop/ /my-account/ /wp-login.php; do
   body="$(mktemp)"
-  code="$(curl -s -o "$body" -w '%{http_code}' --max-time 30 "$SITE_URL$path?deploy_smoke=$RANDOM")"
+  if [[ "${SMOKE_MODE:-public}" == origin ]]; then
+    # Hit nginx on the server directly (the site itself sits behind Cloudflare Access).
+    code="$(remote "curl -s -o /tmp/ul-smoke.html -w '%{http_code}' --max-time 30 -H 'Host: ${SITE_URL#https://}' 'http://127.0.0.1$path?deploy_smoke=$RANDOM'; cat /tmp/ul-smoke.html >&2" 2>"$body")"
+  else
+    code="$(curl -s -o "$body" -w '%{http_code}' --max-time 30 "$SITE_URL$path?deploy_smoke=$RANDOM")"
+  fi
   if [[ "$code" != 200 ]]; then
     warn "$path -> HTTP $code"; fail=1
   elif grep -qiE 'critical error on this website|Fatal error|Parse error' "$body"; then
