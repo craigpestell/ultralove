@@ -1,9 +1,12 @@
 /*
 !.gitignore
-!.htaccess
 !README.md
 !/documentation/
 !/wp-content/
+!/deploy/
+!/ops/
+!/.github/
+!/.claude/
 
 /wp-content/*
 
@@ -14,23 +17,31 @@
 !/wp-content/cloudinary-sync-throttled.php
 !/wp-content/run-cloudinary-workers.sh
 
+# All MU plugins are ours except the ManageWP loader, which ManageWP regenerates.
 !/wp-content/mu-plugins/
-/wp-content/mu-plugins/*
-!/wp-content/mu-plugins/00-close-php-session-for-rest.php
+/wp-content/mu-plugins/0-worker.php
 
 !/wp-content/plugins/
 /wp-content/plugins/*
 !/wp-content/plugins/hide-price-until-login/
-!/wp-content/plugins/hide-price-until-login/**
+!/wp-content/plugins/ultralove-*/
 
 !/wp-content/themes/
 /wp-content/themes/*
 !/wp-content/themes/martfury/
-!/wp-content/themes/martfury/**
 !/wp-content/themes/martfury-child/
-!/wp-content/themes/martfury-child/**
 
+# Never commit DB dumps, backups, archives, secrets or local state.
 *.zip
-/wp-content/themes/martfury/desktop.ini
-/wp-content/themes/martfury/inc/frontend/woocommerce.php.bak
-/wp-content/themes/martfury/js/scripts.js.bak
+*.sql
+*.sql.gz
+*.bak
+*.bak-*
+*.orig
+*.swp
+.DS_Store
+desktop.ini
+.env
+/ops/**/.sync-staging/
+/ops/**/.dev-validation-passed
+/.claude/settings.local.json

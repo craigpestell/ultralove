@@ -1,0 +1,145 @@
+.ub-banner {
+	position: relative;
+	width: 100%;
+	overflow: hidden;
+	aspect-ratio: 2.4;
+	--ub-per-view: 1; /* slides shown side by side; the slide width is 100% / this */
+	cursor: grab;
+	touch-action: pan-y;
+}
+
+.ub-banner.is-dragging {
+	cursor: grabbing;
+}
+
+.ub-banner-track {
+	display: flex;
+	width: 100%;
+	height: 100%;
+	transition: transform 0.35s ease;
+	/* translateX(-50%) etc. lands on a fractional pixel whenever the track's own width is odd, and
+	   without a promoted compositor layer the browser can rasterize that sub-pixel offset with a
+	   soft/blurred edge on one side - most visible on a wide image mid-slide. will-change hints the
+	   browser to composite this layer on the GPU (translated, not re-rasterized, on every frame),
+	   which keeps it sharp regardless of the fractional offset. */
+	will-change: transform;
+	backface-visibility: hidden;
+}
+
+/* Looped banners prepend clones of the last slide(s) before the real ones (see PHP; --ub-clones
+   says how many), so the real first slide sits at track position --ub-clones, not 0. Baking that
+   starting offset into CSS - not just setting it from JS on init - means the correct slide is what
+   paints first, with no gap where the raw un-positioned flex row (starting with the clones) would
+   otherwise flash briefly. */
+.ub-banner-looped .ub-banner-track {
+	transform: translateX(calc(var(--ub-clones, 1) * -100% / var(--ub-per-view)));
+}
+
+.ub-banner-slide {
+	flex: 0 0 calc(100% / var(--ub-per-view));
+	width: calc(100% / var(--ub-per-view));
+	height: 100%;
+	display: block;
+}
+
+.ub-banner-img {
+	display: block;
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	-webkit-user-drag: none;
+	user-select: none;
+	-webkit-user-select: none;
+}
+
+/* Menu-bar (header) banner: one fixed slot shape. Slides are cropped to it in the admin; anything
+   that still doesn't match is centered in the box rather than cut off (the header behind it is already white). The theme sets
+   img:not(.lazy){height:auto}, which outranks .ub-banner-img, so the fill is restated here. */
+.ub-banner-menu-bar {
+	aspect-ratio: 728 / 90;
+}
+
+.ub-banner-menu-bar .ub-banner-img {
+	height: 100%;
+	object-fit: contain;
+}
+
+/* Home banner slides: show the whole image (contain) over a filler, so a banner that isn't exactly
+   the slot's shape is letterboxed rather than cropped. Slides already cropped to the slot shape
+   fill it exactly and look the same either way. Height is restated because the theme's
+   img:not(.lazy){height:auto} outranks .ub-banner-img. The filler is plain black by default; the
+   .ub-banner-bg-blur variant (toggled in the admin) swaps it for a blurred, enlarged copy of the
+   slide itself instead - --ub-bg is set inline per slide (PHP), only when that mode is on. */
+.ub-banner-home .ub-banner-slide {
+	position: relative;
+	overflow: hidden;
+	background: #0a0a0a;
+}
+
+.ub-banner-bg-blur .ub-banner-slide::before {
+	content: '';
+	position: absolute;
+	inset: -12%;
+	background: var(--ub-bg) center / cover no-repeat;
+	filter: blur(22px) brightness(0.92);
+}
+
+/* Aurora "combined" filler: the home banner and the #topcta block below it share ONE gradient
+   backdrop instead of each painting its own copy - there's no seam where the banner's pattern
+   meets topcta's, because it's literally the same element's background behind both.
+
+   The two are separate siblings in the page markup (Elementor top-level sections) with nothing
+   wrapping just the pair of them, so a single CSS background can't span both on its own. Instead
+   hero-combo.js measures the banner's top and topcta's bottom at runtime and sizes/positions
+   #ub-hero-combo-bg (appended to the end of <body>, see PHP) to cover exactly that range, full
+   width, behind normal page content (negative z-index). For that to show through, both the
+   banner's own slide filler and topcta's own background (below) are made transparent here.
+   Everything in this block is only active when ub_home_bg_style is 'aurora' (body.ub-hero-combo,
+   see ub_home_bg_style() / the body_class filter in ultralove-banners.php). */
+.ub-banner-bg-aurora .ub-banner-slide {
+	background: transparent;
+}
+
+body.ub-hero-combo #topcta {
+	background: transparent !important;
+}
+
+#ub-hero-combo-bg {
+	position: absolute;
+	left: 0;
+	width: 100%;
+	z-index: -1;
+	pointer-events: none;
+	background:
+		radial-gradient(ellipse 14% 20% at 65% 25%, rgba(155, 215, 225, .95) 0, rgba(120, 190, 215, .5) 50%, transparent 100%),
+		radial-gradient(ellipse 16% 14% at 80% 32%, rgba(175, 205, 235, .75) 0, transparent 100%),
+		radial-gradient(ellipse 12% 16% at 50% 8%, rgba(115, 155, 205, .65) 0, transparent 100%),
+		radial-gradient(ellipse 12% 14% at 73% 8%, rgba(60, 110, 195, .60) 0, transparent 100%),
+		radial-gradient(ellipse 12% 16% at 14% 32%, rgba(175, 105, 195, .85) 0, rgba(140, 75, 170, .4) 55%, transparent 100%),
+		radial-gradient(ellipse 10% 22% at 6% 52%, rgba(150, 70, 170, .70) 0, transparent 100%),
+		radial-gradient(ellipse 12% 20% at 29% 18%, rgba(135, 75, 175, .70) 0, transparent 100%),
+		radial-gradient(ellipse 12% 14% at 36% 3%, rgba(120, 85, 175, .55) 0, transparent 100%),
+		radial-gradient(ellipse 18% 22% at 91% 45%, rgba(85, 55, 155, .60) 0, transparent 100%),
+		radial-gradient(ellipse 8% 10% at 43% 40%, rgba(145, 85, 175, .70) 0, transparent 100%),
+		radial-gradient(ellipse 10% 14% at 48% 68%, rgba(135, 85, 175, .55) 0, transparent 100%),
+		radial-gradient(ellipse 9% 12% at 60% 63%, rgba(60, 135, 175, .50) 0, transparent 100%),
+		radial-gradient(ellipse 12% 16% at 74% 72%, rgba(95, 65, 165, .50) 0, transparent 100%),
+		radial-gradient(ellipse 12% 14% at 14% 94%, rgba(145, 85, 175, .60) 0, transparent 100%),
+		radial-gradient(ellipse 60% 70% at 40% 60%, rgba(15, 12, 55, .70) 0, transparent 100%),
+		#06060f;
+}
+
+.ub-banner-home .ub-banner-img {
+	position: relative;
+	height: 100%;
+	object-fit: contain;
+}
+
+/* Home banner: two slides side by side on wider screens, one on phones. Each slide keeps the 2.4
+   shape, so the two-up slot is twice as wide relative to its height (4.8). */
+@media (min-width: 768px) {
+	.ub-banner-home {
+		--ub-per-view: 2;
+		aspect-ratio: 4.8;
+	}
+}

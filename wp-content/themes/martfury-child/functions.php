@@ -3,91 +3,8 @@
 // Disable WordPress fuzzy redirect
 add_filter( 'do_redirect_guess_404_permalink', function () { return false; } );
 
-add_filter( 'pre_get_document_title', 'ultralove_homepage_document_title' );
-function ultralove_homepage_document_title( $title ) {
-    if ( is_front_page() ) {
-        return 'Adult Wholesale Canada | Adult Toys for Retailers | UltraLove';
-    }
-
-    return $title;
-}
-
-add_action( 'wp_head', 'ultralove_homepage_meta_description', 1 );
-function ultralove_homepage_meta_description() {
-    if ( ! is_front_page() ) {
-        return;
-    }
-
-    echo '<meta name="description" content="UltraLove is a Canadian adult wholesale distributor serving retailers with adult toys, intimate wellness products, competitive pricing, and wholesale account support.">' . "\n";
-}
-
-// Ensure Martfury mobile mode only activates on true mobile requests.
-if ( ! function_exists( 'martfury_is_mobile' ) ) {
-    function martfury_is_mobile() {
-        if ( is_admin() ) {
-            return false;
-        }
-
-        return function_exists( 'wp_is_mobile' ) ? (bool) wp_is_mobile() : false;
-    }
-}
-
-// Remove breadcrumb from catalog/taxonomy archive page headers (brand, category, tag, etc.)
-add_filter( 'martfury_get_page_header', function ( $page_header ) {
-    if ( is_array( $page_header ) && function_exists( 'martfury_is_catalog' ) && martfury_is_catalog() && ! wp_is_mobile() ) {
-		$key = array_search( 'breadcrumb', $page_header );
-		if ( $key !== false ) {
-			unset( $page_header[ $key ] );
-		}
-	}
-	return $page_header;
-} );
-
 // Hide updates for all users except AtmLogin
 add_filter( 'hide_updates_allowed_users', function () { return [ 'AtmLogin' ]; } );
-
-// Force server-rendered catalog interactions in child theme without editing parent files.
-add_filter( 'martfury_get_option', 'ultralove_force_catalog_ssr_options', 20, 2 );
-function ultralove_force_catalog_ssr_options( $value, $name ) {
-    if ( 'catalog_ajax_filter' === $name ) {
-        return 0;
-    }
-
-    if ( 'catalog_nav_type' === $name ) {
-        return 'numbered';
-    }
-
-    return $value;
-}
-
-// Force SSR for Martfury Elementor product widgets on homepage.
-add_action( 'elementor/widget/before_render_content', 'ultralove_force_elementor_product_widgets_ssr', 5 );
-function ultralove_force_elementor_product_widgets_ssr( $widget ) {
-    if ( is_admin() || ! is_front_page() ) {
-        return;
-    }
-
-    if ( ! is_object( $widget ) || ! method_exists( $widget, 'get_name' ) || ! method_exists( $widget, 'set_settings' ) ) {
-        return;
-    }
-
-    $widget_name = $widget->get_name();
-    $target_widgets = array(
-        'martfury-products-grid',
-        'martfury-products-carousel',
-        'martfury-product-tabs-grid',
-        'martfury-product-tabs-carousel',
-        'martfury-products-of-category',
-        'martfury-products-of-category-2',
-    );
-
-    if ( ! in_array( $widget_name, $target_widgets, true ) ) {
-        return;
-    }
-
-    // These widgets render a spinner + wc-ajax request when lazy_loading is "yes".
-    $widget->set_settings( 'lazy_loading', 'no' );
-}
 
 add_action( 'wp_enqueue_scripts', 'martfury_child_enqueue_scripts', 20 );
 function martfury_child_enqueue_scripts() {
@@ -423,7 +340,7 @@ function ultralove_export_products_to_csv( $format = 'default' ) {
 		'Title',
 		'Content',
 		'Excerpt',
-		'Price',
+		'Regular Price',
 		'Sale Price',
 		'Stock',
 		'Image URL',
@@ -474,11 +391,12 @@ function ultralove_export_products_to_csv( $format = 'default' ) {
 					implode(', ', wp_get_post_terms($product->get_id(), 'product_brand', ['fields' => 'names'])), // Brands
 					get_post_meta( $variation->get_id(), 'hwp_product_gtin', true ), // UPC
 				];
-				
+
 				if ( $format === 'shopify') array_push($line, "draft");
-				
+				else array_splice($line, 4, 1, [ $variation->get_regular_price() ]); // Replace active Price with Regular Price
+
                 fputcsv( $csv_file, $line );
-				
+
 				// TODO: include shopify gallery rows. Skipped because there are no variation products
             }
         } else {
@@ -498,9 +416,10 @@ function ultralove_export_products_to_csv( $format = 'default' ) {
             ];
 			
 			if ( $format === 'shopify') array_push($line, "draft");
-			
+			else array_splice($line, 4, 1, [ $product->get_regular_price() ]); // Replace active Price with Regular Price
+
             fputcsv( $csv_file, $line );
-			
+
             if ($format === 'shopify') {
                 $gallery_image_ids = $product->get_gallery_image_ids();
 
@@ -579,7 +498,7 @@ function ultralove_export_page_callback() {
  * Cloudinary URL overrides are opt-in.
  * Keep disabled by default to avoid broken storefront images if Cloudinary assets are missing.
  */
-if ( get_option( 'ultralove_enable_cloudinary_overrides', 'no' ) === 'yes' && ! is_admin() ) {
+if ( get_option( 'ultralove_enable_cloudinary_overrides', 'no' ) === 'yes' ) {
     add_filter('wp_get_attachment_image_src', 'ultralove_use_cloudinary_urls', 10, 4);
 }
 function ultralove_use_cloudinary_urls($image, $attachment_id, $size, $icon) {
@@ -648,7 +567,7 @@ function ultralove_use_cloudinary_urls($image, $attachment_id, $size, $icon) {
 /**
  * Filter wp_get_attachment_url to use Cloudinary URLs for synced images.
  */
-if ( get_option( 'ultralove_enable_cloudinary_overrides', 'no' ) === 'yes' && ! is_admin() ) {
+if ( get_option( 'ultralove_enable_cloudinary_overrides', 'no' ) === 'yes' ) {
     add_filter('wp_get_attachment_url', 'ultralove_use_cloudinary_url', 10, 2);
 }
 function ultralove_use_cloudinary_url($url, $attachment_id) {
@@ -671,7 +590,7 @@ function ultralove_use_cloudinary_url($url, $attachment_id) {
 /**
  * Filter martfury_get_option to convert theme option image URLs to Cloudinary.
  */
-if ( get_option( 'ultralove_enable_cloudinary_overrides', 'no' ) === 'yes' && ! is_admin() ) {
+if ( get_option( 'ultralove_enable_cloudinary_overrides', 'no' ) === 'yes' ) {
     add_filter('martfury_get_option', 'ultralove_cloudinary_theme_option_images', 10, 2);
 }
 function ultralove_cloudinary_theme_option_images($value, $option_name) {
@@ -729,10 +648,9 @@ function ultralove_cloudinary_theme_option_images($value, $option_name) {
 /**
  * Filter option values that contain image URLs.
  */
-if ( get_option( 'ultralove_enable_cloudinary_overrides', 'no' ) === 'yes' && ! is_admin() ) {
+if ( get_option( 'ultralove_enable_cloudinary_overrides', 'no' ) === 'yes' ) {
     add_filter('option_martfury', 'ultralove_cloudinary_option_array_images', 10, 1);
 }
-
 function ultralove_cloudinary_option_array_images($option_array) {
     if (!is_array($option_array)) {
         return $option_array;
@@ -763,7 +681,7 @@ function ultralove_convert_url_to_cloudinary($url) {
     if (empty($url) || !is_string($url) || strpos($url, 'wp-content/uploads/') === false) {
         return $url;
     }
-
+    
     // Extract the file path from the URL
     if (preg_match('/wp-content\/uploads\/(.+)$/', $url, $matches)) {
         $file_path = $matches[1];
@@ -795,56 +713,6 @@ function ultralove_convert_url_to_cloudinary($url) {
     }
     
     return $url;
-}
-
-/**
- * Rewrite Revolution Slider media URLs to Cloudinary when attachment mapping exists.
- *
- * This keeps global attachment overrides disabled while covering slider attributes
- * like data-lazyload/data-thumb that Cloudinary's generic tag parser does not rewrite.
- */
-add_filter( 'do_shortcode_tag', 'ultralove_rewrite_revslider_to_cloudinary', 20, 4 );
-
-function ultralove_rewrite_revslider_to_cloudinary( $output, $tag, $attr, $m ) {
-    if ( 'rev_slider' !== $tag || empty( $output ) || ! is_string( $output ) ) {
-        return $output;
-    }
-
-    if ( false === strpos( $output, 'wp-content/uploads/' ) ) {
-        return $output;
-    }
-
-    $pattern = "#(?:https?:)?//[^\"'\\s>]+/wp-content/uploads/[^\"'\\s>]+\\.(?:jpg|jpeg|png|webp|gif)#i";
-
-    if ( ! preg_match_all( $pattern, $output, $matches ) || empty( $matches[0] ) ) {
-        return $output;
-    }
-
-    $replacements = array();
-    foreach ( array_unique( $matches[0] ) as $found_url ) {
-        $normalized = $found_url;
-        if ( 0 === strpos( $normalized, '//' ) ) {
-            $normalized = 'https:' . $normalized;
-        }
-
-        $attachment_id = attachment_url_to_postid( $normalized );
-        if ( empty( $attachment_id ) ) {
-            continue;
-        }
-
-        $cloudinary_meta = get_post_meta( $attachment_id, '_cloudinary', true );
-        if ( empty( $cloudinary_meta ) || ! is_array( $cloudinary_meta ) || empty( $cloudinary_meta['_cloudinary_url'] ) ) {
-            continue;
-        }
-
-        $replacements[ $found_url ] = $cloudinary_meta['_cloudinary_url'];
-    }
-
-    if ( empty( $replacements ) ) {
-        return $output;
-    }
-
-    return strtr( $output, $replacements );
 }
 
 

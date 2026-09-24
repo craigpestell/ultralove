@@ -1,0 +1,7 @@
+.ub-ac { position: relative; display: block; }
+.ub-ac-list { position: absolute; z-index: 10000; left: 0; right: 0; top: 100%; margin: 2px 0 0; padding: 0; list-style: none; max-height: 280px; overflow-y: auto; background: #fff; border: 1px solid #8c8f94; border-radius: 3px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); }
+.ub-ac-list li { margin: 0; padding: 7px 10px; cursor: pointer; border-bottom: 1px solid #f0f0f1; line-height: 1.35; }
+.ub-ac-list li:last-child { border-bottom: 0; }
+.ub-ac-list li:hover, .ub-ac-list li.is-active { background: #f0f6fc; }
+.ub-ac-title { display: block; font-weight: 600; }
+.ub-ac-meta { display: block; color: #646970; font-size: 12px; word-break: break-all; }
