@@ -1,44 +1,62 @@
 # Ultralove Website Repository
 
-This repository tracks the site-specific code and operational scripts for the Ultralove WordPress installation in `/var/www/html`.
+Source of truth for the custom code running on the Ultralove WordPress/WooCommerce
+site: **ultralove.ca** (prod) and **dev.ultralove.ca** (dev). `main` is what's live on prod.
 
-## What This Repository Contains
+## Layout
 
-- `wp-content/themes/martfury/`: tracked parent theme source.
-- `wp-content/themes/martfury-child/`: tracked child theme customizations.
-- `wp-content/plugins/hide-price-until-login/`: tracked custom plugin code.
-- `wp-content/mu-plugins/00-close-php-session-for-rest.php`: tracked MU plugin.
-- `wp-content/object-cache.php`: Redis object cache drop-in.
-- `wp-content/cloudinary-*.php`: Cloudinary maintenance and recovery scripts.
-- `wp-content/run-cloudinary-workers.sh`: helper to run Cloudinary sync workers.
-- `.htaccess`: web-server rewrite and cache directives as deployed on this host.
+| Path | What |
+| --- | --- |
+| `wp-content/themes/martfury/` | Parent theme (vendor, with local fixes) |
+| `wp-content/themes/martfury-child/` | Child theme customizations |
+| `wp-content/plugins/hide-price-until-login/` | Custom plugin |
+| `wp-content/plugins/ultralove-*/` | Custom plugins (banners, product export/stock export) |
+| `wp-content/mu-plugins/` | Custom MU plugins (ManageWP's `0-worker.php` excluded) |
+| `wp-content/object-cache.php`, `cloudinary-*.php`, `run-cloudinary-workers.sh` | Redis drop-in and Cloudinary maintenance scripts |
+| `deploy/` | Deploy pipeline (see below) |
+| `ops/nginx/` | Reference copy of prod nginx config (not auto-deployed) |
+| `ops/do-migration/` | DigitalOcean provisioning/migration scripts (`.env` not tracked) |
+| `documentation/` | Architecture and work log |
+| `.claude/skills/ultralove-deploy/` | Claude Code skill describing the deploy workflow |
+| `.github/skills/ultralove-infrastructure/` | Infrastructure operations runbook |
 
-## What Is Intentionally Not Tracked
+Not tracked: WordPress core, vendor plugins, `wp-config.php`, uploads, caches, DB dumps,
+backups. `.gitignore` is an allowlist; new custom code must be added there **and** to
+`deploy/owned-paths.rules`.
 
-- WordPress core files.
-- `wp-config.php` and other secret-bearing configuration.
-- `wp-content/uploads/`, cache directories, backup directories, and generated exports.
-- Plugin ZIP archives and backup artifacts.
+## Deploying
 
-The root `.gitignore` uses an allowlist approach, so only approved files and directories are versioned.
-
-## Working Model
-
-This repository reflects the live site codebase on the server. Make changes carefully and review diffs before committing.
-
-Common workflow:
+Requires GNU rsync (`brew install rsync`) and SSH access to `ultralove-prod-app` /
+`ultralove-dev-app`.
 
 ```bash
-cd /var/www/html
-git status
-git add <paths>
-git commit -m "Describe change"
-git push origin main
+# 1. PR → CI (PHP 8.3 lint, shellcheck, no dumps/archives). Try it on dev:
+deploy/deploy.sh dev --ref my-branch --dry-run
+deploy/deploy.sh dev --ref my-branch
+
+# 2. After verifying on dev: merge, then ship main to dev and prod
+git checkout main && git pull
+deploy/deploy.sh dev
+deploy/deploy.sh prod        # refuses SHAs not on origin/main or not live on dev
 ```
+
+Every deploy: drift check (stops if the server was edited outside git), server-side
+`php -l` on changed files, tarball backup, mirror of owned paths, php-fpm restart when
+PHP changed, smoke test. State lives in `/var/lib/ultralove-deploy/` on each server.
+
+| Script | Purpose |
+| --- | --- |
+| `deploy/deploy.sh <env>` | Deploy a commit (`--ref`, `--dry-run`, `--yes`, `--adopt`, `--skip-dev-gate`) |
+| `deploy/pull-live.sh <env>` | Copy live owned files into the working tree to commit server-side drift |
+| `deploy/rollback.sh <env> [backup]` | Restore the latest (or given) pre-deploy backup |
+| `deploy/smoke-test.sh <env>` | HTTP smoke test of key pages |
+
+Never edit files directly on the servers. If it happens anyway, the next deploy stops
+on drift; run `deploy/pull-live.sh` and commit it.
 
 ## Notes
 
-- The primary application is WordPress.
-- The active customizations are centered around the `martfury` theme stack and the `hide-price-until-login` plugin.
-- If additional custom plugins or MU plugins should be versioned later, update `.gitignore` first so tracking stays deliberate.
-- If Elementor styling appears different for guests vs logged-in users, check for stale generated CSS in `wp-content/uploads/elementor/css/` before tracing theme/plugin logic. The verified fix here was `Elementor Plugin -> Tools -> Elementor Cache -> Clear Files & Data`, followed by cache/CDN purge if needed.
+- If Elementor styling differs for guests vs logged-in users, check for stale generated CSS
+  in `wp-content/uploads/elementor/css/` (fix: Elementor → Tools → Clear Files & Data, then
+  purge caches).
+- PHP-FPM opcache on prod doesn't revalidate timestamps; deploy.sh restarts FPM on PHP changes.

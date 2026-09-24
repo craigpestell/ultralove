@@ -148,6 +148,10 @@ Template: martfury
     letter-spacing: -1px!important
 }
 
+.mf-product-deals-day .cart button.add_to_cart_button,.mf-products-grid .mf-product-price-box button.add_to_cart_button,.mf-shop-content .cart button.add_to_cart_button {
+    color: #fff!important
+}
+
 .mf-products-grid .quantity .qty {
     width: 22px;
     font-size: 13px!important
@@ -235,7 +239,7 @@ Template: martfury
     width: 39%!important
 }
 
-.cart-collaterals .row div:first-of-type {
+.cart-collaterals .row > div:first-of-type {
     width: 20%!important
 }
 
@@ -442,7 +446,10 @@ h1,h2,h3,h4 {
 }
 
 #bottomcta,#topcta,.page-header-page .entry-title {
-    color: #fff!important;
+    color: #fff!important
+}
+
+#topcta,.page-header-page .entry-title {
     background: url(https://ultralove.ca/wp-content/uploads/2021/07/bg.jpg);
     background-size: cover
 }
@@ -457,9 +464,128 @@ h1,h2,h3,h4 {
     padding-bottom: 45px
 }
 
+/* Divider between the View Products/Wholesale Signup buttons and the footer columns below - same
+   spot #bottomcta and the footer used to visibly separate before they shared #hero-footer-combo's
+   one continuous background. Matches the divider further down between the footer columns and the
+   copyright line (.footer-widgets:after) in both color and rendered width (that one is inset
+   15px within a 1200px-wide .footer-widgets, i.e. 1170px; #bottomcta has no such container to
+   inset within since it's full-bleed, so max-width:1170px + auto margins is used instead to land
+   on the same size). Implemented on #bottomcta:after below, which used to hold the old
+   shadow.png transition graphic this divider replaces. */
+#bottomcta {
+    position: relative
+}
+
+/* Pure-CSS replacement for bg.jpg (blurred purple/teal aurora on near-black) on the home CTA blocks.
+   #bottomcta no longer paints its own copy - it and the site footer share one #hero-footer-combo
+   wrapper (see footer.php) with a single copy of this same gradient below, so the two read as one
+   continuous backdrop instead of two independent copies with a seam between them. */
+#topcta {
+    background:
+        radial-gradient(ellipse 14% 20% at 65% 25%, rgba(155, 215, 225, .95) 0, rgba(120, 190, 215, .5) 50%, transparent 100%),
+        radial-gradient(ellipse 16% 14% at 80% 32%, rgba(175, 205, 235, .75) 0, transparent 100%),
+        radial-gradient(ellipse 12% 16% at 50% 8%, rgba(115, 155, 205, .65) 0, transparent 100%),
+        radial-gradient(ellipse 12% 14% at 73% 8%, rgba(60, 110, 195, .60) 0, transparent 100%),
+        radial-gradient(ellipse 12% 16% at 14% 32%, rgba(175, 105, 195, .85) 0, rgba(140, 75, 170, .4) 55%, transparent 100%),
+        radial-gradient(ellipse 10% 22% at 6% 52%, rgba(150, 70, 170, .70) 0, transparent 100%),
+        radial-gradient(ellipse 12% 20% at 29% 18%, rgba(135, 75, 175, .70) 0, transparent 100%),
+        radial-gradient(ellipse 12% 14% at 36% 3%, rgba(120, 85, 175, .55) 0, transparent 100%),
+        radial-gradient(ellipse 18% 22% at 91% 45%, rgba(85, 55, 155, .60) 0, transparent 100%),
+        radial-gradient(ellipse 8% 10% at 43% 40%, rgba(145, 85, 175, .70) 0, transparent 100%),
+        radial-gradient(ellipse 10% 14% at 48% 68%, rgba(135, 85, 175, .55) 0, transparent 100%),
+        radial-gradient(ellipse 9% 12% at 60% 63%, rgba(60, 135, 175, .50) 0, transparent 100%),
+        radial-gradient(ellipse 12% 16% at 74% 72%, rgba(95, 65, 165, .50) 0, transparent 100%),
+        radial-gradient(ellipse 12% 14% at 14% 94%, rgba(145, 85, 175, .60) 0, transparent 100%),
+        radial-gradient(ellipse 60% 70% at 40% 60%, rgba(15, 12, 55, .70) 0, transparent 100%),
+        #06060f!important
+}
+
+#hero-footer-combo {
+    background:
+        radial-gradient(ellipse 14% 20% at 65% 25%, rgba(155, 215, 225, .95) 0, rgba(120, 190, 215, .5) 50%, transparent 100%),
+        radial-gradient(ellipse 16% 14% at 80% 32%, rgba(175, 205, 235, .75) 0, transparent 100%),
+        radial-gradient(ellipse 12% 16% at 50% 8%, rgba(115, 155, 205, .65) 0, transparent 100%),
+        radial-gradient(ellipse 12% 14% at 73% 8%, rgba(60, 110, 195, .60) 0, transparent 100%),
+        radial-gradient(ellipse 12% 16% at 14% 32%, rgba(175, 105, 195, .85) 0, rgba(140, 75, 170, .4) 55%, transparent 100%),
+        radial-gradient(ellipse 10% 22% at 6% 52%, rgba(150, 70, 170, .70) 0, transparent 100%),
+        radial-gradient(ellipse 12% 20% at 29% 18%, rgba(135, 75, 175, .70) 0, transparent 100%),
+        radial-gradient(ellipse 12% 14% at 36% 3%, rgba(120, 85, 175, .55) 0, transparent 100%),
+        radial-gradient(ellipse 18% 22% at 91% 45%, rgba(85, 55, 155, .60) 0, transparent 100%),
+        radial-gradient(ellipse 8% 10% at 43% 40%, rgba(145, 85, 175, .70) 0, transparent 100%),
+        radial-gradient(ellipse 10% 14% at 48% 68%, rgba(135, 85, 175, .55) 0, transparent 100%),
+        radial-gradient(ellipse 9% 12% at 60% 63%, rgba(60, 135, 175, .50) 0, transparent 100%),
+        radial-gradient(ellipse 12% 16% at 74% 72%, rgba(95, 65, 165, .50) 0, transparent 100%),
+        radial-gradient(ellipse 12% 14% at 14% 94%, rgba(145, 85, 175, .60) 0, transparent 100%),
+        radial-gradient(ellipse 60% 70% at 40% 60%, rgba(15, 12, 55, .70) 0, transparent 100%),
+        #06060f
+}
+
+/* .footer-layout's own bg.jpg (and #bottomcta:after, the shadow strip that used to mark the
+   transition into it) are no longer needed - #hero-footer-combo now supplies one continuous
+   background behind both. */
+.site-footer .footer-layout {
+    background: none!important
+}
+
+#bottomcta:after {
+    content: "";
+    display: block;
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    width: 100%;
+    height: 0;
+    max-width: 1170px;
+    margin: 0;
+    transform: translateX(-50%);
+    background: none;
+    border-bottom: 1px solid #825ba5
+}
+
 #bottomcta h2,#topcta h2 {
     color: #fff!important;
     margin-top: 0!important
+}
+
+#topcta h1 {
+    display: inline-block;
+    color: #fff!important;
+    background: rgba(0,0,0,.52);
+    border-radius: 999px;
+    padding: 10px 28px;
+    margin: 0 15px 18px!important;
+    line-height: 1.2;
+    box-shadow: 0 6px 18px rgba(0,0,0,.18)
+}
+
+#topcta p {
+    display: block;
+    width: fit-content;
+    max-width: calc(100% - 30px);
+    color: #fff!important;
+    background: rgba(0,0,0,.38);
+    border-radius: 8px;
+    padding: 10px 18px;
+    margin: 0 auto 32px!important;
+    line-height: 1.5;
+    box-shadow: 0 6px 18px rgba(0,0,0,.14)
+}
+
+.page-id-14 .elementor-element-28ad42c {
+    margin-bottom: 32px!important
+}
+
+@media (max-width:678px) {
+    #topcta h1 {
+        padding: 8px 18px;
+        margin-left: 10px!important;
+        margin-right: 10px!important
+    }
+
+    #topcta p {
+        padding: 9px 14px;
+        margin: 0 10px 24px!important
+    }
 }
 
 #bottomcta a,#topcta a {
@@ -506,7 +632,7 @@ h1,h2,h3,h4 {
 }
 
 .site-footer .footer-widgets .footer-sidebar {
-    max-width: 25%!important
+    max-width: 32%!important
 }
 
 @media (max-width:1200px) {
@@ -553,4 +679,195 @@ h1,h2,h3,h4 {
     .nav li {
         padding: 10px 11px!important
     }
+}
+
+#footer-links {
+    border-bottom-color: #825ba5
+}
+
+#footer-links .widget-title {
+    display: none
+}
+
+#footer-links .widget_nav_menu {
+    text-align: center;
+}
+
+#footer-links .widget_nav_menu ul {
+    display: flex;
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+}
+
+#footer-links .widget_nav_menu ul li {
+    margin: 0;
+}
+
+#footer-links .widget_nav_menu ul li:after {
+    display: none
+}
+
+#footer-links .widget_nav_menu ul li a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 6px 14px;
+    color: #fff!important;
+    text-decoration: none!important;
+    background: rgba(255,255,255,.12);
+    border: 1px solid rgba(255,255,255,.35);
+    border-radius: 999px;
+    transition: background-color .2s ease, border-color .2s ease, transform .2s ease;
+}
+
+#footer-links .widget_nav_menu ul li a:before {
+    display: none!important;
+    content: none!important;
+}
+
+#footer-links .widget_nav_menu ul li a:hover,
+#footer-links .widget_nav_menu ul li a:focus {
+    color: #fff!important;
+    text-decoration: none!important;
+    background: rgba(255,86,121,.32);
+    border-color: #ff5679;
+    transform: translateY(-1px);
+}
+
+/* Footer widget cards (About Ultra Love / Become A Wholesale Buyer / Email Us): the same pill
+   badge + semi-transparent rounded card treatment used on #topcta, so headings, body text, the
+   "Learn More"/"Register" buttons and the contact form all stay readable over the footer's own
+   photographic background. The Learn More/Register buttons live in the same text widget as their
+   paragraphs now (see the About Ultra Love/Become A Wholesale Buyer widget text), so they share
+   this one card instead of a second. */
+.site-footer .footer-widgets .widget-title {
+    display: block;
+    width: fit-content;
+    color: #fff!important;
+    background: rgba(0,0,0,.52);
+    border-radius: 999px;
+    padding: 8px 22px;
+    margin: 0 auto 16px!important;
+    line-height: 1.2;
+    box-shadow: 0 6px 18px rgba(0,0,0,.18)
+}
+
+.site-footer .footer-widgets .textwidget,
+.site-footer .footer-widgets .gform_wrapper {
+    display: block;
+    color: #fff!important;
+    background: rgba(0,0,0,.38);
+    border-radius: 10px;
+    padding: 16px 18px;
+    box-shadow: 0 6px 18px rgba(0,0,0,.14)
+}
+
+/* Gravity Forms makes .gform_footer a flex container by default, so text-align doesn't move its
+   child - justify-content is what actually left-aligns the Send Message button. The margin-top
+   override (beating #gform_1 .gform_footer's own 19px!important above) matches the 16px gap
+   already used between every other field. padding-bottom:0 removes gravity-theme's own bottom
+   padding on this element, and #gform_submit_button_1's own margin-bottom:0 removes the button's
+   own default 8px - between them the two were stacking with the card's own padding into a bigger
+   gap below the button than the matching 16px gap above the first field. */
+.site-footer .footer-widgets #gform_submit_button_1 {
+    margin-bottom: 0!important
+}
+
+.site-footer .footer-widgets #gform_1 .gform_footer {
+    display: flex;
+    justify-content: flex-start;
+    margin-top: 16px!important;
+    padding-bottom: 0!important
+}
+
+@media (max-width:678px) {
+    .site-footer .footer-widgets .widget-title {
+        padding: 7px 16px
+    }
+
+    .site-footer .footer-widgets .textwidget,
+    .site-footer .footer-widgets .gform_wrapper {
+        padding: 14px
+    }
+}
+
+/* "Ordering wholesale products has never been easier." in the same pill treatment as #topcta h1.
+   display:block (not inline-block) puts it on its own line above the View Products/Wholesale
+   Signup buttons instead of sharing a row with them; width:fit-content + margin:auto keeps it
+   centered as a pill rather than stretching full width. */
+#bottomcta h2 {
+    display: block;
+    width: fit-content;
+    background: rgba(0,0,0,.52);
+    border-radius: 999px;
+    padding: 10px 28px;
+    margin: 0 auto 18px!important;
+    line-height: 1.2;
+    box-shadow: 0 6px 18px rgba(0,0,0,.18)
+}
+
+/* Copyright line in the same pill treatment as the rest of the footer/#topcta. block + fit-content
+   + auto margins (rather than inline-block) keeps it centered regardless of its parent column's
+   own text-align, since .footer-copyright itself is the text node being pilled, not a wrapper. */
+.footer-copyright {
+    display: block;
+    width: fit-content;
+    background: rgba(0,0,0,.52);
+    border-radius: 999px;
+    padding: 8px 22px;
+    margin: 0 auto!important;
+    box-shadow: 0 6px 18px rgba(0,0,0,.18)
+}
+
+/* Header layout used when the ultralove-banners plugin is active (the .header-main-row wrapper only
+   exists in that case - see template-parts/headers/layout-1.php). With the plugin off, the theme's
+   original RevSlider header markup is used and none of this applies. */
+.header-main-row {
+    display: flex;
+    align-items: center;
+}
+
+.header-main-row .header-main {
+    float: none;
+    padding-left: 20px;
+}
+
+.header-main-row .sideslidertop {
+    min-height: 0;
+    text-align: initial;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    margin-left: auto;
+}
+
+@media (max-width:992px) {
+    .header-main-row {
+        display: block;
+    }
+}
+
+/*
+ * Elementor's "Stretch Section" setting (used on the header banner/topcta section and the
+ * product-thumbnails section) computes its full-width margin/width in JavaScript at runtime -
+ * there's no static CSS for it at all, so on first paint those sections sit at their default,
+ * theme-container-constrained width (visible left/right margins) until Elementor's frontend JS
+ * loads and injects an inline style. That flash also delays the reported LCP for anything inside
+ * one of these sections, since the element's later JS-driven resize registers as a new, much
+ * later paint candidate. This replaces the JS computation with the standard CSS-only full-bleed
+ * technique so the correct width is there on the very first paint - no JS dependency, no flash.
+ * !important wins even if Elementor's JS still runs afterwards and sets its own inline style.
+ */
+html, body {
+    overflow-x: hidden;
+}
+
+.elementor-section-stretched {
+    width: 100vw !important;
+    margin-left: calc(50% - 50vw) !important;
+    left: 0 !important;
 }

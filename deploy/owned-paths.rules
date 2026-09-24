@@ -1,0 +1,30 @@
+# rsync filter rules, relative to wp-content/.
+#
+# These are the paths this repository owns on the servers. deploy.sh mirrors
+# them exactly (including deletes); everything else under wp-content/
+# (uploads, vendor plugins, caches, updraft, ...) is never touched.
+#
+# To start tracking a new custom plugin/theme: add it to .gitignore AND here.
+
+# ManageWP regenerates its loader inside mu-plugins; never delete or overwrite it.
+P /mu-plugins/0-worker.php
+- /mu-plugins/0-worker.php
+
++ /object-cache.php
++ /cloudinary-audit.php
++ /cloudinary-audit-v2.php
++ /cloudinary-sync-recover-safe.php
++ /cloudinary-sync-throttled.php
++ /run-cloudinary-workers.sh
+
++ /mu-plugins/***
+
++ /plugins/
++ /plugins/hide-price-until-login/***
++ /plugins/ultralove-*/***
+
++ /themes/
++ /themes/martfury/***
++ /themes/martfury-child/***
+
+- *

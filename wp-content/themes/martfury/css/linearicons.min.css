@@ -1,7 +1,7 @@
 @font-face {
 	font-family: 'Linearicons';
-	src: url('../fonts/Linearicons.woff?fgpewa') format('woff'),
-	url('../fonts/Linearicons.svg?fgpewa#Linearicons') format('svg');
+	src: url('../fonts/Linearicons.woff2') format('woff2'),
+	url('../fonts/Linearicons.woff?fgpewa') format('woff');
 	font-weight: normal;
 	font-style: normal;
 	font-display: swap;

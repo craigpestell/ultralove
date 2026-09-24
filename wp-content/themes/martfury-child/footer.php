@@ -12,6 +12,7 @@
 </div><!-- #content -->
 <?php do_action( 'martfury_before_footer' ) ?>
 
+<div id="hero-footer-combo">
 <div id="bottomcta">
 <h2>
 		Ordering wholesale products has never been easier.</h2> <a href="/shop/"> View Products </a> <a href="/become-a-retailer/">Wholesale Signup </a>
@@ -24,6 +25,11 @@
     </footer><!-- #colophon -->
 	<?php do_action( 'martfury_after_footer' ) ?>
 <?php } ?>
+</div><!-- #hero-footer-combo -->
+<?php // #hero-footer-combo wraps #bottomcta and the site footer in one shared box so the
+      // aurora gradient below (see style.css) paints behind both with no seam between them -
+      // the same technique used for the home banner + #topcta, but here as a real DOM wrapper
+      // (both pieces are plain theme template output, so no JS-measured backdrop is needed). ?>
 </div><!-- #page -->
 <?php if( is_checkout() ) :?>
 	<script>
