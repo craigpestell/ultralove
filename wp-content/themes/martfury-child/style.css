@@ -871,3 +871,16 @@ html, body {
     margin-left: calc(50% - 50vw) !important;
     left: 0 !important;
 }
+
+/*
+ * Text on the brand pink (--mf-background-primary-color, #b3094b) must be white.
+ * Martfury's default --mf-background-primary-text-color is #000, chosen for its default
+ * yellow scheme; on our pink that's 3.1:1 contrast (fails WCAG AA) vs 6.9:1 for white.
+ * The theme uses this variable for every "text on primary background" element: WooCommerce
+ * and .btn buttons, pagination, add-to-cart links, header counters, and the active
+ * My Account navigation item. `html body` outranks the parent's `body` rule regardless of
+ * stylesheet order.
+ */
+html body {
+    --mf-background-primary-text-color: #fff;
+}
