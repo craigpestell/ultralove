@@ -8,11 +8,15 @@
 set -euo pipefail
 : "${DEV_DOMAIN:?}" "${PROD_DOMAIN:?}" "${WP_ROOT:?}" "${PHP_VERSION:?}" "${DB_NAME:?}" "${DB_USER:?}" "${WP_ACCESSIBLE_HOSTS:?}"
 TABLE_PREFIX="${TABLE_PREFIX:-wp_}"
-export DEBIAN_FRONTEND=noninteractive
+export DEBIAN_FRONTEND=noninteractive NEEDRESTART_MODE=a NEEDRESTART_SUSPEND=1
 log() { printf '\033[1;34m[bootstrap]\033[0m %s\n' "$*"; }
 PHP="php${PHP_VERSION}"
 
 # --- Packages -----------------------------------------------------------------
+log "Waiting for first-boot setup (cloud-init / apt) to finish"
+cloud-init status --wait >/dev/null 2>&1 || true
+APT_LOCK=(-o DPkg::Lock::Timeout=600)
+apt-get() { command apt-get "${APT_LOCK[@]}" "$@"; }
 log "Installing packages"
 apt-get update -qq
 apt-get upgrade -y -qq
@@ -41,7 +45,7 @@ PasswordAuthentication no
 KbdInteractiveAuthentication no
 PermitRootLogin prohibit-password
 EOF
-systemctl reload ssh
+sshd -t && { systemctl reload ssh 2>/dev/null || true; }
 ufw --force default deny incoming >/dev/null
 ufw --force default allow outgoing >/dev/null
 ufw allow OpenSSH >/dev/null
@@ -125,7 +129,7 @@ EOF
 ln -sf /etc/nginx/sites-available/ultralove-dev.conf /etc/nginx/sites-enabled/ultralove-dev.conf
 rm -f /etc/nginx/sites-enabled/default
 sed -i 's/^\(\s*\)listen \[::\]:80 default_server;/\1# &/' /etc/nginx/sites-available/default 2>/dev/null || true
-nginx -t && systemctl reload nginx
+nginx -t && systemctl restart nginx
 
 # --- wp-config.php (dev-only; never copied from prod) ----------------------------
 if [[ ! -f "$WP_ROOT/wp-config.php" ]]; then

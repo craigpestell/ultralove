@@ -24,18 +24,20 @@ DEV_CNF=/root/.ultralove-dev-db.cnf
 log "Recreating dev database $DB_NAME"
 ssh "$DEV_HOST_ALIAS" "mysql -e 'DROP DATABASE IF EXISTS \`$DB_NAME\`; CREATE DATABASE \`$DB_NAME\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;'"
 
-log "Streaming production DB into dev (this takes a few minutes)"
+DEV_IP="$(ssh -G "$DEV_HOST_ALIAS" | awk '/^hostname /{print $2}')"
+PUSH_SSH="ssh -i $PUSH_KEY -o UserKnownHostsFile=$PUSH_KNOWN_HOSTS -o StrictHostKeyChecking=yes -o BatchMode=yes root@$DEV_IP"
+log "Streaming production DB straight into dev ($DEV_IP); nothing passes through this machine"
 START=$SECONDS
 # mysqldump directly (wp db export mangles --no-* flags). Credentials are read
-# from prod's wp-config into env vars on prod and never printed or sent here.
+# from prod's wp-config into env vars on prod and never printed or sent anywhere.
 # shellcheck disable=SC2016
 ssh "$PROD_HOST" 'set -euo pipefail; cd '"$WP_ROOT"'; W="wp --allow-root --skip-plugins --skip-themes";
   HP="$($W config get DB_HOST)"; DB="$($W config get DB_NAME)"; U="$($W config get DB_USER)";
   CA="$($W config get MYSQL_SSL_CA 2>/dev/null || true)"; export MYSQL_PWD="$($W config get DB_PASSWORD)";
   IGN=""; for t in woocommerce_sessions wffilemods wfknownfilelist; do IGN="$IGN --ignore-table=$DB.'"$PREFIX"'$t"; done;
   mysqldump -h "${HP%%:*}" -P "${HP##*:}" -u "$U" ${CA:+--ssl-ca="$CA"} --ssl-mode=REQUIRED \
-    --single-transaction --quick --no-tablespaces --set-gtid-purged=OFF --default-character-set=utf8mb4 $IGN "$DB" | gzip -1' \
-  | ssh "$DEV_HOST_ALIAS" "gunzip | mysql --defaults-extra-file=$DEV_CNF"
+    --single-transaction --quick --no-tablespaces --set-gtid-purged=OFF --default-character-set=utf8mb4 $IGN "$DB" \
+    | gzip -1 | '"$PUSH_SSH"' "gunzip | mysql --defaults-extra-file='"$DEV_CNF"'"'
 log "Imported in $((SECONDS - START))s"
 
 log "Anonymizing"

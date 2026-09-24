@@ -17,6 +17,7 @@ REPO="$(cd "$DIR/../.." && pwd)"
 PREFIX="$(ssh "$PROD_HOST" "cd '$WP_ROOT' && wp --allow-root --skip-plugins --skip-themes db prefix")"
 ssh "$DEV_HOST_ALIAS" "DEV_DOMAIN='$DEV_DOMAIN' PROD_DOMAIN='$PROD_DOMAIN' WP_ROOT='$WP_ROOT' PHP_VERSION='$PHP_VERSION' \
   DB_NAME='$DB_NAME' DB_USER='$DB_USER' WP_ACCESSIBLE_HOSTS='$WP_ACCESSIBLE_HOSTS' TABLE_PREFIX='$PREFIX' bash -s" < "$DIR/bootstrap.sh"
+"$DIR/setup-prod-push.sh"
 "$DIR/sync-code.sh"
 "$DIR/refresh-db.sh" --yes
 
@@ -25,5 +26,6 @@ ssh "$DEV_HOST_ALIAS" "DEV_DOMAIN='$DEV_DOMAIN' PROD_DOMAIN='$PROD_DOMAIN' WP_RO
 ssh "$DEV_HOST_ALIAS" "rm -f /var/lib/ultralove-deploy/deployed_sha"
 git -C "$REPO" fetch -q origin
 "$REPO/deploy/deploy.sh" dev --ref "${ADOPT_REF:-origin/main}" --adopt
+"$DIR/setup-ci-deploy.sh"
 "$DIR/parity.sh" || true
 echo "Dev rebuilt. If this is a new droplet, run ops/dev/cloudflare-setup.sh to reconnect the tunnel."

@@ -15,8 +15,9 @@ command -v doctl >/dev/null || { echo "doctl required" >&2; exit 1; }
 VPC_ID="$(doctl vpcs list --format ID,Name --no-header | awk -v n="$VPC_NAME" '$2==n{print $1}')"
 if [[ -z "$VPC_ID" ]]; then
   log "Creating VPC $VPC_NAME ($VPC_RANGE)"
-  VPC_ID="$(doctl vpcs create --name "$VPC_NAME" --region "$DO_REGION" --ip-range "$VPC_RANGE" \
-    --description "Ultralove dev only; isolated from production" --format ID --no-header)"
+  doctl vpcs create --name "$VPC_NAME" --region "$DO_REGION" --ip-range "$VPC_RANGE" \
+    --description "Ultralove dev only; isolated from production" >/dev/null
+  VPC_ID="$(doctl vpcs list --format ID,Name --no-header | awk -v n="$VPC_NAME" '$2==n{print $1}')"
 fi
 log "VPC: $VPC_ID"
 
