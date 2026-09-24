@@ -48,7 +48,7 @@ sed -e "s/{{P}}/$PREFIX/g" -e "s/{{KEEP}}/$KEEP_SQL/g" "$DIR/anonymize.sql" \
 
 log "Verifying anonymization"
 LEAKS="$(ssh "$DEV_HOST_ALIAS" "mysql --defaults-extra-file=$DEV_CNF -N -e \"
-  SELECT CONCAT('users with real emails: ', COUNT(*)) FROM ${PREFIX}users WHERE user_email NOT LIKE '%@example.invalid' AND LOWER(user_email) NOT IN ($KEEP_SQL);
+  SELECT CONCAT('users with real emails: ', COUNT(*)) FROM ${PREFIX}users WHERE user_email NOT LIKE '%@example.invalid' AND LOWER(TRIM(user_email)) NOT IN ($KEEP_SQL) AND LOWER(TRIM(user_login)) NOT IN ($KEEP_SQL);
   SELECT CONCAT('order billing emails: ', COUNT(*)) FROM ${PREFIX}postmeta WHERE meta_key='_billing_email' AND meta_value NOT LIKE '%@example.invalid';
   SELECT CONCAT('order phones: ', COUNT(*)) FROM ${PREFIX}postmeta WHERE meta_key='_billing_phone' AND meta_value NOT IN ('Redacted','');\"")"
 printf '    %s\n' "$LEAKS" | sed 's/\t/ /g'
@@ -75,5 +75,5 @@ ssh "$DEV_HOST_ALIAS" "$DWP user create dev-admin dev-admin@example.invalid --ro
   umask 077; printf 'user=dev-admin\npassword=%s\n' '$ADMIN_PASS' > /root/.ultralove-dev-admin"
 
 ssh "$DEV_HOST_ALIAS" "cd '$WP_ROOT' && wp --allow-root cache flush --quiet 2>/dev/null; wp --allow-root elementor flush-css --quiet 2>/dev/null; true"
-log "Kept intact: $(ssh "$DEV_HOST_ALIAS" "mysql --defaults-extra-file=$DEV_CNF -N -e \"SELECT GROUP_CONCAT(CONCAT(user_login, ' <', user_email, '>') SEPARATOR ', ') FROM ${PREFIX}users WHERE LOWER(user_email) IN ($KEEP_SQL)\"")"
+log "Kept intact: $(ssh "$DEV_HOST_ALIAS" "mysql --defaults-extra-file=$DEV_CNF -N -e \"SELECT GROUP_CONCAT(CONCAT('#', ID, ' ', user_login) SEPARATOR ', ') FROM ${PREFIX}users WHERE LOWER(TRIM(user_email)) IN ($KEEP_SQL) OR LOWER(TRIM(user_login)) IN ($KEEP_SQL)\"")"
 log "Dev DB refreshed. wp-admin login: dev-admin / $ADMIN_PASS  (also saved in /root/.ultralove-dev-admin on the droplet)"
