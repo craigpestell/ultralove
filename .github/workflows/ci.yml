@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up PHP 8.3 (matches production)
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          tools: none
+
+      - name: PHP lint
+        run: |
+          fail=0
+          while IFS= read -r -d '' f; do
+            php -l "$f" >/dev/null || fail=1
+          done < <(git ls-files -z -- 'wp-content/*.php')
+          exit $fail
+
+      - name: Shellcheck deploy scripts
+        run: shellcheck -x -S warning deploy/*.sh
+
+      - name: No DB dumps, archives, backups or oversized files
+        run: |
+          bad=$(git ls-files | grep -Ei '\.(sql|sql\.gz|zip|tgz|tar|bak)$|\.bak-' || true)
+          big=$(git ls-files -z | xargs -0 -I{} sh -c 'test $(wc -c < "{}") -gt 5000000 && echo "{}"' || true)
+          if [ -n "$bad$big" ]; then
+            echo "::error::Forbidden or oversized files tracked:"; printf '%s\n' $bad $big; exit 1
+          fi
