@@ -31,6 +31,12 @@
 !/wp-content/themes/martfury/
 !/wp-content/themes/martfury-child/
 
+# Business/financial records (invoices, statements) never belong in this repo.
+/documentation/invoice*
+/documentation/**/invoice*
+/documentation/**/statement-*
+*.xlsx
+
 # Never commit DB dumps, backups, archives, secrets or local state.
 *.zip
 *.sql

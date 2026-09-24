@@ -31,9 +31,9 @@ jobs:
       - name: Shellcheck deploy scripts
         run: shellcheck -x -S warning deploy/*.sh
 
-      - name: No DB dumps, archives, backups or oversized files
+      - name: No DB dumps, invoices, archives, backups or oversized files
         run: |
-          bad=$(git ls-files | grep -Ei '\.(sql|sql\.gz|zip|tgz|tar|bak)$|\.bak-' || true)
+          bad=$(git ls-files | grep -Ei '\.(sql|sql\.gz|zip|tgz|tar|bak|xlsx)$|\.bak-|(^|/)invoice|(^|/)statement-' || true)
           big=$(git ls-files -z | xargs -0 -I{} sh -c 'test $(wc -c < "{}") -gt 5000000 && echo "{}"' || true)
           if [ -n "$bad$big" ]; then
             echo "::error::Forbidden or oversized files tracked:"; printf '%s\n' $bad $big; exit 1
