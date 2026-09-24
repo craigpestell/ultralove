@@ -18,8 +18,12 @@ snapshot() {
 }
 snapshot "$PROD_HOST" > "$TMP/prod"
 snapshot "$DEV_HOST_ALIAS" > "$TMP/dev"
-# Plugins intentionally deactivated on dev aren't drift.
-for p in $DEV_DISABLED_PLUGINS; do sed -i.bak -E "s/^(plugin $p,[^,]*),inactive$/\1,active/" "$TMP/dev"; done
+# ManageWP's loader is deliberately not copied to dev.
+sed -i.bak '/^plugin 0-worker,/d' "$TMP/prod"
+# Plugins intentionally deactivated on dev: compare versions only, not status.
+for p in $DEV_DISABLED_PLUGINS; do
+  sed -i.bak -E "s/^(plugin $p,[^,]*),(active|inactive)$/\1,(status ignored: disabled on dev)/" "$TMP/dev" "$TMP/prod"
+done
 if diff -u --label prod --label dev "$TMP/prod" "$TMP/dev"; then
   echo "Parity OK: core, plugins and themes match (versions + status)."
 else

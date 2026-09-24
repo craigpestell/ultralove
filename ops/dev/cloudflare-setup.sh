@@ -48,6 +48,16 @@ if [[ -n "$POL_ID" ]]; then cf PUT "/accounts/$ACC/access/apps/$APP_ID/policies/
 else cf POST "/accounts/$ACC/access/apps/$APP_ID/policies" "$POLICY" >/dev/null; fi
 log "Access allows: $DEV_ACCESS_EMAILS"
 
+# Email one-time PIN login, so allowed people don't need a Cloudflare account.
+IDPS="$(cf GET "/accounts/$ACC/access/identity_providers" | jq -r '.result[].type')"
+if ! grep -qx onetimepin <<<"$IDPS"; then
+  curl -sS -X POST "https://api.cloudflare.com/client/v4/accounts/$ACC/access/identity_providers" \
+    -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" -H 'Content-Type: application/json' \
+    --data '{"name":"One-time PIN","type":"onetimepin","config":{}}' | jq -e '.success' >/dev/null \
+    && log "Added One-time PIN login method" \
+    || printf '\033[1;33m!!\033[0m %s\n' "Add the One-time PIN login method by hand: Zero Trust > Integrations > Identity providers > Add > One-time PIN (token lacks 'Access: Organizations, Identity Providers, and Groups: Edit')" >&2
+fi
+
 # --- Tunnel -------------------------------------------------------------------
 TUN_ID="$(cf GET "/accounts/$ACC/cfd_tunnel?name=$CF_TUNNEL_NAME&is_deleted=false" | jq -r '.result[0].id // empty')"
 if [[ -z "$TUN_ID" ]]; then
