@@ -23,12 +23,12 @@ Adding a new custom plugin means updating **both** `.gitignore` and `owned-paths
    deploy/deploy.sh dev --ref <branch-or-sha> --dry-run   # review the change list
    deploy/deploy.sh dev --ref <branch-or-sha> --yes
    ```
-3. After the user confirms dev, merge the PR, then deploy **the merge commit** to dev
-   (fast, usually a no-op diff) and to prod. Prod refuses any SHA that is not on
-   `origin/main` and not already recorded as live on dev:
+3. After the user confirms dev, merge the PR. **The "Deploy to dev" GitHub Action
+   deploys the merge commit to dev automatically** (check it passed: `gh run list
+   --workflow deploy-dev.yml -L 1`). Then deploy to prod from a trusted machine. Prod
+   refuses any SHA that is not on `origin/main` and not already recorded as live on dev:
    ```bash
    git checkout main && git pull
-   deploy/deploy.sh dev --yes
    deploy/deploy.sh prod --dry-run
    deploy/deploy.sh prod --yes
    ```
@@ -95,3 +95,14 @@ A server with no `deployed_sha` must be baselined once:
   `.github/skills/ultralove-infrastructure/SKILL.md` and `documentation/ARCHITECTURE.md`.
 - Well-scoped deploys: act, verify, report. Check in with the user before prod,
   before `--skip-dev-gate`, and before anything destructive.
+
+## Dev environment
+
+dev.ultralove.ca is private (Cloudflare Tunnel + Access; SSH is the only open port) and
+disposable. Everything about building, refreshing and checking it is in `ops/dev/`
+(see `ops/dev/README.md`): `refresh-db.sh` for fresh anonymized data, `sync-code.sh` after
+vendor/core updates on prod, `parity.sh` to compare versions, `rebuild.sh` to start over.
+Dev smoke tests run on the server against nginx (`SMOKE_MODE=origin`), so they don't
+need to get past Access. Never copy prod's `wp-config.php`, uploads or unanonymized
+data to dev, and never give dev network or SSH access to prod (prod pushes to dev, not
+the other way round).

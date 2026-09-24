@@ -14,6 +14,7 @@ site: **ultralove.ca** (prod) and **dev.ultralove.ca** (dev). `main` is what's l
 | `wp-content/mu-plugins/` | Custom MU plugins (ManageWP's `0-worker.php` excluded) |
 | `wp-content/object-cache.php`, `cloudinary-*.php`, `run-cloudinary-workers.sh` | Redis drop-in and Cloudinary maintenance scripts |
 | `deploy/` | Deploy pipeline (see below) |
+| `ops/dev/` | Private, disposable dev environment: build, refresh, parity (see `ops/dev/README.md`) |
 | `ops/nginx/` | Reference copy of prod nginx config (not auto-deployed) |
 | `ops/do-migration/` | DigitalOcean provisioning/migration scripts (`.env` not tracked) |
 | `documentation/` | Architecture and work log |
@@ -34,9 +35,9 @@ Requires GNU rsync (`brew install rsync`) and SSH access to `ultralove-prod-app`
 deploy/deploy.sh dev --ref my-branch --dry-run
 deploy/deploy.sh dev --ref my-branch
 
-# 2. After verifying on dev: merge, then ship main to dev and prod
+# 2. After verifying on dev: merge. GitHub Actions deploys main to dev automatically.
+# 3. Ship to prod from a trusted machine:
 git checkout main && git pull
-deploy/deploy.sh dev
 deploy/deploy.sh prod        # refuses SHAs not on origin/main or not live on dev
 ```
 

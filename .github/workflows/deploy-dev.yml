@@ -1,0 +1,45 @@
+name: Deploy to dev
+
+# Every merge to main goes to dev.ultralove.ca automatically. Other refs can be
+# deployed to dev by hand from the Actions tab. Prod deploys stay manual
+# (deploy/deploy.sh prod from a trusted machine) and require this dev deploy first.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Branch, tag or SHA to deploy to dev
+        required: true
+        default: main
+
+concurrency:
+  group: deploy-dev
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    environment: dev   # holds DEV_SSH_KEY, DEV_SSH_KNOWN_HOSTS, DEV_HOST
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure SSH to dev
+        env:
+          DEV_SSH_KEY: ${{ secrets.DEV_SSH_KEY }}
+          DEV_SSH_KNOWN_HOSTS: ${{ secrets.DEV_SSH_KNOWN_HOSTS }}
+          DEV_HOST: ${{ secrets.DEV_HOST }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEV_SSH_KEY" > ~/.ssh/dev_deploy && chmod 600 ~/.ssh/dev_deploy
+          printf '%s\n' "$DEV_SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf 'Host ultralove-dev-app\n  HostName %s\n  User root\n  IdentityFile ~/.ssh/dev_deploy\n  IdentitiesOnly yes\n  StrictHostKeyChecking yes\n' "$DEV_HOST" > ~/.ssh/config
+          ssh ultralove-dev-app true
+
+      - name: Deploy
+        run: deploy/deploy.sh dev --yes --ref "${{ inputs.ref || github.sha }}"

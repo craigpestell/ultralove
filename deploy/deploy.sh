@@ -130,7 +130,7 @@ STAGE="$STATE_DIR/staging"
 log "Staging on server and linting PHP with the server's PHP"
 remote "mkdir -p '$STAGE/wp-content' '$STATE_DIR/backups' && chmod 700 '$STATE_DIR'"
 "$RSYNC" -rlE --checksum --delete -e "ssh -o BatchMode=yes" "$TMP/target/wp-content/" "$DEPLOY_HOST:$STAGE/wp-content/"
-CHANGED_PHP="$(printf '%s\n' "$CHANGES" | awk '$1 ~ /^>f/ && $2 ~ /\.php$/ {print $2}')"
+CHANGED_PHP="$(printf '%s\n' "$CHANGES" | awk '$1 ~ /^[<>]f/ && $2 ~ /\.php$/ {print $2}')"
 if [[ -n "$CHANGED_PHP" ]]; then
   printf '%s\n' "$CHANGED_PHP" | remote "cd '$STAGE/wp-content' && fail=0; while read -r f; do out=\$(php -l \"\$f\" 2>&1) || { echo \"\$out\"; fail=1; }; done; exit \$fail" \
     || die "PHP lint failed on the server; nothing was deployed."
