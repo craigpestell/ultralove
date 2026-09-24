@@ -31,6 +31,23 @@ ZONE_ID="$(jq -r '.result[0].id' <<<"$ZONE")"; ACC="$(jq -r '.result[0].account.
 [[ "$ZONE_ID" != null ]] || die "Zone $PROD_DOMAIN not visible to this token"
 log "Zone $PROD_DOMAIN ($ZONE_ID), account $ACC"
 
+# --- Access -------------------------------------------------------------------
+# Access goes first so that a failure here never leaves dev routed without a login.
+curl -sS "https://api.cloudflare.com/client/v4/accounts/$ACC/access/apps" -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+  | jq -e '.success' >/dev/null || die "Cloudflare Access isn't usable: enable Zero Trust (dash > Zero Trust, Free plan) and give the token Access: Apps and Policies: Edit"
+APP_ID="$(cf GET "/accounts/$ACC/access/apps" | jq -r --arg d "$DEV_DOMAIN" '.result[] | select(.domain==$d) | .id' | head -1)"
+if [[ -z "$APP_ID" ]]; then
+  log "Creating Access application for $DEV_DOMAIN"
+  APP_ID="$(cf POST "/accounts/$ACC/access/apps" "$(jq -nc --arg d "$DEV_DOMAIN" \
+    '{name:"Ultralove dev", domain:$d, type:"self_hosted", session_duration:"24h", app_launcher_visible:true}')" | jq -r '.result.id')"
+fi
+INCLUDE="$(for e in $DEV_ACCESS_EMAILS; do jq -nc --arg e "$e" '{email:{email:$e}}'; done | jq -sc .)"
+POLICY="$(jq -nc --argjson inc "$INCLUDE" '{name:"Allowed people", decision:"allow", include:$inc, precedence:1}')"
+POL_ID="$(cf GET "/accounts/$ACC/access/apps/$APP_ID/policies" | jq -r '.result[] | select(.name=="Allowed people") | .id' | head -1)"
+if [[ -n "$POL_ID" ]]; then cf PUT "/accounts/$ACC/access/apps/$APP_ID/policies/$POL_ID" "$POLICY" >/dev/null
+else cf POST "/accounts/$ACC/access/apps/$APP_ID/policies" "$POLICY" >/dev/null; fi
+log "Access allows: $DEV_ACCESS_EMAILS"
+
 # --- Tunnel -------------------------------------------------------------------
 TUN_ID="$(cf GET "/accounts/$ACC/cfd_tunnel?name=$CF_TUNNEL_NAME&is_deleted=false" | jq -r '.result[0].id // empty')"
 if [[ -z "$TUN_ID" ]]; then
@@ -52,21 +69,6 @@ for id in $(cf GET "/zones/$ZONE_ID/dns_records?name=$DEV_DOMAIN" | jq -r '.resu
 done
 cf POST "/zones/$ZONE_ID/dns_records" "$(jq -nc --arg n "$DEV_DOMAIN" --arg c "$TUN_ID.cfargotunnel.com" \
   '{type:"CNAME", name:$n, content:$c, proxied:true, comment:"Ultralove dev (Cloudflare Tunnel; ops/dev/cloudflare-setup.sh)"}')" >/dev/null
-
-# --- Access -------------------------------------------------------------------
-cf GET "/accounts/$ACC/access/organizations" >/dev/null || die "Enable Zero Trust on the account first (dash > Zero Trust)"
-APP_ID="$(cf GET "/accounts/$ACC/access/apps" | jq -r --arg d "$DEV_DOMAIN" '.result[] | select(.domain==$d) | .id' | head -1)"
-if [[ -z "$APP_ID" ]]; then
-  log "Creating Access application for $DEV_DOMAIN"
-  APP_ID="$(cf POST "/accounts/$ACC/access/apps" "$(jq -nc --arg d "$DEV_DOMAIN" \
-    '{name:"Ultralove dev", domain:$d, type:"self_hosted", session_duration:"24h", app_launcher_visible:true}')" | jq -r '.result.id')"
-fi
-INCLUDE="$(for e in $DEV_ACCESS_EMAILS; do jq -nc --arg e "$e" '{email:{email:$e}}'; done | jq -sc .)"
-POLICY="$(jq -nc --argjson inc "$INCLUDE" '{name:"Allowed people", decision:"allow", include:$inc, precedence:1}')"
-POL_ID="$(cf GET "/accounts/$ACC/access/apps/$APP_ID/policies" | jq -r '.result[] | select(.name=="Allowed people") | .id' | head -1)"
-if [[ -n "$POL_ID" ]]; then cf PUT "/accounts/$ACC/access/apps/$APP_ID/policies/$POL_ID" "$POLICY" >/dev/null
-else cf POST "/accounts/$ACC/access/apps/$APP_ID/policies" "$POLICY" >/dev/null; fi
-log "Access allows: $DEV_ACCESS_EMAILS"
 
 log "Checking https://$DEV_DOMAIN (expect a redirect to the Cloudflare Access login)"
 for _ in $(seq 1 12); do

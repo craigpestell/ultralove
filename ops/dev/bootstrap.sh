@@ -88,6 +88,7 @@ systemctl restart "$PHP-fpm"
 log "Configuring nginx"
 mkdir -p "$WP_ROOT" /var/log/wordpress
 chown www-data:www-data /var/log/wordpress
+touch /var/log/wordpress/debug.log && chown www-data:www-data /var/log/wordpress/debug.log
 cat > /etc/nginx/sites-available/ultralove-dev.conf <<EOF
 server {
     listen 127.0.0.1:80 default_server;
