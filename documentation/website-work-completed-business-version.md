@@ -1,6 +1,6 @@
 # Website Infrastructure Upgrade Summary (Business Version)
 
-Last updated: 2026-04-27 (UTC)
+Last updated: 2026-09-14 (UTC)
 
 ## Executive Summary
 
@@ -9,6 +9,8 @@ We modernized and optimized the website platform to reduce monthly infrastructur
 The project covered infrastructure migration, caching and performance tuning, application-level cacheability improvements in WordPress, media CDN integration, and backup/monitoring automation.
 
 It also included follow-up work to ensure Slider Revolution images use Cloudinary optimization consistently, including cases where slider markup is rebuilt on the frontend. On the homepage, this covered 10 large slide images and 7 smaller slide images. The large banners were roughly 900 KB+ each, the smaller images were roughly 300 KB each, and the optimized versions are now under 100 KB each.
+
+Most recently, a Lighthouse/PageSpeed audit surfaced a server-side compression and caching gap, which was fixed and verified live along with two follow-on issues it uncovered (a Cloudflare setting silently limiting visitor browser caching, and a header misconfiguration). The audit also identified WordPress plugin/page-builder bloat as the next performance opportunity, which has since been acted on with a CSS/JS optimization plugin rollout (see section 6 and Optional Next-Phase Opportunities below).
 
 ## Business Outcomes
 
@@ -58,12 +60,28 @@ It also included follow-up work to ensure Slider Revolution images use Cloudinar
 - Added recurring cron-based automation for backup tasks.
 - Added repeatable monitoring workflow for PHP-FPM and Redis to validate performance tuning against measured data.
 
+### 6) Performance Audit and Origin Caching Fixes (2026-09-14)
+
+- Ran a Lighthouse/PageSpeed Insights audit against the live site to establish a baseline and find low-hanging fixes. Real-user data showed Core Web Vitals failing (LCP 4.1s, TTFB 3.5s, CLS 0.26); the mobile lab test scored ~47-53/100 with a 6.4MB page weight.
+- Found that server-level compression (`gzip_types`) had been left entirely disabled, so only page HTML was compressed — CSS, JS, and similar assets were served uncompressed on every request that Cloudflare's edge cache doesn't cover (cart, checkout, account pages, and API/AJAX calls). Fixed and verified live.
+- Found that static assets (images, CSS, JS, fonts) had no browser-cache headers at all, meaning repeat visitors re-downloaded roughly 1MB of unchanged assets on every page load. Added a one-year cache policy and verified it live.
+- Enabled HTTP/2 on the origin server connection as a supporting best practice.
+- All changes were backed up before applying, syntax-validated, and confirmed live without any service interruption; checkout/cart/account pages were confirmed to still correctly bypass caching as intended.
+- Audited the site's import/export plugins (48 active plugins total) and found four were a dormant, superseded toolchain (WebToffee) duplicating the WooCommerce import/export functionality already handled by the actively-used WP All Import/Export system. Confirmed via database activity logs that the dormant plugins had no scheduled jobs and hadn't run in roughly two months, versus the active system running within the prior few days, and confirmed the dormant plugins had no effect on front-end page load (their front-end code was already disabled). Deactivated all four; verified the site and the active import/export system continued working normally afterward.
+- Found and fixed two follow-on issues discovered while verifying the caching fix above: a header misconfiguration that was accidentally applying the new cache policy to broken-link (404) responses, and a Cloudflare account setting that was silently limiting how long real visitors' browsers were allowed to cache files (capping our new one-year policy down to four hours) — the single largest remaining speed opportunity at the time. Both fixed and verified live.
+- Evaluated and rolled out a CSS/JS optimization plugin (Autoptimize) to address the next-largest opportunity from the audit — the previously-flagged "no CSS/JS optimization plugin" gap. Configured conservatively for a first production rollout (file combination left off, Elementor explicitly protected from any changes) with a documented, single-step rollback plan.
+- While rolling this out, found that JavaScript optimization was silently not working due to a conflict with an unused A/B-testing plugin (Nelio A/B Testing) already installed on the site. Confirmed no A/B test was actively running, then removed the conflict; verified the full site (homepage, shop, cart, account pages) continued working normally and that the performance improvement is now live for real visitors.
+
 ## Short Client-Facing Version
 
-    We reduced infrastructure spend, improved website speed and stability, and made the platform easier to operate. This included server migration, Cloudflare and Redis caching improvements, WordPress cacheability customizations, Cloudinary media CDN integration, improved optimization coverage for Slider Revolution images, and stronger backup/monitoring automation. A Cloudflare geo-challenge rule was also added to block non-Canadian bot and scanner traffic at the edge before it reaches the server — in the first 24 hours alone it intercepted 107,000 requests with a solve rate of only 0.03%, meaning the overwhelming majority never touched the origin. As part of that media work, the homepage's 10 large slider images and 7 smaller slider images dropped from roughly 900 KB+ each and roughly 300 KB each respectively to under 100 KB each.
+    We reduced infrastructure spend, improved website speed and stability, and made the platform easier to operate. This included server migration, Cloudflare and Redis caching improvements, WordPress cacheability customizations, Cloudinary media CDN integration, improved optimization coverage for Slider Revolution images, stronger backup/monitoring automation, a performance audit that found and fixed a server-side compression/caching gap (including a Cloudflare setting that was silently limiting browser caching for visitors), cleanup of four dormant duplicate plugins that were superseded by the import/export system already in active use, and rollout of a CSS/JS optimization plugin — with a same-day fix for a conflict caused by an unused A/B-testing plugin — to reduce page weight and speed up load times sitewide. As part of that media work, the homepage's 10 large slider images and 7 smaller slider images dropped from roughly 900 KB+ each and roughly 300 KB each respectively to under 100 KB each. A Cloudflare geo-challenge rule was also added to block non-Canadian bot and scanner traffic at the edge before it reaches the server — in the first 24 hours alone it intercepted 107,000 requests with a solve rate of only 0.03%, meaning the overwhelming majority never touched the origin.
 
 ## Optional Next-Phase Opportunities
 
+- Enable CSS/JS file combination in Autoptimize (currently off for safety) after a monitoring period with no issues — the next incremental speed gain on top of the minification already rolled out.
+- Review and reduce Elementor's site-wide entrance-animation usage (62 animated elements currently detected on the homepage), which affects both load time and layout stability.
+- After a monitoring period with no issues, consider deleting (not just deactivating) the Nelio A/B Testing plugin files, if the client confirms A/B testing is not needed going forward.
+- After a monitoring period with no issues, consider deleting (not just deactivating) the four dormant WebToffee import/export plugin files removed from active use on 2026-09-14.
 - Finalize outstanding cross-host verification items (mail node access, database firewall verification under correct privilege).
 - Define baseline SLOs and monthly performance/cost reporting.
 - Formalize disaster recovery test cadence (backup restore drills).
