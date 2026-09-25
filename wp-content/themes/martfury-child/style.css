@@ -1136,15 +1136,27 @@ body:not(.shop-view-list) ul.products li.product form.cart .qty-box {
     align-items: center;
     box-sizing: border-box;
     height: 36px;
+    border: 1px solid #ccc;
     border-radius: 5px;
     padding: 3px;
     white-space: nowrap
+}
+
+/* Input and button metrics that the older grid-only rules near the top of this file set for the shop
+   and home page widgets, applied to every product card so the related products / upsells carousels
+   on product pages don't fall back to Martfury's product-page sizes (wide input, 25px button padding). */
+body:not(.shop-view-list) ul.products li.product form.cart .qty-box .qty {
+    width: 22px;
+    height: 35px;
+    font-size: 13px!important
 }
 
 body:not(.shop-view-list) ul.products li.product form.cart button {
     flex: 1 1 auto;
     width: auto!important;
     max-width: 150px;
+    padding: 0 5px!important;
+    letter-spacing: -1px!important;
     min-width: 0;
     margin: 0!important;
     box-sizing: border-box;
