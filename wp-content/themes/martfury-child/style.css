@@ -1705,3 +1705,9 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
 #bottomcta a {
     margin: 0!important
 }
+
+/* No bottom padding on the main content wrapper - the page content runs straight into the footer
+   area (#hero-footer-combo, which has its own top spacing and fade). */
+.site-content {
+    padding-bottom: 0!important
+}
