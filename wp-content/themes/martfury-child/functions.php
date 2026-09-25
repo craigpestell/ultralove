@@ -383,7 +383,7 @@ function ultralove_export_products_to_csv( $format = 'default' ) {
 					($format === 'shopify') ? ultralove_extract_shopify_title($variation->get_name()) : strip_tags($variation->get_name()), // Title
 					$variation->get_description(), // Content
 					$variation->get_sku(), // SKU // $variation->get_short_description(), // Excerpt
-					$variation->get_price(), // Price
+					$variation->get_regular_price(), // Regular Price
 					$variation->get_sale_price(), // Sale Price
 					$variation->get_stock_quantity(), // Stock
                     $variation->get_image_id() ? wp_get_attachment_url($variation->get_image_id()) : '', // Image URL
@@ -406,7 +406,7 @@ function ultralove_export_products_to_csv( $format = 'default' ) {
 				($format === 'shopify') ? ultralove_extract_shopify_title($product->get_name()) : strip_tags($product->get_name()), // Title
                 $product->get_description(), // Content
                 $product->get_sku(), // SKU // $product->get_short_description(), // Excerpt
-                $product->get_price(), // Price
+                $product->get_regular_price(), // Regular Price
                 $product->get_sale_price(), // Sale Price
                 $product->get_stock_quantity(), // Stock
                 $product->get_image_id() ? wp_get_attachment_url($product->get_image_id()) : '', // Image URL
