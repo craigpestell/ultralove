@@ -202,15 +202,53 @@ function bbloomer_add_css_to_emails( $css, $email ) {
 
 add_filter( 'woocommerce_prevent_admin_access', '__return_false' );
 /**
- * Loop add to cart. Non-purchasable items get nothing. Out of stock items get the same
- * quantity + button row as in-stock ones (see the Quantity Field on Shop Page plugin), but
- * disabled, with the button reading "Out of stock".
+ * The Back In Stock Notifier plugin adds its "Notify Me When Available" button to product cards on
+ * woocommerce_after_shop_loop_item (priority 999) - below the card's details, outside the card layout.
+ * Take that callback off the hook and keep it, so woocommerce_template_loop_add_to_cart() below can
+ * show the button in the cart row's place instead (the plugin's own visibility rules still apply).
+ */
+add_action( 'wp_loaded', 'ultralove_capture_instock_notifier_catalog_button' );
+function ultralove_capture_instock_notifier_catalog_button() {
+	global $wp_filter;
+
+	if ( empty( $wp_filter['woocommerce_after_shop_loop_item'] ) ) {
+		return;
+	}
+
+	foreach ( $wp_filter['woocommerce_after_shop_loop_item']->callbacks as $priority => $callbacks ) {
+		foreach ( $callbacks as $callback ) {
+			$fn = $callback['function'];
+			if ( is_array( $fn ) && is_object( $fn[0] ) && 'CWG_Instock_Notifier_Product' === get_class( $fn[0] ) && 'display_popup_button_in_catalog_page' === $fn[1] ) {
+				remove_action( 'woocommerce_after_shop_loop_item', $fn, $priority );
+				$GLOBALS['ultralove_instock_notifier_catalog_button'] = $fn;
+				return;
+			}
+		}
+	}
+}
+
+/**
+ * Loop add to cart. Non-purchasable items get nothing. Out of stock items get the Back In Stock
+ * Notifier's "Notify Me When Available" button where the cart row goes, when the plugin shows it
+ * (logged-in users); otherwise the same quantity + button row as in-stock ones (see the Quantity
+ * Field on Shop Page plugin), but disabled, with the button reading "Out of stock".
  */
 if (!function_exists('woocommerce_template_loop_add_to_cart')) {
 	function woocommerce_template_loop_add_to_cart() {
 		global $product;
 		if ( ! $product->is_purchasable() ) return;
 		if ( ! $product->is_in_stock() ) {
+			$notify = '';
+			if ( ! empty( $GLOBALS['ultralove_instock_notifier_catalog_button'] ) ) {
+				ob_start();
+				call_user_func( $GLOBALS['ultralove_instock_notifier_catalog_button'] );
+				$notify = trim( ob_get_clean() );
+			}
+			if ( '' !== $notify ) {
+				// A div, not a form: the plugin's button is an <input type="submit"> handled by its own JS.
+				echo '<div class="cart ul-notify-row">' . $notify . '</div>';
+				return;
+			}
 			echo '<form class="cart ul-out-of-stock" onsubmit="return false;">'
 				. '<div class="quantity"><div class="qty-box">'
 				. '<span class="decrease icon_minus-06" aria-hidden="true"></span>'

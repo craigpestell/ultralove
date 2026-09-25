@@ -1360,3 +1360,49 @@ section.up-sells .related-title,
 #footer-bot-recently-viewed ul.products .slick-dots {
     display: none!important
 }
+
+/* Out of stock cards for logged-in users: the Back In Stock Notifier's "Notify Me When Available"
+   button takes the cart row's place (see woocommerce_template_loop_add_to_cart() in functions.php),
+   as an outline version of the Add to cart button. The older .cwg_popup_submit rule near the top of
+   this file (relative, top:-29px) is for the product page and is undone here. */
+body:not(.shop-view-list) ul.products li.product .ul-notify-row {
+    display: flex;
+    justify-content: center;
+    margin-top: 12px
+}
+
+body:not(.shop-view-list) ul.products li.product .ul-notify-row .cwg_popup_submit {
+    position: static;
+    top: auto!important;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 226px;
+    height: 36px;
+    margin: 0;
+    padding: 0 8px;
+    border: 1px solid #b3094b;
+    border-radius: 5px;
+    background: #fff;
+    color: #b3094b;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 34px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: pointer;
+    transition: background-color .2s, color .2s
+}
+
+body:not(.shop-view-list) ul.products li.product .ul-notify-row .cwg_popup_submit:hover,
+body:not(.shop-view-list) ul.products li.product .ul-notify-row .cwg_popup_submit:focus-visible {
+    background: #b3094b;
+    color: #fff
+}
+
+@media (max-width: 767px) {
+    body:not(.shop-view-list) ul.products li.product .ul-notify-row .cwg_popup_submit {
+        font-size: 12px;
+        padding: 0 4px
+    }
+}
