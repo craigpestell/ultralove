@@ -1136,6 +1136,8 @@ body:not(.shop-view-list) ul.products li.product form.cart .qty-box {
     align-items: center;
     box-sizing: border-box;
     height: 36px;
+    border-radius: 5px;
+    padding: 3px;
     white-space: nowrap
 }
 
@@ -1158,6 +1160,16 @@ body:not(.shop-view-list) ul.products li.product form.cart button {
 @media (max-width: 767px) {
     body:not(.shop-view-list) ul.products li.product .woo-loop-product__title {
         height: calc(7 * 1.3em)
+    }
+
+    /* Two-up phone cards are ~170px wide: tighter gap and smaller button text so
+       "Add to cart" fits next to the padded quantity box. */
+    body:not(.shop-view-list) ul.products li.product form.cart {
+        gap: 6px
+    }
+
+    body:not(.shop-view-list) ul.products li.product form.cart button {
+        font-size: 14px!important
     }
 
     body:not(.shop-view-list) ul.products li.product .woo-loop-product__title a {
