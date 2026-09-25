@@ -1119,6 +1119,58 @@ body:not(.shop-view-list) ul.products li.product .product-inner:hover {
     }
 }
 
+/* Quick view / add to cart overlay on the thumbnail (desktop grids): instead of the parent's full-width
+   white bar, a floating pill in the #topcta pill style (frosted white, purple border and shadow, plum
+   icons) that fades and slides up into place. Icon buttons fill with the brand pink on hover. It also
+   shows when the card has keyboard focus. Buttons keep the parent's 34px so its loading spinner stays
+   centred. Mobile's always-visible featured icons are left alone. */
+@media (min-width: 992px) {
+    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button {
+        left: 50%;
+        right: auto;
+        bottom: 12px;
+        width: max-content;
+        gap: 4px;
+        padding: 4px;
+        background: rgba(255,255,255,.85);
+        -webkit-backdrop-filter: blur(6px);
+        backdrop-filter: blur(6px);
+        border: 1px solid rgb(177,101,255);
+        border-radius: 999px;
+        box-shadow: 0 6px 18px rgba(177,101,255,.35);
+        opacity: 0;
+        transform: translate(-50%, 10px);
+        transition: opacity .2s ease, transform .2s ease
+    }
+
+    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button:empty {
+        display: none
+    }
+
+    body:not(.shop-view-list) ul.products li.product .product-inner:hover .mf-product-thumbnail .footer-button,
+    body:not(.shop-view-list) ul.products li.product .product-inner:focus-within .mf-product-thumbnail .footer-button {
+        bottom: 12px;
+        opacity: 1;
+        transform: translate(-50%, 0)
+    }
+
+    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button > a,
+    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button .added_to_cart {
+        margin: 0;
+        color: #3b1d4a;
+        transition: background-color .15s ease, color .15s ease
+    }
+
+    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button > a:hover,
+    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button > a:focus-visible,
+    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button .added_to_cart:hover,
+    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button .added_to_cart:focus-visible {
+        background-color: var(--mf-background-primary-color);
+        color: var(--mf-background-primary-text-color);
+        outline: none
+    }
+}
+
 body:not(.shop-view-list) ul.products li.product .mf-product-details {
     display: flex;
     flex-direction: column;
