@@ -1633,3 +1633,43 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     text-underline-offset: 4px;
     text-decoration-thickness: 2px
 }
+
+/* Quick view popup: quantity, Add to cart and the wishlist heart vertically centred on each other (they
+   were floats with uneven top margins) - the same alignment as the product page's cart row above, but
+   keeping the popup's own spacing around the row. Simple products only. */
+#mf-quick-view-modal .entry-summary form.cart:not(.variations_form) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center
+}
+
+#mf-quick-view-modal .entry-summary form.cart:not(.variations_form)::before,
+#mf-quick-view-modal .entry-summary form.cart:not(.variations_form)::after {
+    display: none
+}
+
+#mf-quick-view-modal .entry-summary form.cart:not(.variations_form) > .quantity,
+#mf-quick-view-modal .entry-summary form.cart:not(.variations_form) > .single_add_to_cart_button,
+#mf-quick-view-modal .entry-summary form.cart:not(.variations_form) > .actions-button {
+    float: none!important;
+    margin-top: 0!important;
+    margin-bottom: 0!important;
+    top: 0!important
+}
+
+#mf-quick-view-modal .entry-summary form.cart:not(.variations_form) > .actions-button {
+    display: flex;
+    align-items: center;
+    padding-top: 0!important
+}
+
+#mf-quick-view-modal .entry-summary form.cart:not(.variations_form) > .actions-button .yith-wcwl-add-to-wishlist {
+    float: none;
+    margin-top: 0!important;
+    margin-bottom: 0!important
+}
+
+#mf-quick-view-modal .entry-summary form.cart:not(.variations_form) > .actions-button .yith-wcwl-add-to-wishlist a {
+    display: flex;
+    align-items: center
+}
