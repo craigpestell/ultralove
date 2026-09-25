@@ -1683,3 +1683,24 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     text-underline-offset: 4px;
     text-decoration-thickness: 2px
 }
+
+/* View Products / Wholesale Signup in #topcta and #bottomcta: 30px apart - the same gap as the home page's
+   "View More New Products" / "Browse Products by Brand" buttons - and 30px apart vertically when they wrap
+   on narrow screens (they were 10px apart from their 5px margins, and nearly touching when wrapped). The
+   buttons' container becomes a centred, wrapping flex row; its 5px top/bottom padding stands in for the
+   buttons' old vertical margins so the spacing around the row is unchanged. */
+#topcta *:has(> a.elementor-button, > a[href]:not(.elementor-button)):not(p):not(h1):not(h2),
+#bottomcta *:has(> a[href]):not(p):not(h1):not(h2) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    padding-top: 5px;
+    padding-bottom: 5px
+}
+
+#topcta a,
+#bottomcta a {
+    margin: 0!important
+}
