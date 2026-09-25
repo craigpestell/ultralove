@@ -1107,6 +1107,16 @@ body:not(.shop-view-list) ul.products li.product .product-inner:hover {
         margin: -8px -8px 22px;
         padding: 28px 28px 8px
     }
+
+    /* The image grows with the card: scaled about its centre by roughly the card's extra 16px of width,
+       so it spreads into the new top/side padding and the thumbnail's 12px bottom gap, not the title. */
+    body:not(.shop-view-list) ul.products:not(.slick-slider) li.product .mf-product-thumbnail img {
+        transition: transform .2s ease
+    }
+
+    body:not(.shop-view-list) ul.products:not(.slick-slider) li.product .product-inner:hover .mf-product-thumbnail img {
+        transform: scale(1.07)
+    }
 }
 
 body:not(.shop-view-list) ul.products li.product .mf-product-details {
