@@ -1303,6 +1303,12 @@ ul.products.slick-slider .slick-list {
     margin-bottom: -28px!important
 }
 
+/* The parent theme gives the "On Sale" deals cards no padding, so the hover shadow sat right against
+   the product image and cart row. Same 20px inset as the grid cards, plus 20px below the cart row. */
+.mf-product-deals-day ul.products li.product .product-inner {
+    padding: 20px!important
+}
+
 .mf-product-deals-day ul.products li.product .product-inner > form.cart {
     margin-top: auto!important;
     padding-top: 12px
