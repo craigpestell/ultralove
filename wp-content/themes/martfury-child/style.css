@@ -1625,3 +1625,11 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
 .site-header .primary-nav>ul>li.current-menu-ancestor>a::after {
     transform: scaleX(1)
 }
+
+/* Quick view popup: underline the product name (a link to the product page) on hover / keyboard focus. */
+#mf-quick-view-modal .product_title a:hover,
+#mf-quick-view-modal .product_title a:focus-visible {
+    text-decoration: underline!important;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 2px
+}
