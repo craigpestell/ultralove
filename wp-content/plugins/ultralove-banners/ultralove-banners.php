@@ -83,7 +83,7 @@ function ub_get_crop( $post_id, $thumb_id ) {
  */
 function ub_apply_transform( $html, $seg, $out_w, $out_h, $lqip = false ) {
 	if ( ! $out_w || ! $out_h || ! preg_match( '#(https://res\.cloudinary\.com/[^/]+/images/)(?:[^/?"\s]+/)*?(v\d+/[^?"\s]+)(\?[^"\s]*)?#', $html, $m ) ) {
-		return $html;
+		return $lqip ? ub_local_placeholder( $html ) : $html;
 	}
 	$base  = $m[1];
 	$path  = $m[2];
@@ -128,6 +128,41 @@ function ub_apply_transform( $html, $seg, $out_w, $out_h, $lqip = false ) {
 	$html = preg_replace( '/\swidth="\d+"/', ' width="' . $src_w . '"', $html, 1 );
 	$html = preg_replace( '/\sheight="\d+"/', ' height="' . round( $src_w * $out_h / $out_w ) . '"', $html, 1 );
 	return $html;
+}
+
+/**
+ * The low-quality placeholder for a slide image that isn't served by Cloudinary (not yet synced, or
+ * the Cloudinary plugin isn't active - e.g. on dev): the smallest of WordPress's own srcset
+ * candidates that's at least 480px wide becomes the src, and the full src / srcset / sizes move to
+ * data-ub-* attributes for banner.js to swap in - the same contract as the Cloudinary placeholder in
+ * ub_apply_transform(). Tags without a srcset are left as they are.
+ */
+function ub_local_placeholder( $html ) {
+	if ( ! preg_match( '/\ssrcset="([^"]*)"/', $html, $srcset_match ) || ! preg_match( '/\ssrc="([^"]*)"/', $html, $src_match ) ) {
+		return $html;
+	}
+
+	$candidates = array();
+	foreach ( explode( ',', html_entity_decode( $srcset_match[1], ENT_QUOTES ) ) as $candidate ) {
+		if ( preg_match( '/^\s*(\S+)\s+(\d+)w\s*$/', $candidate, $c ) ) {
+			$candidates[ (int) $c[2] ] = $c[1];
+		}
+	}
+	if ( ! $candidates ) {
+		return $html;
+	}
+	ksort( $candidates );
+	$lq_src = reset( $candidates );
+	foreach ( $candidates as $width => $url ) {
+		if ( $width >= 480 ) {
+			$lq_src = $url;
+			break;
+		}
+	}
+
+	$html = preg_replace( '/\ssrcset="[^"]*"/', '', $html, 1 );
+	$html = preg_replace( '/\ssizes="([^"]*)"/', ' data-ub-sizes="$1"', $html, 1 );
+	return preg_replace( '/\ssrc="[^"]*"/', ' src="' . esc_url( $lq_src ) . '" data-ub-src="' . $src_match[1] . '" data-ub-srcset="' . $srcset_match[1] . '"', $html, 1 );
 }
 
 /**
