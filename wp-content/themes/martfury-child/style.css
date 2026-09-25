@@ -1087,12 +1087,26 @@ body:not(.shop-view-list) ul.products li.product .product-inner {
     display: flex;
     flex-direction: column;
     width: 100%;
-    transition: box-shadow .2s ease
+    transition: box-shadow .2s ease, margin .2s ease, padding .2s ease, width .2s ease
 }
 
 /* Hover: the same purple shadow as the #topcta and footer pills */
 body:not(.shop-view-list) ul.products li.product .product-inner:hover {
     box-shadow: 0 6px 18px rgba(177,101,255,.35)
+}
+
+/* Hover "pop" (desktop grids only): the card grows 8px on every side. Negative margins pull the box
+   out and matching extra padding keeps the contents where they were, so the card's outer size, and
+   the rest of the grid, never moves. Assumes the parent theme's desktop card box (padding 20px 20px 0,
+   margin-bottom 30px); carousels (overflow would clip it) and below 992px (padding 0) are left alone. */
+@media (min-width: 992px) and (hover: hover) {
+    body:not(.shop-view-list) ul.products:not(.slick-slider) li.product .product-inner:hover {
+        position: relative;
+        z-index: 2;
+        width: calc(100% + 16px);
+        margin: -8px -8px 22px;
+        padding: 28px 28px 8px
+    }
 }
 
 body:not(.shop-view-list) ul.products li.product .mf-product-details {
