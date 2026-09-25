@@ -1585,6 +1585,13 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     flex: 0 0 100%;
     width: 100%;
     position: relative;
-    z-index: 5;
-    border-top: 24px solid #fff
+    z-index: 5
+}
+
+/* 24px of white below the home banner slides, between them and the navigation row. On the Elementor
+   widget wrapping the banner rather than .ub-banner-home itself, whose height is fixed by its aspect
+   ratio - a border there would crop 24px off the slides. */
+.elementor-widget:has(> .elementor-widget-container .ub-banner-home),
+.elementor-widget:has(> .elementor-shortcode .ub-banner-home) {
+    border-bottom: 24px solid #fff
 }
