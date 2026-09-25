@@ -704,7 +704,7 @@ add_shortcode(
 		// appended (one per slide shown at a time), so dragging past either end still shows full slides.
 		$clones = $is_looped ? min( ub_group_per_view( $atts['group'] ), count( $slides ) ) : 0;
 
-		$render_slide = function ( $slide, $eager, $is_clone, $is_lcp = false ) use ( $bg_style, $img_sizes ) {
+		$render_slide = function ( $slide, $eager, $is_clone, $is_lcp = false ) use ( $bg_style, $img_sizes, $is_home ) {
 			$link     = ub_slide_link( $slide->ID );
 			$thumb_id = get_post_thumbnail_id( $slide->ID );
 			$bg_url   = '';
@@ -736,9 +736,11 @@ add_shortcode(
 				if ( $crop ) {
 					$img_atts['data-ub-crop'] = implode( ',', $crop );
 				}
-				if ( $eager && ! $is_clone ) {
+				if ( $eager && ! $is_clone && ! $is_home ) {
 					// Shown before banner.js loads: gets a small low-quality placeholder src, upgraded
-					// by banner.js (see ub_apply_transform()).
+					// by banner.js (see ub_apply_transform()). Not the home banner: its first two slides
+					// are the home page's LCP images, so they load at full quality (responsive, q_auto,f_auto)
+					// straight away rather than being swapped in later.
 					$img_atts['data-ub-lqip'] = '1';
 				}
 				$full_meta = wp_get_attachment_metadata( $thumb_id );
