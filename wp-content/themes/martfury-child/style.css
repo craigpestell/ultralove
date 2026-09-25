@@ -1148,7 +1148,8 @@ body:not(.shop-view-list) ul.products li.product form.cart button {
     box-sizing: border-box;
     height: 36px!important;
     line-height: 34px!important;
-    border: 1px solid transparent!important;
+    border: 1px solid #ff5679!important;
+    border-radius: 5px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis
@@ -1210,6 +1211,7 @@ form.cart.ul-out-of-stock .quantity .qty {
 form.cart.ul-out-of-stock button.ul-out-of-stock-button,
 form.cart.ul-out-of-stock button.ul-out-of-stock-button:hover {
     background-color: #e3e0e6!important;
+    border-color: #d3cdd9!important;
     color: #6f6578!important;
     cursor: not-allowed;
     opacity: 1
