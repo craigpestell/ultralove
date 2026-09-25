@@ -1208,10 +1208,10 @@ form.cart.ul-out-of-stock .quantity .qty {
     color: inherit
 }
 
-form.cart.ul-out-of-stock button.ul-out-of-stock-button,
-form.cart.ul-out-of-stock button.ul-out-of-stock-button:hover {
+body ul.products li.product form.cart.ul-out-of-stock button.ul-out-of-stock-button,
+body ul.products li.product form.cart.ul-out-of-stock button.ul-out-of-stock-button:hover {
     background-color: #e3e0e6!important;
-    border-color: #d3cdd9!important;
+    border-color: #e3e0e6!important;
     color: #6f6578!important;
     cursor: not-allowed;
     opacity: 1
