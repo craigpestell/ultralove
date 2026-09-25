@@ -1577,3 +1577,13 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
         padding-bottom: 32px
     }
 }
+
+/* Home page navigation row, printed below the banner inside the banner's full-width Elementor section
+   (see ultralove_print_home_nav_after_banner() in functions.php). The widget wrapper there is a
+   wrapping flex row, so the row claims the full width. */
+.ul-home-nav {
+    flex: 0 0 100%;
+    width: 100%;
+    position: relative;
+    z-index: 5
+}
