@@ -1675,3 +1675,30 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     display: flex;
     align-items: center
 }
+
+/* Quick view popup: the whole product header block (.mf-entry-product-header) links to the product page.
+   Wrapping it in the name's <a> would nest the brand link inside another link (invalid - browsers split
+   it apart), so the name link is "stretched" instead: its ::after covers the header block, while the
+   header's other links (the brand) sit above that layer and keep working. */
+#mf-quick-view-modal .mf-entry-product-header {
+    position: relative;
+    cursor: pointer
+}
+
+#mf-quick-view-modal .mf-entry-product-header .product_title,
+#mf-quick-view-modal .mf-entry-product-header .entry-left,
+#mf-quick-view-modal .mf-entry-product-header .product_title a {
+    position: static!important
+}
+
+#mf-quick-view-modal .mf-entry-product-header .product_title a::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1
+}
+
+#mf-quick-view-modal .mf-entry-product-header a:not(.product_title a) {
+    position: relative;
+    z-index: 2
+}
