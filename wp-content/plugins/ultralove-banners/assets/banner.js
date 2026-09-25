@@ -100,7 +100,12 @@
 		}
 
 		el.addEventListener( 'mouseenter', stopAutoplay );
-		el.addEventListener( 'mouseleave', startAutoplay );
+		el.addEventListener( 'mouseleave', function () {
+			// Mid-drag the pointer can leave the banner; autoplay resumes when the drag ends instead.
+			if ( startX === null ) {
+				startAutoplay();
+			}
+		} );
 
 		// Pointer Events cover mouse click-and-drag, touch swipe, and pen input through one
 		// code path (matching the RevSlider carousel's original behavior, which supported both).
@@ -110,7 +115,8 @@
 		var captured = false;
 
 		el.addEventListener( 'pointerdown', function ( e ) {
-			if ( ! canSlide() ) {
+			// Only the primary mouse button drags; right/middle clicks shouldn't grab the track.
+			if ( ! canSlide() || ( e.pointerType === 'mouse' && e.button !== 0 ) ) {
 				return;
 			}
 			startX = e.clientX;
@@ -128,8 +134,17 @@
 			e.preventDefault();
 		} );
 
-		el.addEventListener( 'pointermove', function ( e ) {
+		// Move/up/cancel are tracked on the window, not the slider: once the pointer leaves the
+		// banner mid-drag, the slider stops receiving them unless capture happened to take, which
+		// left the drag stuck to the cursor until the next click on a slide.
+		window.addEventListener( 'pointermove', function ( e ) {
 			if ( startX === null ) {
+				return;
+			}
+			// The button was released somewhere the page never heard about (e.g. outside the
+			// browser window) - finish the drag now instead of leaving it attached to the cursor.
+			if ( e.pointerType === 'mouse' && e.buttons === 0 ) {
+				endDrag( e );
 				return;
 			}
 			var delta = e.clientX - startX;
@@ -169,8 +184,7 @@
 			startAutoplay();
 		}
 
-		el.addEventListener( 'pointerup', endDrag );
-		el.addEventListener( 'pointercancel', function () {
+		function cancelDrag() {
 			if ( startX === null ) {
 				return;
 			}
@@ -179,7 +193,12 @@
 			el.classList.remove( 'is-dragging' );
 			setPosition( current + offset, true );
 			startAutoplay();
-		} );
+		}
+
+		window.addEventListener( 'pointerup', endDrag );
+		window.addEventListener( 'pointercancel', cancelDrag );
+		// Switching tabs/apps mid-drag never delivers a pointerup.
+		window.addEventListener( 'blur', cancelDrag );
 
 		// A click-and-drag (or swipe) shouldn't also follow the active slide's link.
 		el.addEventListener( 'click', function ( e ) {
