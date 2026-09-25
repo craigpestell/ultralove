@@ -138,6 +138,8 @@ function ultralove_render_recently_viewed_cards( $atts ) {
 
     ob_start();
 
+    // Same wrapper as Martfury's renderer, so the block keeps its container width (see style.css).
+    echo '<div class="container rv-container">';
     echo '<div class="recently-header">';
     if ( ! empty( $atts['title'] ) ) {
         printf( '<h4 class="title">%s</h4>', esc_html( $atts['title'] ) );
@@ -155,6 +157,7 @@ function ultralove_render_recently_viewed_cards( $atts ) {
             esc_url( get_permalink( get_option( 'woocommerce_shop_page_id' ) ) ),
             esc_html__( 'Shop Now', 'martfury' )
         );
+        echo '</div>';
 
         return ob_get_clean();
     }
@@ -169,6 +172,7 @@ function ultralove_render_recently_viewed_cards( $atts ) {
     woocommerce_product_loop_end();
     wp_reset_postdata();
     wc_reset_loop();
+    echo '</div>';
 
     return ob_get_clean();
 }
