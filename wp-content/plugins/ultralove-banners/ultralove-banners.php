@@ -24,7 +24,7 @@ define( 'UB_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 if ( is_admin() ) {
 	require_once UB_PLUGIN_PATH . 'admin-pages.php';
 }
-define( 'UB_ASSET_VERSION', '2.0.5' );
+define( 'UB_ASSET_VERSION', '2.0.6' );
 
 /**
  * Banner slot aspect ratio (width / height) per group. Slides are cropped to this in the admin.
@@ -81,7 +81,7 @@ function ub_get_crop( $post_id, $thumb_id ) {
  * plain slide) and $out_w x $out_h the size it produces. Not-yet-synced (non-Cloudinary) images,
  * and tags with no usable dimensions, are left untouched.
  */
-function ub_apply_transform( $html, $seg, $out_w, $out_h ) {
+function ub_apply_transform( $html, $seg, $out_w, $out_h, $lqip = false ) {
 	if ( ! $out_w || ! $out_h || ! preg_match( '#(https://res\.cloudinary\.com/[^/]+/images/)(?:[^/?"\s]+/)*?(v\d+/[^?"\s]+)(\?[^"\s]*)?#', $html, $m ) ) {
 		return $html;
 	}
@@ -108,11 +108,22 @@ function ub_apply_transform( $html, $seg, $out_w, $out_h ) {
 	}
 	$src_w = min( $out_w, 1920 );
 
-	$html = preg_replace( '/\ssrc="[^"]*"/', ' src="' . esc_url( $url_for( $src_w ) ) . '"', $html, 1 );
-	if ( preg_match( '/\ssrcset="/', $html ) ) {
-		$html = preg_replace( '/\ssrcset="[^"]*"/', ' srcset="' . esc_attr( implode( ', ', $srcset ) ) . '"', $html, 1 );
+	if ( $lqip ) {
+		// A slide shown before banner.js runs: start with one small, low-quality image (a single
+		// src, no srcset, so that's all the browser fetches) and park the full-quality src / srcset
+		// / sizes in data-ub-* attributes - banner.js loads those and swaps them in once decoded.
+		$lq_w   = min( 640, $out_w );
+		$lq_src = sprintf( '%sq_auto:low,f_auto/%sc_scale,w_%d,h_%d/%s%s', $base, $pre, $lq_w, round( $lq_w * $out_h / $out_w ), $path, $query );
+		$html   = preg_replace( '/\ssrcset="[^"]*"/', '', $html, 1 );
+		$html   = preg_replace( '/\ssizes="([^"]*)"/', ' data-ub-sizes="$1"', $html, 1 );
+		$html   = preg_replace( '/\ssrc="[^"]*"/', ' src="' . esc_url( $lq_src ) . '" data-ub-src="' . esc_url( $url_for( $src_w ) ) . '" data-ub-srcset="' . esc_attr( implode( ', ', $srcset ) ) . '"', $html, 1 );
 	} else {
-		$html = preg_replace( '/<img/', '<img srcset="' . esc_attr( implode( ', ', $srcset ) ) . '"', $html, 1 );
+		$html = preg_replace( '/\ssrc="[^"]*"/', ' src="' . esc_url( $url_for( $src_w ) ) . '"', $html, 1 );
+		if ( preg_match( '/\ssrcset="/', $html ) ) {
+			$html = preg_replace( '/\ssrcset="[^"]*"/', ' srcset="' . esc_attr( implode( ', ', $srcset ) ) . '"', $html, 1 );
+		} else {
+			$html = preg_replace( '/<img/', '<img srcset="' . esc_attr( implode( ', ', $srcset ) ) . '"', $html, 1 );
+		}
 	}
 	$html = preg_replace( '/\swidth="\d+"/', ' width="' . $src_w . '"', $html, 1 );
 	$html = preg_replace( '/\sheight="\d+"/', ' height="' . round( $src_w * $out_h / $out_w ) . '"', $html, 1 );
@@ -140,6 +151,8 @@ add_action(
 					'/<img\b[^>]*\bub-banner-img\b[^>]*>/',
 					function ( $m ) {
 						$tag   = $m[0];
+						$lqip  = (bool) preg_match( '/\sdata-ub-lqip="1"/', $tag );
+						$tag   = preg_replace( '/\sdata-ub-lqip="[^"]*"/', '', $tag );
 						$out_w = null;
 						$out_h = null;
 						$seg   = '';
@@ -161,7 +174,7 @@ add_action(
 							}
 						}
 
-						return ub_apply_transform( $tag, $seg, $out_w, $out_h );
+						return ub_apply_transform( $tag, $seg, $out_w, $out_h, $lqip );
 					},
 					$html
 				);
@@ -680,6 +693,11 @@ add_shortcode(
 				}
 				if ( $crop ) {
 					$img_atts['data-ub-crop'] = implode( ',', $crop );
+				}
+				if ( $eager && ! $is_clone ) {
+					// Shown before banner.js loads: gets a small low-quality placeholder src, upgraded
+					// by banner.js (see ub_apply_transform()).
+					$img_atts['data-ub-lqip'] = '1';
 				}
 				$full_meta = wp_get_attachment_metadata( $thumb_id );
 				if ( is_admin() && $crop && ! empty( $full_meta['width'] ) && ! empty( $full_meta['height'] ) ) {

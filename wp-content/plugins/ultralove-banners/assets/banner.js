@@ -216,8 +216,52 @@
 		startAutoplay();
 	}
 
+	// The slides shown before this script loads start with a small, low-quality image (see
+	// ub_apply_transform() in PHP), with the full-quality src / srcset / sizes in data-ub-* attributes.
+	// Load the full-quality image off-screen and swap it in once it's decoded, so the placeholder
+	// stays up until then instead of flashing blank.
+	function upgradeImages( el ) {
+		el.querySelectorAll( 'img[data-ub-srcset]' ).forEach( function ( img ) {
+			var src = img.getAttribute( 'data-ub-src' );
+			var srcset = img.getAttribute( 'data-ub-srcset' );
+			var sizes = img.getAttribute( 'data-ub-sizes' );
+			var full = new Image();
+			var swapped = false;
+
+			function swap() {
+				if ( swapped ) {
+					return;
+				}
+				swapped = true;
+				if ( sizes ) {
+					img.sizes = sizes;
+				}
+				img.srcset = srcset;
+				img.src = src;
+				img.removeAttribute( 'data-ub-src' );
+				img.removeAttribute( 'data-ub-srcset' );
+				img.removeAttribute( 'data-ub-sizes' );
+			}
+
+			if ( sizes ) {
+				full.sizes = sizes;
+			}
+			full.srcset = srcset;
+			full.src = src;
+			if ( full.decode ) {
+				full.decode().then( swap, swap );
+			} else {
+				full.onload = swap;
+				full.onerror = swap;
+			}
+		} );
+	}
+
 	function init() {
-		document.querySelectorAll( '.ub-banner' ).forEach( initBanner );
+		document.querySelectorAll( '.ub-banner' ).forEach( function ( el ) {
+			upgradeImages( el );
+			initBanner( el );
+		} );
 	}
 
 	if ( document.readyState === 'loading' ) {
