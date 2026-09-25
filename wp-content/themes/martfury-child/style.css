@@ -1086,7 +1086,13 @@ body:not(.shop-view-list) ul.products:not(.slick-slider) li.product {
 body:not(.shop-view-list) ul.products li.product .product-inner {
     display: flex;
     flex-direction: column;
-    width: 100%
+    width: 100%;
+    transition: box-shadow .2s ease
+}
+
+/* Hover: the same purple shadow as the #topcta and footer pills */
+body:not(.shop-view-list) ul.products li.product .product-inner:hover {
+    box-shadow: 0 6px 18px rgba(177,101,255,.35)
 }
 
 body:not(.shop-view-list) ul.products li.product .mf-product-details {
