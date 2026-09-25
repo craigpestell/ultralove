@@ -1292,6 +1292,17 @@ ul.products.slick-slider .slick-track > li.product {
     height: auto!important
 }
 
+/* Slick clips its slides (.slick-list is overflow: hidden), which cut off the cards' purple hover
+   shadow above and below (it reaches ~12px up and ~24px down). Move the clip edge out vertically
+   with padding and cancel it with equal negative margins, so the carousel's size and position are
+   unchanged. Not horizontally - that would reveal the neighbouring off-screen slides. */
+ul.products.slick-slider .slick-list {
+    padding-top: 16px!important;
+    padding-bottom: 28px!important;
+    margin-top: -16px!important;
+    margin-bottom: -28px!important
+}
+
 .mf-product-deals-day ul.products li.product .product-inner > form.cart {
     margin-top: auto!important;
     padding-top: 12px
