@@ -1408,3 +1408,29 @@ body:not(.shop-view-list) ul.products li.product .ul-notify-row .cwg_popup_submi
         padding: 0 6px
     }
 }
+
+/*
+ * Product page summary for guests (logged out). The stock status is hidden from guests (.stock above),
+ * which left Martfury's summary header (.mf-summary-header - just the stock status) as an empty box
+ * whose bottom rule floated under the title, with the "Please Register/Login to see the price" prompt
+ * below it. Hide the header when the stock status is all it holds, and give the prompt the header's
+ * rule and spacing, so it takes the price + status block's place for guests. The prompt's first,
+ * empty span (and the -10px margin that offset it) is dropped so its rule lines up with the others.
+ */
+body:not(.logged-in) .entry-summary .mf-summary-header:not(:has(> :not(.mf-summary-meta))):not(:has(.mf-summary-meta > :not(.stock))) {
+    display: none
+}
+
+body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper {
+    margin: 0 0 15px!important;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e1e1e1
+}
+
+body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:first-child:empty {
+    display: none
+}
+
+body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:first-child:empty + .ced_hpul_login_link {
+    margin-left: 0
+}
