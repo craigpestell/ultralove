@@ -81,6 +81,9 @@ memory_limit = 512M
 upload_max_filesize = 64M
 post_max_size = 64M
 max_execution_time = 300
+; Dev: pick up edited PHP files immediately (check timestamps on every request) - no FPM restart needed.
+opcache.validate_timestamps = 1
+opcache.revalidate_freq = 0
 EOF
 systemctl restart "$PHP-fpm"
 
