@@ -1386,10 +1386,12 @@ body:not(.shop-view-list) ul.products li.product .ul-notify-row .cwg_popup_submi
     color: #b3094b;
     font-size: 14px;
     font-weight: 600;
-    line-height: 34px;
-    white-space: nowrap;
+    line-height: 1.1;
+    letter-spacing: -.3px;
+    display: block;
+    /* The label wraps to two lines inside the 36px button when the card is too narrow for one. */
+    white-space: normal;
     overflow: hidden;
-    text-overflow: ellipsis;
     cursor: pointer;
     transition: background-color .2s, color .2s
 }
@@ -1402,7 +1404,7 @@ body:not(.shop-view-list) ul.products li.product .ul-notify-row .cwg_popup_submi
 
 @media (max-width: 767px) {
     body:not(.shop-view-list) ul.products li.product .ul-notify-row .cwg_popup_submit {
-        font-size: 12px;
-        padding: 0 4px
+        font-size: 13px;
+        padding: 0 6px
     }
 }
