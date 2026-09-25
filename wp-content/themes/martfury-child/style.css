@@ -1266,3 +1266,54 @@ ul.products li.product form.cart label.label {
         max-width: none
     }
 }
+
+/*
+ * Product page section headings - "Related products" (and upsells, which share the class) and the
+ * "Your Recently Viewed Products" block - in the same style as the home page product section headings
+ * (.cat-header, e.g. "On Sale"): left-aligned plum text in Work Sans' light 300 weight over a thin grey
+ * rule, instead of the parent theme's centered text on a grey bar.
+ */
+section.related .related-title,
+section.up-sells .related-title,
+#footer-recently-viewed .recently-header,
+#footer-bot-recently-viewed .recently-header {
+    background: none!important;
+    border: 0!important;
+    border-bottom: 1px solid #e1e1e1!important;
+    border-radius: 0;
+    text-align: left!important;
+    padding: 0 0 13px!important;
+    margin: 0 0 30px!important
+}
+
+section.related .related-title,
+section.up-sells .related-title,
+#footer-recently-viewed .recently-header .title,
+#footer-bot-recently-viewed .recently-header .title {
+    font-size: 24px!important;
+    font-weight: 300!important;
+    line-height: 1.2!important;
+    color: #3b1d4a!important;
+    text-align: left!important
+}
+
+#footer-recently-viewed .recently-header,
+#footer-bot-recently-viewed .recently-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between
+}
+
+#footer-recently-viewed .recently-header .title,
+#footer-bot-recently-viewed .recently-header .title {
+    margin: 0!important
+}
+
+/* The recently viewed block gets the same width as the related products above it (the product grid's
+   width - see the related products rule above), so the two headings share left/right edges. */
+@media (min-width: 1200px) {
+    #footer-recently-viewed > .container {
+        width: calc(0.81 * min(100% - 30px, 1680px) - 30px);
+        max-width: none
+    }
+}
