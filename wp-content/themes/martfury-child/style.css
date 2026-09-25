@@ -1466,3 +1466,80 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
         padding: 30px
     }
 }
+
+/*
+ * Product page: the quantity, Add to cart and wishlist heart sit vertically centred between the rule
+ * above (under the short description) and the rule below (above the categories/meta). They were
+ * floats with uneven margins (19px above the row, 32px below, the heart 10px lower than the others).
+ * Now a flex row with the items centred on each other and 25px above and below. Simple products only
+ * (the variations form is laid out differently); the quick view popup is left as is.
+ */
+.site-content .entry-summary form.cart:not(.variations_form) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 25px 0!important
+}
+
+/* The form's clearfix ::before/::after would become empty flex items (and take a gap each). */
+.site-content .entry-summary form.cart:not(.variations_form)::before,
+.site-content .entry-summary form.cart:not(.variations_form)::after {
+    display: none
+}
+
+.site-content .entry-summary form.cart:not(.variations_form) > .quantity,
+.site-content .entry-summary form.cart:not(.variations_form) > .single_add_to_cart_button,
+.site-content .entry-summary form.cart:not(.variations_form) > .actions-button {
+    float: none!important;
+    margin-top: 0!important;
+    margin-bottom: 0!important;
+    top: 0!important
+}
+
+.site-content .entry-summary form.cart:not(.variations_form) > .actions-button {
+    display: flex;
+    align-items: center;
+    padding-top: 0!important
+}
+
+.site-content .entry-summary form.cart:not(.variations_form) > .actions-button .yith-wcwl-add-to-wishlist {
+    float: none;
+    margin-top: 0!important;
+    margin-bottom: 0!important
+}
+
+.site-content .entry-summary form.cart:not(.variations_form) > .actions-button .yith-wcwl-add-to-wishlist a {
+    display: flex;
+    align-items: center
+}
+
+.site-content .entry-summary .woocommerce-product-details__short-description {
+    margin-bottom: 0!important
+}
+
+/* Phones: quantity, button and heart on one line - 12px gaps, the button takes the remaining width. */
+@media (max-width: 767px) {
+    .site-content .entry-summary form.cart:not(.variations_form) {
+        flex-wrap: nowrap;
+        gap: 12px
+    }
+
+    .site-content .entry-summary form.cart:not(.variations_form) > .quantity,
+    .site-content .entry-summary form.cart:not(.variations_form) > .single_add_to_cart_button,
+    .site-content .entry-summary form.cart:not(.variations_form) > .actions-button {
+        margin-left: 0!important;
+        margin-right: 0!important
+    }
+
+    .site-content .entry-summary form.cart:not(.variations_form) > .single_add_to_cart_button {
+        flex: 1 1 auto;
+        width: auto!important;
+        min-width: 0!important
+    }
+
+    /* Martfury gives the wishlist wrapper a percentage width on phones; size it to the heart instead. */
+    .site-content .entry-summary form.cart:not(.variations_form) > .actions-button {
+        flex: 0 0 auto;
+        width: auto!important
+    }
+}
