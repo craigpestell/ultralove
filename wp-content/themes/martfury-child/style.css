@@ -1230,3 +1230,27 @@ body ul.products li.product form.cart.ul-out-of-stock button.ul-out-of-stock-but
     cursor: not-allowed;
     opacity: 1
 }
+
+/* The quantity template's visible "Quantity" label - already hidden in the shop grid and home page
+   widgets by the older rules near the top of this file, but not in the related products / upsells
+   carousels on product pages. The screen-reader label is kept. */
+ul.products li.product form.cart label.label {
+    display: none!important
+}
+
+/*
+ * Related products / upsells on product pages: the same width as the shop's product grid, so their
+ * cards are the same width as the grid's. The shop (full-width catalog layout) puts the grid in an
+ * 81% column of a row that's the viewport minus 30px, capped at 1680px (Martfury's 1650px
+ * .martfury-container), minus the column's 15px padding each side:
+ * 0.81 x min(width - 30px, 1680px) - 30px - e.g. 1112px at 1440, 1331px at 1920. The related
+ * section is full width, so 100% here is the viewport. Below 1200px the shop drops to 3 columns and
+ * the related cards are already within a few px of the grid's, so Bootstrap's widths stay.
+ */
+@media (min-width: 1200px) {
+    section.related > .container,
+    section.up-sells > .container {
+        width: calc(0.81 * min(100% - 30px, 1680px) - 30px);
+        max-width: none
+    }
+}
