@@ -1626,8 +1626,10 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     transform: scaleX(1)
 }
 
-/* Quick view popup: underline the product name (a link to the product page) on hover / keyboard focus. */
-#mf-quick-view-modal .product_title a:hover,
+/* Quick view popup: underline the product name (a link to the product page) while the product header
+   block (.mf-entry-product-header - the name plus the brand/SKU line) is hovered, or the link has
+   keyboard focus. */
+#mf-quick-view-modal .mf-entry-product-header:hover .product_title a,
 #mf-quick-view-modal .product_title a:focus-visible {
     text-decoration: underline!important;
     text-underline-offset: 4px;
