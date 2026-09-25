@@ -1179,16 +1179,18 @@ body:not(.shop-view-list) ul.products li.product form.cart button {
 }
 
 /*
- * Home page "On Sale" deals carousel: every slide stretches to the tallest one (slick sizes the
- * track to its tallest slide, including off-screen ones, so shorter visible slides - e.g. out of
- * stock ones with no cart row - left a variable gap above the button). The cart row is pinned to
- * the bottom of each card, and the "More On-Sale Products" button sits a fixed 40px below.
+ * Product carousels (the home page "On Sale" deals carousel, and the related products / upsells
+ * carousels on product pages): every slide stretches to the tallest one, the same as the grid
+ * cards above. Slick sizes the track to its tallest slide, including off-screen ones, so without
+ * this shorter slides (e.g. out of stock ones, or short titles) end at different heights and their
+ * cart rows don't line up. The cart row is pinned to the bottom of each card, and on the home page
+ * the "More On-Sale Products" button sits a fixed 40px below the carousel.
  */
-.mf-product-deals-day ul.products .slick-track {
+ul.products.slick-slider .slick-track {
     display: flex!important
 }
 
-.mf-product-deals-day ul.products .slick-track > li.product {
+ul.products.slick-slider .slick-track > li.product {
     display: flex!important;
     float: none!important;
     height: auto!important
