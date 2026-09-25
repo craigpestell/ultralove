@@ -1543,3 +1543,37 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
         width: auto!important
     }
 }
+
+/*
+ * More of the aurora backdrop above and below the content of #topcta and the #bottomcta + footer box
+ * (#hero-footer-combo): 60px more at each outer edge (32px on phones). The 85px white fades at the
+ * top and bottom edges stay as they are, so the extra space shows pattern rather than white before
+ * it fades out.
+ */
+#topcta {
+    padding-top: 138px;
+    padding-bottom: 124px
+}
+
+#bottomcta {
+    padding-top: 148px
+}
+
+#hero-footer-combo {
+    padding-bottom: 60px
+}
+
+@media (max-width:678px) {
+    #topcta {
+        padding-top: 78px;
+        padding-bottom: 80px
+    }
+
+    #bottomcta {
+        padding-top: 88px
+    }
+
+    #hero-footer-combo {
+        padding-bottom: 32px
+    }
+}
