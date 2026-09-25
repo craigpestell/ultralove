@@ -835,3 +835,75 @@ function ultralove_convert_url_to_cloudinary($url) {
 }
 
 
+
+/**
+ * The header's navigation row (Store / On Sale / ... ), moved here from template-parts/headers/layout-1.php
+ * so it can also be printed outside the header - see ultralove_home_nav_below_banner().
+ */
+function ultralove_main_menu_row() {
+	$css_header_menu = 'col-md-9 col-sm-9';
+	$show_department = true;
+	$extras          = martfury_menu_extras();
+	if ( empty( $extras ) || ! in_array( 'department', $extras ) ) {
+		$show_department = false;
+		$css_header_menu = 'col-md-12 col-sm-12';
+	}
+	?>
+<div class="main-menu hidden-xs hidden-sm">
+    <div class="<?php echo martfury_header_container_classes(); ?>">
+        <div class="row header-row">
+			<?php if ( $show_department ) : ?>
+                <div class="col-md-3 col-sm-3 i-product-cats mr-extra-department">
+					<?php martfury_extra_department( true ); ?>
+                </div>
+			<?php endif; ?>
+            <div class="<?php echo esc_attr( $css_header_menu ); ?> mr-header-menu">
+                <div class="col-header-menu">
+					<?php martfury_header_menu(); ?>
+					<?php martfury_header_bar(); ?>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+	<?php
+}
+
+/**
+ * Home page: the navigation row sits below the banner slides rather than above them. When the front
+ * page's Elementor content has the home banner ([ultralove_banner group="home"] in a Shortcode widget),
+ * the header template skips the row and it's printed right after that widget instead - inside the
+ * banner's full-width (stretched) section, so it keeps the full page width. Without the banner the
+ * header prints the row as usual.
+ */
+function ultralove_home_nav_below_banner() {
+	static $result = null;
+
+	if ( null === $result ) {
+		$result = false;
+		if ( is_front_page() && shortcode_exists( 'ultralove_banner' ) ) {
+			$data   = get_post_meta( get_queried_object_id(), '_elementor_data', true );
+			$result = is_string( $data ) && (bool) preg_match( '/ultralove_banner\s+group=\\\\?["\']?home\b/', $data );
+		}
+	}
+
+	return $result;
+}
+
+add_action( 'elementor/frontend/widget/after_render', 'ultralove_print_home_nav_after_banner' );
+function ultralove_print_home_nav_after_banner( $widget ) {
+	static $done = false;
+
+	if ( $done || 'shortcode' !== $widget->get_name() || ! ultralove_home_nav_below_banner() ) {
+		return;
+	}
+	if ( ! preg_match( '/ultralove_banner\s+group=["\']?home\b/', (string) $widget->get_settings( 'shortcode' ) ) ) {
+		return;
+	}
+
+	$done = true;
+	// .site-header so the header's menu styles (all scoped to it) still apply.
+	echo '<div class="site-header ul-home-nav">';
+	ultralove_main_menu_row();
+	echo '</div>';
+}
