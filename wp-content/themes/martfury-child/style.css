@@ -267,9 +267,10 @@ Template: martfury
     float: none!important
 }
 
+/* Same nav bar height at every width - the parent theme halves this padding below 1200px. */
 .site-header .primary-nav>ul>li {
-    padding-top: 20px;
-    padding-bottom: 20px
+    padding-top: 20px!important;
+    padding-bottom: 20px!important
 }
 
 #mf_product_categories-2 ul li a {
