@@ -107,7 +107,70 @@ function ultralove_martfury_footer_recently_viewed() {
     $atts['link_text'] = martfury_get_option( 'footer_recently_viewed_link_text' );
     $atts['link_url']  = martfury_get_option( 'footer_recently_viewed_link_url' );
 
-    wp_send_json_success( ultralove_render_recently_viewed_from_request( $atts ) );
+    wp_send_json_success( ultralove_render_recently_viewed_cards( $atts ) );
+}
+
+/**
+ * Footer "Recently viewed" block: the standard product card (content-product.php - the same card as
+ * the shop grid and related products) instead of Martfury's image-only list. recently-viewed.js turns
+ * the list into a carousel. The viewed IDs come from the browser (oldest first); the product being
+ * viewed is left out, since it's the page itself.
+ */
+function ultralove_render_recently_viewed_cards( $atts ) {
+    $current  = isset( $_POST['current_product'] ) ? absint( $_POST['current_product'] ) : 0;
+    $products = array();
+
+    foreach ( array_reverse( ultralove_get_recently_viewed_request_ids() ) as $product_id ) {
+        if ( $product_id === $current ) {
+            continue;
+        }
+
+        $product = wc_get_product( $product_id );
+        if ( ! $product || ! $product->is_visible() ) {
+            continue;
+        }
+
+        $products[] = $product;
+        if ( count( $products ) >= 10 ) {
+            break;
+        }
+    }
+
+    ob_start();
+
+    echo '<div class="recently-header">';
+    if ( ! empty( $atts['title'] ) ) {
+        printf( '<h4 class="title">%s</h4>', esc_html( $atts['title'] ) );
+    }
+    if ( ! empty( $atts['link_text'] ) ) {
+        printf( '<a href="%s" class="link">%s</a>', esc_url( $atts['link_url'] ), esc_html( $atts['link_text'] ) );
+    }
+    echo '</div>';
+
+    if ( empty( $products ) ) {
+        // Martfury's empty state; the block is hidden when empty (footer_recently_viewed_empty).
+        printf(
+            '<ul class="product-list no-products"><li class="text-center">%s <br><a href="%s" class="btn-secondary">%s</a></li></ul>',
+            esc_html__( 'Recently Viewed Products is a function which helps you keep track of your recent viewing history.', 'martfury' ),
+            esc_url( get_permalink( get_option( 'woocommerce_shop_page_id' ) ) ),
+            esc_html__( 'Shop Now', 'martfury' )
+        );
+
+        return ob_get_clean();
+    }
+
+    wc_setup_loop( array( 'name' => 'recently_viewed', 'columns' => 5 ) );
+    woocommerce_product_loop_start();
+    foreach ( $products as $product ) {
+        $post_object = get_post( $product->get_id() );
+        setup_postdata( $GLOBALS['post'] =& $post_object );
+        wc_get_template_part( 'content', 'product' );
+    }
+    woocommerce_product_loop_end();
+    wp_reset_postdata();
+    wc_reset_loop();
+
+    return ob_get_clean();
 }
 
 function ultralove_martfury_header_recently_viewed() {

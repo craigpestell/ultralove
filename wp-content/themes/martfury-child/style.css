@@ -1317,3 +1317,46 @@ section.up-sells .related-title,
         max-width: none
     }
 }
+
+/* Footer "Recently viewed" block: now standard product cards in a carousel (see
+   ultralove_render_recently_viewed_cards() in functions.php), with arrows/dots matching the related
+   products carousel (the parent theme's section.related ul.products rules). */
+#footer-recently-viewed ul.products,
+#footer-bot-recently-viewed ul.products {
+    position: relative
+}
+
+#footer-recently-viewed ul.products .slick-arrow,
+#footer-bot-recently-viewed ul.products .slick-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    left: -54px;
+    color: #ccc;
+    font-size: 30px;
+    cursor: pointer;
+    transition: .5s;
+    z-index: 2
+}
+
+#footer-recently-viewed ul.products .slick-next-arrow,
+#footer-bot-recently-viewed ul.products .slick-next-arrow {
+    left: auto;
+    right: -54px
+}
+
+#footer-recently-viewed ul.products .slick-arrow:hover,
+#footer-bot-recently-viewed ul.products .slick-arrow:hover {
+    color: #000
+}
+
+#footer-recently-viewed ul.products .slick-arrow.slick-disabled,
+#footer-bot-recently-viewed ul.products .slick-arrow.slick-disabled {
+    color: #ccc;
+    cursor: auto
+}
+
+#footer-recently-viewed ul.products .slick-dots,
+#footer-bot-recently-viewed ul.products .slick-dots {
+    display: none!important
+}
