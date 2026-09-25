@@ -1600,14 +1600,17 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
 /* Header navigation: a white underline that grows from the centre on hover / keyboard focus, and stays
    on the current page's item. */
 .site-header .primary-nav>ul>li>a {
-    position: relative
+    position: relative;
+    padding-left: 10px!important;
+    padding-right: 10px!important
 }
 
 .site-header .primary-nav>ul>li>a::after {
     content: "";
     position: absolute;
-    left: 0;
-    right: 0;
+    /* inset by the link's horizontal padding, so the underline is the width of the text */
+    left: 10px;
+    right: 10px;
     bottom: -6px;
     height: 2px;
     background: #fff;
