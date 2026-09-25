@@ -30,6 +30,26 @@
       // aurora gradient below (see style.css) paints behind both with no seam between them -
       // the same technique used for the home banner + #topcta, but here as a real DOM wrapper
       // (both pieces are plain theme template output, so no JS-measured backdrop is needed). ?>
+<?php if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_location( 'footer' ) ) {
+	// The copyright/payments row, moved out of the site footer (see the child
+	// template-parts/footers/layout-1.php) so it sits on plain white below the backdrop. Keeps the
+	// parent's .footer-layout-1/.footer-bottom classes so its layout styles still apply.
+	?>
+    <div id="footer-copyright-row" class="footer-layout footer-layout-1">
+        <div class="<?php echo martfury_footer_container_classes(); ?>">
+            <div class="footer-bottom">
+                <div class="row footer-row">
+                    <div class="col-footer-copyright col-lg-6 col-md-12 col-sm-12 col-xs-12">
+						<?php martfury_footer_copyright(); ?>
+                    </div>
+                    <div class="col-footer-payments col-lg-6 col-md-12 col-sm-12 col-xs-12">
+						<?php martfury_footer_payments(); ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php } ?>
 </div><!-- #page -->
 <?php if( is_checkout() ) :?>
 	<script>

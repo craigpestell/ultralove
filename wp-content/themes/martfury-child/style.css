@@ -255,10 +255,6 @@ Template: martfury
     margin-top: 19px!important
 }
 
-#text-2 {
-    min-height: 407px
-}
-
 .footer-row {
     text-align: center!important;
     display: block!important
@@ -332,7 +328,7 @@ Template: martfury
 }
 
 .site-footer .footer-widgets:after {
-    border-bottom: 1px solid #825ba5
+    border-bottom: 1px solid rgba(130,91,165,.28)
 }
 
 .mf-products-grid .cat-header h2,.mf-products-grid .cat-header h3 {
@@ -344,14 +340,14 @@ Template: martfury
 }
 
 #input_1_1,#input_1_2,#input_1_3,#input_1_4 {
-    background-color: #271a38!important;
-    border: 1px solid #684686!important;
+    background-color: #fff!important;
+    border: 1px solid #d9c8e6!important;
     border-radius: 6px!important;
-    color: #fff!important
+    color: #3b1d4a!important
 }
 
 #input_1_1::placeholder,#input_1_2::placeholder,#input_1_3::placeholder,#input_1_4::placeholder {
-    color: #fff!important
+    color: #8a7a96!important
 }
 
 h1,h2,h3,h4 {
@@ -362,8 +358,12 @@ h1,h2,h3,h4 {
     text-align: center
 }
 
-#welcome,#welcome h2,#welcome p,.footer-copyright,.site-footer .footer-layout,.site-footer .footer-layout .widget-title {
+#welcome,#welcome h2,#welcome p {
     color: #fff!important
+}
+
+.footer-copyright,.site-footer .footer-layout,.site-footer .footer-layout .widget-title {
+    color: #3b1d4a!important
 }
 
 #welcome,.site-footer .footer-layout {
@@ -380,21 +380,6 @@ h1,h2,h3,h4 {
     display: inherit
 }
 
-#topcta:before,#welcome:after {
-    content: "";
-    width: 100%;
-    height: 55px;
-    background-image: url(https://ultralove.ca/wp-content/uploads/2021/07/shadow.png);
-    background-size: 100% 45px;
-    background-repeat: no-repeat;
-    display: inline-block
-}
-
-#welcome:after {
-    position: absolute!important;
-    z-index: 2
-}
-
 .ced_hpul_single_summary_wrapper {
     margin-bottom: 15px!important;
     margin-left: -10px!important
@@ -404,49 +389,12 @@ h1,h2,h3,h4 {
     display: none!important
 }
 
-#topcta:before {
-    position: relative
-}
-
-#topcta:after {
-    position: absolute;
-    left: 0;
-    margin-top: 45px;
-    z-index: 2
-}
-
-#bottomcta:after,#bottomcta:before,#topcta:after,.main-menu:after,.page-header-page .entry-title:after {
-    content: "";
-    width: 100%;
-    height: 55px;
-    background-image: url(https://ultralove.ca/wp-content/uploads/2021/07/shadow.png);
-    background-size: 100% 45px;
-    background-repeat: no-repeat;
-    display: inline-block
-}
-
-.main-menu:after {
-    position: absolute;
-    left: 0;
-    z-index: 2
-}
-
-#bottomcta:after,#bottomcta:before,.page-header-page .entry-title:after {
-    position: relative
-}
-
-#bottomcta:after,.page-header-page .entry-title:after {
-    position: absolute;
-    left: 0;
-    margin-top: 82px
-}
-
-.page-header-page .entry-title:after {
-    margin-top: 103px
-}
-
-#bottomcta,#topcta,.page-header-page .entry-title {
+.page-header-page .entry-title {
     color: #fff!important
+}
+
+#bottomcta,#topcta {
+    color: #3b1d4a!important
 }
 
 #topcta,.page-header-page .entry-title {
@@ -459,116 +407,164 @@ h1,h2,h3,h4 {
     padding-bottom: 55px
 }
 
+/* Breathing room above the heading pill and below the buttons. All three pill-headed blocks
+   (#topcta, #bottomcta, the footer widget columns) land on the same 88px gap above the pill and
+   ~72px below the last row. #topcta's Elementor widget wrappers add ~10px of their own above the
+   h1 (and ~8px below the buttons), so its padding is that much smaller to match. */
 #bottomcta,#topcta {
-    text-align: center;
-    padding-bottom: 45px
+    text-align: center
 }
 
-/* Divider between the View Products/Wholesale Signup buttons and the footer columns below - same
-   spot #bottomcta and the footer used to visibly separate before they shared #hero-footer-combo's
-   one continuous background. Matches the divider further down between the footer columns and the
-   copyright line (.footer-widgets:after) in both color and rendered width (that one is inset
-   15px within a 1200px-wide .footer-widgets, i.e. 1170px; #bottomcta has no such container to
-   inset within since it's full-bleed, so max-width:1170px + auto margins is used instead to land
-   on the same size). Implemented on #bottomcta:after below, which used to hold the old
-   shadow.png transition graphic this divider replaces. */
+#topcta {
+    padding-top: 78px;
+    padding-bottom: 64px
+}
+
+#bottomcta {
+    padding-top: 88px;
+    padding-bottom: 72px
+}
+
+/* Divider between the View Products/Wholesale Signup buttons and the footer columns below. It's
+   drawn as .footer-widgets:before (see further down) rather than on full-bleed #bottomcta, so it
+   sits in the same container - and matches the width - of the other footer dividers
+   (.footer-widgets:after, #footer-links) at every screen size. */
 #bottomcta {
     position: relative
 }
 
-/* Pure-CSS replacement for bg.jpg (blurred purple/teal aurora on near-black) on the home CTA blocks.
-   #bottomcta no longer paints its own copy - it and the site footer share one #hero-footer-combo
-   wrapper (see footer.php) with a single copy of this same gradient below, so the two read as one
-   continuous backdrop instead of two independent copies with a seam between them. */
-#topcta {
-    background:
-        radial-gradient(ellipse 14% 20% at 65% 25%, rgba(155, 215, 225, .95) 0, rgba(120, 190, 215, .5) 50%, transparent 100%),
-        radial-gradient(ellipse 16% 14% at 80% 32%, rgba(175, 205, 235, .75) 0, transparent 100%),
-        radial-gradient(ellipse 12% 16% at 50% 8%, rgba(115, 155, 205, .65) 0, transparent 100%),
-        radial-gradient(ellipse 12% 14% at 73% 8%, rgba(60, 110, 195, .60) 0, transparent 100%),
-        radial-gradient(ellipse 12% 16% at 14% 32%, rgba(175, 105, 195, .85) 0, rgba(140, 75, 170, .4) 55%, transparent 100%),
-        radial-gradient(ellipse 10% 22% at 6% 52%, rgba(150, 70, 170, .70) 0, transparent 100%),
-        radial-gradient(ellipse 12% 20% at 29% 18%, rgba(135, 75, 175, .70) 0, transparent 100%),
-        radial-gradient(ellipse 12% 14% at 36% 3%, rgba(120, 85, 175, .55) 0, transparent 100%),
-        radial-gradient(ellipse 18% 22% at 91% 45%, rgba(85, 55, 155, .60) 0, transparent 100%),
-        radial-gradient(ellipse 8% 10% at 43% 40%, rgba(145, 85, 175, .70) 0, transparent 100%),
-        radial-gradient(ellipse 10% 14% at 48% 68%, rgba(135, 85, 175, .55) 0, transparent 100%),
-        radial-gradient(ellipse 9% 12% at 60% 63%, rgba(60, 135, 175, .50) 0, transparent 100%),
-        radial-gradient(ellipse 12% 16% at 74% 72%, rgba(95, 65, 165, .50) 0, transparent 100%),
-        radial-gradient(ellipse 12% 14% at 14% 94%, rgba(145, 85, 175, .60) 0, transparent 100%),
-        radial-gradient(ellipse 60% 70% at 40% 60%, rgba(15, 12, 55, .70) 0, transparent 100%),
-        #06060f!important
+/* Light aurora backdrop for the home CTA blocks: soft lavender/teal/pink glows on a pale lavender
+   base, so these sections read as part of the white site around them rather than a dark band.
+   #bottomcta doesn't paint its own copy - it and the site footer share one #hero-footer-combo
+   wrapper (see footer.php), so the two read as one continuous backdrop. On the home page the
+   ultralove-banners plugin also paints this same gradient behind the banner row + #topcta
+   (#ub-hero-combo-bg in its banner.css) - keep the two in sync. */
+:root {
+    --ul-aurora:
+        radial-gradient(ellipse 14% 20% at 65% 25%, rgba(170, 225, 232, .60) 0, rgba(170, 225, 232, .25) 50%, transparent 100%),
+        radial-gradient(ellipse 16% 14% at 80% 32%, rgba(200, 220, 245, .55) 0, transparent 100%),
+        radial-gradient(ellipse 12% 16% at 50% 8%, rgba(190, 205, 240, .50) 0, transparent 100%),
+        radial-gradient(ellipse 12% 14% at 73% 8%, rgba(175, 195, 240, .45) 0, transparent 100%),
+        radial-gradient(ellipse 12% 16% at 14% 32%, rgba(215, 170, 230, .60) 0, rgba(215, 170, 230, .25) 55%, transparent 100%),
+        radial-gradient(ellipse 10% 22% at 6% 52%, rgba(225, 175, 215, .50) 0, transparent 100%),
+        radial-gradient(ellipse 12% 20% at 29% 18%, rgba(205, 175, 235, .50) 0, transparent 100%),
+        radial-gradient(ellipse 12% 14% at 36% 3%, rgba(200, 185, 235, .45) 0, transparent 100%),
+        radial-gradient(ellipse 18% 22% at 91% 45%, rgba(220, 180, 225, .50) 0, transparent 100%),
+        radial-gradient(ellipse 8% 10% at 43% 40%, rgba(240, 180, 205, .45) 0, transparent 100%),
+        radial-gradient(ellipse 10% 14% at 48% 68%, rgba(210, 180, 235, .45) 0, transparent 100%),
+        radial-gradient(ellipse 9% 12% at 60% 63%, rgba(170, 215, 230, .45) 0, transparent 100%),
+        radial-gradient(ellipse 12% 16% at 74% 72%, rgba(215, 190, 240, .45) 0, transparent 100%),
+        radial-gradient(ellipse 12% 14% at 14% 94%, rgba(235, 185, 215, .45) 0, transparent 100%),
+        radial-gradient(ellipse 60% 70% at 40% 60%, rgba(255, 255, 255, .55) 0, transparent 100%),
+        #f6f1fa
 }
 
+#topcta,#hero-footer-combo {
+    background: var(--ul-aurora)!important
+}
+
+/* Same white fade-out at the edges as #topcta (see #topcta:before), on the shared #bottomcta +
+   footer backdrop - including the same fixed 85px top/bottom fade depth, so the pattern starts at
+   the same distance from the top of both sections. */
 #hero-footer-combo {
-    background:
-        radial-gradient(ellipse 14% 20% at 65% 25%, rgba(155, 215, 225, .95) 0, rgba(120, 190, 215, .5) 50%, transparent 100%),
-        radial-gradient(ellipse 16% 14% at 80% 32%, rgba(175, 205, 235, .75) 0, transparent 100%),
-        radial-gradient(ellipse 12% 16% at 50% 8%, rgba(115, 155, 205, .65) 0, transparent 100%),
-        radial-gradient(ellipse 12% 14% at 73% 8%, rgba(60, 110, 195, .60) 0, transparent 100%),
-        radial-gradient(ellipse 12% 16% at 14% 32%, rgba(175, 105, 195, .85) 0, rgba(140, 75, 170, .4) 55%, transparent 100%),
-        radial-gradient(ellipse 10% 22% at 6% 52%, rgba(150, 70, 170, .70) 0, transparent 100%),
-        radial-gradient(ellipse 12% 20% at 29% 18%, rgba(135, 75, 175, .70) 0, transparent 100%),
-        radial-gradient(ellipse 12% 14% at 36% 3%, rgba(120, 85, 175, .55) 0, transparent 100%),
-        radial-gradient(ellipse 18% 22% at 91% 45%, rgba(85, 55, 155, .60) 0, transparent 100%),
-        radial-gradient(ellipse 8% 10% at 43% 40%, rgba(145, 85, 175, .70) 0, transparent 100%),
-        radial-gradient(ellipse 10% 14% at 48% 68%, rgba(135, 85, 175, .55) 0, transparent 100%),
-        radial-gradient(ellipse 9% 12% at 60% 63%, rgba(60, 135, 175, .50) 0, transparent 100%),
-        radial-gradient(ellipse 12% 16% at 74% 72%, rgba(95, 65, 165, .50) 0, transparent 100%),
-        radial-gradient(ellipse 12% 14% at 14% 94%, rgba(145, 85, 175, .60) 0, transparent 100%),
-        radial-gradient(ellipse 60% 70% at 40% 60%, rgba(15, 12, 55, .70) 0, transparent 100%),
-        #06060f
+    position: relative
 }
 
-/* .footer-layout's own bg.jpg (and #bottomcta:after, the shadow strip that used to mark the
-   transition into it) are no longer needed - #hero-footer-combo now supplies one continuous
-   background behind both. */
+#hero-footer-combo:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+        linear-gradient(to bottom, #fff 0, rgba(255,255,255,.75) 34px, rgba(255,255,255,0) 85px, rgba(255,255,255,0) calc(100% - 85px), rgba(255,255,255,.75) calc(100% - 34px), #fff 100%),
+        linear-gradient(to right, #fff 0, rgba(255,255,255,.75) 4%, rgba(255,255,255,0) 12%, rgba(255,255,255,0) 88%, rgba(255,255,255,.75) 96%, #fff 100%)
+}
+
+#hero-footer-combo > #bottomcta,#hero-footer-combo > .site-footer {
+    position: relative;
+    z-index: 1
+}
+
+/* .footer-layout's own bg.jpg is no longer needed - #hero-footer-combo now supplies one
+   continuous background behind #bottomcta and the footer. */
 .site-footer .footer-layout {
     background: none!important
 }
 
-#bottomcta:after {
+.site-footer .footer-widgets:before {
     content: "";
     display: block;
     position: absolute;
-    left: 50%;
-    bottom: 0;
-    width: 100%;
+    top: 0;
+    left: 15px;
+    right: 15px;
     height: 0;
-    max-width: 1170px;
-    margin: 0;
-    transform: translateX(-50%);
-    background: none;
-    border-bottom: 1px solid #825ba5
+    border-top: 1px solid rgba(130,91,165,.28)
 }
 
 #bottomcta h2,#topcta h2 {
-    color: #fff!important;
+    color: #3b1d4a!important;
     margin-top: 0!important
 }
 
 #topcta h1 {
     display: inline-block;
-    color: #fff!important;
-    background: rgba(0,0,0,.52);
+    color: #3b1d4a!important;
+    background: rgba(255,255,255,.8);
+    border: 1px solid rgb(177,101,255);
     border-radius: 999px;
     padding: 10px 28px;
-    margin: 0 15px 18px!important;
+    margin: 0 15px 30px!important;
     line-height: 1.2;
-    box-shadow: 0 6px 18px rgba(0,0,0,.18)
+    box-shadow: 0 6px 18px rgba(90,40,120,.10)
+}
+
+/* Fade #topcta's backdrop out to white on all four sides, so the pattern never runs into the page
+   edges or the sections above/below: top and bottom over a fixed 85px (same as #hero-footer-combo),
+   left and right over 12% of its width. Done as one overlay rather than extra background layers so it also covers the
+   ultralove-banners plugin's shared #ub-hero-combo-bg (which sits behind a transparent #topcta in
+   its aurora mode). The content container is lifted above it so the pills and buttons aren't
+   washed out. */
+#topcta {
+    position: relative
+}
+
+#topcta:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+        linear-gradient(to bottom, #fff 0, rgba(255,255,255,.75) 34px, rgba(255,255,255,0) 85px, rgba(255,255,255,0) calc(100% - 85px), rgba(255,255,255,.75) calc(100% - 34px), #fff 100%),
+        linear-gradient(to right, #fff 0, rgba(255,255,255,.75) 4%, rgba(255,255,255,0) 12%, rgba(255,255,255,0) 88%, rgba(255,255,255,.75) 96%, #fff 100%)
+}
+
+#topcta > .elementor-container {
+    position: relative;
+    z-index: 1
 }
 
 #topcta p {
     display: block;
-    width: fit-content;
-    max-width: calc(100% - 30px);
-    color: #fff!important;
-    background: rgba(0,0,0,.38);
+    width: auto;
+    max-width: none;
+    color: #4a3558!important;
+    background: rgba(255,255,255,.7);
+    border: 1px solid rgb(177,101,255);
     border-radius: 8px;
     padding: 10px 18px;
-    margin: 0 auto 32px!important;
+    margin: 0 0 44px!important;
+    font-size: 21px;
     line-height: 1.5;
-    box-shadow: 0 6px 18px rgba(0,0,0,.14)
+    box-shadow: 0 6px 18px rgba(90,40,120,.08)
 }
 
 .page-id-14 .elementor-element-28ad42c {
@@ -579,12 +575,24 @@ h1,h2,h3,h4 {
     #topcta h1 {
         padding: 8px 18px;
         margin-left: 10px!important;
-        margin-right: 10px!important
+        margin-right: 10px!important;
+        margin-bottom: 24px!important
+    }
+
+    #topcta {
+        padding-top: 46px;
+        padding-bottom: 48px
+    }
+
+    #bottomcta {
+        padding-top: 56px;
+        padding-bottom: 56px
     }
 
     #topcta p {
         padding: 9px 14px;
-        margin: 0 10px 24px!important
+        margin: 0 0 34px!important;
+        font-size: 18px
     }
 }
 
@@ -614,9 +622,10 @@ h1,h2,h3,h4 {
     font-weight: 500!important
 }
 
+/* No top/bottom border on the header menu bar - the parent theme adds a 1px #e1e1e1 one. */
 .site-header .main-menu {
-    border-top: 1px solid #c15ceb;
-    border-bottom: 1px solid #c36af9;
+    border-top: 0!important;
+    border-bottom: 0!important;
     color: #fff!important
 }
 
@@ -628,7 +637,7 @@ h1,h2,h3,h4 {
 }
 
 #text-4 a {
-    color: #b78bde!important
+    color: #b3094b!important
 }
 
 .site-footer .footer-widgets .footer-sidebar {
@@ -641,14 +650,12 @@ h1,h2,h3,h4 {
     }
 }
 
+/* Footer columns go straight from 3 across to 1 stacked - never 2 (the parent theme drops to
+   width:50% columns in between, which left the Email Us form alone on a second row). */
 @media (max-width:991px) {
     .site-footer .footer-widgets .footer-sidebar {
-        max-width: 50%!important
-    }
-}
-
-@media (max-width:771px) {
-    .site-footer .footer-widgets .footer-sidebar {
+        width: 100%;
+        flex: 0 0 100%;
         max-width: 100%!important
     }
 }
@@ -665,10 +672,6 @@ h1,h2,h3,h4 {
     #gform_1 .gform_footer {
         margin-top: 9px!important
     }
-
-    #text-2 {
-        min-height: 7px
-    }
 }
 
 .rc-anchor-container,body .rc-anchor-dark {
@@ -682,8 +685,10 @@ h1,h2,h3,h4 {
 }
 
 #footer-links {
-    border-bottom-color: #825ba5
+    border-bottom-color: rgba(130,91,165,.28)
 }
+
+
 
 #footer-links .widget-title {
     display: none
@@ -716,10 +721,10 @@ h1,h2,h3,h4 {
     align-items: center;
     min-height: 36px;
     padding: 6px 14px;
-    color: #fff!important;
+    color: #3b1d4a!important;
     text-decoration: none!important;
-    background: rgba(255,255,255,.12);
-    border: 1px solid rgba(255,255,255,.35);
+    background: rgba(255,255,255,.7);
+    border: 1px solid rgb(177,101,255);
     border-radius: 999px;
     transition: background-color .2s ease, border-color .2s ease, transform .2s ease;
 }
@@ -731,39 +736,41 @@ h1,h2,h3,h4 {
 
 #footer-links .widget_nav_menu ul li a:hover,
 #footer-links .widget_nav_menu ul li a:focus {
-    color: #fff!important;
+    color: #b3094b!important;
     text-decoration: none!important;
-    background: rgba(255,86,121,.32);
-    border-color: #ff5679;
+    background: #fff;
+    border-color: #b3094b;
     transform: translateY(-1px);
 }
 
 /* Footer widget cards (About Ultra Love / Become A Wholesale Buyer / Email Us): the same pill
    badge + semi-transparent rounded card treatment used on #topcta, so headings, body text, the
    "Learn More"/"Register" buttons and the contact form all stay readable over the footer's own
-   photographic background. The Learn More/Register buttons live in the same text widget as their
+   light aurora background. The Learn More/Register buttons live in the same text widget as their
    paragraphs now (see the About Ultra Love/Become A Wholesale Buyer widget text), so they share
    this one card instead of a second. */
 .site-footer .footer-widgets .widget-title {
     display: block;
     width: fit-content;
-    color: #fff!important;
-    background: rgba(0,0,0,.52);
+    color: #3b1d4a!important;
+    background: rgba(255,255,255,.8);
+    border: 1px solid rgb(177,101,255);
     border-radius: 999px;
     padding: 8px 22px;
-    margin: 0 auto 16px!important;
+    margin: 0 auto 24px!important;
     line-height: 1.2;
-    box-shadow: 0 6px 18px rgba(0,0,0,.18)
+    box-shadow: 0 6px 18px rgba(90,40,120,.10)
 }
 
 .site-footer .footer-widgets .textwidget,
 .site-footer .footer-widgets .gform_wrapper {
     display: block;
-    color: #fff!important;
-    background: rgba(0,0,0,.38);
+    color: #4a3558!important;
+    background: rgba(255,255,255,.7);
+    border: 1px solid rgb(177,101,255);
     border-radius: 10px;
     padding: 16px 18px;
-    box-shadow: 0 6px 18px rgba(0,0,0,.14)
+    box-shadow: 0 6px 18px rgba(90,40,120,.08)
 }
 
 /* Gravity Forms makes .gform_footer a flex container by default, so text-align doesn't move its
@@ -802,25 +809,21 @@ h1,h2,h3,h4 {
 #bottomcta h2 {
     display: block;
     width: fit-content;
-    background: rgba(0,0,0,.52);
+    background: rgba(255,255,255,.8);
+    border: 1px solid rgb(177,101,255);
     border-radius: 999px;
     padding: 10px 28px;
-    margin: 0 auto 18px!important;
+    margin: 0 auto 44px!important;
     line-height: 1.2;
-    box-shadow: 0 6px 18px rgba(0,0,0,.18)
+    box-shadow: 0 6px 18px rgba(90,40,120,.10)
 }
 
-/* Copyright line in the same pill treatment as the rest of the footer/#topcta. block + fit-content
-   + auto margins (rather than inline-block) keeps it centered regardless of its parent column's
-   own text-align, since .footer-copyright itself is the text node being pilled, not a wrapper. */
+/* Copyright line: plain centered text on the white #footer-copyright-row (no pill). block +
+   fit-content + auto margins keeps it centered regardless of its parent column's own text-align. */
 .footer-copyright {
     display: block;
     width: fit-content;
-    background: rgba(0,0,0,.52);
-    border-radius: 999px;
-    padding: 8px 22px;
-    margin: 0 auto!important;
-    box-shadow: 0 6px 18px rgba(0,0,0,.18)
+    margin: 0 auto!important
 }
 
 /* Header layout used when the ultralove-banners plugin is active (the .header-main-row wrapper only
@@ -884,6 +887,188 @@ html, body {
 html body {
     --mf-background-primary-text-color: #fff;
 }
+
+/* Footer breathing room: more space above/below the widget columns, between stacked columns
+   (e.g. Email Us under the About/Wholesale cards on narrower screens) and around the copyright pill. */
+.site-footer .footer-widgets {
+    padding-top: 88px!important;
+    padding-bottom: 64px!important
+}
+
+.site-footer .footer-widgets .footer-sidebar {
+    margin-bottom: 48px
+}
+
+/* Copyright row - rendered after #hero-footer-combo (see footer.php), on the plain white page. */
+#footer-copyright-row {
+    background: #fff
+}
+
+#footer-copyright-row .footer-bottom {
+    padding-top: 36px;
+    padding-bottom: 44px
+}
+
+@media (max-width:678px) {
+    .site-footer .footer-widgets {
+        padding-top: 56px!important;
+        padding-bottom: 48px!important
+    }
+}
+
+/*
+ * Keep the content of #topcta and the #bottomcta + footer box (#hero-footer-combo) within the same
+ * left/right edges as the home page product grids, while the sections themselves (and their
+ * backdrop/fades) stay full width. Those grids sit in Elementor boxed containers (1170 / 970 /
+ * 720px at >=1200 / >=1025 / >=768px, full width minus 15px padding below that - Martfury's
+ * css/elementors/elementor.scss plus the Elementor kit's tablet width) with 10px column padding, so
+ * their visible edges are 1150 / 950 / 700px wide, or 25px in from each side on phones. The
+ * footer's Bootstrap .container normally has a fixed width (1170 / 970 / 750px), so it's switched
+ * to width:auto + max-width here.
+ */
+#topcta > .elementor-container,
+#bottomcta,
+#hero-footer-combo .site-footer .container {
+    width: auto;
+    max-width: 1150px;
+    margin-left: auto;
+    margin-right: auto
+}
+
+@media (max-width:1199px) {
+    #topcta > .elementor-container,
+    #bottomcta,
+    #hero-footer-combo .site-footer .container {
+        max-width: 950px
+    }
+}
+
+@media (max-width:1024px) {
+    #topcta > .elementor-container,
+    #bottomcta,
+    #hero-footer-combo .site-footer .container {
+        max-width: 700px
+    }
+}
+
+@media (max-width:767px) {
+    #topcta > .elementor-container,
+    #bottomcta,
+    #hero-footer-combo .site-footer .container {
+        max-width: none;
+        margin-left: 25px;
+        margin-right: 25px
+    }
+}
+
+/* Turnstile's flexible widget has a 300px minimum width; cap it at the form card's width so it
+   can't overflow the card where the footer columns are narrower than that (~992-1199px). */
+.site-footer .cf-turnstile,
+.site-footer .cf-turnstile iframe {
+    max-width: 100%!important
+}
+
+/* Center the text inside every pill, so a heading that wraps to two lines stays centered, and
+   use Work Sans' light (300) weight rather than the 500 all h1-h4 get above. */
+#topcta h1,
+#bottomcta h2,
+.site-footer .footer-widgets .widget-title {
+    text-align: center!important;
+    font-weight: 300!important
+}
+
+/* #bottomcta's pill-to-buttons gap matches #topcta's text-to-buttons gap (#topcta p's 44px bottom
+   margin, 34px on phones). */
+@media (max-width:678px) {
+    #bottomcta h2 {
+        margin-bottom: 34px!important
+    }
+}
+
+/* Footer content edges: everything in the footer (cards, dividers, the links row) and #bottomcta's
+   pill/buttons sit within the product grid's edges at every width - see the content-width block
+   above, which also constrains #bottomcta. At >=1025px the Bootstrap gutters already line up; below that the footer container's own
+   15px padding pushed content 15px inside the grid, and on phones the parent theme also drops the
+   row's -15px margin, which left the cards at one inset and the dividers/links at another. */
+@media (max-width:1024px) {
+    #hero-footer-combo .site-footer .container {
+        padding-left: 0;
+        padding-right: 0
+    }
+}
+
+@media (max-width:767px) {
+    .site-footer .footer-widgets:before,
+    .site-footer .footer-widgets:after {
+        left: 0!important;
+        right: 0!important
+    }
+
+    #footer-links {
+        margin-left: 0;
+        margin-right: 0
+    }
+
+}
+
+/* #topcta's text box spans the full content width - the same edges as the product grids and the
+   footer content (see the content-width block above). Elementor's 10px column padding inside
+   #topcta is removed so the box lands exactly on those edges rather than 10px inside them. */
+#topcta > .elementor-container > .elementor-column > .elementor-widget-wrap,
+#topcta > .elementor-container > .elementor-column > .elementor-column-wrap > .elementor-widget-wrap {
+    padding-left: 0!important;
+    padding-right: 0!important
+}
+
+/* More breathing room above/below the logo + search row on desktop (the parent theme uses 20px). */
+@media (min-width:992px) {
+    .site-header .header-main {
+        padding-top: 32px!important;
+        padding-bottom: 32px!important
+    }
+}
+
+/* Product section titles (e.g. "On Sale" on the home page) in the same light (300) weight as the
+   pill headings, instead of the 500 all h1-h4 get above. */
+.cat-header .cat-title,
+.cat-header h2,
+.cat-header h3 {
+    font-weight: 300!important
+}
+
+/* All text in the home page product sections (the deals carousel - "On Sale" - and the products
+   grid widgets) in a lighter weight. `lighter` is relative to the parent's weight, so applied at
+   every level it steps everything down to Work Sans' lightest loaded weight (300). The product
+   cards themselves (ul.products) are excluded so their titles/promo notes match the shop page. */
+.elementor-widget-martfury-product-deals-carousel,
+.elementor-widget-martfury-product-deals-carousel *:not(ul.products, ul.products *),
+.elementor-widget-martfury-products-grid,
+.elementor-widget-martfury-products-grid *:not(ul.products, ul.products *) {
+    font-weight: lighter!important
+}
+
+/* ...except the buttons (Add to cart etc.), which keep their original 600 weight. */
+.elementor-widget-martfury-product-deals-carousel .button,
+.elementor-widget-martfury-product-deals-carousel button,
+.elementor-widget-martfury-products-grid .button,
+.elementor-widget-martfury-products-grid button {
+    font-weight: 600!important
+}
+
+/* Product section headings (e.g. "On Sale"): plum text, no pill - no background, border, shadow
+   or padding (set explicitly so nothing from the parent theme shows through). The light 300 weight
+   comes from the product-section font-weight rules above. The header row keeps the parent theme's
+   grey bottom rule. */
+.cat-header .cat-title,
+.cat-header h2,
+.cat-header h3 {
+    color: #3b1d4a!important;
+    background: none!important;
+    border: 0!important;
+    box-shadow: none!important;
+    padding: 0!important
+}
+
 
 /*
  * Product grid cards: consistent height + non-wrapping cart row.
