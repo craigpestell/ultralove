@@ -907,3 +907,45 @@ function ultralove_print_home_nav_after_banner( $widget ) {
 	ultralove_main_menu_row();
 	echo '</div>';
 }
+
+/**
+ * Quick view popup header: the link wraps the product name's container (<a><h2 class="product_title">),
+ * with the brand / rating / SKU list outside it, rather than Martfury's link inside the heading with the
+ * list alongside. Replaces MF's get_product_quick_view_header() on the same hook and priority.
+ */
+add_action( 'wp_loaded', 'ultralove_replace_quick_view_header' );
+function ultralove_replace_quick_view_header() {
+	global $martfury_woocommerce;
+
+	if ( ! isset( $martfury_woocommerce ) || ! is_object( $martfury_woocommerce ) || ! method_exists( $martfury_woocommerce, 'single_product_brand' ) ) {
+		return;
+	}
+	if ( false === has_action( 'martfury_single_product_summary', array( $martfury_woocommerce, 'get_product_quick_view_header' ) ) ) {
+		return;
+	}
+
+	remove_action( 'martfury_single_product_summary', array( $martfury_woocommerce, 'get_product_quick_view_header' ), 5 );
+	add_action( 'martfury_single_product_summary', 'ultralove_quick_view_header', 5 );
+}
+
+function ultralove_quick_view_header() {
+	global $product, $martfury_woocommerce;
+	?>
+        <div class="mf-entry-product-header">
+            <div class="entry-left">
+                <a class="ul-qv-title" href="<?php echo esc_url( $product->get_permalink() ); ?>"><h2 class="product_title"><?php echo $product->get_title(); // phpcs:ignore -- titles hold <br>/<b> markup, output as Martfury does ?></h2></a>
+                <ul class="entry-meta">
+					<?php
+					$martfury_woocommerce->single_product_brand();
+					if ( function_exists( 'woocommerce_template_single_rating' ) && $product->get_rating_count() ) {
+						echo '<li class="meta-review">';
+						woocommerce_template_single_rating();
+						echo '</li>';
+					}
+					$martfury_woocommerce->single_product_sku();
+					?>
+                </ul>
+            </div>
+        </div>
+	<?php
+}

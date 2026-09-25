@@ -1626,15 +1626,7 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     transform: scaleX(1)
 }
 
-/* Quick view popup: underline the product name (a link to the product page) while the product header
-   block (.mf-entry-product-header - the name plus the brand/SKU line) is hovered, or the link has
-   keyboard focus. */
-#mf-quick-view-modal .mf-entry-product-header:hover .product_title a,
-#mf-quick-view-modal .product_title a:focus-visible {
-    text-decoration: underline!important;
-    text-underline-offset: 4px;
-    text-decoration-thickness: 2px
-}
+
 
 /* Quick view popup: quantity, Add to cart and the wishlist heart vertically centred on each other (they
    were floats with uneven top margins) - the same alignment as the product page's cart row above, but
@@ -1676,29 +1668,18 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     align-items: center
 }
 
-/* Quick view popup: the whole product header block (.mf-entry-product-header) links to the product page.
-   Wrapping it in the name's <a> would nest the brand link inside another link (invalid - browsers split
-   it apart), so the name link is "stretched" instead: its ::after covers the header block, while the
-   header's other links (the brand) sit above that layer and keep working. */
-#mf-quick-view-modal .mf-entry-product-header {
-    position: relative;
-    cursor: pointer
+/* Quick view popup: the product name's container is the link (<a class="ul-qv-title"><h2>, see
+   ultralove_quick_view_header() in functions.php), with the brand/SKU list outside it. The name is
+   underlined while the link is hovered or has keyboard focus. */
+#mf-quick-view-modal .ul-qv-title {
+    display: block;
+    color: inherit;
+    text-decoration: none!important
 }
 
-#mf-quick-view-modal .mf-entry-product-header .product_title,
-#mf-quick-view-modal .mf-entry-product-header .entry-left,
-#mf-quick-view-modal .mf-entry-product-header .product_title a {
-    position: static!important
-}
-
-#mf-quick-view-modal .mf-entry-product-header .product_title a::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: 1
-}
-
-#mf-quick-view-modal .mf-entry-product-header a:not(.product_title a) {
-    position: relative;
-    z-index: 2
+#mf-quick-view-modal .ul-qv-title:hover .product_title,
+#mf-quick-view-modal .ul-qv-title:focus-visible .product_title {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 2px
 }
