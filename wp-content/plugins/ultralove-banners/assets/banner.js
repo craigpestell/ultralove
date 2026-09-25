@@ -243,6 +243,12 @@
 				img.removeAttribute( 'data-ub-sizes' );
 			}
 
+			// The first slide is the page's LCP image: once the full-quality version is in, it's the
+			// LCP request, so it keeps the placeholder's fetchpriority=high.
+			if ( img.getAttribute( 'fetchpriority' ) === 'high' ) {
+				full.fetchPriority = 'high';
+				full.setAttribute( 'fetchpriority', 'high' );
+			}
 			if ( sizes ) {
 				full.sizes = sizes;
 			}

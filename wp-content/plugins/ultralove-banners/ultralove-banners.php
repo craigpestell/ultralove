@@ -24,7 +24,7 @@ define( 'UB_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 if ( is_admin() ) {
 	require_once UB_PLUGIN_PATH . 'admin-pages.php';
 }
-define( 'UB_ASSET_VERSION', '2.0.6' );
+define( 'UB_ASSET_VERSION', '2.0.7' );
 
 /**
  * Banner slot aspect ratio (width / height) per group. Slides are cropped to this in the admin.
