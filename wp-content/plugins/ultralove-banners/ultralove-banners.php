@@ -24,7 +24,7 @@ define( 'UB_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 if ( is_admin() ) {
 	require_once UB_PLUGIN_PATH . 'admin-pages.php';
 }
-define( 'UB_ASSET_VERSION', '2.0.3' );
+define( 'UB_ASSET_VERSION', '2.0.4' );
 
 /**
  * Banner slot aspect ratio (width / height) per group. Slides are cropped to this in the admin.
@@ -166,14 +166,19 @@ add_action(
 					$html
 				);
 
-				// Preload the header's first (LCP) slide image so the browser's preload scanner finds
-				// it right in <head>, ahead of where the banner container actually sits in <body>.
-				if ( preg_match( '/<img\b(?=[^>]*\bub-banner-img\b)(?=[^>]*\bfetchpriority="high")[^>]*>/', $html, $lcp_match ) ) {
-					$tag = $lcp_match[0];
-					preg_match( '/\ssrc="([^"]*)"/', $tag, $src_match );
-					preg_match( '/\ssrcset="([^"]*)"/', $tag, $srcset_match );
-					preg_match( '/\ssizes="([^"]*)"/', $tag, $sizes_match );
-					if ( ! empty( $src_match[1] ) ) {
+				// Preload each banner's first slide image (the ones marked fetchpriority=high - the header
+				// strip's, and on the home page the home banner's, which is the larger LCP image there) so
+				// the browser's preload scanner finds them right in <head>, ahead of where the banners
+				// actually sit in <body>. One preload per distinct image.
+				if ( preg_match_all( '/<img\b(?=[^>]*\bub-banner-img\b)(?=[^>]*\bfetchpriority="high")[^>]*>/', $html, $lcp_matches ) ) {
+					$preloads = array();
+					foreach ( $lcp_matches[0] as $tag ) {
+						preg_match( '/\ssrc="([^"]*)"/', $tag, $src_match );
+						preg_match( '/\ssrcset="([^"]*)"/', $tag, $srcset_match );
+						preg_match( '/\ssizes="([^"]*)"/', $tag, $sizes_match );
+						if ( empty( $src_match[1] ) || isset( $preloads[ $src_match[1] ] ) ) {
+							continue;
+						}
 						$preload = '<link rel="preload" as="image" fetchpriority="high" href="' . esc_url( html_entity_decode( $src_match[1], ENT_QUOTES ) ) . '"';
 						if ( ! empty( $srcset_match[1] ) ) {
 							$preload .= ' imagesrcset="' . esc_attr( html_entity_decode( $srcset_match[1], ENT_QUOTES ) ) . '"';
@@ -181,8 +186,10 @@ add_action(
 						if ( ! empty( $sizes_match[1] ) ) {
 							$preload .= ' imagesizes="' . esc_attr( html_entity_decode( $sizes_match[1], ENT_QUOTES ) ) . '"';
 						}
-						$preload .= '>' . "\n";
-						$html     = preg_replace( '/<head\b[^>]*>/', '$0' . $preload, $html, 1 );
+						$preloads[ $src_match[1] ] = $preload . '>' . "\n";
+					}
+					if ( $preloads ) {
+						$html = preg_replace( '/<head\b[^>]*>/', '$0' . str_replace( '$', '\\$', implode( '', $preloads ) ), $html, 1 );
 					}
 				}
 
