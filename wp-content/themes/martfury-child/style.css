@@ -521,7 +521,7 @@ h1,h2,h3,h4 {
     padding: 10px 28px;
     margin: 0 15px 30px!important;
     line-height: 1.2;
-    box-shadow: 0 6px 18px rgba(90,40,120,.10)
+    box-shadow: 0 6px 18px rgba(177,101,255,.35)
 }
 
 /* Fade #topcta's backdrop out to white at the bottom and sides, so the pattern never runs into the page
