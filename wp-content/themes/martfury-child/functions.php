@@ -135,12 +135,25 @@ function bbloomer_add_css_to_emails( $css, $email ) {
 
 add_filter( 'woocommerce_prevent_admin_access', '__return_false' );
 /**
- * Hide loop read more buttons for out of stock items 
+ * Loop add to cart. Non-purchasable items get nothing. Out of stock items get the same
+ * quantity + button row as in-stock ones (see the Quantity Field on Shop Page plugin), but
+ * disabled, with the button reading "Out of stock".
  */
 if (!function_exists('woocommerce_template_loop_add_to_cart')) {
 	function woocommerce_template_loop_add_to_cart() {
 		global $product;
-		if ( ! $product->is_in_stock() || ! $product->is_purchasable() ) return;
+		if ( ! $product->is_purchasable() ) return;
+		if ( ! $product->is_in_stock() ) {
+			echo '<form class="cart ul-out-of-stock" onsubmit="return false;">'
+				. '<div class="quantity"><div class="qty-box">'
+				. '<span class="decrease icon_minus-06" aria-hidden="true"></span>'
+				. '<input type="number" class="input-text qty text" value="1" disabled aria-label="' . esc_attr__( 'Quantity', 'woocommerce' ) . '" />'
+				. '<span class="increase icon_plus" aria-hidden="true"></span>'
+				. '</div></div>'
+				. '<button type="button" class="button alt ul-out-of-stock-button" disabled>' . esc_html__( 'Out of stock', 'woocommerce' ) . '</button>'
+				. '</form>';
+			return;
+		}
 		wc_get_template('loop/add-to-cart.php');
 	}
 }

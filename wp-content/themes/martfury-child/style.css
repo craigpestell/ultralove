@@ -884,3 +884,148 @@ html, body {
 html body {
     --mf-background-primary-text-color: #fff;
 }
+
+/*
+ * Product grid cards: consistent height + non-wrapping cart row.
+ * Titles (SKU / name / promo note, separated by <br>) get a fixed 6-line box
+ * (7 on phones) and are clamped with an ellipsis; the price/cart box is pinned to
+ * the bottom of the card. Quantity + Add to cart sit in a nowrap flex row.
+ * List view (.shop-view-list) is left alone.
+ */
+body:not(.shop-view-list) ul.products:not(.slick-slider) li.product {
+    display: flex
+}
+
+body:not(.shop-view-list) ul.products li.product .product-inner {
+    display: flex;
+    flex-direction: column;
+    width: 100%
+}
+
+body:not(.shop-view-list) ul.products li.product .mf-product-details {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto
+}
+
+body:not(.shop-view-list) ul.products li.product .woo-loop-product__title {
+    min-height: 0;
+    height: calc(6 * 1.3em);
+    line-height: 1.3em;
+    overflow: hidden;
+    margin-bottom: 0;
+    padding-bottom: 0!important
+}
+
+body:not(.shop-view-list) ul.products li.product .woo-loop-product__title a {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 6;
+    line-clamp: 6;
+    overflow: hidden;
+    line-height: 1.3em
+}
+
+body:not(.shop-view-list) ul.products li.product .mf-product-price-box {
+    margin-top: auto;
+    min-height: 53px
+}
+
+body:not(.shop-view-list) ul.products li.product form.cart {
+    display: flex!important;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 12px
+}
+
+body:not(.shop-view-list) ul.products li.product form.cart .quantity {
+    flex: 0 0 auto;
+    width: auto!important;
+    margin: 0!important
+}
+
+body:not(.shop-view-list) ul.products li.product form.cart .qty-box {
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    height: 36px;
+    white-space: nowrap
+}
+
+body:not(.shop-view-list) ul.products li.product form.cart button {
+    flex: 1 1 auto;
+    width: auto!important;
+    max-width: 150px;
+    min-width: 0;
+    margin: 0!important;
+    box-sizing: border-box;
+    height: 36px!important;
+    line-height: 34px!important;
+    border: 1px solid transparent!important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis
+}
+
+@media (max-width: 767px) {
+    body:not(.shop-view-list) ul.products li.product .woo-loop-product__title {
+        height: calc(7 * 1.3em)
+    }
+
+    body:not(.shop-view-list) ul.products li.product .woo-loop-product__title a {
+        -webkit-line-clamp: 7;
+        line-clamp: 7
+    }
+}
+
+/*
+ * Home page "On Sale" deals carousel: every slide stretches to the tallest one (slick sizes the
+ * track to its tallest slide, including off-screen ones, so shorter visible slides - e.g. out of
+ * stock ones with no cart row - left a variable gap above the button). The cart row is pinned to
+ * the bottom of each card, and the "More On-Sale Products" button sits a fixed 40px below.
+ */
+.mf-product-deals-day ul.products .slick-track {
+    display: flex!important
+}
+
+.mf-product-deals-day ul.products .slick-track > li.product {
+    display: flex!important;
+    float: none!important;
+    height: auto!important
+}
+
+.mf-product-deals-day ul.products li.product .product-inner > form.cart {
+    margin-top: auto!important;
+    padding-top: 12px
+}
+
+#carousel .elementor-element-65e395a {
+    margin-top: 40px!important
+}
+
+/* Out of stock loop items: the quantity + button row is shown disabled (see
+   woocommerce_template_loop_add_to_cart() in functions.php). */
+form.cart.ul-out-of-stock .quantity {
+    opacity: .45
+}
+
+form.cart.ul-out-of-stock .quantity,
+form.cart.ul-out-of-stock .quantity * {
+    pointer-events: none;
+    cursor: not-allowed
+}
+
+form.cart.ul-out-of-stock .quantity .qty {
+    background: transparent;
+    color: inherit
+}
+
+form.cart.ul-out-of-stock button.ul-out-of-stock-button,
+form.cart.ul-out-of-stock button.ul-out-of-stock-button:hover {
+    background-color: #e3e0e6!important;
+    color: #6f6578!important;
+    cursor: not-allowed;
+    opacity: 1
+}
