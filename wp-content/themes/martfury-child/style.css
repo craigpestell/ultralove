@@ -1585,5 +1585,6 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     flex: 0 0 100%;
     width: 100%;
     position: relative;
-    z-index: 5
+    z-index: 5;
+    border-top: 24px solid #fff
 }
