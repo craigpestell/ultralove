@@ -1434,3 +1434,35 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
 body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:first-child:empty + .ced_hpul_login_link {
     margin-left: 0
 }
+
+/*
+ * Quick view popup: size to its content. The parent theme floats the gallery and absolutely positions
+ * the summary beside it (top/right/bottom: 0; overflow: auto), so the popup was always the gallery's
+ * 430px tall and the summary scrolled inside that, whatever the window height. Here the two sit in a
+ * flex row: the popup is as tall as the taller of the two (the gallery's 430px minimum, or the summary),
+ * capped at the window height minus a 40px margin top and bottom, and only then does the summary scroll.
+ * Only at >=992px, where the popup is side by side; below that the parent theme shows a full-screen
+ * sheet with the gallery above the summary, which is left as is. .modal-content is centred with top: 50% + translate(-50%, -50%), so it stays centred at any height.
+ */
+@media (min-width: 992px) {
+    #mf-quick-view-modal div.product .mf-product-detail {
+        display: flex;
+        align-items: stretch;
+        max-height: calc(100vh - 80px);
+        overflow: hidden
+    }
+
+    #mf-quick-view-modal div.product .woocommerce-product-gallery {
+        flex: 0 0 auto;
+        float: none;
+        align-self: flex-start
+    }
+
+    #mf-quick-view-modal div.product .entry-summary {
+        position: static;
+        flex: 1 1 auto;
+        min-width: 0;
+        overflow-y: auto;
+        padding: 30px
+    }
+}
