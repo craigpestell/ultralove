@@ -36,10 +36,6 @@ function martfury_child_enqueue_scripts() {
                 'maxItems'   => 100,
             )
         );
-
-        // Quick view popup: switches to two columns when the one-column layout is taller than the window.
-        $qv_fit_path = get_stylesheet_directory() . '/js/quick-view-fit.js';
-        wp_enqueue_script( 'ultralove-quick-view-fit', get_stylesheet_directory_uri() . '/js/quick-view-fit.js', array( 'jquery', 'martfury' ), (string) filemtime( $qv_fit_path ), true );
     }
 }
 
