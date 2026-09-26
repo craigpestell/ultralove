@@ -1924,7 +1924,7 @@ section.up-sells .related-title,
    cancelled by equal negative margins so the cards sit where the list did. */
 .ul-carousel ul.products {
     display: flex!important;
-    flex-wrap: nowrap;
+    flex-wrap: nowrap!important;
     overflow-x: auto;
     overflow-y: hidden;
     overscroll-behavior-x: contain;
