@@ -1273,9 +1273,11 @@ body:not(.shop-view-list) ul.products li.product .product-inner:hover {
 }
 
 /* Quick view / wishlist buttons on the thumbnail (desktop grids): instead of the parent's full-width
-   white bar, two separate round icon buttons stacked in the image's top-right corner (the sale ribbon
-   sits top-left). Frosted white with a soft plum shadow and plum icons; brand pink with a white icon
-   on hover. They fade and slide in from the right on card hover or keyboard focus. Buttons are 36px
+   white bar, two separate round icon buttons side by side in the image's top-right corner (the sale
+   ribbon sits top-left). Side by side rather than stacked, so the theme's tooltips - always placed
+   above the icon, set in its JS - don't land on the other icon. Frosted white with a soft plum shadow
+   and plum icons; brand pink with a white icon on hover. They fade and slide down into place on card
+   hover or keyboard focus. Buttons are 36px
    and the icons are centred with no margins - YITH Wishlist 4's own CSS gives its heart SVG a 5px
    right margin and the parent theme a 2px top margin, which pushed it off-centre in the circle. In
    the "added" / "already in wishlist" states YITH outputs a text link, so the text is hidden and a
@@ -1287,7 +1289,7 @@ body:not(.shop-view-list) ul.products li.product .product-inner:hover {
         right: 10px;
         bottom: auto;
         left: auto;
-        flex-direction: column;
+        flex-direction: row;
         gap: 8px;
         padding: 0;
         background: none
@@ -1296,7 +1298,7 @@ body:not(.shop-view-list) ul.products li.product .product-inner:hover {
     body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button {
         opacity: 0;
         pointer-events: none;
-        transform: translateX(8px);
+        transform: translateY(-8px);
         transition: opacity .2s ease, transform .2s ease
     }
 
