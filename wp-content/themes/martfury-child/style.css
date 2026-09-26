@@ -379,8 +379,14 @@ Template: martfury
     letter-spacing: -.5px!important
 }
 
-.page-header .breadcrumbs a,.woocommerce ul.products li.product .woo-loop-product__title a,.woocommerce ul.products li.product h2 a,.woocommerce-cart .woocommerce table.shop_table td.product-name a {
+.page-header .breadcrumbs a,.woocommerce-cart .woocommerce table.shop_table td.product-name a {
     color: #b3094b!important
+}
+
+/* Product names on product cards in black; the parent theme's hover rule turns them brand pink. */
+.woocommerce ul.products li.product .woo-loop-product__title a,
+.woocommerce ul.products li.product h2 a {
+    color: #000
 }
 
 .mf-recently-products .recently-header .title,.site-footer .footer-widgets .widget .widget-title {
