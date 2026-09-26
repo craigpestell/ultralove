@@ -1278,7 +1278,14 @@ body:not(.shop-view-list) ul.products li.product .product-inner:hover {
      and a 25px width, and the parent theme adds a 2px top margin, which pushed it off-centre;
    - in the "added" / "already in wishlist" states YITH outputs a text link, so the text is hidden and a
      filled heart drawn in the brand pink instead (white on the pink hover circle);
-   - the bar also shows when the card has keyboard focus. */
+   - the bar also shows when the card has keyboard focus;
+   - the bar is semi-transparent white (with a light blur behind it, so the icons stay legible). */
+.woocommerce ul.products li.product .mf-product-thumbnail .footer-button {
+    background-color: rgba(255,255,255,.75);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px)
+}
+
 body:not(.shop-view-list) ul.products li.product .product-inner:focus-within .mf-product-thumbnail .footer-button {
     bottom: 0;
     opacity: 1
