@@ -1147,19 +1147,20 @@ html body {
  * Every button on the site in one weight (500). Don't give individual buttons their own weight; a
  * genuine special case gets an explicit, commented exception after this rule. Covers native buttons
  * and inputs, WooCommerce/Martfury (.button, .btn*, banner/slide buttons), Elementor, Gravity Forms
- * and block buttons. `html body` + !important outranks the parent theme and Elementor's per-widget
- * styles (which use long, high-specificity selectors). Label spans/icons inside inherit it.
+ * and block buttons. No !important needed: the more specific parent-theme button rules that win ask
+ * for 600/700, which the Work Sans remap at the top of this file draws at 500 anyway, and Gravity
+ * Forms' buttons default to 500. Label spans/icons inside inherit it.
  */
 html body :is(button, input[type="submit"], input[type="button"], input[type="reset"], .button,
     .btn, .btn-primary, .btn-primary-small, .btn-primary-outline, .btn-primary-small-outline,
     .btn-button, .banner-button, .mf-slide-button, .elementor-button, .gform_button, .wp-block-button__link) {
-    font-weight: 500!important
+    font-weight: 500
 }
 
 html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-primary-outline,
     .btn-primary-small-outline, .btn-button, .banner-button, .mf-slide-button, .elementor-button,
     .gform_button, .wp-block-button__link) * {
-    font-weight: inherit!important
+    font-weight: inherit
 }
 
 /* Product section headings (e.g. "On Sale"): plum text, no pill - no background, border, shadow
