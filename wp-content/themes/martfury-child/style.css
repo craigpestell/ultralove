@@ -620,8 +620,7 @@ h1,h2,h3,h4 {
 }
 
 #gform_submit_button_1 {
-    height: auto!important;
-    font-weight: 500!important
+    height: auto!important
 }
 
 /* No top/bottom border on the header menu bar - the parent theme adds a 1px #e1e1e1 one. */
@@ -1049,27 +1048,23 @@ html body {
     font-weight: lighter!important
 }
 
-/* ...except the buttons, which keep their original 600 weight - apart from Add to cart (below). */
-.elementor-widget-martfury-product-deals-carousel .button:not(.add_to_cart_button, .ul-out-of-stock-button),
-.elementor-widget-martfury-product-deals-carousel button:not(.add_to_cart_button, .ul-out-of-stock-button),
-.elementor-widget-martfury-products-grid .button:not(.add_to_cart_button, .ul-out-of-stock-button),
-.elementor-widget-martfury-products-grid button:not(.add_to_cart_button, .ul-out-of-stock-button) {
-    font-weight: 600!important
-}
-
-/* Add to cart buttons everywhere (product cards, product pages, quick view) in one 500 weight, plus
-   the disabled "Out of stock" button that takes their place. `html body` outranks the product-section
-   `lighter` rule above and the parent theme. */
-html body .add_to_cart_button,
-html body .single_add_to_cart_button,
-html body .ul-out-of-stock-button {
+/*
+ * Every button on the site in one weight (500). Don't give individual buttons their own weight; a
+ * genuine special case gets an explicit, commented exception after this rule. Covers native buttons
+ * and inputs, WooCommerce/Martfury (.button, .btn*, banner/slide buttons), Elementor, Gravity Forms
+ * and block buttons. `html body` + !important outranks the parent theme, Elementor's per-widget
+ * styles and the product-section `lighter` rule above. Label spans/icons inside inherit it, since
+ * that `lighter` rule would otherwise hit them directly.
+ */
+html body :is(button, input[type="submit"], input[type="button"], input[type="reset"], .button,
+    .btn, .btn-primary, .btn-primary-small, .btn-primary-outline, .btn-primary-small-outline,
+    .btn-button, .banner-button, .mf-slide-button, .elementor-button, .gform_button, .wp-block-button__link) {
     font-weight: 500!important
 }
 
-/* Label spans inside them would otherwise get the section-wide `lighter` directly. */
-html body .add_to_cart_button *,
-html body .single_add_to_cart_button *,
-html body .ul-out-of-stock-button * {
+html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-primary-outline,
+    .btn-primary-small-outline, .btn-button, .banner-button, .mf-slide-button, .elementor-button,
+    .gform_button, .wp-block-button__link) * {
     font-weight: inherit!important
 }
 
@@ -1502,7 +1497,6 @@ body:not(.shop-view-list) ul.products li.product .ul-notify-row .cwg_popup_submi
     background: #fff;
     color: #b3094b;
     font-size: 14px;
-    font-weight: 600;
     line-height: 1.1;
     letter-spacing: -.3px;
     display: block;
