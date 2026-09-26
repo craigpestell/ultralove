@@ -1049,12 +1049,28 @@ html body {
     font-weight: lighter!important
 }
 
-/* ...except the buttons (Add to cart etc.), which keep their original 600 weight. */
-.elementor-widget-martfury-product-deals-carousel .button,
-.elementor-widget-martfury-product-deals-carousel button,
-.elementor-widget-martfury-products-grid .button,
-.elementor-widget-martfury-products-grid button {
+/* ...except the buttons, which keep their original 600 weight - apart from Add to cart (below). */
+.elementor-widget-martfury-product-deals-carousel .button:not(.add_to_cart_button, .ul-out-of-stock-button),
+.elementor-widget-martfury-product-deals-carousel button:not(.add_to_cart_button, .ul-out-of-stock-button),
+.elementor-widget-martfury-products-grid .button:not(.add_to_cart_button, .ul-out-of-stock-button),
+.elementor-widget-martfury-products-grid button:not(.add_to_cart_button, .ul-out-of-stock-button) {
     font-weight: 600!important
+}
+
+/* Add to cart buttons everywhere (product cards, product pages, quick view) in one 500 weight, plus
+   the disabled "Out of stock" button that takes their place. `html body` outranks the product-section
+   `lighter` rule above and the parent theme. */
+html body .add_to_cart_button,
+html body .single_add_to_cart_button,
+html body .ul-out-of-stock-button {
+    font-weight: 500!important
+}
+
+/* Label spans inside them would otherwise get the section-wide `lighter` directly. */
+html body .add_to_cart_button *,
+html body .single_add_to_cart_button *,
+html body .ul-out-of-stock-button * {
+    font-weight: inherit!important
 }
 
 /* Product section headings (e.g. "On Sale"): plum text, no pill - no background, border, shadow
