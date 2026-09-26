@@ -2111,12 +2111,13 @@ section.up-sells .related-title,
     -webkit-user-select: none
 }
 
-/* Previous/next: white circles with the site's lavender border and purple shadow, centred on the
-   product images (--ul-arrow-top, set by the script), straddling the carousel's edges where there's
-   room and just inside them otherwise. Hidden at either end, and on phones (swipe instead). */
+/* Previous/next: white circles with the site's lavender border and purple shadow, vertically centred on
+   the cards (the carousel's height less the 30px progress bar below them - the arrows only show when it
+   does), straddling the carousel's edges where there's room and just inside them otherwise. Hidden at
+   either end, and on phones (swipe instead). */
 .ul-carousel__arrow {
     position: absolute;
-    top: var(--ul-arrow-top, 40%);
+    top: calc((100% - 30px) / 2);
     z-index: 3;
     display: flex;
     align-items: center;

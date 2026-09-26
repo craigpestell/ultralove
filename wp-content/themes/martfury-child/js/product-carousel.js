@@ -102,13 +102,6 @@
 
             thumb.style.width = (ratio * 100) + '%';
             thumb.style.transform = 'translateX(' + (progress * (1 - ratio) / ratio * 100) + '%)';
-
-            // Centre the arrows on the product images rather than the whole card.
-            var image = track.querySelector('li.product .mf-product-thumbnail');
-            if (image) {
-                var top = image.getBoundingClientRect().top - root.getBoundingClientRect().top + image.offsetHeight / 2;
-                root.style.setProperty('--ul-arrow-top', Math.round(top) + 'px');
-            }
         }
 
         function requestUpdate() {
@@ -243,8 +236,6 @@
         if (window.ResizeObserver) {
             new ResizeObserver(requestUpdate).observe(track);
         }
-        // Card images can change the cards' height (and so the arrows' position) as they load.
-        track.addEventListener('load', requestUpdate, true);
 
         // The nudge: once per page, the first time a scrollable carousel is mostly in view.
         if (window.IntersectionObserver) {
