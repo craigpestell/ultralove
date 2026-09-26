@@ -710,8 +710,11 @@ h1,h2,h3,h4 {
    #topcta style: the same aurora backdrop and fade-to-white overlay as #topcta, with the title as the
    #topcta pill. Unlike #topcta (which continues the banner's backdrop above it) the pattern also fades
    out towards the top. The band is short (~180px), so the top/bottom fades are proportional rather than
-   #topcta's fixed 85px, which would leave almost none of the pattern showing. */
-.page-header-page {
+   #topcta's fixed 85px, which would leave almost none of the pattern showing. The titled catalog pages
+   (.ul-titled-catalog, e.g. Sale/Closeout Items - see functions.php) get the same header, their catalog
+   title in place of the breadcrumb bar. */
+.page-header-page,
+.ul-titled-catalog .page-header-catalog {
     position: relative;
     background: var(--ul-aurora);
     text-align: center;
@@ -720,18 +723,21 @@ h1,h2,h3,h4 {
 
 /* The content below the page header loses its top padding (parent theme: 90px, 40px up to 767px); that
    space is split 50/50 above and below the title pill instead (the paddings above and below). */
-.page-header-page + .site-content {
+.page-header-page + .site-content,
+.ul-titled-catalog .page-header-catalog + .site-content {
     padding-top: 0
 }
 
 @media (max-width:767px) {
-    .page-header-page {
+    .page-header-page,
+    .ul-titled-catalog .page-header-catalog {
         padding-top: 84px;
         padding-bottom: 76px
     }
 }
 
-.page-header-page:before {
+.page-header-page:before,
+.ul-titled-catalog .page-header-catalog:before {
     content: "";
     position: absolute;
     top: 0;
@@ -745,12 +751,25 @@ h1,h2,h3,h4 {
         linear-gradient(to right, #fff 0, rgba(255,255,255,.75) 4%, rgba(255,255,255,0) 12%, rgba(255,255,255,0) 88%, rgba(255,255,255,.75) 96%, #fff 100%)
 }
 
-.page-header-page > * {
+.page-header-page > *,
+.ul-titled-catalog .page-header-catalog > * {
     position: relative;
     z-index: 1
 }
 
-.page-header-page .entry-title {
+/* The catalog header's title row has its own background and padding, and catalog layout 10 hides the
+   title (text-indent/line-height); the breadcrumb bar gives way to the title. */
+.ul-titled-catalog .page-header-catalog .page-title {
+    background: none;
+    padding: 0
+}
+
+.ul-titled-catalog .page-header-catalog .page-breadcrumbs {
+    display: none
+}
+
+.page-header-page .entry-title,
+.ul-titled-catalog .page-header-catalog .page-title .entry-title {
     display: inline-block;
     color: #3b1d4a;
     background: rgba(255,255,255,.8);
@@ -762,16 +781,19 @@ h1,h2,h3,h4 {
     font-weight: 300;
     line-height: 1.2;
     text-align: center;
+    text-indent: 0;
     box-shadow: 0 6px 18px rgba(177,101,255,.35)
 }
 
 @media (max-width:678px) {
-    .page-header-page {
+    .page-header-page,
+    .ul-titled-catalog .page-header-catalog {
         padding-top: 66px;
         padding-bottom: 68px
     }
 
-    .page-header-page .entry-title {
+    .page-header-page .entry-title,
+    .ul-titled-catalog .page-header-catalog .page-title .entry-title {
         padding: 8px 18px;
         margin: 0 10px;
         font-size: 28px

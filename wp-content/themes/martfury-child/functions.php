@@ -969,3 +969,27 @@ function ultralove_quick_view_header() {
         </div>
 	<?php
 }
+
+/**
+ * Catalog pages that get the titled page header (the aurora band with the title pill, as on Brands,
+ * Buy Wholesale and Contact) instead of the breadcrumb bar. The title is the term name, i.e. the
+ * breadcrumb's last item. Currently only the Sale/Closeout Items category (the "On Sale" page).
+ */
+function ultralove_is_titled_catalog_page() {
+	return function_exists( 'is_product_category' ) && is_product_category( 'sale-closeout-items' );
+}
+
+// Martfury's catalog layout 10 turns the catalog header's title off; turn it back on (after the parent's filter).
+add_filter( 'martfury_catalog_page_title', 'ultralove_catalog_page_title', 20 );
+function ultralove_catalog_page_title( $show_title ) {
+	return ultralove_is_titled_catalog_page() ? true : $show_title;
+}
+
+// Body class the stylesheet keys the header styling (and hiding the breadcrumb bar) off.
+add_filter( 'body_class', 'ultralove_titled_catalog_body_class' );
+function ultralove_titled_catalog_body_class( $classes ) {
+	if ( ultralove_is_titled_catalog_page() ) {
+		$classes[] = 'ul-titled-catalog';
+	}
+	return $classes;
+}
