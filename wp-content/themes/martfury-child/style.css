@@ -454,6 +454,13 @@ Template: martfury
     margin: auto
 }
 
+/* In a .martfury-container header (the site-wide page container - see functions.php) Martfury sizes the
+   menu column to 83.4%, to sit beside its 300px department menu. There's no department menu here (the
+   column is col-md-12), so it takes the full row and the centred menu is centred on the page. */
+.site-header .martfury-container .mr-header-menu.col-md-12 {
+    width: 100%
+}
+
 .site-footer .footer-widgets:after {
     border-bottom: 1px solid rgba(130,91,165,.28)
 }
