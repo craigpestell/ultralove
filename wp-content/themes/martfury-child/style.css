@@ -706,109 +706,35 @@ h1,h2,h3,h4 {
     }
 }
 
-/* Page headers (the theme's title band on pages such as Brands, Buy Wholesale and Contact) in the home
-   #topcta style: the same aurora backdrop and fade-to-white overlay as #topcta, with the title as the
-   #topcta pill. Unlike #topcta (which continues the banner's backdrop above it) the pattern also fades
-   out towards the top. The band is short (~180px), so the top/bottom fades are proportional rather than
-   #topcta's fixed 85px, which would leave almost none of the pattern showing. The titled catalog pages
-   (.ul-titled-catalog, e.g. Sale/Closeout Items - see functions.php) get the same header, their catalog
-   title in place of the breadcrumb bar. */
-.page-header-page,
-.ul-titled-catalog .page-header-catalog {
-    position: relative;
-    background: var(--ul-aurora);
-    text-align: center;
-    padding: 109px 15px 101px
+/* Page headers (pages such as Brands, Buy Wholesale and Contact): just the breadcrumb strip, as on the
+   catalog and product pages; the trail's last item names the page. The title stays in the markup as the
+   page's h1 for screen readers and search engines, visually hidden. The content below starts 30px under
+   the strip, as on catalog and product pages (parent theme: 90px on pages). */
+.page-header-page .entry-title {
+    position: absolute!important;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0
 }
 
-/* The content below the page header loses its top padding (parent theme: 90px, 40px up to 767px); that
-   space is split 50/50 above and below the title pill instead (the paddings above and below). */
-.page-header-page + .site-content,
-.ul-titled-catalog .page-header-catalog + .site-content {
-    padding-top: 0
+.page-header-page + .site-content {
+    padding-top: 30px
 }
 
-@media (max-width:767px) {
-    .page-header-page,
-    .ul-titled-catalog .page-header-catalog {
-        padding-top: 84px;
-        padding-bottom: 76px
-    }
-}
-
-.page-header-page:before,
-.ul-titled-catalog .page-header-catalog:before {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    pointer-events: none;
-    z-index: 0;
-    background:
-        linear-gradient(to bottom, #fff 0, rgba(255,255,255,.75) 11%, rgba(255,255,255,0) 28%, rgba(255,255,255,0) 72%, rgba(255,255,255,.75) 89%, #fff 100%),
-        linear-gradient(to right, #fff 0, rgba(255,255,255,.75) 4%, rgba(255,255,255,0) 12%, rgba(255,255,255,0) 88%, rgba(255,255,255,.75) 96%, #fff 100%)
-}
-
-.page-header-page > *,
-.ul-titled-catalog .page-header-catalog > * {
-    position: relative;
-    z-index: 1
-}
-
-/* The catalog header's title row has its own background and padding, and catalog layout 10 hides the
-   title (text-indent/line-height); the breadcrumb bar gives way to the title. */
-.ul-titled-catalog .page-header-catalog .page-title {
-    background: none;
-    padding: 0
-}
-
-.ul-titled-catalog .page-header-catalog .page-breadcrumbs {
-    display: none
-}
-
-.page-header-page .entry-title,
-.ul-titled-catalog .page-header-catalog .page-title .entry-title {
-    display: inline-block;
-    color: #3b1d4a;
-    background: rgba(255,255,255,.8);
-    border: 1px solid rgb(177,101,255);
-    border-radius: 999px;
-    padding: 10px 28px;
-    margin: 0 15px;
-    font-size: 36px;
-    font-weight: 300;
-    line-height: 1.2;
-    text-align: center;
-    text-indent: 0;
-    box-shadow: 0 6px 18px rgba(177,101,255,.35)
-}
-
-@media (max-width:678px) {
-    .page-header-page,
-    .ul-titled-catalog .page-header-catalog {
-        padding-top: 66px;
-        padding-bottom: 68px
-    }
-
-    .page-header-page .entry-title,
-    .ul-titled-catalog .page-header-catalog .page-title .entry-title {
-        padding: 8px 18px;
-        margin: 0 10px;
-        font-size: 28px
-    }
-}
-
-/* Breadcrumbs (catalog and product pages): a soft lavender strip with a lavender rule instead of the
+/* Breadcrumbs (every page header - catalog, product and other pages): a soft lavender strip with a lavender rule instead of the
    parent theme's #f1f1f1 bar. Links in muted plum (brand pink on hover), the current page in plum,
    lavender separators. */
-.page-header-catalog .page-breadcrumbs {
+.page-header .page-breadcrumbs {
     background: #faf5fc;
     border-bottom: 1px solid rgba(177,101,255,.2)
 }
 
-.page-header-catalog .page-breadcrumbs .breadcrumbs {
+.page-header .page-breadcrumbs .breadcrumbs {
     align-items: center;
     padding-top: 14px;
     padding-bottom: 14px;

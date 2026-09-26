@@ -971,25 +971,26 @@ function ultralove_quick_view_header() {
 }
 
 /**
- * Catalog pages that get the titled page header (the aurora band with the title pill, as on Brands,
- * Buy Wholesale and Contact) instead of the breadcrumb bar. The title is the term name, i.e. the
- * breadcrumb's last item. The Store (shop) page and the Sale/Closeout Items category (the "On Sale" page).
+ * Breadcrumbs on every page, in the same strip as the catalog pages: pages (Brands, Buy Wholesale,
+ * Contact, cart, ...) get them in their page header, where the theme's page header elements leave them
+ * out, and product pages get the breadcrumb bar (theme option product_breadcrumb, off). The home page
+ * hides its page header altogether and keeps doing so. Page breadcrumbs use the catalog's full-width
+ * container so the trail lines up on every page.
  */
-function ultralove_is_titled_catalog_page() {
-	return function_exists( 'is_shop' ) && ( is_shop() || is_product_category( 'sale-closeout-items' ) );
-}
-
-// Martfury's catalog layout 10 turns the catalog header's title off; turn it back on (after the parent's filter).
-add_filter( 'martfury_catalog_page_title', 'ultralove_catalog_page_title', 20 );
-function ultralove_catalog_page_title( $show_title ) {
-	return ultralove_is_titled_catalog_page() ? true : $show_title;
-}
-
-// Body class the stylesheet keys the header styling (and hiding the breadcrumb bar) off.
-add_filter( 'body_class', 'ultralove_titled_catalog_body_class' );
-function ultralove_titled_catalog_body_class( $classes ) {
-	if ( ultralove_is_titled_catalog_page() ) {
-		$classes[] = 'ul-titled-catalog';
+add_filter( 'martfury_get_page_header', 'ultralove_page_header_breadcrumbs' );
+function ultralove_page_header_breadcrumbs( $page_header ) {
+	if ( is_array( $page_header ) && ( is_page() || is_singular( 'product' ) ) && ! in_array( 'breadcrumb', $page_header, true ) ) {
+		$page_header[] = 'breadcrumb';
 	}
-	return $classes;
+	return $page_header;
+}
+
+add_filter( 'martfury_get_option', 'ultralove_product_breadcrumb_option', 10, 2 );
+function ultralove_product_breadcrumb_option( $value, $option_name ) {
+	return 'product_breadcrumb' === $option_name ? 1 : $value;
+}
+
+add_filter( 'martfury_page_header_container_class', 'ultralove_page_header_container_class' );
+function ultralove_page_header_container_class( $classes ) {
+	return 'martfury-container';
 }
