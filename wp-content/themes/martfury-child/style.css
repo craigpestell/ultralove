@@ -1138,30 +1138,17 @@ html body {
     font-weight: 300!important
 }
 
-/* All text in the home page product sections (the deals carousel - "On Sale" - and the products
-   grid widgets) in a lighter weight. `lighter` is relative to the parent's weight, so applied at
-   every level it steps everything down to Work Sans' lightest loaded weight (300). This includes the
-   product cards, so their titles/prices are lighter here than on the shop page. */
-.elementor-widget-martfury-product-deals-carousel,
-.elementor-widget-martfury-product-deals-carousel *,
-.elementor-widget-martfury-products-grid,
-.elementor-widget-martfury-products-grid * {
-    font-weight: lighter!important
-}
-
-/* Bold parts of product card titles (<b> inside the title link) at 500, including in the home page
-   product sections, where the `lighter` rule above would otherwise hit them directly. */
-html body .mf-product-content > h2 > a > b {
-    font-weight: 500!important
+/* Bold parts of product card titles (<b> inside the title link) at 500. */
+.mf-product-content > h2 > a > b {
+    font-weight: 500
 }
 
 /*
  * Every button on the site in one weight (500). Don't give individual buttons their own weight; a
  * genuine special case gets an explicit, commented exception after this rule. Covers native buttons
  * and inputs, WooCommerce/Martfury (.button, .btn*, banner/slide buttons), Elementor, Gravity Forms
- * and block buttons. `html body` + !important outranks the parent theme, Elementor's per-widget
- * styles and the product-section `lighter` rule above. Label spans/icons inside inherit it, since
- * that `lighter` rule would otherwise hit them directly.
+ * and block buttons. `html body` + !important outranks the parent theme and Elementor's per-widget
+ * styles (which use long, high-specificity selectors). Label spans/icons inside inherit it.
  */
 html body :is(button, input[type="submit"], input[type="button"], input[type="reset"], .button,
     .btn, .btn-primary, .btn-primary-small, .btn-primary-outline, .btn-primary-small-outline,
@@ -1177,7 +1164,7 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
 
 /* Product section headings (e.g. "On Sale"): plum text, no pill - no background, border, shadow
    or padding (set explicitly so nothing from the parent theme shows through). The light 300 weight
-   comes from the product-section font-weight rules above. The header row keeps the parent theme's
+   comes from the product section title rule above. The header row keeps the parent theme's
    grey bottom rule. */
 .cat-header .cat-title,
 .cat-header h2,
