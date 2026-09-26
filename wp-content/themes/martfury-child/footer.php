@@ -72,6 +72,11 @@
                 const table = document.getElementById('exportMe');
                 const exportBtn = document.getElementById('export');
 
+                // Only the page with the [exportstock] shortcode has the table and button.
+                if (!table || !exportBtn) {
+                    return;
+                }
+
                 const toCsv = function (table) {
                     // Query all rows
                     const rows = table.querySelectorAll('tr');
