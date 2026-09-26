@@ -834,6 +834,13 @@ h1,h2,h3,h4 {
     color: #c9a3dc
 }
 
+/* No root "Home" item: the trail starts at Shop. Hidden rather than removed so the BreadcrumbList
+   microdata keeps its full path (Home at position 1). */
+.page-header .breadcrumbs > li:first-child,
+.page-header .breadcrumbs > li:first-child + .sep {
+    display: none
+}
+
 /* Catalog sidebar - Product Categories. From 768px up (below that the sidebar is the parent theme's
    off-canvas Filter panel, left as is) the widget is a white card with a lavender border and a soft
    purple shadow in place of the #f5f5f5 box. At every size: the heading in plum over a lavender rule,
