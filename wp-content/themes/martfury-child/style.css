@@ -2021,10 +2021,13 @@ section.up-sells .related-title,
  *  - a progress bar under the cards, sized to the share in view,
  *  - a one-off nudge the first time it comes into view (the script; not with reduced motion).
  */
+/* flow-root: the scroller's negative top margin (below) stays inside the carousel instead of collapsing
+   through it, so the carousel's box starts at the cards - which the arrows' centring relies on. */
 .ul-carousel {
     --ul-per-view: 1.75;
     --ul-fade: 48px;
-    position: relative
+    position: relative;
+    display: flow-root
 }
 
 @media (min-width: 576px) {
