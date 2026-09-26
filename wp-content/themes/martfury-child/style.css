@@ -1272,128 +1272,68 @@ body:not(.shop-view-list) ul.products li.product .product-inner:hover {
     pointer-events: none
 }
 
-/* Quick view / wishlist buttons on the thumbnail (desktop grids): instead of the parent's full-width
-   white bar, two separate round icon buttons side by side in the image's top-right corner (the sale
-   ribbon sits top-left). Side by side rather than stacked, so the theme's tooltips - always placed
-   above the icon, set in its JS - don't land on the other icon. Frosted white with a soft plum shadow
-   and plum icons; brand pink with a white icon on hover. They fade and slide down into place on card
-   hover or keyboard focus. Buttons are 36px
-   and the icons are centred with no margins - YITH Wishlist 4's own CSS gives its heart SVG a 5px
-   right margin and the parent theme a 2px top margin, which pushed it off-centre in the circle. In
-   the "added" / "already in wishlist" states YITH outputs a text link, so the text is hidden and a
-   filled heart drawn instead. Mobile's always-visible featured icons are left alone. */
-@media (min-width: 992px) {
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button,
-    body:not(.shop-view-list) ul.products li.product .product-inner:hover .mf-product-thumbnail .footer-button {
-        top: 10px;
-        right: 10px;
-        bottom: auto;
-        left: auto;
-        flex-direction: row;
-        gap: 8px;
-        padding: 0;
-        background: none
-    }
+/* Quick view / wishlist on the thumbnail: the parent theme's (and production's) white bar that slides up
+   over the bottom of the image on hover, icons inside. Only fixes on top of it:
+   - the heart is centred in its hover circle: YITH Wishlist 4 draws it as an SVG with a 5px right margin
+     and a 25px width, and the parent theme adds a 2px top margin, which pushed it off-centre;
+   - in the "added" / "already in wishlist" states YITH outputs a text link, so the text is hidden and a
+     filled heart drawn in the brand pink instead (white on the pink hover circle);
+   - the bar also shows when the card has keyboard focus. */
+body:not(.shop-view-list) ul.products li.product .product-inner:focus-within .mf-product-thumbnail .footer-button {
+    bottom: 0;
+    opacity: 1
+}
 
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button {
-        opacity: 0;
-        pointer-events: none;
-        transform: translateY(-8px);
-        transition: opacity .2s ease, transform .2s ease
-    }
+ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist a .yith-wcwl-icon,
+ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist a .yith-wcwl-icon-svg {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    font-size: 18px;
+    line-height: 1;
+    color: inherit;
+    vertical-align: middle
+}
 
-    body:not(.shop-view-list) ul.products li.product .product-inner:hover .mf-product-thumbnail .footer-button,
-    body:not(.shop-view-list) ul.products li.product .product-inner:focus-within .mf-product-thumbnail .footer-button {
-        opacity: 1;
-        pointer-events: auto;
-        transform: none
-    }
+ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist .feedback {
+    display: none
+}
 
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button:empty {
-        display: none
-    }
+body ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist .yith-wcwl-wishlistaddedbrowse a,
+body ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist .yith-wcwl-wishlistexistsbrowse a {
+    font-size: 0;
+    color: var(--mf-background-primary-color)
+}
 
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist {
-        margin: 0
-    }
+body ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist .yith-wcwl-wishlistaddedbrowse a:hover,
+body ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist .yith-wcwl-wishlistexistsbrowse a:hover {
+    color: var(--mf-background-primary-text-color)
+}
 
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button > a,
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button .added_to_cart,
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist a {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 36px;
-        height: 36px;
-        margin: 0;
-        padding: 0;
-        line-height: 1;
-        border-radius: 50%;
-        background-color: rgba(255,255,255,.92);
-        -webkit-backdrop-filter: blur(4px);
-        backdrop-filter: blur(4px);
-        box-shadow: 0 2px 8px rgba(59,29,74,.18);
-        color: #3b1d4a;
-        --add-to-wishlist-icon-color: currentColor;
-        transition: background-color .15s ease, color .15s ease
-    }
+body ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist .yith-wcwl-wishlistaddedbrowse a > *,
+body ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist .yith-wcwl-wishlistexistsbrowse a > * {
+    display: none
+}
 
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button > a:hover,
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button > a:focus-visible,
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button .added_to_cart:hover,
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button .added_to_cart:focus-visible,
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist a:hover,
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist a:focus-visible {
-        background-color: var(--mf-background-primary-color);
-        color: var(--mf-background-primary-text-color);
-        outline: none
-    }
+body ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist .yith-wcwl-wishlistaddedbrowse a::before,
+body ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist .yith-wcwl-wishlistexistsbrowse a::before {
+    content: "";
+    display: block;
+    width: 18px;
+    height: 18px;
+    background-color: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E") center / contain no-repeat
+}
 
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button .p-icon {
-        height: auto;
-        font-size: 18px;
-        line-height: 1
-    }
-
-    /* The heart: centred, no margins, sized like the eye icon. */
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist a .yith-wcwl-icon,
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist a .yith-wcwl-icon-svg {
-        width: 18px;
-        height: 18px;
-        margin: 0;
-        font-size: 18px;
-        line-height: 1;
-        color: inherit;
-        vertical-align: middle
-    }
-
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist a > span,
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist .feedback {
-        display: none
-    }
-
-    /* Added / already in the wishlist: hide the "Browse wishlist" text and draw a filled heart in the
-       brand pink (white on hover, from the rule above). */
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-wishlistaddedbrowse a,
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-wishlistexistsbrowse a {
-        font-size: 0;
-        color: var(--mf-background-primary-color)
-    }
-
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-wishlistaddedbrowse a > *,
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-wishlistexistsbrowse a > * {
-        display: none
-    }
-
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-wishlistaddedbrowse a::before,
-    body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-wishlistexistsbrowse a::before {
-        content: "";
-        display: block;
-        width: 18px;
-        height: 18px;
-        background-color: currentColor;
-        -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E") center / contain no-repeat;
-        mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E") center / contain no-repeat
+/* Desktop grids, where the image scales up 7% on hover (see the hover "pop" above): it then overhangs
+   the thumbnail by 3.5% on each side, so the bar is pushed out by the same 3.5% - percentages of the
+   thumbnail's own height/width - to stay flush with the enlarged image's bottom and sides. */
+@media (min-width: 992px) and (hover: hover) {
+    body:not(.shop-view-list) ul.products:not(.slick-slider) li.product .product-inner:hover .mf-product-thumbnail .footer-button {
+        bottom: -3.5%;
+        left: -3.5%;
+        right: -3.5%
     }
 }
 
