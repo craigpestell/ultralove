@@ -707,8 +707,10 @@ h1,h2,h3,h4 {
 }
 
 /* Page headers (the theme's title band on pages such as Brands, Buy Wholesale and Contact) in the home
-   #topcta style: the same aurora backdrop and bottom/side fade-to-white overlay as #topcta (no top fade -
-   like #topcta it sits right under the navigation), with the title as the #topcta pill. */
+   #topcta style: the same aurora backdrop and fade-to-white overlay as #topcta, with the title as the
+   #topcta pill. Unlike #topcta (which continues the banner's backdrop above it) the pattern also fades
+   out towards the top. The band is short (~180px), so the top/bottom fades are proportional rather than
+   #topcta's fixed 85px, which would leave almost none of the pattern showing. */
 .page-header-page {
     position: relative;
     background: var(--ul-aurora);
@@ -726,7 +728,7 @@ h1,h2,h3,h4 {
     pointer-events: none;
     z-index: 0;
     background:
-        linear-gradient(to bottom, rgba(255,255,255,0) 0, rgba(255,255,255,0) calc(100% - 85px), rgba(255,255,255,.75) calc(100% - 34px), #fff 100%),
+        linear-gradient(to bottom, #fff 0, rgba(255,255,255,.75) 16%, rgba(255,255,255,0) 42%, rgba(255,255,255,0) 58%, rgba(255,255,255,.75) 84%, #fff 100%),
         linear-gradient(to right, #fff 0, rgba(255,255,255,.75) 4%, rgba(255,255,255,0) 12%, rgba(255,255,255,0) 88%, rgba(255,255,255,.75) 96%, #fff 100%)
 }
 
