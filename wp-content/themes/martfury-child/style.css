@@ -715,7 +715,20 @@ h1,h2,h3,h4 {
     position: relative;
     background: var(--ul-aurora);
     text-align: center;
-    padding: 64px 15px 56px
+    padding: 109px 15px 101px
+}
+
+/* The content below the page header loses its top padding (parent theme: 90px, 40px up to 767px); that
+   space is split 50/50 above and below the title pill instead (the paddings above and below). */
+.page-header-page + .site-content {
+    padding-top: 0
+}
+
+@media (max-width:767px) {
+    .page-header-page {
+        padding-top: 84px;
+        padding-bottom: 76px
+    }
 }
 
 .page-header-page:before {
@@ -754,8 +767,8 @@ h1,h2,h3,h4 {
 
 @media (max-width:678px) {
     .page-header-page {
-        padding-top: 46px;
-        padding-bottom: 48px
+        padding-top: 66px;
+        padding-bottom: 68px
     }
 
     .page-header-page .entry-title {
