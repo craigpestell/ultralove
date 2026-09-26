@@ -1,5 +1,23 @@
 <?php
 
+// WooCommerce caches where each template was found (the object cache is persistent here - Redis) and
+// only clears that on a theme switch, so a newly added (or removed) template override in this theme's
+// woocommerce/ folder would go unused until the cache happened to expire. Clear it whenever the set of
+// overrides changes.
+add_action( 'init', 'ultralove_clear_wc_template_cache_on_change' );
+function ultralove_clear_wc_template_cache_on_change() {
+	if ( ! function_exists( 'wc_clear_template_cache' ) ) {
+		return;
+	}
+	$dir       = get_stylesheet_directory() . '/woocommerce/';
+	$overrides = array_merge( (array) glob( $dir . '*.php' ), (array) glob( $dir . '*/*.php' ), (array) glob( $dir . '*/*/*.php' ) );
+	$hash      = md5( implode( '|', $overrides ) );
+	if ( get_option( 'ultralove_wc_template_overrides' ) !== $hash ) {
+		wc_clear_template_cache();
+		update_option( 'ultralove_wc_template_overrides', $hash, true );
+	}
+}
+
 // Disable WordPress fuzzy redirect
 add_filter( 'do_redirect_guess_404_permalink', function () { return false; } );
 
