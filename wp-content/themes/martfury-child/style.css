@@ -2026,7 +2026,8 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
 }
 
 /* Header navigation: a white underline that grows from the centre on hover / keyboard focus, and stays
-   on the current page's item. */
+   on the current page's item in lavender (the aurora backdrop's rgb(215, 170, 230)), turning white
+   while that item is hovered / focused. */
 .site-header .primary-nav>ul>li>a {
     position: relative;
     padding-left: 10px!important;
@@ -2044,7 +2045,7 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     background: #fff;
     transform: scaleX(0);
     transform-origin: center;
-    transition: transform .25s ease
+    transition: transform .25s ease, background-color .25s ease
 }
 
 .site-header .primary-nav>ul>li>a:hover::after,
@@ -2052,6 +2053,17 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
 .site-header .primary-nav>ul>li.current-menu-item>a::after,
 .site-header .primary-nav>ul>li.current-menu-ancestor>a::after {
     transform: scaleX(1)
+}
+
+.site-header .primary-nav>ul>li.current-menu-item>a::after,
+.site-header .primary-nav>ul>li.current-menu-ancestor>a::after {
+    background: #d7aae6
+}
+
+/* after the rule above, which has the same specificity */
+.site-header .primary-nav>ul>li>a:hover::after,
+.site-header .primary-nav>ul>li>a:focus-visible::after {
+    background: #fff
 }
 
 
