@@ -1225,7 +1225,7 @@ body:not(.shop-view-list) ul.products li.product .product-inner:hover {
 }
 
 /* Quick view / add to cart overlay on the thumbnail (desktop grids): instead of the parent's full-width
-   white bar, a floating pill in the #topcta pill style (frosted white, purple border and shadow, plum
+   white bar, a floating pill in the #topcta pill style (frosted white, purple border, no shadow, plum
    icons) that fades and slides up into place. Icon buttons fill with the brand pink on hover. It also
    shows when the card has keyboard focus. Buttons keep the parent's 34px so its loading spinner stays
    centred. Mobile's always-visible featured icons are left alone. */
@@ -1242,7 +1242,6 @@ body:not(.shop-view-list) ul.products li.product .product-inner:hover {
         backdrop-filter: blur(6px);
         border: 1px solid rgb(177,101,255);
         border-radius: 999px;
-        box-shadow: 0 6px 18px rgba(177,101,255,.35);
         opacity: 0;
         transform: translate(-50%, 10px);
         transition: opacity .2s ease, transform .2s ease
