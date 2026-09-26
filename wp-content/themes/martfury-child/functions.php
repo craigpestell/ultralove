@@ -1032,6 +1032,74 @@ function ultralove_page_header_breadcrumbs( $page_header ) {
 	return $page_header;
 }
 
+/**
+ * Breadcrumbs - Martfury's martfury_get_breadcrumbs() (inc/functions/entry.php), with one change: brand
+ * pages (product_brand archives, linked from the Brands We Carry page) start their trail with that page,
+ * the way category trails start with Shop - "Brands We Carry / LELO" instead of just "LELO". Martfury's
+ * martfury_breadcrumbs() has no hook for this, so brand trails are built here in its markup (Home first,
+ * hidden by the stylesheet like on every page; schema.org positions in order); everything else is as
+ * Martfury does it.
+ */
+function martfury_get_breadcrumbs() {
+	$page_header = martfury_get_page_header();
+	if ( ! $page_header || ! in_array( 'breadcrumb', $page_header ) ) {
+		return;
+	}
+
+	$breadcrumbs_enabled = current_theme_supports( 'yoast-seo-breadcrumbs' );
+	if ( ! $breadcrumbs_enabled && class_exists( 'WPSEO_Options' ) ) {
+		$breadcrumbs_enabled = WPSEO_Options::get( 'breadcrumbs-enable', false );
+	}
+
+	if ( $breadcrumbs_enabled ) {
+		yoast_breadcrumb( '<div id="breadcrumbs" class="breadcrumbs">', '</div>' );
+		return;
+	}
+
+	echo '<ul class="breadcrumbs" itemscope itemtype="https://schema.org/BreadcrumbList">';
+	if ( is_tax( 'product_brand' ) ) {
+		ultralove_brand_breadcrumbs();
+	} else {
+		martfury_breadcrumbs(
+			array(
+				'before'   => '',
+				'taxonomy' => function_exists( 'is_woocommerce' ) && is_woocommerce() ? 'product_cat' : 'category',
+			)
+		);
+	}
+	echo '</ul>';
+}
+
+function ultralove_brand_breadcrumbs() {
+	$item  = '<li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem"><a href="%s" itemprop="item"><span itemprop="name">%s</span><meta itemprop="position" content="%d"></a></li>';
+	$items = array(
+		sprintf(
+			'<li itemprop="itemListElement" itemscope itemtype="http://schema.org/ListItem"><a class="home" href="%s" itemprop="item"><span itemprop="name">%s </span><meta itemprop="position" content="1"></a></li>',
+			esc_url( apply_filters( 'martfury_breadcrumbs_home_url', get_home_url() ) ),
+			esc_html__( 'Home', 'martfury' )
+		),
+	);
+	$position = 2;
+
+	$brands_page = get_page_by_path( 'brands' );
+	if ( $brands_page ) {
+		$items[] = sprintf( $item, esc_url( get_permalink( $brands_page ) ), esc_html( get_the_title( $brands_page ) ), $position++ );
+	}
+
+	$term = get_queried_object();
+	if ( $term instanceof WP_Term ) {
+		foreach ( (array) martfury_get_term_parents( $term->term_id, $term->taxonomy ) as $parent_id ) {
+			$parent = get_term( $parent_id, $term->taxonomy );
+			if ( $parent instanceof WP_Term ) {
+				$items[] = sprintf( $item, esc_url( get_term_link( $parent ) ), esc_html( $parent->name ), $position++ );
+			}
+		}
+		$items[] = sprintf( $item, esc_url( get_term_link( $term ) ), esc_html( $term->name ), $position );
+	}
+
+	echo implode( '<span class="sep">/</span>', $items ); // phpcs:ignore -- escaped above
+}
+
 // The On Sale page (the Sale/Closeout Items category, its own item in the header navigation) leaves Shop
 // out of its trail, so it reads just "Sale/Closeout Items" rather than "Shop / Sale/Closeout Items".
 add_filter( 'martfury_breadcrumb_get_shop_page', 'ultralove_sale_breadcrumb_without_shop' );
