@@ -973,10 +973,10 @@ function ultralove_quick_view_header() {
 /**
  * Catalog pages that get the titled page header (the aurora band with the title pill, as on Brands,
  * Buy Wholesale and Contact) instead of the breadcrumb bar. The title is the term name, i.e. the
- * breadcrumb's last item. Currently only the Sale/Closeout Items category (the "On Sale" page).
+ * breadcrumb's last item. The Store (shop) page and the Sale/Closeout Items category (the "On Sale" page).
  */
 function ultralove_is_titled_catalog_page() {
-	return function_exists( 'is_product_category' ) && is_product_category( 'sale-closeout-items' );
+	return function_exists( 'is_shop' ) && ( is_shop() || is_product_category( 'sale-closeout-items' ) );
 }
 
 // Martfury's catalog layout 10 turns the catalog header's title off; turn it back on (after the parent's filter).
