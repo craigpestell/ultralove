@@ -764,6 +764,13 @@ h1,h2,h3,h4 {
     color: #fff
 }
 
+/* "Log in / Register" in the header at the site's regular 300, like the rest of the header text (the
+   parent theme sets 700, drawn at 500). The Search button stays 500 like every button, and the cart /
+   wishlist count badges keep their bold. */
+.site-header .extras-menu .menu-item-account > a {
+    font-weight: 300
+}
+
 #text-4 a {
     color: #b3094b!important
 }
