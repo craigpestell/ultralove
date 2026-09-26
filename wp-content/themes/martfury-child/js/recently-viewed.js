@@ -119,36 +119,14 @@
     });
 
     // The footer block now holds standard product cards (see ultralove_render_recently_viewed_cards()
-    // in functions.php); once Martfury's AJAX handler has inserted them, make them a carousel with the
-    // same settings as the related products carousel.
+    // in functions.php) in the child theme's product carousel; once Martfury's AJAX handler has
+    // inserted them, start it (js/product-carousel.js).
     function initCardsCarousel() {
-        var $list = $('#footer-recently-viewed ul.products, #footer-bot-recently-viewed ul.products').not('.slick-initialized');
-
-        if (!$list.length || !$.fn.slick) {
-            return;
+        if (window.ulProductCarousel) {
+            $('#footer-recently-viewed, #footer-bot-recently-viewed').each(function () {
+                window.ulProductCarousel.initAll(this);
+            });
         }
-
-        $list.slick({
-            rtl: (window.martfuryData && martfuryData.direction === 'true'),
-            slidesToShow: 5,
-            slidesToScroll: 5,
-            arrows: true,
-            dots: true,
-            infinite: false,
-            prevArrow: '<span class="icon-chevron-left slick-prev-arrow"></span>',
-            nextArrow: '<span class="icon-chevron-right slick-next-arrow"></span>',
-            responsive: [
-                {breakpoint: 1200, settings: {slidesToShow: 4, slidesToScroll: 4}},
-                {breakpoint: 992, settings: {slidesToShow: 3, slidesToScroll: 3}},
-                {breakpoint: 767, settings: {slidesToShow: 2, slidesToScroll: 2}}
-            ]
-        });
-
-        $list.on('afterChange', function () {
-            if (window.martfury && martfury.lazyLoad) {
-                martfury.lazyLoad();
-            }
-        });
     }
 
     $(document).ajaxComplete(function (event, xhr, settings) {

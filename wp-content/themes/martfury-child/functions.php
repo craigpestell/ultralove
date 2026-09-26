@@ -22,11 +22,15 @@ function martfury_child_enqueue_scripts() {
 	}
 
     if ( class_exists( 'WooCommerce' ) ) {
+        // Product carousel (related products, upsells, recently viewed - .ul-carousel in style.css).
+        $carousel_path = get_stylesheet_directory() . '/js/product-carousel.js';
+        wp_enqueue_script( 'ultralove-product-carousel', get_stylesheet_directory_uri() . '/js/product-carousel.js', array(), (string) filemtime( $carousel_path ), true );
+
         $script_path = get_stylesheet_directory() . '/js/recently-viewed.js';
         $script_url  = get_stylesheet_directory_uri() . '/js/recently-viewed.js';
         $version     = file_exists( $script_path ) ? (string) filemtime( $script_path ) : null;
 
-        wp_enqueue_script( 'ultralove-recently-viewed', $script_url, array( 'jquery', 'martfury' ), $version, true );
+        wp_enqueue_script( 'ultralove-recently-viewed', $script_url, array( 'jquery', 'martfury', 'ultralove-product-carousel' ), $version, true );
         wp_localize_script(
             'ultralove-recently-viewed',
             'ulRecentlyViewed',
@@ -130,8 +134,8 @@ function ultralove_martfury_footer_recently_viewed() {
 
 /**
  * Footer "Recently viewed" block: the standard product card (content-product.php - the same card as
- * the shop grid and related products) instead of Martfury's image-only list. recently-viewed.js turns
- * the list into a carousel. The viewed IDs come from the browser (oldest first); the product being
+ * the shop grid and related products) instead of Martfury's image-only list, in the child theme's
+ * product carousel (js/product-carousel.js; recently-viewed.js starts it once the block has loaded). The viewed IDs come from the browser (oldest first); the product being
  * viewed is left out, since it's the page itself.
  */
 function ultralove_render_recently_viewed_cards( $atts ) {
@@ -180,6 +184,8 @@ function ultralove_render_recently_viewed_cards( $atts ) {
         return ob_get_clean();
     }
 
+    // The same scrollable carousel as related products (.ul-carousel - js/product-carousel.js).
+    printf( '<div class="ul-carousel" data-ul-carousel aria-label="%s">', esc_attr( ! empty( $atts['title'] ) ? $atts['title'] : __( 'Recently viewed products', 'martfury' ) ) );
     wc_setup_loop( array( 'name' => 'recently_viewed', 'columns' => 5 ) );
     woocommerce_product_loop_start();
     foreach ( $products as $product ) {
@@ -188,6 +194,7 @@ function ultralove_render_recently_viewed_cards( $atts ) {
         wc_get_template_part( 'content', 'product' );
     }
     woocommerce_product_loop_end();
+    echo '</div>';
     wp_reset_postdata();
     wc_reset_loop();
     echo '</div>';

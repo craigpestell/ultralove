@@ -1878,47 +1878,245 @@ section.up-sells .related-title,
     }
 }
 
-/* Footer "Recently viewed" block: now standard product cards in a carousel (see
-   ultralove_render_recently_viewed_cards() in functions.php), with arrows/dots matching the related
-   products carousel (the parent theme's section.related ul.products rules). */
-#footer-recently-viewed ul.products,
-#footer-bot-recently-viewed ul.products {
+/*
+ * Product carousel - related products, upsells and the footer's recently viewed products
+ * (.ul-carousel around a standard ul.products; js/product-carousel.js adds the buttons and progress bar).
+ * The list is a native horizontal scroller with snapping, and its cards are the product grid's cards:
+ * no .slick-slider class, so every grid card rule above applies as is (flex cards, hover shadow and
+ * pop, fixed title box, cart row). What tells visitors it scrolls sideways:
+ *  - the next card peeks in at the right edge (fractional cards per view below),
+ *  - the edge(s) with more cards beyond fade out,
+ *  - round previous/next buttons over the product images, hidden at either end,
+ *  - a progress bar under the cards, sized to the share in view,
+ *  - a one-off nudge the first time it comes into view (the script; not with reduced motion).
+ */
+.ul-carousel {
+    --ul-per-view: 1.75;
+    --ul-fade: 48px;
     position: relative
 }
 
-#footer-recently-viewed ul.products .slick-arrow,
-#footer-bot-recently-viewed ul.products .slick-arrow {
+@media (min-width: 576px) {
+    .ul-carousel {
+        --ul-per-view: 2.4
+    }
+}
+
+@media (min-width: 768px) {
+    .ul-carousel {
+        --ul-per-view: 3.3
+    }
+}
+
+@media (min-width: 992px) {
+    .ul-carousel {
+        --ul-per-view: 4.3
+    }
+}
+
+@media (min-width: 1200px) {
+    .ul-carousel {
+        --ul-per-view: 5.3
+    }
+}
+
+/* The scroller. Its padding gives the cards' hover shadow and pop room (a scroller clips on both axes),
+   cancelled by equal negative margins so the cards sit where the list did. */
+.ul-carousel ul.products {
+    display: flex!important;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 10px;
+    scrollbar-width: none;
+    padding: 16px 10px 28px!important;
+    margin: -16px -10px -28px!important;
+    -webkit-overflow-scrolling: touch
+}
+
+.ul-carousel ul.products::-webkit-scrollbar {
+    display: none
+}
+
+.ul-carousel ul.products > li.product {
+    flex: 0 0 calc(100% / var(--ul-per-view));
+    width: auto!important;
+    max-width: none!important;
+    float: none!important;
+    margin: 0!important;
+    scroll-snap-align: start
+}
+
+/* Edge fades on whichever side has more cards (none at the start's left or the end's right). */
+.ul-carousel.is-scrollable ul.products {
+    --ul-fade-left: var(--ul-fade);
+    --ul-fade-right: var(--ul-fade);
+    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--ul-fade-left), #000 calc(100% - var(--ul-fade-right)), transparent 100%);
+    mask-image: linear-gradient(to right, transparent 0, #000 var(--ul-fade-left), #000 calc(100% - var(--ul-fade-right)), transparent 100%)
+}
+
+.ul-carousel.is-scrollable.is-at-start ul.products {
+    --ul-fade-left: 0px
+}
+
+.ul-carousel.is-scrollable.is-at-end ul.products {
+    --ul-fade-right: 0px
+}
+
+/* Dragging (mouse, or the progress bar's thumb): no snapping or smoothing mid-drag, no text selection. */
+@media (hover: hover) and (pointer: fine) {
+    .ul-carousel.is-scrollable ul.products {
+        cursor: grab
+    }
+}
+
+.ul-carousel.is-dragging ul.products {
+    scroll-snap-type: none;
+    scroll-behavior: auto;
+    cursor: grabbing;
+    user-select: none;
+    -webkit-user-select: none
+}
+
+/* Previous/next: white circles with the site's lavender border and purple shadow, centred on the
+   product images (--ul-arrow-top, set by the script), straddling the carousel's edges where there's
+   room and just inside them otherwise. Hidden at either end, and on phones (swipe instead). */
+.ul-carousel__arrow {
     position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    left: -54px;
-    color: #ccc;
-    font-size: 30px;
+    top: var(--ul-arrow-top, 40%);
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 46px;
+    height: 46px;
+    padding: 0;
+    color: #3b1d4a;
+    background: #fff;
+    border: 1px solid rgba(177,101,255,.45);
+    border-radius: 50%;
+    box-shadow: 0 6px 18px rgba(177,101,255,.3);
     cursor: pointer;
-    transition: .5s;
-    z-index: 2
+    transform: translateY(-50%);
+    transition: opacity .2s ease, visibility .2s ease, color .15s ease, border-color .15s ease, transform .15s ease
 }
 
-#footer-recently-viewed ul.products .slick-next-arrow,
-#footer-bot-recently-viewed ul.products .slick-next-arrow {
-    left: auto;
-    right: -54px
+.ul-carousel__arrow--prev {
+    left: 6px
 }
 
-#footer-recently-viewed ul.products .slick-arrow:hover,
-#footer-bot-recently-viewed ul.products .slick-arrow:hover {
-    color: #000
+.ul-carousel__arrow--prev svg {
+    transform: scaleX(-1)
 }
 
-#footer-recently-viewed ul.products .slick-arrow.slick-disabled,
-#footer-bot-recently-viewed ul.products .slick-arrow.slick-disabled {
-    color: #ccc;
-    cursor: auto
+.ul-carousel__arrow--next {
+    right: 6px
 }
 
-#footer-recently-viewed ul.products .slick-dots,
-#footer-bot-recently-viewed ul.products .slick-dots {
-    display: none!important
+@media (min-width: 1300px) {
+    .ul-carousel__arrow--prev {
+        left: -23px
+    }
+
+    .ul-carousel__arrow--next {
+        right: -23px
+    }
+}
+
+.ul-carousel__arrow:hover,
+.ul-carousel__arrow:focus-visible {
+    color: #b3094b;
+    border-color: #b3094b;
+    transform: translateY(-50%) scale(1.06)
+}
+
+.ul-carousel__arrow:focus-visible {
+    outline: 2px solid rgb(177,101,255);
+    outline-offset: 2px
+}
+
+.ul-carousel__arrow:disabled,
+.ul-carousel:not(.is-scrollable) .ul-carousel__arrow {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none
+}
+
+@media (max-width: 767px) {
+    .ul-carousel__arrow {
+        display: none
+    }
+}
+
+/* Progress bar: a thin lavender track with a purple thumb as wide as the share of cards in view.
+   The element is a 16px hit area; the visible track is 4px (6px while hovered or dragged). */
+.ul-carousel__progress {
+    position: relative;
+    height: 16px;
+    margin-top: 14px;
+    cursor: pointer;
+    touch-action: none
+}
+
+.ul-carousel:not(.is-scrollable) .ul-carousel__progress {
+    display: none
+}
+
+.ul-carousel__progress:before,
+.ul-carousel__thumb {
+    position: absolute;
+    top: 6px;
+    height: 4px;
+    border-radius: 999px;
+    transition: top .15s ease, height .15s ease
+}
+
+.ul-carousel__progress:before {
+    content: "";
+    left: 0;
+    right: 0;
+    background: rgba(177,101,255,.15)
+}
+
+.ul-carousel__thumb {
+    left: 0;
+    background: linear-gradient(90deg, #d7aae6, rgb(177,101,255));
+    cursor: grab
+}
+
+.ul-carousel__progress:hover:before,
+.ul-carousel__progress:hover .ul-carousel__thumb,
+.ul-carousel.is-dragging .ul-carousel__progress:before,
+.ul-carousel.is-dragging .ul-carousel__thumb {
+    top: 5px;
+    height: 6px
+}
+
+/* The nudge: the cards slide a little to the left and back, once. */
+.ul-carousel.is-nudging ul.products > li.product {
+    animation: ul-carousel-nudge 1s cubic-bezier(.45,0,.25,1) .3s 1
+}
+
+@keyframes ul-carousel-nudge {
+    0%, 100% {
+        transform: none
+    }
+
+    45% {
+        transform: translateX(-44px)
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ul-carousel ul.products {
+        scroll-behavior: auto
+    }
+
+    .ul-carousel.is-nudging ul.products > li.product {
+        animation: none
+    }
 }
 
 /* Out of stock cards for logged-in users: the Back In Stock Notifier's "Notify Me When Available"
