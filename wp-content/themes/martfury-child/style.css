@@ -1818,10 +1818,11 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
  * by ultralove_replace_quick_view_header() in functions.php), the image, then the summary (price,
  * quantity, Add to cart, wishlist). The parent theme floats a 43%-wide, 430px-tall gallery and absolutely
  * positions the summary beside it; here all three are full-width blocks and the popup is as tall as its
- * content. The image is centred and capped at 400px (or 45% of the window) tall so the cart row stays in
- * view. At >=992px the popup is 560px wide, centred (top: 50% + translate(-50%, -50%) in the parent
- * theme), capped at the window height minus 40px top and bottom, and scrolls as a whole beyond that;
- * below 992px the parent theme's side sheet (85% wide, max 600px) already scrolls as a whole.
+ * content. The image is centred and capped at 400px tall. At >=992px the popup is 560px wide, centred
+ * (top: 50% + translate(-50%, -50%) in the parent theme) and capped at the window height minus 40px top
+ * and bottom; when the content is taller than that, js/quick-view-fit.js adds .ul-qv-columns and the
+ * popup goes to two columns (below). Below 992px the parent theme's side sheet (85% wide, max 600px)
+ * scrolls as a whole.
  */
 #mf-quick-view-modal div.product .mf-product-detail {
     display: flex;
@@ -1844,7 +1845,7 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     display: block;
     width: auto;
     max-width: 100%;
-    max-height: min(400px, 45vh);
+    max-height: 400px;
     margin: 0 auto;
     object-fit: contain
 }
@@ -1879,6 +1880,40 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     #mf-quick-view-modal div.product .mf-product-detail {
         max-height: calc(100vh - 80px);
         overflow-y: auto
+    }
+
+    /* Two columns when one doesn't fit the window: the image on the left, vertically centred, as tall as
+       the window allows; the name / brand / SKU header over the summary on the right. The popup is
+       960px wide and still scrolls as a whole if even this is taller than the window. */
+    #mf-quick-view-modal.ul-qv-columns .modal-content {
+        max-width: 960px
+    }
+
+    #mf-quick-view-modal.ul-qv-columns div.product .mf-product-detail {
+        display: grid;
+        grid-template-columns: minmax(0, 45%) minmax(0, 1fr);
+        grid-template-rows: auto 1fr;
+        grid-template-areas: "gallery header" "gallery summary"
+    }
+
+    #mf-quick-view-modal.ul-qv-columns div.product .mf-entry-product-header {
+        grid-area: header;
+        padding: 30px 30px 8px 0
+    }
+
+    #mf-quick-view-modal.ul-qv-columns div.product .woocommerce-product-gallery {
+        grid-area: gallery;
+        align-self: center;
+        padding: 30px
+    }
+
+    #mf-quick-view-modal.ul-qv-columns div.product .woocommerce-product-gallery__image img {
+        max-height: calc(100vh - 140px)
+    }
+
+    #mf-quick-view-modal.ul-qv-columns div.product .entry-summary {
+        grid-area: summary;
+        padding: 0 30px 30px 0
     }
 }
 
