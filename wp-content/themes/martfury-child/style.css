@@ -1964,17 +1964,16 @@ body:not(.home) #content .elementor-section.elementor-section-boxed > .elementor
 }
 
 /*
- * Large screens (>=1200px): the product page (product and breadcrumbs), the related products / upsells
- * carousels and the recently viewed carousel - on every page it appears on, the shop included - sit in a
- * narrower column with wider side margins, all the same: the shop's product grid width, so their cards are
- * the grid's card size. The shop puts the
+ * Large screens (>=1200px): the product page's content, the related products / upsells carousels and the
+ * recently viewed carousel - on every page it appears on, the shop included - sit in a narrower column with
+ * wider side margins, all the same: the shop's product grid width, so their cards are the grid's card size.
+ * The breadcrumbs keep the site-wide page container, like on every other page. The shop puts the
  * grid in an 81% column of a row that's the viewport minus 30px, capped at 1680px, less the column's 15px
  * padding each side: 0.81 x min(width - 30px, 1680px) - 30px of content, e.g. 1112px at 1440, 1331px at
  * 1920. The container keeps its 30px side padding around that.
  */
 @media (min-width: 1200px) {
     .single-product #content > .martfury-container,
-    .single-product .page-header .page-breadcrumbs > .martfury-container,
     section.related > .martfury-container,
     #footer-recently-viewed > .container,
     #footer-recently-viewed > .rv-container {
