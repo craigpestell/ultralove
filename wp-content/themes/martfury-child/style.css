@@ -1040,12 +1040,12 @@ html body {
 
 /* All text in the home page product sections (the deals carousel - "On Sale" - and the products
    grid widgets) in a lighter weight. `lighter` is relative to the parent's weight, so applied at
-   every level it steps everything down to Work Sans' lightest loaded weight (300). The product
-   cards themselves (ul.products) are excluded so their titles/promo notes match the shop page. */
+   every level it steps everything down to Work Sans' lightest loaded weight (300). This includes the
+   product cards, so their titles/prices are lighter here than on the shop page. */
 .elementor-widget-martfury-product-deals-carousel,
-.elementor-widget-martfury-product-deals-carousel *:not(ul.products, ul.products *),
+.elementor-widget-martfury-product-deals-carousel *,
 .elementor-widget-martfury-products-grid,
-.elementor-widget-martfury-products-grid *:not(ul.products, ul.products *) {
+.elementor-widget-martfury-products-grid * {
     font-weight: lighter!important
 }
 
