@@ -1355,6 +1355,17 @@ body:not(.shop-view-list) ul.products li.product .product-inner:hover {
     body:not(.shop-view-list) ul.products:not(.slick-slider) li.product .product-inner:hover .woo-loop-product__title {
         transform: translateY(6px)
     }
+
+    /* The badge (New / Sale / Out of stock) sits at the thumbnail's top-right corner, which stays put
+       while the card grows; shift it up and right by the card's 8px so it rides the card's corner.
+       On .ribbon, not .ribbons: that wrapper is an inline span, which ignores transforms. */
+    body:not(.shop-view-list) ul.products:not(.slick-slider) li.product .ribbons .ribbon {
+        transition: transform .2s ease
+    }
+
+    body:not(.shop-view-list) ul.products:not(.slick-slider) li.product .product-inner:hover .ribbons .ribbon {
+        transform: translate(8px, -8px)
+    }
 }
 
 /* The theme's jQuery UI tooltips (e.g. "Quick View" over the thumbnail icons) are appended to <body>,
