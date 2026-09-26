@@ -1148,9 +1148,11 @@ html body {
     font-weight: 300!important
 }
 
-/* Bold parts of product card titles (<b> inside the title link) at 500. */
+/* Bold parts of product card titles (<b> inside the title link) at 500, in the theme's primary colour.
+   Set on the <b> itself, so it stays that colour in every link state (hover, focus, visited). */
 .mf-product-content > h2 > a > b {
-    font-weight: 500
+    font-weight: 500;
+    color: var(--mf-primary-color)
 }
 
 /*
