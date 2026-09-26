@@ -379,7 +379,7 @@ Template: martfury
     letter-spacing: -.5px!important
 }
 
-.page-header .breadcrumbs a,.woocommerce-cart .woocommerce table.shop_table td.product-name a {
+.woocommerce-cart .woocommerce table.shop_table td.product-name a {
     color: #b3094b!important
 }
 
@@ -800,6 +800,196 @@ h1,h2,h3,h4 {
     }
 }
 
+/* Breadcrumbs (catalog and product pages): a soft lavender strip with a lavender rule instead of the
+   parent theme's #f1f1f1 bar. Links in muted plum (brand pink on hover), the current page in plum,
+   lavender separators. */
+.page-header-catalog .page-breadcrumbs {
+    background: #faf5fc;
+    border-bottom: 1px solid rgba(177,101,255,.2)
+}
+
+.page-header-catalog .page-breadcrumbs .breadcrumbs {
+    align-items: center;
+    padding-top: 14px;
+    padding-bottom: 14px;
+    font-size: 14px
+}
+
+.page-header .breadcrumbs a {
+    color: #7a5a8c!important;
+    transition: color .15s ease
+}
+
+.page-header .breadcrumbs a:hover,
+.page-header .breadcrumbs a:focus-visible {
+    color: #b3094b!important
+}
+
+.page-header .breadcrumbs li:last-child a {
+    color: #3b1d4a!important
+}
+
+.page-header .breadcrumbs .sep {
+    margin: 0 8px;
+    color: #c9a3dc
+}
+
+/* Catalog sidebar - Product Categories. From 768px up (below that the sidebar is the parent theme's
+   off-canvas Filter panel, left as is) the widget is a white card with a lavender border and a soft
+   purple shadow in place of the #f5f5f5 box. At every size: the heading in plum over a lavender rule,
+   each category a rounded row with a lavender tint on hover and on the current category, and the
+   sub-category lists hung off a lavender line. */
+@media (min-width:768px) {
+    .catalog-sidebar .mf_widget_product_categories {
+        background: #fff;
+        border: 1px solid rgba(177,101,255,.3);
+        border-radius: 10px;
+        padding: 22px 14px 16px;
+        box-shadow: 0 6px 18px rgba(177,101,255,.12)
+    }
+}
+
+.catalog-sidebar .mf_widget_product_categories .widget-title {
+    color: #3b1d4a;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: .08em;
+    padding: 0 8px 12px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(177,101,255,.25)
+}
+
+.catalog-sidebar .mf_widget_product_categories ul li {
+    padding: 1px 0
+}
+
+.catalog-sidebar .mf_widget_product_categories ul li a {
+    display: block;
+    padding: 6px 34px 6px 8px;
+    margin-right: -16px;
+    color: #3b1d4a;
+    line-height: 1.3;
+    border-radius: 6px;
+    transition: background-color .15s ease, color .15s ease
+}
+
+.catalog-sidebar .mf_widget_product_categories ul li a:hover,
+.catalog-sidebar .mf_widget_product_categories ul li a:focus-visible {
+    color: #b3094b;
+    background: rgba(215,170,230,.22)
+}
+
+.catalog-sidebar .mf_widget_product_categories ul li.current-cat > a,
+.catalog-sidebar .mf_widget_product_categories ul li.current-cat-parent > a {
+    color: #b3094b;
+    background: rgba(215,170,230,.35)
+}
+
+.catalog-sidebar .mf_widget_product_categories ul li .children {
+    margin: 2px 0 4px 10px;
+    padding-left: 6px;
+    border-left: 1px solid rgba(177,101,255,.3)
+}
+
+.catalog-sidebar .mf_widget_product_categories ul li .children li a {
+    color: #6b5578
+}
+
+.catalog-sidebar .mf_widget_product_categories ul li .children li a:hover,
+.catalog-sidebar .mf_widget_product_categories ul li .children li.current-cat > a {
+    color: #b3094b
+}
+
+/* The expand/collapse chevron: a round 28px target inside the row's right padding. */
+.catalog-sidebar .mf_widget_product_categories ul li .cat-menu-close {
+    z-index: 1;
+    top: 3px;
+    right: 3px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #7a5a8c;
+    border-radius: 50%;
+    transition: background-color .15s ease, color .15s ease
+}
+
+.catalog-sidebar .mf_widget_product_categories ul li .cat-menu-close:hover {
+    color: #b3094b;
+    background: rgba(215,170,230,.35)
+}
+
+/* Catalog toolbar (products found / sort / grid-list view): a white card matching the sidebar's instead
+   of the #f5f5f5 strip; the sort menu as a lavender-bordered pill with a rounded dropdown, the view
+   icons in muted lavender with the current one in plum. */
+.woocommerce #mf-catalog-toolbar {
+    background: #fff;
+    border: 1px solid rgba(177,101,255,.3);
+    border-radius: 10px;
+    padding: 0 16px;
+    box-shadow: 0 6px 18px rgba(177,101,255,.12)
+}
+
+.woocommerce #mf-catalog-toolbar .products-found {
+    color: #7a5a8c
+}
+
+.woocommerce #mf-catalog-toolbar .products-found strong {
+    color: #3b1d4a
+}
+
+.woocommerce #mf-catalog-toolbar .woocommerce-ordering .current {
+    color: #3b1d4a;
+    border: 1px solid rgba(177,101,255,.45);
+    border-radius: 999px;
+    padding: 0 34px 0 18px;
+    transition: border-color .15s ease, box-shadow .15s ease
+}
+
+.woocommerce #mf-catalog-toolbar .woocommerce-ordering .current:hover {
+    border-color: rgb(177,101,255);
+    box-shadow: 0 3px 10px rgba(177,101,255,.2)
+}
+
+.woocommerce #mf-catalog-toolbar .woocommerce-ordering .current:after {
+    right: 14px;
+    color: #3b1d4a
+}
+
+.woocommerce #mf-catalog-toolbar .woocommerce-ordering li > ul {
+    border: 1px solid rgba(177,101,255,.3);
+    border-radius: 10px;
+    padding: 8px 18px;
+    box-shadow: 0 6px 18px rgba(177,101,255,.25)
+}
+
+.woocommerce #mf-catalog-toolbar .woocommerce-ordering li > ul li a {
+    color: #6b5578
+}
+
+.woocommerce #mf-catalog-toolbar .woocommerce-ordering li > ul li a.active,
+.woocommerce #mf-catalog-toolbar .woocommerce-ordering li > ul li a:hover {
+    color: #b3094b
+}
+
+.woocommerce #mf-catalog-toolbar .shop-view {
+    color: #7a5a8c
+}
+
+.woocommerce #mf-catalog-toolbar .shop-view .mf-shop-view {
+    color: #c9a3dc;
+    transition: color .15s ease
+}
+
+.woocommerce #mf-catalog-toolbar .shop-view .mf-shop-view:hover {
+    color: #b3094b
+}
+
+.woocommerce #mf-catalog-toolbar .shop-view .mf-shop-view.current {
+    color: #3b1d4a
+}
+
 #bottomcta a,#topcta a {
     background-color: #b3094b;
     padding: 7px 15px;
@@ -1020,6 +1210,34 @@ h1,h2,h3,h4 {
    gap below the button than the matching 16px gap above the first field. */
 .site-footer .footer-widgets #gform_submit_button_1 {
     margin-bottom: 0!important
+}
+
+/* Gravity Forms submit buttons in page content (e.g. Send Message on Contact Us): the brand pink
+   button, like the footer form's and the product cards' Add to cart; hover darkens it and adds the
+   site's purple shadow. The footer form keeps its own rules above. */
+.site-content .gform_wrapper .gform_footer .gform_button {
+    min-height: 44px;
+    padding: 10px 32px;
+    color: #fff;
+    font-size: 16px;
+    line-height: 1.2;
+    background-color: #b3094b;
+    border: 1px solid #b3094b;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease
+}
+
+.site-content .gform_wrapper .gform_footer .gform_button:hover,
+.site-content .gform_wrapper .gform_footer .gform_button:focus-visible {
+    background-color: #8e073b;
+    border-color: #8e073b;
+    box-shadow: 0 6px 18px rgba(177,101,255,.35)
+}
+
+.site-content .gform_wrapper .gform_footer .gform_button:focus-visible {
+    outline: 2px solid rgb(177,101,255);
+    outline-offset: 2px
 }
 
 .site-footer .footer-widgets #gform_1 .gform_footer {
