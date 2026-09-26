@@ -383,9 +383,13 @@ Template: martfury
     color: #b3094b!important
 }
 
-/* Product names on product cards in black; the parent theme's hover rule turns them brand pink. */
+/* Product names on product cards in black, including on hover: the parent theme's hover selectors
+   (grid, list view, products-of-category widget) are repeated so the same-specificity rule here wins. */
 .woocommerce ul.products li.product .woo-loop-product__title a,
-.woocommerce ul.products li.product h2 a {
+.woocommerce ul.products li.product h2 a,
+.woocommerce ul.products li.product .woo-loop-product__title:hover a,
+.woocommerce.shop-view-list ul.products:not(.slick-slider) li.product .mf-product-details h2 a:hover,
+.mf-products-of-category .products-box ul.products li.product .product-inner:hover .mf-product-content h2 a {
     color: #000
 }
 
