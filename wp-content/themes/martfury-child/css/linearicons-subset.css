@@ -1,0 +1,107 @@
+/* Linearicons, trimmed to the icons the site uses (built from the parent theme's full font, which is
+   146 KB for 1,097 icons). Loaded in place of the parent's css/linearicons.min.css (see functions.php).
+   To add an icon: add its .icon-*:before rule from the parent's css/linearicons.min.css here, add its
+   codepoint to the font with pyftsubset, and bump ?v= here and in the preload in functions.php.
+   Codepoints: U+E600, U+E68C, U+E6A5, U+E6F2, U+E705, U+E71E, U+E74C, U+E76A, U+E7FC, U+E922, U+E92A, U+E92B, U+E930, U+E934, U+E935, U+E936, U+E937, U+E939, U+E93A, U+E93B, U+E93C, U+E943, U+E944, U+E959, U+E975, U+E999 */
+@font-face {
+	font-family: 'Linearicons';
+	src: url('../fonts/linearicons-subset.woff2?v=1') format('woff2');
+	font-weight: normal;
+	font-style: normal;
+	font-display: block;
+}
+
+[class^="icon-"], [class*=" icon-"] {
+	/* use !important to prevent issues with browser extensions that change fonts */
+	font-family: 'Linearicons' !important;
+	speak: none;
+	font-style: normal;
+	font-weight: normal;
+	font-variant: normal;
+	text-transform: none;
+	line-height: 1;
+
+	/* Enable Ligatures ================ */
+	letter-spacing: 0;
+	-webkit-font-feature-settings: "liga";
+	-moz-font-feature-settings: "liga=1";
+	-moz-font-feature-settings: "liga";
+	-ms-font-feature-settings: "liga" 1;
+	font-feature-settings: "liga";
+	-webkit-font-variant-ligatures: discretionary-ligatures;
+	font-variant-ligatures: discretionary-ligatures;
+
+	/* Better Font Rendering =========== */
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+.icon-arrow-left:before {
+	content: "\e943";
+}
+.icon-arrow-right:before {
+	content: "\e944";
+}
+.icon-bag2:before {
+	content: "\e74c";
+}
+.icon-camera-flip:before {
+	content: "\e705";
+}
+.icon-chart-bars:before {
+	content: "\e7fc";
+}
+.icon-checkmark-circle:before {
+	content: "\e959";
+}
+.icon-chevron-down:before {
+	content: "\e93a";
+}
+.icon-chevron-left:before {
+	content: "\e93b";
+}
+.icon-chevron-right:before {
+	content: "\e93c";
+}
+.icon-chevron-up:before {
+	content: "\e939";
+}
+.icon-cross:before {
+	content: "\e92a";
+}
+.icon-cross2:before {
+	content: "\e935";
+}
+.icon-equalizer:before {
+	content: "\e6f2";
+}
+.icon-eye:before {
+	content: "\e6a5";
+}
+.icon-grid:before {
+	content: "\e975";
+}
+.icon-heart:before {
+	content: "\e68c";
+}
+.icon-home:before {
+	content: "\e600";
+}
+.icon-list4:before {
+	content: "\e930";
+}
+.icon-magnifier:before {
+	content: "\e922";
+}
+.icon-menu:before {
+	content: "\e92b";
+}
+.icon-plus:before {
+	content: "\e936";
+}
+.icon-telephone:before {
+	content: "\e76a";
+}
+.icon-user:before {
+	content: "\e71e";
+}

@@ -10,6 +10,13 @@ add_action( 'wp_enqueue_scripts', 'martfury_child_enqueue_scripts', 20 );
 function martfury_child_enqueue_scripts() {
 	// Version by file mtime so CSS edits bust browser/Cloudflare caches (static assets are cached for a year).
 	wp_enqueue_style( 'martfury-child-style', get_stylesheet_uri(), array(), filemtime( get_stylesheet_directory() . '/style.css' ) );
+
+	// Linearicons: swap the parent's full icon font (146 KB, 1,097 icons) for a subset of the ones the
+	// site uses (~3.5 KB). Same handle, so the parent's stylesheet that depends on it still loads.
+	$icons_css = get_stylesheet_directory() . '/css/linearicons-subset.css';
+	wp_deregister_style( 'linearicons' );
+	wp_register_style( 'linearicons', get_stylesheet_directory_uri() . '/css/linearicons-subset.css', array(), filemtime( $icons_css ) );
+
 	if ( is_rtl() ) {
 		wp_enqueue_style( 'martfury-rtl', get_template_directory_uri() . '/rtl.css', array(), '20180105' );
 	}
@@ -30,6 +37,17 @@ function martfury_child_enqueue_scripts() {
             )
         );
     }
+}
+
+// Preload the icon font so it downloads alongside the stylesheets instead of after them. The URL must
+// match the @font-face src in css/linearicons-subset.css exactly (including ?v=), and crossorigin is
+// required for fonts even on the same origin, or the browser fetches it twice.
+add_action( 'wp_head', 'ultralove_preload_icon_font', 1 );
+function ultralove_preload_icon_font() {
+	printf(
+		'<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin>' . "\n",
+		esc_url( get_stylesheet_directory_uri() . '/fonts/linearicons-subset.woff2?v=1' )
+	);
 }
 
 add_action( 'init', 'ultralove_bootstrap_recently_viewed', 30 );
