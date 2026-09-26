@@ -750,6 +750,14 @@ h1,h2,h3,h4 {
     font-size: 16px
 }
 
+/* Pages built in Elementor (Contact, Brands, Cart - not the home page, which has no breadcrumbs) inset
+   their text 20px inside the page container: the page's section and its inner section each pad their
+   columns by 10px. The trail gets the same inset on both sides, so it starts where the page's text does. */
+body.elementor-page:not(.home) .page-header .page-breadcrumbs .breadcrumbs {
+    padding-left: 20px;
+    padding-right: 20px
+}
+
 .page-header .breadcrumbs a {
     color: #7a5a8c!important;
     transition: color .15s ease
