@@ -2114,7 +2114,7 @@ section.up-sells .related-title,
     -webkit-user-select: none
 }
 
-/* Previous/next: white circles with the site's lavender border and purple shadow, vertically centred on
+/* Previous/next: white circles with the site's lavender border (no shadow), vertically centred on
    the cards (the carousel's height less the 30px progress bar below them - the arrows only show when it
    does), straddling the carousel's edges where there's room and just inside them otherwise. Hidden at
    either end, and on phones (swipe instead). */
@@ -2132,7 +2132,6 @@ section.up-sells .related-title,
     background: #fff;
     border: 1px solid rgba(177,101,255,.45);
     border-radius: 50%;
-    box-shadow: 0 6px 18px rgba(177,101,255,.3);
     cursor: pointer;
     transform: translateY(-50%);
     transition: opacity .2s ease, visibility .2s ease, color .15s ease, border-color .15s ease, transform .15s ease
