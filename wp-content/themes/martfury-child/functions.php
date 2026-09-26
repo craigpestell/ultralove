@@ -974,8 +974,7 @@ function ultralove_quick_view_header() {
  * Breadcrumbs on every page, in the same strip as the catalog pages: pages (Brands, Buy Wholesale,
  * Contact, cart, ...) get them in their page header, where the theme's page header elements leave them
  * out, and product pages get the breadcrumb bar (theme option product_breadcrumb, off). The home page
- * hides its page header altogether and keeps doing so. Page breadcrumbs use the catalog's full-width
- * container so the trail lines up on every page.
+ * hides its page header altogether and keeps doing so.
  */
 add_filter( 'martfury_get_page_header', 'ultralove_page_header_breadcrumbs' );
 function ultralove_page_header_breadcrumbs( $page_header ) {
@@ -990,7 +989,23 @@ function ultralove_product_breadcrumb_option( $value, $option_name ) {
 	return 'product_breadcrumb' === $option_name ? 1 : $value;
 }
 
-add_filter( 'martfury_page_header_container_class', 'ultralove_page_header_container_class' );
-function ultralove_page_header_container_class( $classes ) {
-	return 'martfury-container';
+// Product titles hold <br>/<b> markup (e.g. "SKU<br>Name"), which the breadcrumb prints as-is and so
+// breaks onto two lines. While the product page's breadcrumb is built, its title comes through as plain
+// text (the <br> as a space); the filter removes itself after that one title, so the page's other titles
+// keep their markup.
+add_filter( 'martfury_breadcrumbs_args', 'ultralove_breadcrumb_plain_product_title_start' );
+function ultralove_breadcrumb_plain_product_title_start( $args ) {
+	if ( is_singular( 'product' ) ) {
+		add_filter( 'the_title', 'ultralove_breadcrumb_plain_product_title', 10, 2 );
+	}
+	return $args;
+}
+
+function ultralove_breadcrumb_plain_product_title( $title, $post_id = 0 ) {
+	if ( (int) $post_id !== get_queried_object_id() ) {
+		return $title;
+	}
+	remove_filter( 'the_title', 'ultralove_breadcrumb_plain_product_title', 10 );
+	$title = preg_replace( '/<br\s*\/?>/i', ' ', $title );
+	return trim( preg_replace( '/\s+/', ' ', wp_strip_all_tags( $title ) ) );
 }
