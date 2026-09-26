@@ -1149,6 +1149,12 @@ html body {
     font-weight: lighter!important
 }
 
+/* Bold parts of product card titles (<b> inside the title link) at 500, including in the home page
+   product sections, where the `lighter` rule above would otherwise hit them directly. */
+html body .mf-product-content > h2 > a > b {
+    font-weight: 500!important
+}
+
 /*
  * Every button on the site in one weight (500). Don't give individual buttons their own weight; a
  * genuine special case gets an explicit, commented exception after this rule. Covers native buttons
