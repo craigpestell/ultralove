@@ -1216,6 +1216,12 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
     font-weight: inherit
 }
 
+/* Exception: the header's Search button label at the regular 300, to sit with the rest of the header
+   text (navigation, Log in / Register) rather than stand out as the one bold word there. */
+.site-header .product-extra-search .search-submit {
+    font-weight: 300
+}
+
 /* Product section headings (e.g. "On Sale"): plum text, no pill - no background, border, shadow
    or padding (set explicitly so nothing from the parent theme shows through). The light 300 weight
    comes from the product section title rule above. The header row keeps the parent theme's
