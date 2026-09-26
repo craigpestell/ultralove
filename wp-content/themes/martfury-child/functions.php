@@ -1032,6 +1032,13 @@ function ultralove_page_header_breadcrumbs( $page_header ) {
 	return $page_header;
 }
 
+// The On Sale page (the Sale/Closeout Items category, its own item in the header navigation) leaves Shop
+// out of its trail, so it reads just "Sale/Closeout Items" rather than "Shop / Sale/Closeout Items".
+add_filter( 'martfury_breadcrumb_get_shop_page', 'ultralove_sale_breadcrumb_without_shop' );
+function ultralove_sale_breadcrumb_without_shop( $show ) {
+	return ( function_exists( 'is_product_category' ) && is_product_category( 'sale-closeout-items' ) ) ? false : $show;
+}
+
 add_filter( 'martfury_get_option', 'ultralove_product_breadcrumb_option', 10, 2 );
 function ultralove_product_breadcrumb_option( $value, $option_name ) {
 	return 'product_breadcrumb' === $option_name ? 1 : $value;
