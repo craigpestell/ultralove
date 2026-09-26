@@ -383,6 +383,12 @@ Template: martfury
     color: #b3094b!important
 }
 
+/* Product names on product cards at 16px (parent theme: 14px). The grid's fixed 6-line title box is in
+   em, so it grows with it. */
+.woocommerce ul.products li.product .woo-loop-product__title {
+    font-size: 16px
+}
+
 /* Product names on product cards in black, including on hover: the parent theme's hover selectors
    (grid, list view, products-of-category widget) are repeated so the same-specificity rule here wins. */
 .woocommerce ul.products li.product .woo-loop-product__title a,
