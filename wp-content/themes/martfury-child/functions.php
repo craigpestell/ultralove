@@ -929,7 +929,9 @@ function ultralove_print_home_nav_after_banner( $widget ) {
 /**
  * Quick view popup header: the link wraps the product name's container (<a><h2 class="product_title">),
  * with the brand / rating / SKU list outside it, rather than Martfury's link inside the heading with the
- * list alongside. Replaces MF's get_product_quick_view_header() on the same hook and priority.
+ * list alongside. Replaces MF's get_product_quick_view_header(), and moves it from the top of the summary
+ * to ahead of the gallery (martfury_before_single_product_summary, before the images at 20) so the popup
+ * reads top to bottom: name / brand / SKU, then the image, then price, quantity, Add to cart and wishlist.
  */
 add_action( 'wp_loaded', 'ultralove_replace_quick_view_header' );
 function ultralove_replace_quick_view_header() {
@@ -943,7 +945,7 @@ function ultralove_replace_quick_view_header() {
 	}
 
 	remove_action( 'martfury_single_product_summary', array( $martfury_woocommerce, 'get_product_quick_view_header' ), 5 );
-	add_action( 'martfury_single_product_summary', 'ultralove_quick_view_header', 5 );
+	add_action( 'martfury_before_single_product_summary', 'ultralove_quick_view_header', 5 );
 }
 
 function ultralove_quick_view_header() {

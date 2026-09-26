@@ -1814,34 +1814,71 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
 }
 
 /*
- * Quick view popup: size to its content. The parent theme floats the gallery and absolutely positions
- * the summary beside it (top/right/bottom: 0; overflow: auto), so the popup was always the gallery's
- * 430px tall and the summary scrolled inside that, whatever the window height. Here the two sit in a
- * flex row: the popup is as tall as the taller of the two (the gallery's 430px minimum, or the summary),
- * capped at the window height minus a 40px margin top and bottom, and only then does the summary scroll.
- * Only at >=992px, where the popup is side by side; below that the parent theme shows a full-screen
- * sheet with the gallery above the summary, which is left as is. .modal-content is centred with top: 50% + translate(-50%, -50%), so it stays centred at any height.
+ * Quick view popup: one column, top to bottom - the name / brand / SKU header (moved ahead of the gallery
+ * by ultralove_replace_quick_view_header() in functions.php), the image, then the summary (price,
+ * quantity, Add to cart, wishlist). The parent theme floats a 43%-wide, 430px-tall gallery and absolutely
+ * positions the summary beside it; here all three are full-width blocks and the popup is as tall as its
+ * content. The image is centred and capped at 400px (or 45% of the window) tall so the cart row stays in
+ * view. At >=992px the popup is 560px wide, centred (top: 50% + translate(-50%, -50%) in the parent
+ * theme), capped at the window height minus 40px top and bottom, and scrolls as a whole beyond that;
+ * below 992px the parent theme's side sheet (85% wide, max 600px) already scrolls as a whole.
  */
-@media (min-width: 992px) {
-    #mf-quick-view-modal div.product .mf-product-detail {
-        display: flex;
-        align-items: stretch;
-        max-height: calc(100vh - 80px);
-        overflow: hidden
+#mf-quick-view-modal div.product .mf-product-detail {
+    display: flex;
+    flex-direction: column
+}
+
+#mf-quick-view-modal div.product .mf-entry-product-header {
+    margin: 0 0 20px;
+    padding: 30px 30px 8px
+}
+
+#mf-quick-view-modal div.product .woocommerce-product-gallery {
+    float: none;
+    width: 100%;
+    min-height: 0;
+    padding: 0 30px
+}
+
+#mf-quick-view-modal div.product .woocommerce-product-gallery__image img {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    max-height: min(400px, 45vh);
+    margin: 0 auto;
+    object-fit: contain
+}
+
+#mf-quick-view-modal div.product .entry-summary {
+    position: static;
+    width: 100%;
+    float: none;
+    overflow: visible;
+    padding: 20px 30px 30px
+}
+
+@media (max-width: 991px) {
+    #mf-quick-view-modal div.product .mf-entry-product-header {
+        padding: 20px 20px 8px
     }
 
     #mf-quick-view-modal div.product .woocommerce-product-gallery {
-        flex: 0 0 auto;
-        float: none;
-        align-self: flex-start
+        padding: 0 20px
     }
 
     #mf-quick-view-modal div.product .entry-summary {
-        position: static;
-        flex: 1 1 auto;
-        min-width: 0;
-        overflow-y: auto;
-        padding: 30px
+        padding: 20px
+    }
+}
+
+@media (min-width: 992px) {
+    #mf-quick-view-modal .modal-content {
+        max-width: 560px
+    }
+
+    #mf-quick-view-modal div.product .mf-product-detail {
+        max-height: calc(100vh - 80px);
+        overflow-y: auto
     }
 }
 
