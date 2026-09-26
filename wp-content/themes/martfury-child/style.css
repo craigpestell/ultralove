@@ -728,7 +728,7 @@ h1,h2,h3,h4 {
     pointer-events: none;
     z-index: 0;
     background:
-        linear-gradient(to bottom, #fff 0, rgba(255,255,255,.75) 12%, rgba(255,255,255,0) 30%, rgba(255,255,255,0) 70%, rgba(255,255,255,.75) 88%, #fff 100%),
+        linear-gradient(to bottom, #fff 0, rgba(255,255,255,.75) 8%, rgba(255,255,255,0) 20%, rgba(255,255,255,0) 80%, rgba(255,255,255,.75) 92%, #fff 100%),
         linear-gradient(to right, #fff 0, rgba(255,255,255,.75) 4%, rgba(255,255,255,0) 12%, rgba(255,255,255,0) 88%, rgba(255,255,255,.75) 96%, #fff 100%)
 }
 
