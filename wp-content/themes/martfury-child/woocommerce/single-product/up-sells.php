@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 $upsell_title    = martfury_get_option( 'product_upsells_title' );
-$container_class = martfury_get_product_layout() == '6' ? 'martfury-container' : 'container';
+$container_class = 'martfury-container'; // the site-wide page container (see functions.php)
 
 if ( $upsells ) : ?>
 

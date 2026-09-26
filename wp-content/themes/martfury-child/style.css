@@ -747,7 +747,7 @@ h1,h2,h3,h4 {
     align-items: center;
     padding-top: 14px;
     padding-bottom: 14px;
-    font-size: 14px
+    font-size: 16px
 }
 
 .page-header .breadcrumbs a {
@@ -1943,20 +1943,15 @@ ul.products li.product form.cart label.label {
 }
 
 /*
- * Related products / upsells on product pages: the same width as the shop's product grid, so their
- * cards are the same width as the grid's. The shop (full-width catalog layout) puts the grid in an
- * 81% column of a row that's the viewport minus 30px, capped at 1680px (Martfury's 1650px
- * .martfury-container), minus the column's 15px padding each side:
- * 0.81 x min(width - 30px, 1680px) - 30px - e.g. 1112px at 1440, 1331px at 1920. The related
- * section is full width, so 100% here is the viewport. Below 1200px the shop drops to 3 columns and
- * the related cards are already within a few px of the grid's, so Bootstrap's widths stay.
+ * Page container: every page type now uses the wide .martfury-container (see functions.php). Pages built
+ * in Elementor put their content in boxed sections, which Martfury caps at Bootstrap's 1170 / 970 / 750px
+ * and centres; on those pages (not the home page, whose sections, #topcta/#bottomcta and footer are laid
+ * out around that width) the boxes fill the page container instead, so their content lines up with the
+ * header and breadcrumbs like every other page's.
  */
-@media (min-width: 1200px) {
-    section.related > .container,
-    section.up-sells > .container {
-        width: calc(0.81 * min(100% - 30px, 1680px) - 30px);
-        max-width: none
-    }
+body:not(.home) #content .elementor-section.elementor-section-boxed > .elementor-container {
+    width: auto;
+    max-width: none
 }
 
 /*
@@ -1999,15 +1994,6 @@ section.up-sells .related-title,
 #footer-recently-viewed .recently-header .title,
 #footer-bot-recently-viewed .recently-header .title {
     margin: 0!important
-}
-
-/* The recently viewed block gets the same width as the related products above it (the product grid's
-   width - see the related products rule above), so the two headings share left/right edges. */
-@media (min-width: 1200px) {
-    #footer-recently-viewed > .container {
-        width: calc(0.81 * min(100% - 30px, 1680px) - 30px);
-        max-width: none
-    }
 }
 
 /*
@@ -2053,6 +2039,13 @@ section.up-sells .related-title,
 @media (min-width: 1200px) {
     .ul-carousel {
         --ul-per-view: 5.3
+    }
+}
+
+/* The page container runs up to 1650px wide; a sixth card keeps the cards near the product grid's size. */
+@media (min-width: 1440px) {
+    .ul-carousel {
+        --ul-per-view: 6.3
     }
 }
 

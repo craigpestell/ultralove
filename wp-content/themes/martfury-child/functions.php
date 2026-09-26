@@ -18,6 +18,29 @@ function ultralove_clear_wc_template_cache_on_change() {
 	}
 }
 
+/**
+ * One page container for every page type: Martfury's wide .martfury-container (1650px, or full width
+ * with 30px padding below 1680px, 15px on phones), which the catalog pages already use, instead of
+ * Bootstrap's .container (1170px) on product pages, regular pages, the breadcrumbs and the header rows.
+ * So the header, breadcrumbs and content share their left/right edges on every page. The home page's
+ * content keeps its own layout (its Elementor sections and the footer are built around it). The related
+ * products / upsells templates and the recently viewed block use the same class directly.
+ */
+function martfury_header_container_classes() {
+	return 'martfury-container';
+}
+
+add_filter( 'martfury_site_content_container_class', 'ultralove_site_content_container_class', 20 );
+function ultralove_site_content_container_class( $class ) {
+	return ( 'container' === $class && ! is_front_page() ) ? 'martfury-container' : $class;
+}
+
+add_filter( 'martfury_page_header_container_class', 'ultralove_wide_container_class' );
+add_filter( 'martfury_catalog_page_header_container', 'ultralove_wide_container_class', 20 );
+function ultralove_wide_container_class( $class ) {
+	return 'martfury-container';
+}
+
 // Disable WordPress fuzzy redirect
 add_filter( 'do_redirect_guess_404_permalink', function () { return false; } );
 
@@ -179,7 +202,7 @@ function ultralove_render_recently_viewed_cards( $atts ) {
     ob_start();
 
     // Same wrapper as Martfury's renderer, so the block keeps its container width (see style.css).
-    echo '<div class="container rv-container">';
+    echo '<div class="martfury-container rv-container">';
     echo '<div class="recently-header">';
     if ( ! empty( $atts['title'] ) ) {
         printf( '<h4 class="title">%s</h4>', esc_html( $atts['title'] ) );
