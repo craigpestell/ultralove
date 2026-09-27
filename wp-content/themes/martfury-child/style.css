@@ -1582,7 +1582,8 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
  *
  * Markup the child theme outputs carries the classes (Out of stock, the carousel arrows, "Shop Now");
  * buttons from the theme and plugins (WooCommerce, Gravity Forms, Elementor, Back In Stock Notifier) join
- * the same tiers through the selector lists below. Every rule is ":is(#page, #mf-quick-view-modal) :where(...)"
+ * the same tiers through the selector lists below (product card buttons are listed on their own: the related
+ * products and recently viewed carousels sit outside .site-content). Every rule is ":is(#page, #mf-quick-view-modal) :where(...)"
  * - :where() adds nothing, so every rule weighs exactly one id: enough to beat the theme's and plugins'
  * button rules without !important, and within the system the tiers apply in source order (base, variant,
  * size, state). The header's Search button (joined to its field) is left out, as is the image lightbox.
@@ -1605,6 +1606,7 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
     .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
     .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
     .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button,
+    ul.products li.product form.cart button,
     .ul-btn--secondary, .cwg_popup_submit, .btn-secondary,
     .ul-btn--tertiary, .show-password-input
 ) {
@@ -1613,6 +1615,7 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
     justify-content: center;
     gap: 8px;
     box-sizing: border-box;
+    height: auto;
     min-height: 44px;
     padding: 10px 28px;
     font-family: inherit;
@@ -1636,6 +1639,7 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
     .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
     .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
     .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button,
+    ul.products li.product form.cart button,
     .ul-btn--secondary, .cwg_popup_submit, .btn-secondary,
     .ul-btn--tertiary, .show-password-input
 ):focus-visible {
@@ -1647,7 +1651,8 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
 :is(#page, #mf-quick-view-modal) :where(
     .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
     .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
-    .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button
+    .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button,
+    ul.products li.product form.cart button
 ) {
     color: #fff;
     background: var(--ul-btn-pink);
@@ -1657,7 +1662,8 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
 :is(#page, #mf-quick-view-modal) :where(
     .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
     .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
-    .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button
+    .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button,
+    ul.products li.product form.cart button
 ):is(:hover, :focus-visible) {
     color: #fff;
     background: var(--ul-btn-pink-dark);
