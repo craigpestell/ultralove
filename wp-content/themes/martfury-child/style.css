@@ -1089,10 +1089,12 @@ h1,h2,h3,h4 {
     background-color: #b3094b!important
 }
 
+/* No visible border (it was a light pink #ff5679 outline): transparent, so the button's own background fills
+   the 1px edge and its size is unchanged. */
 #bottomcta a,#gform_submit_button_1,#topcta a,.footlink {
     color: #fff!important;
     border-radius: 5px;
-    border: 1px solid #ff5679!important
+    border: 1px solid transparent!important
 }
 
 #gform_submit_button_1,.footlink {
@@ -1853,7 +1855,7 @@ body:not(.shop-view-list) ul.products li.product form.cart button {
     box-sizing: border-box;
     height: 36px!important;
     line-height: 34px!important;
-    border: 1px solid #ff5679!important;
+    border: 1px solid transparent!important;
     border-radius: 5px;
     white-space: nowrap;
     overflow: hidden;
