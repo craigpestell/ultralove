@@ -1842,65 +1842,19 @@ body:not(.shop-view-list) ul.products li.product .product-inner {
     display: flex;
     flex-direction: column;
     width: 100%;
-    transition: box-shadow .2s ease, margin .2s ease, padding .2s ease, width .2s ease
+    transition: box-shadow .2s ease
 }
 
-/* Hover: the same purple shadow as the #topcta and footer pills */
+/* Hover: the same purple shadow as the #topcta and footer pills - the only hover effect on the card (no
+   growing card or zooming image). */
 body:not(.shop-view-list) ul.products li.product .product-inner:hover {
     box-shadow: 0 6px 18px rgba(177,101,255,.35)
 }
 
-/* Hover "pop" (desktop grids only): the card grows 8px on every side. Negative margins pull the box
-   out and matching extra padding keeps the contents where they were, so the card's outer size, and
-   the rest of the grid, never moves. Assumes the parent theme's desktop card box (padding 20px 20px 0,
-   margin-bottom 30px); carousels - Slick's and the child theme's product carousel (a list directly in
-   .ul-carousel), where the cards keep just the hover shadow - and below 992px (padding 0) are left alone. */
-@media (min-width: 992px) and (hover: hover) {
-    body:not(.shop-view-list) :not(.ul-carousel) > ul.products:not(.slick-slider) li.product .product-inner:hover {
-        position: relative;
-        z-index: 2;
-        width: calc(100% + 16px);
-        margin: -8px -8px 22px;
-        padding: 28px 28px 8px
-    }
-
-    /* The image grows with the card: scaled about its centre by roughly the card's extra 16px of width,
-       so it spreads into the new top/side padding and the thumbnail's 12px bottom gap, not the title. */
-    body:not(.shop-view-list) :not(.ul-carousel) > ul.products:not(.slick-slider) li.product .mf-product-thumbnail img {
-        transition: transform .2s ease
-    }
-
-    body:not(.shop-view-list) :not(.ul-carousel) > ul.products:not(.slick-slider) li.product .product-inner:hover .mf-product-thumbnail img {
-        transform: scale(1.07)
-    }
-
-    /* The product name moves with them: it slides down about as far as the enlarged image's bottom
-       edge (~7px), so the gap between them holds. A transform, so nothing reflows and text stays crisp. */
-    body:not(.shop-view-list) :not(.ul-carousel) > ul.products:not(.slick-slider) li.product .woo-loop-product__title {
-        transition: transform .2s ease
-    }
-
-    body:not(.shop-view-list) :not(.ul-carousel) > ul.products:not(.slick-slider) li.product .product-inner:hover .woo-loop-product__title {
-        transform: translateY(6px)
-    }
-
-    /* The badge (New / Sale / Out of stock) sits at the thumbnail's top-right corner, which stays put
-       while the card grows; shift it up and right by the card's 8px so it rides the card's corner.
-       On .ribbon, not .ribbons: that wrapper is an inline span, which ignores transforms. */
-    body:not(.shop-view-list) :not(.ul-carousel) > ul.products:not(.slick-slider) li.product .ribbons .ribbon {
-        transition: transform .2s ease
-    }
-
-    body:not(.shop-view-list) :not(.ul-carousel) > ul.products:not(.slick-slider) li.product .product-inner:hover .ribbons .ribbon {
-        transform: translate(8px, -8px)
-    }
-}
-
 /* The theme's jQuery UI tooltips (e.g. "Quick View" over the thumbnail icons) are appended to <body>,
-   outside the card, and positioned once when they open - while the icons are still sliding in and the
-   card is still growing - so one can land under the pointer. Hovering it counts as leaving the card,
-   which shrinks, the tooltip closes, the card pops again: a flicker loop. Tooltips are labels only, so
-   let the pointer pass through them. */
+   outside the card, and positioned once when they open - while the icons are still sliding in - so one
+   can land under the pointer; hovering it counts as leaving the card. Tooltips are labels only, so let
+   the pointer pass through them. */
 .martfury-tooltip {
     pointer-events: none
 }
@@ -1964,17 +1918,6 @@ body ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-
     background-color: currentColor;
     -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E") center / contain no-repeat;
     mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E") center / contain no-repeat
-}
-
-/* Desktop grids, where the image scales up 7% on hover (see the hover "pop" above): it then overhangs
-   the thumbnail by 3.5% on each side, so the bar is pushed out by the same 3.5% - percentages of the
-   thumbnail's own height/width - to stay flush with the enlarged image's bottom and sides. */
-@media (min-width: 992px) and (hover: hover) {
-    body:not(.shop-view-list) ul.products:not(.slick-slider) li.product .product-inner:hover .mf-product-thumbnail .footer-button {
-        bottom: -3.5%;
-        left: -3.5%;
-        right: -3.5%
-    }
 }
 
 body:not(.shop-view-list) ul.products li.product .mf-product-details {
@@ -2237,8 +2180,7 @@ section.up-sells .related-title,
  * (.ul-carousel around a standard ul.products; js/product-carousel.js adds the buttons and progress bar).
  * The list is a native horizontal scroller with snapping, and its cards are the product grid's cards:
  * no .slick-slider class, so the grid card rules above apply as is (flex cards, hover shadow, fixed
- * title box, cart row) - all but the hover pop, which is grids only. What tells visitors it scrolls
- * sideways:
+ * title box, cart row). What tells visitors it scrolls sideways:
  *  - the next card peeks in at the right edge (fractional cards per view below),
  *  - the edge(s) with more cards beyond fade out,
  *  - round previous/next buttons over the product images, hidden at either end,
@@ -2278,7 +2220,7 @@ section.up-sells .related-title,
     }
 }
 
-/* The scroller. Its padding gives the cards' hover shadow and pop room (a scroller clips on both axes),
+/* The scroller. Its padding gives the cards' hover shadow room (a scroller clips on both axes),
    cancelled by equal negative margins so the cards sit where the list did. */
 .ul-carousel ul.products {
     display: flex!important;
