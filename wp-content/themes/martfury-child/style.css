@@ -1147,11 +1147,21 @@ h1,h2,h3,h4 {
     display: block
 }
 
-@media (max-width: 767px) {
-    .site-header .header-extras ul.extras-menu > li.menu-item-account {
-        height: auto
-    }
+/* The parent gives the account item a 30px minimum height at every width, taller than the 24/30px icons -
+   with its icon at the top of that, it sat above the others' line. Logged in, the link (icon + dropdown
+   arrow) is centred on the icon. */
+.site-header .extras-menu .menu-item-account {
+    min-height: 0
+}
 
+@media (min-width: 768px) {
+    .site-header .header-extras .menu-item-account.logined > a {
+        display: flex;
+        align-items: center
+    }
+}
+
+@media (max-width: 767px) {
     .site-header .header-extras .menu-item-account > a {
         height: 24px;
         padding-top: 0
