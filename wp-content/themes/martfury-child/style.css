@@ -1725,6 +1725,38 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
     border-radius: 50%
 }
 
+/* WooCommerce's show/hide password toggle (login and account forms): a tertiary icon button inside the
+   password field - borderless there, 34px, the eye drawn in the text colour (plum, pink on hover), crossed
+   out while the password is shown (.display-password). WooCommerce's own icon comes from its stylesheet,
+   which Martfury doesn't load, so it was an empty box. */
+:is(#page, #mf-quick-view-modal) :where(.password-input .show-password-input) {
+    top: calc(50% - 17px);
+    right: 8px;
+    width: 34px;
+    height: 34px;
+    min-height: 0;
+    padding: 0;
+    border-color: transparent
+}
+
+:is(#page, #mf-quick-view-modal) :where(.password-input .show-password-input):is(:hover, :focus-visible) {
+    border-color: transparent
+}
+
+.password-input .show-password-input:before {
+    content: "";
+    width: 20px;
+    height: 20px;
+    background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") center / contain no-repeat
+}
+
+.password-input .show-password-input.display-password:before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M3 3l18 18'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M3 3l18 18'/%3E%3C/svg%3E")
+}
+
 /* Disabled: greyed, no hover or pointer (the carousel arrows fade out instead - see the carousel). */
 :is(#page, #mf-quick-view-modal) :where(
     .ul-out-of-stock-button, .ul-btn:disabled:not(.ul-btn--icon), .ul-btn.disabled,
