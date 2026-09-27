@@ -1137,10 +1137,19 @@ h1,h2,h3,h4 {
     }
 }
 
-/* Below 768px the parent drops the account link 4px (padding-top, with the logged-in avatar pulled back up
-   by a -4px margin), which left the user icon 4px below the wishlist and cart icons beside it. */
+/* Header icons (wishlist, cart, account) on one line with the logo and search at every width. The icons
+   row centres its items, but the wishlist and cart icons were inline in taller links (their line-height),
+   so they sat at the top of the link, ~3px above centre; as blocks the links are the icon's height. Below
+   768px the parent gives the account link a fixed 30px height and a 4px top padding (with the logged-in
+   avatar pulled back up by -4px), which also put its icon off the others' line: the link is the 24px
+   icon's height there instead. */
+.site-header .header-extras .extras-menu > li:not(.menu-item-account) > a > i {
+    display: block
+}
+
 @media (max-width: 767px) {
     .site-header .header-extras .menu-item-account > a {
+        height: 24px;
         padding-top: 0
     }
 
