@@ -31,7 +31,7 @@
     function makeButton(dir, label, controls) {
         var button = document.createElement('button');
         button.type = 'button';
-        button.className = 'ul-carousel__arrow ul-carousel__arrow--' + dir;
+        button.className = 'ul-btn ul-btn--tertiary ul-btn--icon ul-carousel__arrow ul-carousel__arrow--' + dir;
         button.setAttribute('aria-label', label);
         button.setAttribute('aria-controls', controls);
         button.innerHTML = CHEVRON;

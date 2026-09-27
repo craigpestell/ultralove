@@ -215,7 +215,7 @@ function ultralove_render_recently_viewed_cards( $atts ) {
     if ( empty( $products ) ) {
         // Martfury's empty state; the block is hidden when empty (footer_recently_viewed_empty).
         printf(
-            '<ul class="product-list no-products"><li class="text-center">%s <br><a href="%s" class="btn-secondary">%s</a></li></ul>',
+            '<ul class="product-list no-products"><li class="text-center">%s <br><a href="%s" class="btn-secondary ul-btn ul-btn--secondary ul-btn--sm">%s</a></li></ul>',
             esc_html__( 'Recently Viewed Products is a function which helps you keep track of your recent viewing history.', 'martfury' ),
             esc_url( get_permalink( get_option( 'woocommerce_shop_page_id' ) ) ),
             esc_html__( 'Shop Now', 'martfury' )
@@ -321,7 +321,7 @@ if (!function_exists('woocommerce_template_loop_add_to_cart')) {
 				. '<input type="number" class="input-text qty text" value="1" disabled aria-label="' . esc_attr__( 'Quantity', 'woocommerce' ) . '" />'
 				. '<span class="increase icon_plus" aria-hidden="true"></span>'
 				. '</div></div>'
-				. '<button type="button" class="button alt ul-out-of-stock-button" disabled>' . esc_html__( 'Out of stock', 'woocommerce' ) . '</button>'
+				. '<button type="button" class="button alt ul-out-of-stock-button ul-btn ul-btn--sm" disabled>' . esc_html__( 'Out of stock', 'woocommerce' ) . '</button>'
 				. '</form>';
 			return;
 		}

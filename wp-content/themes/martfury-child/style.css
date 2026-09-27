@@ -1078,31 +1078,10 @@ h1,h2,h3,h4 {
     color: #3b1d4a
 }
 
-#bottomcta a,#topcta a {
-    background-color: #b3094b;
-    padding: 7px 15px;
-    font-size: 24px;
-    margin: 5px
-}
-
-#gform_submit_button_1,.footlink,.gform_footer button,.site-header .main-menu {
+/* (The #topcta / #bottomcta links, .footlink and the footer form's button are styled by the button system -
+   see "Buttons" below.) */
+.site-header .main-menu {
     background-color: #b3094b!important
-}
-
-/* No visible border (it was a light pink #ff5679 outline): transparent, so the button's own background fills
-   the 1px edge and its size is unchanged. */
-#bottomcta a,#gform_submit_button_1,#topcta a,.footlink {
-    color: #fff!important;
-    border-radius: 5px;
-    border: 1px solid transparent!important
-}
-
-#gform_submit_button_1,.footlink {
-    padding: 7px
-}
-
-#gform_submit_button_1 {
-    height: auto!important
 }
 
 /* No top/bottom border on the header menu bar - the parent theme adds a 1px #e1e1e1 one. */
@@ -1302,33 +1281,6 @@ h1,h2,h3,h4 {
     margin-bottom: 0!important
 }
 
-/* Gravity Forms submit buttons in page content (e.g. Send Message on Contact Us): the brand pink
-   button, like the footer form's and the product cards' Add to cart; hover darkens it and adds the
-   site's purple shadow. The footer form keeps its own rules above. */
-.site-content .gform_wrapper .gform_footer .gform_button {
-    min-height: 44px;
-    padding: 10px 32px;
-    color: #fff;
-    font-size: 16px;
-    line-height: 1.2;
-    background-color: #b3094b;
-    border: 1px solid #b3094b;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease
-}
-
-.site-content .gform_wrapper .gform_footer .gform_button:hover,
-.site-content .gform_wrapper .gform_footer .gform_button:focus-visible {
-    background-color: #8e073b;
-    border-color: #8e073b;
-    box-shadow: 0 6px 18px rgba(177,101,255,.35)
-}
-
-.site-content .gform_wrapper .gform_footer .gform_button:focus-visible {
-    outline: 2px solid rgb(177,101,255);
-    outline-offset: 2px
-}
 
 .site-footer .footer-widgets #gform_1 .gform_footer {
     display: flex;
@@ -1615,6 +1567,174 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
     font-weight: 300
 }
 
+/*
+ * Buttons - one system for every button on the site, as a hierarchy:
+ *
+ *   .ul-btn                  base: font, weight, 5px radius, 1px border, transitions, focus ring
+ *   .ul-btn--primary         solid brand pink, darker on hover - the main action (Add to cart, Send, CTAs)
+ *   .ul-btn--secondary       pink outline, filling pink on hover - a second action (Notify me, Update cart)
+ *   .ul-btn--tertiary        lavender outline, plum text, pink on hover - quiet controls (arrows, toggles)
+ *   (default size)           44px - forms, WooCommerce pages
+ *   .ul-btn--sm              36px - product cards, the footer, the mini cart
+ *   .ul-btn--lg              54px - the home page calls to action
+ *   .ul-btn--icon            46px circle, for an icon alone (carousel arrows)
+ *   disabled                 greyed out, no hover (Out of stock)
+ *
+ * Markup the child theme outputs carries the classes (Out of stock, the carousel arrows, "Shop Now");
+ * buttons from the theme and plugins (WooCommerce, Gravity Forms, Elementor, Back In Stock Notifier) join
+ * the same tiers through the selector lists below. Every rule is ":is(#page, #mf-quick-view-modal) :where(...)"
+ * - :where() adds nothing, so every rule weighs exactly one id: enough to beat the theme's and plugins'
+ * button rules without !important, and within the system the tiers apply in source order (base, variant,
+ * size, state). The header's Search button (joined to its field) is left out, as is the image lightbox.
+ * Context rules that must keep a button's size (the product card's Add to cart and Notify me) use !important.
+ */
+:root {
+    --ul-btn-pink: #b3094b;
+    --ul-btn-pink-dark: #8e073b;
+    --ul-btn-plum: #3b1d4a;
+    --ul-btn-lavender: rgba(177,101,255,.45);
+    --ul-btn-focus: rgb(177,101,255);
+    --ul-btn-disabled-bg: #e3e0e6;
+    --ul-btn-disabled-text: #6f6578;
+    --ul-btn-radius: 5px
+}
+
+/* Base - every button in the system (all the tiers' members). */
+:is(#page, #mf-quick-view-modal) :where(
+    .ul-btn,
+    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
+    .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
+    .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button,
+    .ul-btn--secondary, .cwg_popup_submit, .btn-secondary,
+    .ul-btn--tertiary, .show-password-input
+) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-sizing: border-box;
+    min-height: 44px;
+    padding: 10px 28px;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: normal;
+    text-align: center;
+    text-decoration: none;
+    text-transform: none;
+    vertical-align: middle;
+    border: 1px solid transparent;
+    border-radius: var(--ul-btn-radius);
+    box-shadow: none;
+    cursor: pointer;
+    transition: background-color .2s ease, border-color .2s ease, color .2s ease, opacity .2s ease, visibility .2s ease, transform .15s ease
+}
+
+:is(#page, #mf-quick-view-modal) :where(
+    .ul-btn,
+    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
+    .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
+    .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button,
+    .ul-btn--secondary, .cwg_popup_submit, .btn-secondary,
+    .ul-btn--tertiary, .show-password-input
+):focus-visible {
+    outline: 2px solid var(--ul-btn-focus);
+    outline-offset: 2px
+}
+
+/* Primary. */
+:is(#page, #mf-quick-view-modal) :where(
+    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
+    .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
+    .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button
+) {
+    color: #fff;
+    background: var(--ul-btn-pink);
+    border-color: var(--ul-btn-pink)
+}
+
+:is(#page, #mf-quick-view-modal) :where(
+    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
+    .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
+    .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button
+):is(:hover, :focus-visible) {
+    color: #fff;
+    background: var(--ul-btn-pink-dark);
+    border-color: var(--ul-btn-pink-dark)
+}
+
+/* Secondary (after primary: some of its members are also WooCommerce .buttons). */
+:is(#page, #mf-quick-view-modal) :where(
+    .ul-btn--secondary, .cwg_popup_submit, .btn-secondary,
+    button[name="update_cart"], button[name="apply_coupon"], .widget_shopping_cart .buttons .button:not(.checkout)
+) {
+    color: var(--ul-btn-pink);
+    background: #fff;
+    border-color: var(--ul-btn-pink)
+}
+
+:is(#page, #mf-quick-view-modal) :where(
+    .ul-btn--secondary, .cwg_popup_submit, .btn-secondary,
+    button[name="update_cart"], button[name="apply_coupon"], .widget_shopping_cart .buttons .button:not(.checkout)
+):is(:hover, :focus-visible) {
+    color: #fff;
+    background: var(--ul-btn-pink);
+    border-color: var(--ul-btn-pink)
+}
+
+/* Tertiary. */
+:is(#page, #mf-quick-view-modal) :where(.ul-btn--tertiary, .show-password-input) {
+    color: var(--ul-btn-plum);
+    background: #fff;
+    border-color: var(--ul-btn-lavender)
+}
+
+:is(#page, #mf-quick-view-modal) :where(.ul-btn--tertiary, .show-password-input):is(:hover, :focus-visible) {
+    color: var(--ul-btn-pink);
+    background: #fff;
+    border-color: var(--ul-btn-pink)
+}
+
+/* Sizes (the default, 44px, is the base's). */
+:is(#page, #mf-quick-view-modal) :where(
+    .ul-btn--sm, .footlink, .site-footer .gform_button, ul.products li.product form.cart button,
+    .ul-notify-row .cwg_popup_submit, .widget_shopping_cart .buttons .button, .show-password-input
+) {
+    min-height: 36px;
+    padding: 6px 16px
+}
+
+:is(#page, #mf-quick-view-modal) :where(.ul-btn--lg, #topcta a, #bottomcta a, .elementor-button) {
+    min-height: 54px;
+    padding: 12px 32px;
+    font-size: 20px
+}
+
+:is(#page, #mf-quick-view-modal) :where(.ul-btn--icon) {
+    width: 46px;
+    height: 46px;
+    min-height: 0;
+    padding: 0;
+    border-radius: 50%
+}
+
+/* Disabled: greyed, no hover or pointer (the carousel arrows fade out instead - see the carousel). */
+:is(#page, #mf-quick-view-modal) :where(
+    .ul-out-of-stock-button, .ul-btn:disabled:not(.ul-btn--icon), .ul-btn.disabled,
+    .site-content button.button:disabled, .site-content .button.disabled, .gform_wrapper .gform_button:disabled
+),
+:is(#page, #mf-quick-view-modal) :where(
+    .ul-out-of-stock-button, .ul-btn:disabled:not(.ul-btn--icon), .ul-btn.disabled,
+    .site-content button.button:disabled, .site-content .button.disabled, .gform_wrapper .gform_button:disabled
+):is(:hover, :focus-visible) {
+    color: var(--ul-btn-disabled-text);
+    background: var(--ul-btn-disabled-bg);
+    border-color: var(--ul-btn-disabled-bg);
+    cursor: not-allowed;
+    opacity: 1
+}
+
 /* Product section headings (e.g. "On Sale"): plum text, no pill - no background, border, shadow
    or padding (set explicitly so nothing from the parent theme shows through). The light 300 weight
    comes from the product section title rule above. The header row keeps the parent theme's
@@ -1855,8 +1975,6 @@ body:not(.shop-view-list) ul.products li.product form.cart button {
     box-sizing: border-box;
     height: 36px!important;
     line-height: 34px!important;
-    border: 1px solid transparent!important;
-    border-radius: 5px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis
@@ -1944,14 +2062,7 @@ form.cart.ul-out-of-stock .quantity .qty {
     color: inherit
 }
 
-body ul.products li.product form.cart.ul-out-of-stock button.ul-out-of-stock-button,
-body ul.products li.product form.cart.ul-out-of-stock button.ul-out-of-stock-button:hover {
-    background-color: #e3e0e6!important;
-    border-color: #e3e0e6!important;
-    color: #6f6578!important;
-    cursor: not-allowed;
-    opacity: 1
-}
+/* (The Out of stock button itself is the button system's disabled state - see "Buttons" below.) */
 
 /* The quantity template's visible "Quantity" label - already hidden in the shop grid and home page
    widgets by the older rules near the top of this file, but not in the related products / upsells
@@ -2154,23 +2265,13 @@ section.up-sells .related-title,
    the cards (the carousel's height less the 30px progress bar below them - the arrows only show when it
    does), straddling the carousel's edges where there's room and just inside them otherwise. Hidden at
    either end, and on phones (swipe instead). */
+/* The arrows are the button system's tertiary icon buttons (ul-btn ul-btn--tertiary ul-btn--icon - colours,
+   border, 46px circle, focus ring; see "Buttons" below); here only their placement and motion. */
 .ul-carousel__arrow {
     position: absolute;
     top: calc((100% - 30px) / 2);
     z-index: 3;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 46px;
-    height: 46px;
-    padding: 0;
-    color: #3b1d4a;
-    background: #fff;
-    border: 1px solid rgba(177,101,255,.45);
-    border-radius: 50%;
-    cursor: pointer;
-    transform: translateY(-50%);
-    transition: opacity .2s ease, visibility .2s ease, color .15s ease, border-color .15s ease, transform .15s ease
+    transform: translateY(-50%)
 }
 
 .ul-carousel__arrow--prev {
@@ -2197,14 +2298,7 @@ section.up-sells .related-title,
 
 .ul-carousel__arrow:hover,
 .ul-carousel__arrow:focus-visible {
-    color: #b3094b;
-    border-color: #b3094b;
     transform: translateY(-50%) scale(1.06)
-}
-
-.ul-carousel__arrow:focus-visible {
-    outline: 2px solid rgb(177,101,255);
-    outline-offset: 2px
 }
 
 .ul-carousel__arrow:disabled,
@@ -2305,34 +2399,25 @@ body:not(.shop-view-list) ul.products li.product .ul-notify-row .cwg_popup_submi
     box-sizing: border-box;
     width: 100%;
     max-width: 226px;
-    height: 36px;
+    /* Colours, border and states: the button system's secondary variant ("Buttons" below). The card's own
+       compact sizing wins over the system's small size, like the Add to cart button's. */
+    height: 36px!important;
+    min-height: 0!important;
     margin: 0;
-    padding: 0 8px;
-    border: 1px solid #b3094b;
-    border-radius: 5px;
-    background: #fff;
-    color: #b3094b;
-    font-size: 14px;
-    line-height: 1.1;
+    padding: 0 8px!important;
+    font-size: 14px!important;
+    line-height: 1.1!important;
     letter-spacing: -.3px;
-    display: block;
+    display: block!important;
     /* The label wraps to two lines inside the 36px button when the card is too narrow for one. */
     white-space: normal;
-    overflow: hidden;
-    cursor: pointer;
-    transition: background-color .2s, color .2s
-}
-
-body:not(.shop-view-list) ul.products li.product .ul-notify-row .cwg_popup_submit:hover,
-body:not(.shop-view-list) ul.products li.product .ul-notify-row .cwg_popup_submit:focus-visible {
-    background: #b3094b;
-    color: #fff
+    overflow: hidden
 }
 
 @media (max-width: 767px) {
     body:not(.shop-view-list) ul.products li.product .ul-notify-row .cwg_popup_submit {
-        font-size: 13px;
-        padding: 0 6px
+        font-size: 13px!important;
+        padding: 0 6px!important
     }
 }
 
