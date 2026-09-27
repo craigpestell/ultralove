@@ -1118,19 +1118,35 @@ h1,h2,h3,h4 {
 /* Logged out, the account item is two stacked links ("Log in" / "Register", ~41px tall at the 17px body
    size) and the parent theme pins the 30px user icon to the top of the first one, so it sat ~5px above
    the wishlist and cart icons, which are centred. Centre it on the whole item instead. (Logged in, the
-   parent shows the icon inline, and the link's dropdown arrow needs the link positioned - left alone.) */
-.site-header .extras-menu .menu-item-account:not(.logined) {
-    position: relative
+   parent shows the icon inline, and the link's dropdown arrow needs the link positioned - left alone.)
+   From 768px only: below that the parent hides the text and shows the icon inline (position: static), so
+   it already sits in line with the other icons - the transform would still pull it 12px up. */
+@media (min-width: 768px) {
+    .site-header .extras-menu .menu-item-account:not(.logined) {
+        position: relative
+    }
+
+    .site-header .extras-menu .menu-item-account:not(.logined) > a {
+        position: static
+    }
+
+    .site-header .extras-menu .menu-item-account:not(.logined) .extra-icon {
+        top: 50%;
+        left: 20px;
+        transform: translateY(-50%)
+    }
 }
 
-.site-header .extras-menu .menu-item-account:not(.logined) > a {
-    position: static
-}
+/* Below 768px the parent drops the account link 4px (padding-top, with the logged-in avatar pulled back up
+   by a -4px margin), which left the user icon 4px below the wishlist and cart icons beside it. */
+@media (max-width: 767px) {
+    .site-header .header-extras .menu-item-account > a {
+        padding-top: 0
+    }
 
-.site-header .extras-menu .menu-item-account:not(.logined) .extra-icon {
-    top: 50%;
-    left: 20px;
-    transform: translateY(-50%)
+    .site-header .header-extras .menu-item-account > a img {
+        margin-top: 0
+    }
 }
 
 #text-4 a {
