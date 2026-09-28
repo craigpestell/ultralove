@@ -1643,11 +1643,24 @@ html body {
     }
 }
 
-/* More breathing room above/below the logo + search row on desktop (the parent theme uses 20px). */
+/* More breathing room above/below the logo + search row on desktop (the parent theme uses 20px). With the
+   header banner beside it (.header-main-row), the 24px goes on the whole row instead, so whichever is
+   taller - the logo group or the banner - has 24px above and below it. That matches the 24px between the
+   home banner slides and the navigation row below them (.ul-home-banner). */
 @media (min-width:992px) {
     .site-header .header-main {
         padding-top: 24px!important;
         padding-bottom: 24px!important
+    }
+
+    .site-header .header-main-row {
+        padding-top: 24px;
+        padding-bottom: 24px
+    }
+
+    .site-header .header-main-row .header-main {
+        padding-top: 0!important;
+        padding-bottom: 0!important
     }
 }
 
