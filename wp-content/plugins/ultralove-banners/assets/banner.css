@@ -135,6 +135,30 @@ body.ub-hero-combo #topcta {
 	object-fit: contain;
 }
 
+/* Saved crop shown with CSS, when Cloudinary can't crop the image (dev, or an image not synced yet -
+   see ub_css_crop()). The .ub-crop box has the crop's shape and its width (set inline) fits it into
+   the slide the way object-fit: contain fits a Cloudinary-cropped image; the whole image sits inside
+   it, sized and offset inline with negative margins so only the crop area shows. The image stays in
+   normal flow because the header strip takes its width from its content. The selector outranks
+   .ub-banner-home/.ub-banner-menu-bar .ub-banner-img. */
+.ub-banner-slide--cropped {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.ub-crop {
+	display: block;
+	flex: none;
+	overflow: hidden;
+}
+
+.ub-banner .ub-crop > .ub-banner-img {
+	height: auto;
+	max-width: none;
+	object-fit: fill;
+}
+
 /* Home banner: two slides side by side on wider screens, one on phones. Each slide keeps the 2.4
    shape, so the two-up slot is twice as wide relative to its height (4.8). */
 @media (min-width: 768px) {

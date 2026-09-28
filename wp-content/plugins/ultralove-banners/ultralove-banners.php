@@ -11,7 +11,7 @@
  *              "attached" to the pointer during a drag/swipe - matching RevSlider's own click-drag
  *              and touch-swipe navigation. A clone of the last slide is prepended and a clone of the
  *              first is appended so dragging past either end loops seamlessly.
- * Version: 2.1.0
+ * Version: 2.1.1
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -24,7 +24,7 @@ define( 'UB_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 if ( is_admin() ) {
 	require_once UB_PLUGIN_PATH . 'admin-pages.php';
 }
-define( 'UB_ASSET_VERSION', '2.0.3' );
+define( 'UB_ASSET_VERSION', '2.0.11' );
 
 /**
  * Banner slot aspect ratio (width / height) per group. Slides are cropped to this in the admin.
@@ -120,6 +120,45 @@ function ub_apply_transform( $html, $seg, $out_w, $out_h ) {
 }
 
 /**
+ * CSS version of a saved crop, for a slide image Cloudinary can't crop (dev has no Cloudinary; on
+ * prod, an image not synced yet). Wraps the local <img> in a .ub-crop box of the crop's shape,
+ * fitted into the $slot_ratio slide the way object-fit: contain fits a Cloudinary-cropped image,
+ * and sizes and offsets the whole image inside it so only the crop area shows. The image stays in
+ * normal flow (negative margins, not absolute positioning) so it still gives the banner its
+ * natural width - the header strip is sized by its content. $crop is array( x, y, w, h ) in the
+ * pixels of the $full_w x $full_h original. `sizes` is scaled by the same factors so the browser
+ * still picks a sharp srcset candidate for the larger, partly hidden image.
+ */
+function ub_css_crop( $html, $crop, $full_w, $full_h, $slot_ratio ) {
+	list( $x, $y, $w, $h ) = $crop;
+	if ( $w < 1 || $h < 1 ) {
+		return $html;
+	}
+	$pct   = function ( $v ) {
+		return round( $v, 4 ) . '%';
+	};
+	$ratio = $w / $h;
+	// Box width as a share of the slide: full width unless the crop is taller than the slot.
+	$box   = $slot_ratio && $ratio < $slot_ratio ? $ratio / $slot_ratio : 1;
+	$scale = $full_w / $w * $box;
+	// Percentage margins are measured against the box's width in both directions, so the vertical
+	// offset is also y / w.
+	$style = sprintf( 'width:%s;margin-left:%s;margin-top:%s', $pct( $full_w / $w * 100 ), $pct( -$x / $w * 100 ), $pct( -$y / $w * 100 ) );
+	$html  = preg_replace( '/<img\b/', '<img style="' . esc_attr( $style ) . '"', $html, 1 );
+
+	if ( abs( $scale - 1 ) > 0.001 && preg_match( '/\ssizes="([^"]*)"/', $html, $sizes_match ) ) {
+		$parts = array();
+		foreach ( explode( ',', html_entity_decode( $sizes_match[1], ENT_QUOTES ) ) as $part ) {
+			$part    = trim( $part );
+			$parts[] = preg_match( '/^(.*?)(\S+)$/', $part, $p ) && 'auto' !== $p[2] ? $p[1] . 'calc(' . $p[2] . ' * ' . round( $scale, 4 ) . ')' : $part;
+		}
+		$html = str_replace( $sizes_match[0], ' sizes="' . esc_attr( implode( ', ', $parts ) ) . '"', $html );
+	}
+
+	return '<span class="ub-crop" style="aspect-ratio:' . round( $ratio, 5 ) . ';width:' . $pct( $box * 100 ) . '">' . $html . '</span>';
+}
+
+/**
  * Output pass for every banner slide image (cropped or not), plus a <head> preload for the
  * header's first (LCP) slide. Started at init priority 0 so it wraps (runs after) the Cloudinary
  * plugin's own output buffer.
@@ -145,10 +184,15 @@ add_action(
 						$seg   = '';
 
 						if ( preg_match( '/\sdata-ub-crop="(\d+),(\d+),(\d+),(\d+)"/', $tag, $crop_match ) ) {
-							$tag   = preg_replace( '/\sdata-ub-crop="[^"]*"/', '', $tag );
-							$out_w = (int) $crop_match[3];
-							$out_h = (int) $crop_match[4];
-							$seg   = sprintf( 'c_crop,x_%d,y_%d,w_%d,h_%d', $crop_match[1], $crop_match[2], $crop_match[3], $crop_match[4] );
+							$full = preg_match( '/\sdata-ub-full="(\d+),(\d+),([\d.]*)"/', $tag, $full_match ) ? array( (int) $full_match[1], (int) $full_match[2], (float) $full_match[3] ) : null;
+							$tag  = preg_replace( '/\sdata-ub-(crop|full)="[^"]*"/', '', $tag );
+							$out  = ub_apply_transform( $tag, sprintf( 'c_crop,x_%d,y_%d,w_%d,h_%d', $crop_match[1], $crop_match[2], $crop_match[3], $crop_match[4] ), (int) $crop_match[3], (int) $crop_match[4] );
+							// Unchanged means the image isn't served by Cloudinary (dev, or not synced yet):
+							// show the crop with CSS on the local image instead.
+							if ( $out === $tag && $full ) {
+								$out = ub_css_crop( $tag, array_map( 'intval', array_slice( $crop_match, 1 ) ), $full[0], $full[1], $full[2] );
+							}
+							return $out;
 						} else {
 							// No saved crop: scale from the dimensions WordPress already wrote on the tag -
 							// accurate even when it fell back to the full original because no local
@@ -649,7 +693,7 @@ add_shortcode(
 		// appended (one per slide shown at a time), so dragging past either end still shows full slides.
 		$clones = $is_looped ? min( ub_group_per_view( $atts['group'] ), count( $slides ) ) : 0;
 
-		$render_slide = function ( $slide, $eager, $is_clone, $is_lcp = false ) use ( $bg_style, $img_sizes ) {
+		$render_slide = function ( $slide, $eager, $is_clone, $is_lcp = false ) use ( $bg_style, $img_sizes, $atts ) {
 			$link     = ub_slide_link( $slide->ID );
 			$thumb_id = get_post_thumbnail_id( $slide->ID );
 			$bg_url   = '';
@@ -663,10 +707,10 @@ add_shortcode(
 					$bg_url = html_entity_decode( $bg_match[1], ENT_QUOTES );
 				}
 			}
+			$crop = ub_get_crop( $slide->ID, $thumb_id );
 			?>
-			<a class="ub-banner-slide" href="<?php echo esc_url( $link ); ?>"<?php echo $bg_url ? ' style="' . esc_attr( "--ub-bg:url('" . esc_url_raw( $bg_url ) . "')" ) . '"' : ''; ?><?php echo $is_clone ? ' aria-hidden="true" tabindex="-1"' : ''; ?>>
+			<a class="ub-banner-slide<?php echo $crop ? ' ub-banner-slide--cropped' : ''; ?>" href="<?php echo esc_url( $link ); ?>"<?php echo $bg_url ? ' style="' . esc_attr( "--ub-bg:url('" . esc_url_raw( $bg_url ) . "')" ) . '"' : ''; ?><?php echo $is_clone ? ' aria-hidden="true" tabindex="-1"' : ''; ?>>
 				<?php
-				$crop     = ub_get_crop( $slide->ID, $thumb_id );
 				$img_atts = array(
 					'class'   => 'ub-banner-img',
 					'loading' => $eager ? 'eager' : 'lazy',
@@ -678,10 +722,15 @@ add_shortcode(
 					// the browser to fetch it ahead of lower-priority page resources.
 					$img_atts['fetchpriority'] = 'high';
 				}
+				$full_meta = wp_get_attachment_metadata( $thumb_id );
 				if ( $crop ) {
 					$img_atts['data-ub-crop'] = implode( ',', $crop );
+					if ( ! empty( $full_meta['width'] ) && ! empty( $full_meta['height'] ) ) {
+						// The original's size and the slide's shape, for the CSS crop used when
+						// Cloudinary can't apply it.
+						$img_atts['data-ub-full'] = $full_meta['width'] . ',' . $full_meta['height'] . ',' . round( (float) ub_group_ratio( $atts['group'] ), 5 );
+					}
 				}
-				$full_meta = wp_get_attachment_metadata( $thumb_id );
 				if ( is_admin() && $crop && ! empty( $full_meta['width'] ) && ! empty( $full_meta['height'] ) ) {
 					// Admin previews aren't rewritten by the Cloudinary plugin, so show the crop with CSS.
 					$dx = $full_meta['width'] - $crop['w'];
