@@ -2220,41 +2220,36 @@ section.up-sells .related-title,
  * The list is a native horizontal scroller with snapping, and its cards are the product grid's cards:
  * no .slick-slider class, so the grid card rules above apply as is (flex cards, hover shadow, fixed
  * title box, cart row). What tells visitors it scrolls sideways:
- *  - the next card peeks in at the right edge (fractional cards per view below),
  *  - the edge(s) with more cards beyond fade out,
  *  - round previous/next buttons over the product images, hidden at either end,
  *  - a progress bar under the cards, sized to the share in view.
  */
+/* Cards per view match the product grid's columns at every width (2, 3 from 768px, 4 from 1200px, 5
+   from 1400px - see the shop grid's col-xs-6 / col-sm-4 / col-mf-5 and its 4-column band above). */
 /* flow-root: the scroller's negative top margin (below) stays inside the carousel instead of collapsing
    through it, so the carousel's box starts at the cards - which the arrows' centring relies on. */
 .ul-carousel {
-    --ul-per-view: 1.75;
+    --ul-per-view: 2;
     --ul-fade: 48px;
     position: relative;
     display: flow-root
 }
 
-@media (min-width: 576px) {
-    .ul-carousel {
-        --ul-per-view: 2.4
-    }
-}
-
 @media (min-width: 768px) {
     .ul-carousel {
-        --ul-per-view: 3.3
-    }
-}
-
-@media (min-width: 992px) {
-    .ul-carousel {
-        --ul-per-view: 4.3
+        --ul-per-view: 3
     }
 }
 
 @media (min-width: 1200px) {
     .ul-carousel {
-        --ul-per-view: 5.3
+        --ul-per-view: 4
+    }
+}
+
+@media (min-width: 1400px) {
+    .ul-carousel {
+        --ul-per-view: 5
     }
 }
 
