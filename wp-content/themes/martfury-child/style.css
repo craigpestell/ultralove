@@ -1857,9 +1857,16 @@ body:not(.shop-view-list) ul.products li.product .product-inner {
 }
 
 /* Hover: the same even purple glow as the #topcta and footer pills (--ul-purple-shadow) - the only
-   hover effect on the card (no growing card or zooming image). */
+   hover effect on the card (no growing card or zooming image). The parent theme's grey #c0c0c0 hover
+   border (on the card and its hover details panel) is kept transparent, so the glow alone marks the
+   card's edge; the 1px border itself stays so nothing shifts on hover. */
 body:not(.shop-view-list) ul.products li.product .product-inner:hover {
+    border-color: transparent;
     box-shadow: var(--ul-purple-shadow)
+}
+
+body:not(.shop-view-list) ul.products li.product .product-inner:hover .mf-product-details-hover {
+    border-color: transparent
 }
 
 /* The theme's jQuery UI tooltips (e.g. "Quick View" over the thumbnail icons) are appended to <body>,
