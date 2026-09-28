@@ -5,8 +5,9 @@ description: Map of where everything on an Ultralove (ultralove.ca / dev.ultralo
 
 # Where Ultralove page content comes from
 
-The site is WordPress + WooCommerce on the **Martfury** theme with a **martfury-child** child theme,
-pages built in **Elementor**. Code the repo owns (see `deploy/owned-paths.rules`): both themes,
+The site is WordPress + WooCommerce on the **Martfury** theme with a **martfury-child** child theme.
+**Elementor is deactivated** (dev now; production at the next release): the home page is the child
+theme's `front-page.php`, other pages are plain page content (shortcodes / HTML). Code the repo owns (see `deploy/owned-paths.rules`): both themes,
 `wp-content/mu-plugins/`, `plugins/hide-price-until-login`, `plugins/ultralove-*`. Everything else -
 vendor plugins (martfury-addons, Elementor, YITH, ...), uploads and **all database content** - lives only
 on the servers. Deploy code with the `ultralove-deploy` skill; database content is edited per server.
@@ -37,9 +38,10 @@ git but treat it as vendor too - override it from the child.
 | Source | What it holds | Where / how to change |
 |---|---|---|
 | Parent theme `wp-content/themes/martfury` | Page templates, header/footer, WooCommerce layout, product card markup (`inc/frontend/woocommerce.php`), theme CSS/JS (`style.css`, `js/scripts.js`) | Override from the child; don't edit |
-| Child theme `wp-content/themes/martfury-child` | `functions.php` hooks/filters, `style.css` (all site styling on top of the parent), `js/`, `footer.php` (`#hero-footer-combo`), `template-parts/headers`, `template-parts/footers`, `woocommerce/single-product/related.php` + `up-sells.php` (carousel markup), `woocommerce/emails` | Git + deploy |
-| Elementor page data | Page bodies: `_elementor_data` post meta (JSON). Home = post 14; also Shop (9), Cart, Checkout, My account, Sale Products, Brands We Carry, Contact Us. Revisions keep old copies | Elementor editor, or careful SQL `REPLACE` on the one row. Never `wp post meta update` (it unslashes and corrupts the JSON). Then clear the Redis entry (`wp cache delete <id> post_meta`) and `wp elementor flush-css` |
-| martfury-addons (vendor plugin) | Martfury's Elementor widgets: Product Deals Carousel (home "On Sale"), Products Grid (home "Latest Adult Products", loaded by AJAX), their JS (`assets/js/elementor.js`) | Not in git. Override from child JS/CSS (e.g. `js/deals-carousel.js`) |
+| Child theme `wp-content/themes/martfury-child` | `front-page.php` (the whole home page: banner, nav row, `#topcta` call to action - its text is edited here - "On Sale" carousel, "Latest Adult Products", links), `functions.php` hooks/filters and shortcodes (`[ultralove_brand_grid]` for Brands We Carry), `style.css` (all site styling on top of the parent), `js/`, `footer.php` (`#hero-footer-combo`), `template-parts/headers`, `template-parts/footers`, `woocommerce/single-product/related.php` + `up-sells.php` (carousel markup), `woocommerce/emails` | Git + deploy |
+| Page content (`post_content`) | Brands We Carry = `[ultralove_brand_grid]`; Sale Products = a `[products on_sale="true"]` shortcode; Contact Us, Buy Wholesale (Gravity Form 2), My account / Cart / Checkout (WooCommerce shortcodes) | Page editor or `wp post update` |
+| Old Elementor data | `_elementor_data` post meta is still in the database (Home = post 14 with its revisions) but unused while Elementor is off | Leave it; don't edit |
+| martfury-addons (vendor plugin) | Martfury shortcodes and (unused now) Elementor widgets | Not in git. Override from the child theme |
 | Theme options (Kirki) | Header/footer layouts, footer recently viewed settings, catalog layout, product loop hover style, logos | Customizer; read in code via `martfury_get_option()` (the child filters some) |
 | Widgets | Footer widget text cards, sidebar filters (`widget_martfury_layered_nav`, ...), Gravity Forms | Appearance > Widgets (`widget_*` options) |
 | Menus | Main navigation (Shop, On Sale, Browse by Brand, Buy Wholesale, Contact) | Appearance > Menus |
@@ -55,12 +57,8 @@ git but treat it as vendor too - override it from the child.
   scrolls into view; the child replaces the handler (`ultralove_martfury_footer_recently_viewed()` ->
   `ultralove_render_recently_viewed_cards()`), the viewed IDs come from the browser
   (`js/recently-viewed.js`, localStorage `ultralove_recently_viewed`).
-- **Home "Latest Adult Products" grid**: martfury-addons requests `mf_elementor_get_elements` when the
-  widget scrolls into view.
 - **Wishlist hearts**: YITH renders empty `.wishlist-fragment` placeholders and fills them in one request at
   page load; content added later must trigger `yith_wcwl_reload_fragments` (see `js/recently-viewed.js`).
-- **Home "On Sale" carousel**: martfury-addons builds a Slick slider; `js/deals-carousel.js` removes it and
-  turns the list into the child's product carousel.
 
 ## Product cards ("product thumbnails")
 
@@ -90,8 +88,8 @@ Until Login hides price and cart row for logged-out visitors (`.footer-button` i
 | List | Page | Rendered by | Container |
 |---|---|---|---|
 | Catalog grid | Shop, categories (incl. On Sale = `sale-closeout-items`), brand filter, search | WooCommerce archive template, `div.mf-shop-content > ul.products` | Beside the filter sidebar (`.catalog-sidebar`, `col-md-3`) from 992px |
-| Home "Latest Adult Products" | Home | martfury-addons Products Grid widget (AJAX) | Elementor boxed section |
-| Home "On Sale" | Home | martfury-addons Product Deals Carousel -> `js/deals-carousel.js` | `.ul-carousel` |
+| Home "On Sale" | Home | `front-page.php`: `[products on_sale="true" limit="12" orderby="rand"]` in `.ul-carousel` | `.ul-home-container` (1150 / 950 / 700px) |
+| Home "Latest Adult Products" | Home | `front-page.php`: `[products limit="30" orderby="date"]` | `.ul-home-container` |
 | Related / upsells | Product pages | Child `woocommerce/single-product/related.php`, `up-sells.php` | `.ul-carousel` |
 | Recently viewed | Footer of most pages | `ultralove_render_recently_viewed_cards()` (AJAX) | `.ul-carousel` |
 | Cross-sells | Cart (items in cart) | WooCommerce | grid |
@@ -102,7 +100,6 @@ Until Login hides price and cart row for logged-out visitors (`.footer-button` i
   the card's own controls)
 - `product-carousel.js` - the shared carousel (`.ul-carousel[data-ul-carousel]`): round prev/next buttons
   that wrap round, progress bar, drag to scroll, keyboard; `window.ulProductCarousel.init()/initAll()`
-- `deals-carousel.js` - home "On Sale" Slick slider -> shared carousel
 - `recently-viewed.js` - footer recently viewed IDs, carousel start, wishlist fragments, quantity sync
 - Parent `js/scripts.js` - Quick View (`.mf-product-quick-view`, delegated on body); YITH handles
   `.add_to_wishlist` (delegated on document)
@@ -122,7 +119,8 @@ Until Login hides price and cart row for logged-out visitors (`.footer-button` i
 - **"Product carousel - ..."** (`.ul-carousel`) - scroller, arrows (`.ul-carousel__arrow`), progress bar
 - **"Buttons"** - one button system (`ul-btn`, `--primary/--secondary/--tertiary`, `--icon`); every rule
   is `:is(#page, #mf-quick-view-modal) :where(...)`, so beating it needs that id weight
-- Home "On Sale" specifics use `.mf-product-deals-day`; product section headings `.cat-header`
+- Home page sections: `.ul-home-*` (`.ul-home-bleed` full width, `.ul-home-container` the content
+  edges shared with `#bottomcta` and the footer); product section headings `.cat-header`
 - The parent theme's own card CSS is in `martfury/style.css` (`.woocommerce ul.products li.product ...`)
 
 Images: `sizes` from `mu-plugins/30-woocommerce-loop-image-sizes.php` (keep in step with the card widths
@@ -131,7 +129,6 @@ above), URLs via Cloudinary, native `loading="lazy"`.
 ## Caches - when a change doesn't show
 
 - **Redis object cache**: after direct SQL edits, `wp cache delete <post_id> post_meta` (or `wp cache flush`).
-- **Elementor generated CSS** (`uploads/elementor/css`): `wp elementor flush-css`.
 - **Cloudflare** caches HTML for some URLs (the home page showed `cf-cache-status: HIT`, days old) and static
   assets for a year. CSS/JS URLs carry `?ver=<file mtime>` (deploys set mtimes), so a stale HTML page keeps
   pointing at an old stylesheet. Purge the page URL in the Cloudflare dashboard (by URL, with the
@@ -145,6 +142,6 @@ above), URLs via Cloudinary, native `loading="lazy"`.
 - Testing in Chrome: a background tab/window throttles timers, `requestAnimationFrame` and smooth
   scrolling; hidden iframes don't fire in-viewport lazy loads. Measure synchronously, trigger AJAX
   blocks directly, and keep browser use minimal.
-- Elementor's mobile/desktop column rules leave a 1px gap at exactly 767px where flex columns can grow
-  with their content (see the `min-width: 0` rule for the deals carousel column).
+- Database/plugin changes (page content, plugin activation) are per server - list them in
+  `documentation/pending-release.md` so the production release repeats them.
 - Most visual work is previewed on dev first; production changes wait for client approval.
