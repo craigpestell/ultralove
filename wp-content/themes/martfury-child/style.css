@@ -1623,11 +1623,11 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
  *   .ul-btn                  base: font, weight, 5px radius, 1px border, transitions, focus ring
  *   .ul-btn--primary         solid brand pink, darker on hover - the main action (Add to cart, Send, CTAs)
  *   .ul-btn--secondary       pink outline, filling pink on hover - a second action (Notify me, Update cart)
- *   .ul-btn--tertiary        lavender outline, plum text, pink on hover - quiet controls (arrows, toggles)
+ *   .ul-btn--tertiary        lavender outline, plum text, pink on hover - quiet controls (toggles)
  *   (default size)           44px - forms, WooCommerce pages
  *   .ul-btn--sm              36px - product cards, the footer, the mini cart
  *   .ul-btn--lg              54px - the home page calls to action
- *   .ul-btn--icon            46px circle, for an icon alone (carousel arrows)
+ *   .ul-btn--icon            46px circle, for an icon alone (carousel arrows - primary)
  *   disabled                 greyed out, no hover (Out of stock)
  *
  * Markup the child theme outputs carries the classes (Out of stock, the carousel arrows, "Shop Now");
@@ -2305,11 +2305,11 @@ section.up-sells .related-title,
     -webkit-user-select: none
 }
 
-/* Previous/next: white circles with the site's lavender border (no shadow), vertically centred on
+/* Previous/next: solid brand-pink circles like the site's other buttons (no shadow), vertically centred on
    the cards (the carousel's height less the 30px progress bar below them - the arrows only show when it
    does), straddling the carousel's edges where there's room and just inside them otherwise. Hidden at
    either end, and on phones (swipe instead). */
-/* The arrows are the button system's tertiary icon buttons (ul-btn ul-btn--tertiary ul-btn--icon - colours,
+/* The arrows are the button system's primary icon buttons (ul-btn ul-btn--primary ul-btn--icon - colours,
    border, 46px circle, focus ring; see "Buttons" below); here only their placement and motion. */
 .ul-carousel__arrow {
     position: absolute;
@@ -2343,20 +2343,6 @@ section.up-sells .related-title,
 .ul-carousel__arrow:hover,
 .ul-carousel__arrow:focus-visible {
     transform: translateY(-50%) scale(1.06)
-}
-
-/* Arrow colours inverted from the tertiary button: a white arrow on a filled plum circle (pink on
-   hover), with the border in the circle's colour so it reads as one solid disc. */
-:is(#page, #mf-quick-view-modal) .ul-carousel__arrow {
-    color: #fff;
-    background: var(--ul-btn-plum);
-    border-color: var(--ul-btn-plum)
-}
-
-:is(#page, #mf-quick-view-modal) .ul-carousel__arrow:is(:hover, :focus-visible) {
-    color: #fff;
-    background: var(--ul-btn-pink);
-    border-color: var(--ul-btn-pink)
 }
 
 .ul-carousel__arrow:disabled,
