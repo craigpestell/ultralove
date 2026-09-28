@@ -9,16 +9,14 @@
  *  - a progress bar under the cards (click to jump, drag the thumb to scrub),
  *  - start/end state classes for the fade on whichever edge has more cards,
  *  - mouse drag-to-scroll (a drag doesn't also click the card under the pointer),
- *  - left/right arrow keys while focus is inside the carousel,
- *  - a one-off nudge the first time a carousel scrolls into view, hinting that it moves sideways.
- * Motion is instant for visitors who ask for reduced motion, and the nudge is skipped for them.
+ *  - left/right arrow keys while focus is inside the carousel.
+ * Motion is instant for visitors who ask for reduced motion.
  * window.ulProductCarousel.initAll(scope) sets up carousels added later (recently viewed arrives by AJAX).
  */
 (function () {
     'use strict';
 
     var reduceMotion = window.matchMedia ? window.matchMedia('(prefers-reduced-motion: reduce)') : null;
-    var nudged = false;
     var count = 0;
 
     var CHEVRON = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">' +
@@ -235,30 +233,6 @@
         window.addEventListener('resize', requestUpdate);
         if (window.ResizeObserver) {
             new ResizeObserver(requestUpdate).observe(track);
-        }
-
-        // The nudge: once per page, the first time a scrollable carousel is mostly in view.
-        if (window.IntersectionObserver) {
-            var observer = new IntersectionObserver(function (entries) {
-                entries.forEach(function (entry) {
-                    if (!entry.isIntersecting) {
-                        return;
-                    }
-                    observer.disconnect();
-                    if (nudged || (reduceMotion && reduceMotion.matches) || !root.classList.contains('is-scrollable') || !root.classList.contains('is-at-start')) {
-                        return;
-                    }
-                    nudged = true;
-                    root.classList.add('is-nudging');
-                    track.addEventListener('animationend', function done(event) {
-                        if (event.target.parentNode === track) {
-                            track.removeEventListener('animationend', done);
-                            root.classList.remove('is-nudging');
-                        }
-                    });
-                });
-            }, {threshold: 0.6});
-            observer.observe(track);
         }
 
         carousel.update = update;
