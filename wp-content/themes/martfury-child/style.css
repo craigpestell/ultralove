@@ -1898,11 +1898,15 @@ body:not(.shop-view-list) ul.products:not(.slick-slider) > li.product {
 }
 
 /* 10px corners (as on the shop sidebar and toolbar cards) so the card's edge follows the rounded
-   corners of its hover glow - a blurred shadow always rounds off square corners. */
+   corners of its hover glow - a blurred shadow always rounds off square corners. The same inner padding
+   on every card, in every grid and carousel at every width - so the hover glow never sits against the
+   image, title or cart row - scaled to the card: 7% of its width, 10px to 20px (the parent theme had
+   20px 20px 0 from 1200px and none at all below 992px). */
 body:not(.shop-view-list) ul.products li.product .product-inner {
     display: flex;
     flex-direction: column;
     width: 100%;
+    padding: clamp(10px, 7%, 20px);
     border-radius: 10px;
     transition: box-shadow .2s ease
 }
@@ -2279,8 +2283,11 @@ section.up-sells .related-title,
 }
 
 /* The scroller. Its padding gives the cards' hover shadow room (a scroller clips on both axes),
-   cancelled by equal negative margins so the cards sit where the list did. */
+   cancelled by equal negative margins so the cards sit where the list did. isolation keeps everything in
+   the cards (e.g. the thumbnail's Quick view / favourites bar, z-index 10) in its own layer, below the
+   previous/next buttons. */
 .ul-carousel ul.products {
+    isolation: isolate;
     display: flex!important;
     flex-wrap: nowrap!important;
     overflow-x: auto;
