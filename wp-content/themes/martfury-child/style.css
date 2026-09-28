@@ -2030,12 +2030,15 @@ body:not(.shop-view-list) ul.products li.product .mf-product-price-box {
     min-height: 53px
 }
 
+/* The quantity box and the button share a row where the button's label fits beside it; on narrower cards
+   (phones) the button wraps onto its own line below instead of cutting its label off - it can grow but
+   never shrink below its label (flex: 1 0 auto below). */
 body:not(.shop-view-list) ul.products li.product form.cart {
     display: flex!important;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    gap: 12px;
+    gap: 8px 12px;
     margin-top: 12px
 }
 
@@ -2066,7 +2069,7 @@ body:not(.shop-view-list) ul.products li.product form.cart .qty-box .qty {
 }
 
 body:not(.shop-view-list) ul.products li.product form.cart button {
-    flex: 1 1 auto;
+    flex: 1 0 auto;
     width: auto!important;
     max-width: 150px;
     padding: 0 5px!important;
