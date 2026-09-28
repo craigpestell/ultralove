@@ -2089,6 +2089,20 @@ ul.products.slick-slider .slick-list {
     margin-bottom: -28px!important
 }
 
+/* "On Sale" deals carousel arrows: the carousels' round buttons (js/deals-carousel.js gives Slick the
+   .ul-carousel__arrow markup), centred on the cards - the parent theme puts its arrows at top:40%. */
+.mf-product-deals-day .ul-carousel__arrow {
+    top: 50%
+}
+
+/* At exactly 767px the Elementor column holding the deals carousel has no width rule (between
+   Elementor's mobile and desktop ones), and as a flex item with min-width:auto it grew with Slick's
+   track, which Slick sizes from it - a loop out to tens of thousands of pixels. Let it shrink. */
+.elementor-column:has(.mf-elementor-product-deals-carousel),
+.elementor-column:has(.mf-elementor-product-deals-carousel) > .elementor-widget-wrap {
+    min-width: 0
+}
+
 /* The parent theme gives the "On Sale" deals cards no padding, so the hover shadow sat right against
    the product image and cart row. Same 20px inset as the grid cards, plus 20px below the cart row. */
 .mf-product-deals-day ul.products li.product .product-inner {
