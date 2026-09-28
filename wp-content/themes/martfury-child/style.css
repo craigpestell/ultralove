@@ -1849,14 +1849,47 @@ body:not(.shop-view-list) ul.products:not(.slick-slider) li.product {
     display: flex
 }
 
-/* 4 columns instead of the shop's 5 from 1200px (where the parent theme's .col-mf-5 starts) to 1399px:
-   in that band a fifth of the grid leaves the cart row too narrow and the buttons' labels are cut off
-   ("Add to cart" up to ~1330px, the wider "Out of stock" up to ~1380px). Flex-wrapped grid, so only
-   the width changes. The carousels size their own cards (width:auto!important) and aren't affected. */
-@media (min-width: 1200px) and (max-width: 1399.98px) {
-    ul.products.columns-5 > li.product.col-mf-5 {
-        width: 25%
+/* Product grids and carousels - one sizing rule everywhere: as many cards as fit the list's own
+   container at 215px or more each (the cart row's "Out of stock" needs ~214px; "Add to cart" ~204px),
+   and never fewer than 2. The element holding the list is a size container, and the column count steps
+   at multiples of 215px of its width - so the shop's filter sidebar, Martfury's page container and the
+   home page's fixed Elementor boxes need no breakpoints of their own. Replaces the parent theme's
+   col-xs-6 / col-sm-4 / col-mf-5 widths; the carousels read the same count (.ul-carousel below). List
+   view and Slick sliders are left alone. */
+body:not(.shop-view-list) :has(> ul.products:not(.slick-slider)) {
+    container-type: inline-size
+}
+
+body:not(.shop-view-list) ul.products:not(.slick-slider) {
+    --ul-cols: 2
+}
+
+@container (min-width: 645px) {
+    body:not(.shop-view-list) ul.products:not(.slick-slider) {
+        --ul-cols: 3
     }
+}
+
+@container (min-width: 860px) {
+    body:not(.shop-view-list) ul.products:not(.slick-slider) {
+        --ul-cols: 4
+    }
+}
+
+@container (min-width: 1075px) {
+    body:not(.shop-view-list) ul.products:not(.slick-slider) {
+        --ul-cols: 5
+    }
+}
+
+@container (min-width: 1290px) {
+    body:not(.shop-view-list) ul.products:not(.slick-slider) {
+        --ul-cols: 6
+    }
+}
+
+body:not(.shop-view-list) ul.products:not(.slick-slider) > li.product {
+    width: calc(100% / var(--ul-cols))
 }
 
 /* 10px corners (as on the shop sidebar and toolbar cards) so the card's edge follows the rounded
@@ -2232,55 +2265,14 @@ section.up-sells .related-title,
  *  - round previous/next buttons over the product images (wrapping round at either end),
  *  - a progress bar under the cards, sized to the share in view.
  */
-/* Cards per view match the product grid's columns at every width (2, 3 from 768px, 4 from 1200px, 5
-   from 1400px - see the shop grid's col-xs-6 / col-sm-4 / col-mf-5 and its 4-column band above); one
-   more on catalog pages with the filter sidebar (below). The home page's "On Sale" deals carousel is
-   this carousel too (js/deals-carousel.js replaces Martfury's Slick slider with it). */
+/* Cards per view: the same count as the product grids (--ul-cols, set from the carousel's own width by
+   the container queries above - the carousel is the list's container). The home page's "On Sale" deals
+   carousel is this carousel too (js/deals-carousel.js replaces Martfury's Slick slider with it). */
 /* flow-root: the scroller's negative top margin (below) stays inside the carousel instead of collapsing
    through it, so the carousel's box starts at the cards - which the arrows' centring relies on. */
 .ul-carousel {
-    --ul-per-view: 2;
     position: relative;
     display: flow-root
-}
-
-@media (min-width: 768px) {
-    .ul-carousel {
-        --ul-per-view: 3
-    }
-}
-
-@media (min-width: 1200px) {
-    .ul-carousel {
-        --ul-per-view: 4
-    }
-}
-
-@media (min-width: 1400px) {
-    .ul-carousel {
-        --ul-per-view: 5
-    }
-}
-
-/* Catalog pages whose grid has the filter sidebar beside it (from 992px, where .catalog-sidebar's
-   col-md-3 sits next to the content): that grid is narrower, so the full-width carousels (the footer's
-   recently viewed) show one card more than its columns, which keeps their cards about the same size. */
-@media (min-width: 992px) {
-    .mf-catalog-page:is(.sidebar-content, .content-sidebar) .ul-carousel {
-        --ul-per-view: 4
-    }
-}
-
-@media (min-width: 1200px) {
-    .mf-catalog-page:is(.sidebar-content, .content-sidebar) .ul-carousel {
-        --ul-per-view: 5
-    }
-}
-
-@media (min-width: 1400px) {
-    .mf-catalog-page:is(.sidebar-content, .content-sidebar) .ul-carousel {
-        --ul-per-view: 6
-    }
 }
 
 /* The scroller. Its padding gives the cards' hover shadow room (a scroller clips on both axes),
@@ -2304,7 +2296,7 @@ section.up-sells .related-title,
 }
 
 .ul-carousel ul.products > li.product {
-    flex: 0 0 calc(100% / var(--ul-per-view));
+    flex: 0 0 calc(100% / var(--ul-cols));
     width: auto!important;
     max-width: none!important;
     float: none!important;
