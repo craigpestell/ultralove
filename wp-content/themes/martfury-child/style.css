@@ -2225,12 +2225,14 @@ section.up-sells .related-title,
  *  - a progress bar under the cards, sized to the share in view.
  */
 /* Cards per view match the product grid's columns at every width (2, 3 from 768px, 4 from 1200px, 5
-   from 1400px - see the shop grid's col-xs-6 / col-sm-4 / col-mf-5 and its 4-column band above). */
+   from 1400px - see the shop grid's col-xs-6 / col-sm-4 / col-mf-5 and its 4-column band above). Only
+   whole cards are in view, so the 30px edge fade stays inside the gutter (the scroller's 10px padding +
+   the card's 20px) and never dims a visible card's content. */
 /* flow-root: the scroller's negative top margin (below) stays inside the carousel instead of collapsing
    through it, so the carousel's box starts at the cards - which the arrows' centring relies on. */
 .ul-carousel {
     --ul-per-view: 2;
-    --ul-fade: 48px;
+    --ul-fade: 30px;
     position: relative;
     display: flow-root
 }
