@@ -1103,7 +1103,7 @@ function ultralove_breadcrumb_plain_product_title( $title, $post_id = 0 ) {
  * [ultralove_brand_grid] - the Brands We Carry page's grid: every brand with products (A-Z), its logo and
  * name linking to the brand's products. The same markup as the martfury-addons Elementor "Brand Images"
  * widget the page used to have (so its styles still apply); Martfury's own [brand_images] shortcode leaves
- * the names out. Columns via columns="" (default 6).
+ * the names out. Laid out and styled in style.css ("Brands We Carry"); columns="" only sets a class.
  */
 add_shortcode( 'ultralove_brand_grid', 'ultralove_brand_grid_shortcode' );
 function ultralove_brand_grid_shortcode( $atts ) {

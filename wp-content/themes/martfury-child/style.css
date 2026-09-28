@@ -3358,3 +3358,67 @@ body .cwginstock-subscribe-form :is(.row, [class*="col-"]) {
     color: var(--ul-btn-pink)!important;
     background: rgba(179,9,75,.07)
 }
+
+/* Brands We Carry ([ultralove_brand_grid], the markup of martfury-addons' Brand Images widget): brand cards
+   in the product cards' style - white, 10px corners, the shared purple hover glow, the name in the product
+   names' plum (brand pink on hover). As many 170px+ cards as fit the page container (7 across at 1440px),
+   which keeps every logo at or below its 215px size. Every logo image has the same grey bevelled frame and
+   drop shadow drawn into it; the logo is drawn at 115% inside a rounded, clipped tile so that frame (about
+   5% top/left, 8% right/bottom, the shadow side) falls outside it. */
+.mf-brand-images .images-list {
+    display: grid!important;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 20px;
+    margin: 0!important
+}
+
+.mf-brand-images .images-list .image-item {
+    width: auto!important;
+    max-width: none!important;
+    float: none!important;
+    margin: 0!important;
+    padding: 12px!important;
+    background: #fff;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    text-align: center;
+    transition: box-shadow .2s ease
+}
+
+.mf-brand-images .images-list .image-item:hover,
+.mf-brand-images .images-list .image-item:focus-within {
+    box-shadow: var(--ul-purple-shadow)
+}
+
+.mf-brand-images .image-item > a {
+    display: block;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 6px
+}
+
+.mf-brand-images .image-item > a img {
+    display: block;
+    width: 115%!important;
+    max-width: none!important;
+    height: auto!important;
+    margin: -5.75% 0 0 -5.75%!important
+}
+
+.mf-brand-images .image-item .b-title {
+    margin: 10px 0 0!important;
+    font-size: 16px!important;
+    font-weight: 400!important;
+    line-height: 1.3!important
+}
+
+.mf-brand-images .image-item .b-title a {
+    color: #3b1d4a!important;
+    letter-spacing: -.5px;
+    transition: color .15s ease
+}
+
+.mf-brand-images .image-item .b-title a:hover,
+.mf-brand-images .image-item .b-title a:focus-visible {
+    color: #b3094b!important
+}
