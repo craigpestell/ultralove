@@ -88,8 +88,8 @@ Until Login hides price and cart row for logged-out visitors (`.footer-button` i
 | List | Page | Rendered by | Container |
 |---|---|---|---|
 | Catalog grid | Shop, categories (incl. On Sale = `sale-closeout-items`), brand filter, search | WooCommerce archive template, `div.mf-shop-content > ul.products` | Beside the filter sidebar (`.catalog-sidebar`, `col-md-3`) from 992px |
-| Home "On Sale" | Home | `front-page.php`: `[products on_sale="true" limit="12" orderby="rand"]` in `.ul-carousel` | `.ul-home-container` (1150 / 950 / 700px) |
-| Home "Latest Adult Products" | Home | `front-page.php`: `[products limit="30" orderby="date"]` | `.ul-home-container` |
+| Home "On Sale" | Home | `front-page.php`: `[products on_sale="true" limit="12" orderby="rand"]` in `.ul-carousel` | page container |
+| Home "Latest Adult Products" | Home | `front-page.php`: `[products limit="30" orderby="date"]` | page container |
 | Related / upsells | Product pages | Child `woocommerce/single-product/related.php`, `up-sells.php` | `.ul-carousel` |
 | Recently viewed | Footer of most pages | `ultralove_render_recently_viewed_cards()` (AJAX) | `.ul-carousel` |
 | Cross-sells | Cart (items in cart) | WooCommerce | grid |
@@ -119,8 +119,13 @@ Until Login hides price and cart row for logged-out visitors (`.footer-button` i
 - **"Product carousel - ..."** (`.ul-carousel`) - scroller, arrows (`.ul-carousel__arrow`), progress bar
 - **"Buttons"** - one button system (`ul-btn`, `--primary/--secondary/--tertiary`, `--icon`); every rule
   is `:is(#page, #mf-quick-view-modal) :where(...)`, so beating it needs that id weight
-- Home page sections: `.ul-home-*` (`.ul-home-bleed` full width, `.ul-home-container` the content
-  edges shared with `#bottomcta` and the footer); product section headings `.cat-header`
+- **One content container everywhere**: every section of every page - the header's logo/search row and
+  menu, page content, home page sections (`front-page.php`), `#bottomcta` and the footer - uses Martfury's
+  `.martfury-container` (window less 30px padding each side, 15px on phones, 1650px wide at most). Don't
+  give a page or section its own width; product lists get their card count from this width via the
+  column rule. (Catalog grids are narrower only because the filter sidebar sits beside them.)
+- Home page sections: `.ul-home-*` (`.ul-home-bleed` breaks full width out of the front page's Bootstrap
+  `.container`, with a `.martfury-container` inside); product section headings `.cat-header`
 - The parent theme's own card CSS is in `martfury/style.css` (`.woocommerce ul.products li.product ...`)
 
 Images: `sizes` from `mu-plugins/30-woocommerce-loop-image-sizes.php` (keep in step with the card widths
@@ -138,6 +143,9 @@ above), URLs via Cloudinary, native `loading="lazy"`.
   "No products were found".
 
 ## Gotchas
+
+- Make changes holistically: change the shared system (the page container, the column rule, the button
+  system, the form-page style), not one page or width band.
 
 - Testing in Chrome: a background tab/window throttles timers, `requestAnimationFrame` and smooth
   scrolling; hidden iframes don't fire in-viewport lazy loads. Measure synchronously, trigger AJAX
