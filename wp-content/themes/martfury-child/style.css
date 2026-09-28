@@ -1584,12 +1584,17 @@ html body {
     }
 }
 
-/* Product section titles (e.g. "On Sale" / "Latest Adult Products" on the home page) everywhere: 32px, in
-   the same light (300) weight as the pill headings, instead of the 500 all h1-h4 get above. */
+/* Product section titles everywhere - "On Sale" / "Latest Adult Products" (.cat-header) and the carousel
+   headings ("Related products", upsells, "Your Recently Viewed Products" - further down) - share one size,
+   in the same light (300) weight as the pill headings, instead of the 500 all h1-h4 get above. */
+:root {
+    --ul-section-title-size: 32px
+}
+
 .cat-header .cat-title,
 .cat-header h2,
 .cat-header h3 {
-    font-size: 32px!important;
+    font-size: var(--ul-section-title-size)!important;
     font-weight: 300!important
 }
 
@@ -2243,7 +2248,7 @@ section.related .related-title,
 section.up-sells .related-title,
 #footer-recently-viewed .recently-header .title,
 #footer-bot-recently-viewed .recently-header .title {
-    font-size: 24px!important;
+    font-size: var(--ul-section-title-size)!important;
     font-weight: 300!important;
     line-height: 1.2!important;
     color: #3b1d4a!important;
