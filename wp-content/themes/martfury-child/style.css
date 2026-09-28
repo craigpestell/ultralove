@@ -2305,8 +2305,8 @@ section.up-sells .related-title,
     -webkit-user-select: none
 }
 
-/* Previous/next: solid brand-pink circles like the site's other buttons, with a slight plum shadow that
-   deepens on hover, vertically centred on the cards (the carousel's height less the 30px progress bar
+/* Previous/next: solid brand-pink circles like the site's other buttons, with a slight plum shadow
+   (hovered or not), vertically centred on the cards (the carousel's height less the 30px progress bar
    below them - the arrows only show when it does), straddling the carousel's edges where there's room
    and just inside them otherwise. Hidden at either end, and on phones (swipe instead). */
 /* The arrows are the button system's primary icon buttons (ul-btn ul-btn--primary ul-btn--icon - colours,
@@ -2345,14 +2345,9 @@ section.up-sells .related-title,
     transform: translateY(-50%) scale(1.06)
 }
 
-/* The shadow carries the button system's id weight (and its transition list, plus box-shadow) - the
-   base .ul-btn rule sets box-shadow:none at that weight. */
+/* The shadow carries the button system's id weight - the base .ul-btn rule sets box-shadow:none at
+   that weight. The same shadow with or without hover. */
 :is(#page, #mf-quick-view-modal) .ul-carousel__arrow {
-    box-shadow: 0 2px 6px rgba(59,29,74,.25);
-    transition: background-color .2s ease, border-color .2s ease, color .2s ease, opacity .2s ease, visibility .2s ease, transform .15s ease, box-shadow .15s ease
-}
-
-:is(#page, #mf-quick-view-modal) .ul-carousel__arrow:is(:hover, :focus-visible) {
     box-shadow: 0 4px 10px rgba(59,29,74,.3)
 }
 
