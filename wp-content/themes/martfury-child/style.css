@@ -1872,6 +1872,11 @@ body:not(.shop-view-list) ul.products li.product .product-inner:hover .mf-produc
     border-color: transparent
 }
 
+/* The whole card clicks through to the product page (js/product-card-link.js), padding included. */
+ul.products li.product .product-inner {
+    cursor: pointer
+}
+
 /* The theme's jQuery UI tooltips (e.g. "Quick View" over the thumbnail icons) are appended to <body>,
    outside the card, and positioned once when they open - while the icons are still sliding in - so one
    can land under the pointer; hovering it counts as leaving the card. Tooltips are labels only, so let
