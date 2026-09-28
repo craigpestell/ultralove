@@ -29,9 +29,9 @@ get_header();
     <section id="topcta" class="ul-home-bleed">
         <div class="ul-home-container">
             <div id="ctatop">
-                <h1>Adult Wholesale Canada</h1>
-                <p>Ultra Love supplies Canadian retailers with adult toys and intimate wellness products, competitive wholesale pricing, and dedicated account support.</p>
-                <div class="ul-home-cta-buttons">
+                <div class="ul-home-cta-content">
+                    <h1>Adult Wholesale Canada</h1>
+                    <p>Ultra Love supplies Canadian retailers with adult toys and intimate wellness products, competitive wholesale pricing, and dedicated account support.</p>
                     <a href="<?php echo esc_url( home_url( '/shop/' ) ); ?>">View Products</a>
                     <a href="<?php echo esc_url( home_url( '/become-a-retailer/' ) ); ?>">Wholesale Signup</a>
                 </div>

@@ -677,7 +677,8 @@ h1,h2,h3,h4 {
     z-index: 1
 }
 
-/* The space the Elementor column and widget wrappers used to add around the call to action's content. */
+/* The space the Elementor column and widget wrappers used to add around the call to action's content
+   (.ul-home-cta-content inside is the wrapping flex row the button spacing rule further down sets up). */
 #ctatop {
     padding: 10px 0 8px
 }
@@ -2106,6 +2107,23 @@ ul.products.slick-slider .slick-list {
    the two links under the grid. */
 .ul-home-products {
     padding-top: 10px
+}
+
+/* Section headings: Martfury's product grid widget heading - a row with a light rule under it, 15px
+   below the title, 30px above the products. */
+.ul-home-products .cat-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #e3e3e3;
+    padding-bottom: 15px;
+    margin-bottom: 30px
+}
+
+.ul-home-products .cat-header .cat-title {
+    line-height: 1;
+    margin: 0
 }
 
 .ul-home-more {
