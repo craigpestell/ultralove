@@ -2950,26 +2950,32 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
 }
 
 /*
- * Buy Wholesale (the page holding the wholesale signup form, Gravity Forms #2): a readable column
- * instead of intro text and form stretched across the whole container (the form was 1,600px wide at
- * 1920px). Below 1200px one centred 760px column; from 1200px the intro sits beside the form.
- * The form is a lavender card with the purple glow, its
- * inputs match the account forms. The footer's contact form (#gform_wrapper_1) is left alone.
+ * Form pages - any page whose content is intro text plus a Gravity Form (Buy Wholesale's signup, form 2;
+ * Contact Us, form 3): a readable column instead of text and form stretched across the whole container
+ * (the signup form was 1,600px wide at 1920px). Below 1200px one centred 760px column; from 1200px the
+ * intro sits beside the form. The form is a lavender card with the purple glow, its inputs match the
+ * account forms. The footer's contact form (#gform_wrapper_1, in a widget, not page content) is left alone.
  */
-.entry-content:has(> #gform_wrapper_2) {
+.entry-content:has(> .gform_wrapper) {
     max-width: 760px;
     margin: 0 auto;
     padding: 20px 0 50px
 }
 
-.entry-content:has(> #gform_wrapper_2) > p {
+.entry-content:has(> .gform_wrapper) > p {
     font-size: 17px;
     line-height: 1.6;
     color: #4a3558
 }
 
+.entry-content:has(> .gform_wrapper) > p a {
+    color: var(--ul-btn-pink);
+    text-decoration: underline;
+    text-underline-offset: 3px
+}
+
 @media (min-width: 1200px) {
-    .entry-content:has(> #gform_wrapper_2) {
+    .entry-content:has(> .gform_wrapper) {
         display: grid;
         grid-template-columns: minmax(0, 340px) minmax(0, 760px);
         justify-content: center;
@@ -2978,18 +2984,18 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
         max-width: none
     }
 
-    .entry-content:has(> #gform_wrapper_2) > p {
+    .entry-content:has(> .gform_wrapper) > p {
         grid-column: 1;
         margin: 0 0 18px
     }
 
-    .entry-content:has(> #gform_wrapper_2) > #gform_wrapper_2 {
+    .entry-content:has(> .gform_wrapper) > .gform_wrapper {
         grid-column: 2;
         grid-row: 1 / span 20
     }
 }
 
-#gform_wrapper_2 {
+#content .entry-content > .gform_wrapper {
     padding: 32px 36px 30px;
     background: #fff;
     border: 1px solid rgb(177,101,255);
@@ -2997,18 +3003,18 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     box-shadow: var(--ul-purple-shadow)
 }
 
-#gform_wrapper_2 .gfield_label {
+#content .entry-content > .gform_wrapper .gfield_label {
     font-size: 15px;
     color: #3b1d4a
 }
 
-#gform_wrapper_2 .gform-field-label--type-sub,
-#gform_wrapper_2 .gform_fileupload_rules {
+#content .entry-content > .gform_wrapper .gform-field-label--type-sub,
+#content .entry-content > .gform_wrapper .gform_fileupload_rules {
     font-size: 13px;
     color: #6f6578
 }
 
-#gform_wrapper_2 :is(input[type="text"], input[type="email"], input[type="tel"], select, textarea) {
+#content .entry-content > .gform_wrapper :is(input[type="text"], input[type="email"], input[type="tel"], select, textarea) {
     min-height: 44px;
     padding: 8px 12px;
     border: 1px solid var(--ul-btn-lavender);
@@ -3017,19 +3023,19 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     transition: border-color .15s ease, box-shadow .15s ease
 }
 
-#gform_wrapper_2 textarea {
-    height: 150px;
+#content .entry-content > .gform_wrapper textarea {
+    height: 170px;
     min-height: 0
 }
 
-#gform_wrapper_2 :is(input[type="text"], input[type="email"], input[type="tel"], select, textarea):focus {
+#content .entry-content > .gform_wrapper :is(input[type="text"], input[type="email"], input[type="tel"], select, textarea):focus {
     border-color: rgb(177,101,255);
     box-shadow: 0 0 0 3px rgba(177,101,255,.18);
     outline: 0
 }
 
 @media (max-width: 767px) {
-    #gform_wrapper_2 {
+    #content .entry-content > .gform_wrapper {
         padding: 22px 16px
     }
 }
