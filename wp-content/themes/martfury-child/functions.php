@@ -30,15 +30,6 @@ function martfury_header_container_classes() {
 	return 'martfury-container';
 }
 
-/**
- * The footer (and the copyright row below it) uses the same page container as the header and the page
- * content, so every section of every page shares one set of content edges. (Martfury's version reads a
- * theme option / per-page setting and returns the narrower Bootstrap .container by default.)
- */
-function martfury_footer_container_classes() {
-	return 'martfury-container';
-}
-
 add_filter( 'martfury_site_content_container_class', 'ultralove_site_content_container_class', 20 );
 function ultralove_site_content_container_class( $class ) {
 	return ( 'container' === $class && ! is_front_page() ) ? 'martfury-container' : $class;

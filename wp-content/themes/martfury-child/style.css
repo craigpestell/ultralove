@@ -1464,11 +1464,97 @@ html body {
 }
 
 /*
- * Content edges: every section of every page - the header, the page content, the home page sections
- * (front-page.php), #bottomcta and the footer - sits in Martfury's page container (.martfury-container:
- * the window less 30px of padding each side, 15px on phones, 1650px wide at most), so all content shares
- * one set of edges and product lists get their width (and card count) from it.
+ * Content width: the page container (.martfury-container - the header rows, the page content, the home
+ * page's product sections) is the window less 30px of padding each side (15px on phones), at most 1440px
+ * of content: larger screens get growing side margins rather than ever-wider pages, and product cards
+ * (as many 215px+ cards as fit, up to 6 - see "Product grids and carousels") stay at most ~240px wide
+ * there (about 215-285px across desktop and tablet widths).
  */
+.martfury-container {
+    max-width: 1500px;
+    margin-left: auto;
+    margin-right: auto
+}
+
+/* Martfury only pads the container up to 1680px (a fixed 1650px with no padding above that) - keep the
+   30px so the content is 1440px there too. */
+@media (min-width: 1681px) {
+    .martfury-container {
+        padding-left: 30px;
+        padding-right: 30px
+    }
+}
+
+/*
+ * The home page's call to action (#topcta) and the #bottomcta + footer box (#hero-footer-combo, on every
+ * page) keep narrower edges of their own while their backdrops stay full width: 1150 / 950 / 700px wide at
+ * >=1200 / >=1025 / >=768px, 25px in from each side on phones. The footer's Bootstrap .container normally
+ * has a fixed width (1170 / 970 / 750px), so it's switched to width:auto + max-width here.
+ */
+#topcta > .martfury-container,
+#bottomcta,
+#hero-footer-combo .site-footer .container {
+    width: auto;
+    max-width: 1150px;
+    margin-left: auto;
+    margin-right: auto
+}
+
+#topcta > .martfury-container {
+    padding-left: 0;
+    padding-right: 0
+}
+
+@media (max-width:1199px) {
+    #topcta > .martfury-container,
+    #bottomcta,
+    #hero-footer-combo .site-footer .container {
+        max-width: 950px
+    }
+}
+
+@media (max-width:1024px) {
+    #topcta > .martfury-container,
+    #bottomcta,
+    #hero-footer-combo .site-footer .container {
+        max-width: 700px
+    }
+}
+
+@media (max-width:767px) {
+    #topcta > .martfury-container,
+    #bottomcta,
+    #hero-footer-combo .site-footer .container {
+        max-width: none;
+        margin-left: 25px;
+        margin-right: 25px
+    }
+}
+
+/* Footer content edges: everything in the footer (cards, dividers, the links row) and #bottomcta's
+   pill/buttons sit within those edges at every width. At >=1025px the Bootstrap gutters already line up;
+   below that the footer container's own 15px padding pushed content 15px inside them, and on phones the
+   parent theme also drops the row's -15px margin, which left the cards at one inset and the
+   dividers/links at another. */
+@media (max-width:1024px) {
+    #hero-footer-combo .site-footer .container {
+        padding-left: 0;
+        padding-right: 0
+    }
+}
+
+@media (max-width:767px) {
+    .site-footer .footer-widgets:before,
+    .site-footer .footer-widgets:after {
+        left: 0!important;
+        right: 0!important
+    }
+
+    #footer-links {
+        margin-left: 0;
+        margin-right: 0
+    }
+}
 
 /* Turnstile's flexible widget has a 300px minimum width; cap it at the form card's width so it
    can't overflow the card where the footer columns are narrower than that (~992-1199px). */
