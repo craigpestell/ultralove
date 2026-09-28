@@ -2329,7 +2329,7 @@ section.up-sells .related-title,
 /* Previous/next: solid brand-pink circles like the site's other buttons, with a slight plum shadow
    that drops deeper on hover as the circle lifts, vertically centred on the cards (the carousel's
    height less the 30px progress bar below them - the arrows only show when it does), straddling the
-   carousel's edges where there's room and just inside them otherwise. Hidden when there's nothing to
+   carousel's edges, their outer edges on the content's (see below). Hidden when there's nothing to
    scroll, and on phones (swipe instead). */
 /* The arrows are the button system's primary icon buttons (ul-btn ul-btn--primary ul-btn--icon - colours,
    border, 46px circle, focus ring; see "Buttons" below); here only their placement and motion. */
@@ -2340,8 +2340,11 @@ section.up-sells .related-title,
     transform: translateY(-50%)
 }
 
+/* The arrows straddle the carousel's edges, and wherever they show (from 768px) the carousel is inset by
+   half an arrow (23px) each side - so each circle's outer edge lines up with the content above it (the
+   section heading, the page's content edges). */
 .ul-carousel__arrow--prev {
-    left: 6px
+    left: -23px
 }
 
 .ul-carousel__arrow--prev svg {
@@ -2349,16 +2352,13 @@ section.up-sells .related-title,
 }
 
 .ul-carousel__arrow--next {
-    right: 6px
+    right: -23px
 }
 
-@media (min-width: 1300px) {
-    .ul-carousel__arrow--prev {
-        left: -23px
-    }
-
-    .ul-carousel__arrow--next {
-        right: -23px
+@media (min-width: 768px) {
+    .ul-carousel {
+        margin-left: 23px;
+        margin-right: 23px
     }
 }
 
