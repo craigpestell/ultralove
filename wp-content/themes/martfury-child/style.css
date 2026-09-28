@@ -2135,6 +2135,18 @@ ul.products.slick-slider .slick-list {
     margin-top: 65px
 }
 
+/* From 1200px the product sections are as wide as the product pages' and the shop grid's content (see
+   "Large screens (>=1200px)" further up: 0.81 x min(width - 30px, 1680px) - 30px), but never narrower than
+   the 1150px the rest of the home page uses - so they fill 1150px up to ~1487px, then grow, and like every
+   other product list reach 6 cards across from ~1660px (a 1290px container - the column rule's 6th step).
+   The call to action above and #bottomcta / the footer below keep the 1150px edges. */
+@media (min-width: 1200px) {
+    .ul-home-products > .ul-home-container {
+        width: max(1150px, calc(0.81 * min(100% - 30px, 1680px) - 30px));
+        max-width: none
+    }
+}
+
 .ul-home-links {
     display: flex;
     flex-wrap: wrap;
