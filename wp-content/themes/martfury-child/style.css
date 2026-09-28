@@ -1394,14 +1394,21 @@ h1,h2,h3,h4 {
 .header-main-row {
     display: flex;
     align-items: center;
+    gap: 20px;
 }
 
 /* The row is the page container (.martfury-container - see "Content edges"), so the logo starts and the
    header banner ends on the same edges as the menu, breadcrumbs, content and footer. The container nested
    inside .header-main adds no padding of its own, so the logo lands exactly on that edge. */
+/* The logo, search and account icons get half the row and the header banner the other half, so the
+   header is balanced on the content edges at any width. The logo group never gets narrower than 652px
+   (logo 170 + gaps 50 + icons 172 + a 260px search box, the narrowest that's still usable); below
+   that, the banner shrinks instead. The banner keeps its 728x90 shape, so its height follows. */
 .header-main-row .header-main {
     float: none;
     padding-left: 0;
+    flex: 0 0 max(50% - 10px, 652px);
+    max-width: none;
 }
 
 .header-main-row .header-main > .martfury-container {
@@ -1416,6 +1423,9 @@ h1,h2,h3,h4 {
     align-items: center;
     justify-content: flex-end;
     margin-left: auto;
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: none!important;
 }
 
 @media (max-width:992px) {
