@@ -3191,6 +3191,7 @@ body .swal2-container.swal2-backdrop-show {
 }
 
 body .swal2-container .swal2-popup {
+    width: min(440px, 100vw - 32px);
     padding: 28px 30px 30px;
     border: 1px solid rgb(177,101,255);
     border-radius: 10px;
@@ -3208,9 +3209,8 @@ body .swal2-container .swal2-close:is(:hover, :focus-visible) {
     box-shadow: none
 }
 
-.cwginstock-subscribe-form .panel,
-.cwginstock-subscribe-form .panel-heading,
-.cwginstock-subscribe-form .panel-body {
+/* body + the panel-primary forms: outranks the plugin's own prefixed Bootstrap, which loads after this. */
+body .cwginstock-subscribe-form :is(.panel, .panel-primary, .panel-heading, .panel-primary > .panel-heading, .panel-body) {
     margin: 0;
     padding: 0;
     background: none;
