@@ -2523,10 +2523,10 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     flex-direction: column
 }
 
-/* Side spacing as margin, not padding, so the header's bottom rule stops short of the popup's edges. */
+/* The header and the summary below it have 30px of padding each side, at every size. */
 #mf-quick-view-modal div.product .mf-entry-product-header {
-    margin: 0 20px 20px;
-    padding: 20px 0 8px
+    margin: 0 0 20px;
+    padding: 20px 30px 8px
 }
 
 #mf-quick-view-modal div.product .woocommerce-product-gallery {
@@ -2550,7 +2550,7 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     width: 100%;
     float: none;
     overflow: visible;
-    padding: 20px
+    padding: 20px 30px
 }
 
 @media (min-width: 992px) {
@@ -2569,8 +2569,8 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
 
     #mf-quick-view-modal div.product .mf-entry-product-header {
         grid-area: header;
-        margin: 0 30px 20px 0;
-        padding: 30px 0 8px
+        margin: 0 0 20px;
+        padding: 30px 30px 8px
     }
 
     #mf-quick-view-modal div.product .woocommerce-product-gallery {
@@ -2585,7 +2585,7 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
 
     #mf-quick-view-modal div.product .entry-summary {
         grid-area: summary;
-        padding: 0 30px 30px 0
+        padding: 0 30px 30px
     }
 }
 
