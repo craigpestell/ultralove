@@ -1262,17 +1262,23 @@ h1,h2,h3,h4 {
     text-align: center;
 }
 
+/* Footer quick links (Ordering / About Us / Contact): plain underlined text links in brand pink, so they
+   read as links - not pills, which on this footer are the headings' treatment. Lavender dots between them,
+   like the breadcrumb separators. The underline thickens and the pink darkens on hover / keyboard focus. */
 #footer-links .widget_nav_menu ul {
     display: flex;
     width: 100%;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 8px;
+    align-items: center;
+    gap: 4px 0;
     margin: 0;
     padding: 0;
 }
 
 #footer-links .widget_nav_menu ul li {
+    display: flex;
+    align-items: center;
     margin: 0;
 }
 
@@ -1280,17 +1286,28 @@ h1,h2,h3,h4 {
     display: none
 }
 
+#footer-links .widget_nav_menu ul li + li:before {
+    content: "\00b7";
+    margin: 0 14px;
+    color: #c9a3dc;
+    font-size: 22px;
+    line-height: 1
+}
+
 #footer-links .widget_nav_menu ul li a {
     display: inline-flex;
     align-items: center;
     min-height: 36px;
-    padding: 6px 14px;
-    color: #3b1d4a!important;
-    text-decoration: none!important;
-    background: rgba(255,255,255,.7);
-    border: 1px solid rgb(177,101,255);
-    border-radius: 999px;
-    transition: background-color .2s ease, border-color .2s ease, transform .2s ease;
+    padding: 0 2px;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--ul-btn-pink)!important;
+    text-decoration: underline!important;
+    text-decoration-thickness: 1px!important;
+    text-underline-offset: 4px;
+    background: none;
+    border: 0;
+    transition: color .15s ease, text-decoration-thickness .15s ease;
 }
 
 #footer-links .widget_nav_menu ul li a:before {
@@ -1299,12 +1316,15 @@ h1,h2,h3,h4 {
 }
 
 #footer-links .widget_nav_menu ul li a:hover,
-#footer-links .widget_nav_menu ul li a:focus {
-    color: #b3094b!important;
-    text-decoration: none!important;
-    background: #fff;
-    border-color: #b3094b;
-    transform: translateY(-1px);
+#footer-links .widget_nav_menu ul li a:focus-visible {
+    color: var(--ul-btn-pink-dark)!important;
+    text-decoration-thickness: 2px!important;
+}
+
+#footer-links .widget_nav_menu ul li a:focus-visible {
+    outline: 2px solid var(--ul-btn-focus);
+    outline-offset: 3px;
+    border-radius: 3px;
 }
 
 /* Footer widget cards (About Ultra Love / Become A Wholesale Buyer / Email Us): the same pill
