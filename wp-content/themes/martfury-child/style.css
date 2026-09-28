@@ -1401,14 +1401,43 @@ h1,h2,h3,h4 {
    header banner ends on the same edges as the menu, breadcrumbs, content and footer. The container nested
    inside .header-main adds no padding of its own, so the logo lands exactly on that edge. */
 /* The logo, search and account icons get half the row and the header banner the other half, so the
-   header is balanced on the content edges at any width. The logo group never gets narrower than 652px
-   (logo 170 + gaps 50 + icons 172 + a 260px search box, the narrowest that's still usable); below
-   that, the banner shrinks instead. The banner keeps its 728x90 shape, so its height follows. */
+   header is balanced on the content edges at any width. The logo group never gets narrower than 662px
+   (logo 180 + gaps 50 + a 260px search box, the narrowest that's still usable + icons 172); below that,
+   the banner shrinks instead. The banner keeps its 728x90 shape, so its height follows. Inside the group
+   the logo is a fixed 180px (it used to scale with Martfury's 25% Bootstrap column) and the search box
+   takes whatever is left. */
 .header-main-row .header-main {
     float: none;
     padding-left: 0;
-    flex: 0 0 max(50% - 10px, 652px);
+    flex: 0 0 max(50% - 10px, 662px);
+    min-width: 0;
     max-width: none;
+}
+
+.header-main-row .header-row > .header-logo {
+    flex: 0 0 auto;
+    width: auto;
+}
+
+.header-main-row .header-logo .d-logo img {
+    width: 180px;
+    max-width: none;
+    height: auto;
+}
+
+.header-main-row .header-row > .header-extras {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+}
+
+.header-main-row .header-extras .product-extra-search {
+    flex: 1 1 auto;
+    min-width: 260px;
+}
+
+.header-main-row .header-extras .products-search {
+    width: 100%;
 }
 
 .header-main-row .header-main > .martfury-container {
