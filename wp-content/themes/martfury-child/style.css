@@ -458,17 +458,18 @@ h1,h2,h3,h4 {
         radial-gradient(ellipse 12% 14% at 14% 94%, rgba(235, 185, 215, .45) 0, transparent 100%),
         radial-gradient(ellipse 60% 70% at 40% 60%, rgba(255, 255, 255, .55) 0, transparent 100%),
         #f6f1fa;
-    --ul-purple-shadow: 0 6px 18px rgba(177,101,255,.35)
+    --ul-purple-shadow: 0 0 18px rgba(177,101,255,.5)
 }
 
 #topcta,#hero-footer-combo {
     background: var(--ul-aurora)!important
 }
 
-/* Purple glow in the pills'/cards' rgb(177,101,255) border colour, shared by the #topcta and
-   #bottomcta pills, the #topcta text box, and the footer widget heading pills and cards. Those are
-   Elementor/widget markup, so they're listed here by selector; anything new can opt in by adding
-   the ul-purple-shadow class (e.g. an Elementor widget's Advanced > CSS Classes field). */
+/* Even purple glow (no offset, so it shows on all four sides) in the pills'/cards'
+   rgb(177,101,255) border colour, shared by the #topcta and #bottomcta pills, the #topcta text
+   box, and the footer widget heading pills and cards. Those are Elementor/widget markup, so
+   they're listed here by selector; anything new can opt in by adding the ul-purple-shadow class
+   (e.g. an Elementor widget's Advanced > CSS Classes field). */
 .ul-purple-shadow,
 #topcta h1,
 #topcta p,
