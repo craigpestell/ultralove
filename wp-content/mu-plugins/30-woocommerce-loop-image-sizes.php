@@ -12,8 +12,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Product card widths (see "Product grids and carousels - one sizing rule" in the child theme's
  * style.css): every grid and carousel shows as many cards as fit its container at 215px or more, never
- * fewer than 2, in a page container of at most 1440px - so cards are half the width below 576px and at
- * most ~320px wide elsewhere (2-up tablets; ~215-285px on desktops, <=240px on large screens).
+ * fewer than 2 or more than 5, in a page container of at most 1440px - so cards are half the width below
+ * 576px and at most ~320px wide elsewhere (2-up tablets; ~215-290px on desktops, up to ~288px on large
+ * screens).
  */
 add_filter(
 	'wp_calculate_image_sizes',

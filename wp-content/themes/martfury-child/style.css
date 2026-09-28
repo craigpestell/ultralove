@@ -1954,7 +1954,7 @@ body:not(.shop-view-list) ul.products:not(.slick-slider) li.product {
 
 /* Product grids and carousels - one sizing rule everywhere: as many cards as fit the list's own
    container at 215px or more each (the cart row's "Out of stock" needs ~214px; "Add to cart" ~204px),
-   and never fewer than 2. The element holding the list is a size container, and the column count steps
+   never fewer than 2 and never more than 5. The element holding the list is a size container, and the column count steps
    at multiples of 215px of its width - so the shop's filter sidebar, Martfury's page container and the
    home page's fixed Elementor boxes need no breakpoints of their own. Replaces the parent theme's
    col-xs-6 / col-sm-4 / col-mf-5 widths; the carousels read the same count (.ul-carousel below). List
@@ -1979,15 +1979,11 @@ body:not(.shop-view-list) ul.products:not(.slick-slider) {
     }
 }
 
+/* At most 5 across: at the 1440px content width 6 cards (~240px each) looked crowded, so the widest
+   lists get ~288px cards instead. */
 @container (min-width: 1075px) {
     body:not(.shop-view-list) ul.products:not(.slick-slider) {
         --ul-cols: 5
-    }
-}
-
-@container (min-width: 1290px) {
-    body:not(.shop-view-list) ul.products:not(.slick-slider) {
-        --ul-cols: 6
     }
 }
 

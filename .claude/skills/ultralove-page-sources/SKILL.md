@@ -108,8 +108,8 @@ Until Login hides price and cart row for logged-out visitors (`.footer-button` i
 ### Styling (child `style.css` - search for these section comments)
 
 - **"Product grids and carousels - one sizing rule everywhere"** - columns: the element holding each
-  `ul.products` is a size container; cards per row = as many 215px+ cards as fit, min 2 (`--ul-cols`,
-  steps at 645/860/1075/1290px of container width). Grids and carousels share it - **don't add
+  `ul.products` is a size container; cards per row = as many 215px+ cards as fit, min 2, max 5
+  (`--ul-cols`, steps at 645/860/1075px of container width; 6 across looked crowded). Grids and carousels share it - **don't add
   window-width column breakpoints**; change the 215px steps instead. 215px is what the cart row needs
   ("Out of stock" ~214px, "Add to cart" ~204px).
 - **"Product grid cards: consistent height + non-wrapping cart row"** - flex cards, fixed title box,
@@ -126,8 +126,8 @@ Until Login hides price and cart row for logged-out visitors (`.footer-button` i
   `#bottomcta` + footer box keep their own narrower edges (1150 / 950 / 700px, 25px in on phones).
   Don't give other pages or sections widths of their own.
 - **Product card widths**: at least 215px (what the cart row needs; phones are 2-up at ~175-185px), about
-  215-285px on desktop/tablet and at most ~240px on large screens - from the column rule plus the 1440px
-  cap. Pages with the filter sidebar may not reach 6 columns; that's fine.
+  215-290px on desktop/tablet and ~288px on large screens (5 across the 1440px cap) - from the column
+  rule plus the 1440px cap. Pages with the filter sidebar may not reach 5 columns; that's fine.
 - Home page sections: `.ul-home-*` (`.ul-home-bleed` breaks full width out of the front page's Bootstrap
   `.container`, with a `.martfury-container` inside); product section headings `.cat-header`
 - The parent theme's own card CSS is in `martfury/style.css` (`.woocommerce ul.products li.product ...`)
