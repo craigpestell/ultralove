@@ -1176,6 +1176,42 @@ h1,h2,h3,h4 {
     }
 }
 
+/* Three columns (from 992px): the columns' pills (.widget-title) form one row and their cards another - a
+   two-row grid the columns and their widget pass through (subgrid) - so the pills line up along the row's
+   bottom even when one wraps to two lines, and the cards all start on the same line below them. Same
+   column widths and spacing as the parent theme's flex row (32% each, spread across the row). */
+@media (min-width: 992px) {
+    .site-footer .footer-widgets {
+        display: grid;
+        grid-template-columns: repeat(3, 32%);
+        grid-template-rows: auto auto;
+        justify-content: space-between
+    }
+
+    .site-footer .footer-widgets .footer-sidebar {
+        display: grid;
+        grid-row: span 2;
+        grid-template-rows: subgrid;
+        width: auto;
+        max-width: none!important
+    }
+
+    .site-footer .footer-widgets .footer-sidebar > .widget {
+        display: grid;
+        grid-row: span 2;
+        grid-template-rows: subgrid;
+        margin-bottom: 0
+    }
+
+    .site-footer .footer-widgets .widget-title {
+        align-self: end
+    }
+
+    .site-footer .footer-widgets :is(.textwidget, .gform_wrapper) {
+        align-self: start
+    }
+}
+
 /* Footer columns go straight from 3 across to 1 stacked - never 2 (the parent theme drops to
    width:50% columns in between, which left the Email Us form alone on a second row). */
 @media (max-width:991px) {
