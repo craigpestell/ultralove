@@ -67,6 +67,10 @@ function martfury_child_enqueue_scripts() {
         $carousel_path = get_stylesheet_directory() . '/js/product-carousel.js';
         wp_enqueue_script( 'ultralove-product-carousel', get_stylesheet_directory_uri() . '/js/product-carousel.js', array(), (string) filemtime( $carousel_path ), true );
 
+        // Home page deals carousel (Martfury's Slick widget): the product grid's column counts.
+        $deals_path = get_stylesheet_directory() . '/js/deals-carousel.js';
+        wp_enqueue_script( 'ultralove-deals-carousel', get_stylesheet_directory_uri() . '/js/deals-carousel.js', array( 'jquery' ), (string) filemtime( $deals_path ), true );
+
         // Whole product card (padding included) clicks through to the product page.
         $card_link_path = get_stylesheet_directory() . '/js/product-card-link.js';
         wp_enqueue_script( 'ultralove-product-card-link', get_stylesheet_directory_uri() . '/js/product-card-link.js', array(), (string) filemtime( $card_link_path ), true );

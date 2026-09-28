@@ -2225,7 +2225,9 @@ section.up-sells .related-title,
  *  - a progress bar under the cards, sized to the share in view.
  */
 /* Cards per view match the product grid's columns at every width (2, 3 from 768px, 4 from 1200px, 5
-   from 1400px - see the shop grid's col-xs-6 / col-sm-4 / col-mf-5 and its 4-column band above). */
+   from 1400px - see the shop grid's col-xs-6 / col-sm-4 / col-mf-5 and its 4-column band above); one
+   more on catalog pages with the filter sidebar (below). The home page's Martfury deals carousel is
+   Slick, not this - js/deals-carousel.js gives it the same counts. */
 /* flow-root: the scroller's negative top margin (below) stays inside the carousel instead of collapsing
    through it, so the carousel's box starts at the cards - which the arrows' centring relies on. */
 .ul-carousel {
@@ -2250,6 +2252,27 @@ section.up-sells .related-title,
 @media (min-width: 1400px) {
     .ul-carousel {
         --ul-per-view: 5
+    }
+}
+
+/* Catalog pages whose grid has the filter sidebar beside it (from 992px, where .catalog-sidebar's
+   col-md-3 sits next to the content): that grid is narrower, so the full-width carousels (the footer's
+   recently viewed) show one card more than its columns, which keeps their cards about the same size. */
+@media (min-width: 992px) {
+    .mf-catalog-page:is(.sidebar-content, .content-sidebar) .ul-carousel {
+        --ul-per-view: 4
+    }
+}
+
+@media (min-width: 1200px) {
+    .mf-catalog-page:is(.sidebar-content, .content-sidebar) .ul-carousel {
+        --ul-per-view: 5
+    }
+}
+
+@media (min-width: 1400px) {
+    .mf-catalog-page:is(.sidebar-content, .content-sidebar) .ul-carousel {
+        --ul-per-view: 6
     }
 }
 
