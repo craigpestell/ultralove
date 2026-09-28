@@ -67,10 +67,6 @@ function martfury_child_enqueue_scripts() {
         $carousel_path = get_stylesheet_directory() . '/js/product-carousel.js';
         wp_enqueue_script( 'ultralove-product-carousel', get_stylesheet_directory_uri() . '/js/product-carousel.js', array(), (string) filemtime( $carousel_path ), true );
 
-        // Home page "On Sale" deals carousel (Martfury's Slick widget) as the product carousel above.
-        $deals_path = get_stylesheet_directory() . '/js/deals-carousel.js';
-        wp_enqueue_script( 'ultralove-deals-carousel', get_stylesheet_directory_uri() . '/js/deals-carousel.js', array( 'jquery', 'ultralove-product-carousel' ), (string) filemtime( $deals_path ), true );
-
         // Whole product card (padding included) clicks through to the product page.
         $card_link_path = get_stylesheet_directory() . '/js/product-card-link.js';
         wp_enqueue_script( 'ultralove-product-card-link', get_stylesheet_directory_uri() . '/js/product-card-link.js', array(), (string) filemtime( $card_link_path ), true );
@@ -944,42 +940,28 @@ function ultralove_main_menu_row() {
 }
 
 /**
- * Home page: the navigation row sits below the banner slides rather than above them. When the front
- * page's Elementor content has the home banner ([ultralove_banner group="home"] in a Shortcode widget),
- * the header template skips the row and it's printed right after that widget instead - inside the
- * banner's full-width (stretched) section, so it keeps the full page width. Without the banner the
- * header prints the row as usual.
+ * Home page (front-page.php): the navigation row sits below the banner slides rather than above them -
+ * the header template skips the row there and front-page.php prints it after the banner. Only while the
+ * UltraLove Banners plugin (which provides the banner) is active; without it the header prints the row as usual.
  */
 function ultralove_home_nav_below_banner() {
-	static $result = null;
+	return is_front_page() && shortcode_exists( 'ultralove_banner' );
+}
 
-	if ( null === $result ) {
-		$result = false;
-		if ( is_front_page() && shortcode_exists( 'ultralove_banner' ) ) {
-			$data   = get_post_meta( get_queried_object_id(), '_elementor_data', true );
-			$result = is_string( $data ) && (bool) preg_match( '/ultralove_banner\s+group=\\\\?["\']?home\b/', $data );
+/**
+ * The home page is front-page.php. Elementor's page templates (the page still has "Elementor Theme" set)
+ * swap in their own template file on template_include, so pick front-page.php after they've run.
+ */
+add_filter( 'template_include', 'ultralove_front_page_template', 99 );
+function ultralove_front_page_template( $template ) {
+	if ( is_front_page() && ! is_home() ) {
+		$front_page = locate_template( 'front-page.php' );
+		if ( $front_page ) {
+			return $front_page;
 		}
 	}
 
-	return $result;
-}
-
-add_action( 'elementor/frontend/widget/after_render', 'ultralove_print_home_nav_after_banner' );
-function ultralove_print_home_nav_after_banner( $widget ) {
-	static $done = false;
-
-	if ( $done || 'shortcode' !== $widget->get_name() || ! ultralove_home_nav_below_banner() ) {
-		return;
-	}
-	if ( ! preg_match( '/ultralove_banner\s+group=["\']?home\b/', (string) $widget->get_settings( 'shortcode' ) ) ) {
-		return;
-	}
-
-	$done = true;
-	// .site-header so the header's menu styles (all scoped to it) still apply.
-	echo '<div class="site-header ul-home-nav">';
-	ultralove_main_menu_row();
-	echo '</div>';
+	return $template;
 }
 
 /**

@@ -205,7 +205,7 @@ Template: martfury
     padding-top: 65px
 }
 
-.mf-product-deals-day .cart label,.mf-products-grid .cart label,.mf-shop-content .cart label,.product_tag-discontinued .ribbons,.product_tag-discontinued .stock {
+.ul-home-products .cart label,.mf-shop-content .cart label,.product_tag-discontinued .ribbons,.product_tag-discontinued .stock {
     display: none!important
 }
 
@@ -224,7 +224,7 @@ Template: martfury
     margin-top: 16px
 }
 
-.mf-product-deals-day .cart .quantity .qty-box,.mf-products-grid .mf-product-price-box .quantity .qty-box,.mf-shop-content .cart .quantity .qty-box {
+.ul-home-products .cart .quantity .qty-box,.mf-shop-content .cart .quantity .qty-box {
     border: 1px solid #ccc
 }
 
@@ -233,14 +233,14 @@ Template: martfury
     font-size: 13px!important
 }
 
-.mf-products-grid .mf-product-price-box .quantity {
+.ul-home-products .mf-product-price-box .quantity {
     display: inline-block!important;
     width: 38%!important;
     vertical-align: top;
     margin-top: 16px
 }
 
-.mf-product-deals-day .cart button,.mf-products-grid .mf-product-price-box button,.mf-shop-content .cart button {
+.ul-home-products .cart button,.mf-shop-content .cart button {
     display: inline-block!important;
     height: 35px!important;
     line-height: 35px!important;
@@ -249,23 +249,11 @@ Template: martfury
     letter-spacing: -1px!important
 }
 
-.mf-product-deals-day .cart button.add_to_cart_button,.mf-products-grid .mf-product-price-box button.add_to_cart_button,.mf-shop-content .cart button.add_to_cart_button {
+.ul-home-products .cart button.add_to_cart_button,.mf-shop-content .cart button.add_to_cart_button {
     color: #fff!important
 }
 
-.mf-products-grid .quantity .qty {
-    width: 22px;
-    font-size: 13px!important
-}
-
-.mf-product-deals-day .cart .quantity {
-    display: inline-block!important;
-    width: 38%!important;
-    vertical-align: top;
-    margin-top: 16px
-}
-
-.mf-product-deals-day .quantity .qty {
+.ul-home-products .quantity .qty {
     width: 22px;
     font-size: 13px!important
 }
@@ -280,7 +268,7 @@ Template: martfury
     position: relative
 }
 
-#carousel .mf-product-deals-day ul.products li.product .price {
+#carousel ul.products li.product .price {
     margin: auto!important;
     display: inline-block
 }
@@ -348,7 +336,7 @@ Template: martfury
     width: 100%!important
 }
 
-.mf-product-deals-day .header-content .cat-title {
+.ul-home-products .cat-header .cat-title {
     font-size: 24px!important
 }
 
@@ -463,10 +451,6 @@ Template: martfury
 
 .site-footer .footer-widgets:after {
     border-bottom: 1px solid rgba(130,91,165,.28)
-}
-
-.mf-products-grid .cat-header h2,.mf-products-grid .cat-header h3 {
-    font-size: 24px
 }
 
 .header-countdown,.martfury-countdown {
@@ -688,9 +672,14 @@ h1,h2,h3,h4 {
         linear-gradient(to right, #fff 0, rgba(255,255,255,.75) 4%, rgba(255,255,255,0) 12%, rgba(255,255,255,0) 88%, rgba(255,255,255,.75) 96%, #fff 100%)
 }
 
-#topcta > .elementor-container {
+#topcta > .ul-home-container {
     position: relative;
     z-index: 1
+}
+
+/* The space the Elementor column and widget wrappers used to add around the call to action's content. */
+#ctatop {
+    padding: 10px 0 8px
 }
 
 #topcta p {
@@ -707,8 +696,8 @@ h1,h2,h3,h4 {
     line-height: 1.5
 }
 
-.page-id-14 .elementor-element-28ad42c {
-    margin-bottom: 32px!important
+#topcta {
+    margin-bottom: 32px
 }
 
 @media (max-width:678px) {
@@ -1211,7 +1200,7 @@ h1,h2,h3,h4 {
 }
 
 @media (max-width:678px) {
-    #input_1_5 div,.elementor-14 .elementor-element.elementor-element-53bc313,.elementor-14 .elementor-element.elementor-element-5f89bb2 {
+    #input_1_5 div {
         margin: auto
     }
 
@@ -1417,7 +1406,8 @@ html, body {
     overflow-x: hidden;
 }
 
-.elementor-section-stretched {
+.elementor-section-stretched,
+.ul-home-bleed {
     width: 100vw !important;
     margin-left: calc(50% - 50vw) !important;
     left: 0 !important;
@@ -1465,16 +1455,14 @@ html body {
 }
 
 /*
- * Keep the content of #topcta and the #bottomcta + footer box (#hero-footer-combo) within the same
- * left/right edges as the home page product grids, while the sections themselves (and their
- * backdrop/fades) stay full width. Those grids sit in Elementor boxed containers (1170 / 970 /
- * 720px at >=1200 / >=1025 / >=768px, full width minus 15px padding below that - Martfury's
- * css/elementors/elementor.scss plus the Elementor kit's tablet width) with 10px column padding, so
- * their visible edges are 1150 / 950 / 700px wide, or 25px in from each side on phones. The
- * footer's Bootstrap .container normally has a fixed width (1170 / 970 / 750px), so it's switched
- * to width:auto + max-width here.
+ * One set of content edges for the home page sections (.ul-home-container in front-page.php: #topcta,
+ * the product lists) and the #bottomcta + footer box (#hero-footer-combo) on every page, while the
+ * sections themselves (and their backdrop/fades) stay full width: 1150 / 950 / 700px wide at >=1200 /
+ * >=1025 / >=768px, 25px in from each side on phones (the widths the home page's Elementor boxes used to
+ * have). The footer's Bootstrap .container normally has a fixed width (1170 / 970 / 750px), so it's
+ * switched to width:auto + max-width here.
  */
-#topcta > .elementor-container,
+.ul-home-container,
 #bottomcta,
 #hero-footer-combo .site-footer .container {
     width: auto;
@@ -1484,7 +1472,7 @@ html body {
 }
 
 @media (max-width:1199px) {
-    #topcta > .elementor-container,
+    .ul-home-container,
     #bottomcta,
     #hero-footer-combo .site-footer .container {
         max-width: 950px
@@ -1492,7 +1480,7 @@ html body {
 }
 
 @media (max-width:1024px) {
-    #topcta > .elementor-container,
+    .ul-home-container,
     #bottomcta,
     #hero-footer-combo .site-footer .container {
         max-width: 700px
@@ -1500,7 +1488,7 @@ html body {
 }
 
 @media (max-width:767px) {
-    #topcta > .elementor-container,
+    .ul-home-container,
     #bottomcta,
     #hero-footer-combo .site-footer .container {
         max-width: none;
@@ -1557,15 +1545,6 @@ html body {
         margin-right: 0
     }
 
-}
-
-/* #topcta's text box spans the full content width - the same edges as the product grids and the
-   footer content (see the content-width block above). Elementor's 10px column padding inside
-   #topcta is removed so the box lands exactly on those edges rather than 10px inside them. */
-#topcta > .elementor-container > .elementor-column > .elementor-widget-wrap,
-#topcta > .elementor-container > .elementor-column > .elementor-column-wrap > .elementor-widget-wrap {
-    padding-left: 0!important;
-    padding-right: 0!important
 }
 
 /* More breathing room above/below the logo + search row on desktop (the parent theme uses 20px). */
@@ -2122,27 +2101,29 @@ ul.products.slick-slider .slick-list {
     margin-bottom: -28px!important
 }
 
-/* At exactly 767px the Elementor column holding the deals carousel has no width rule (between
-   Elementor's mobile and desktop ones), and as a flex item with min-width:auto it could grow with the
-   carousel's content, which is sized from it - a loop out to tens of thousands of pixels. Let it shrink. */
-.elementor-column:has(.mf-elementor-product-deals-carousel),
-.elementor-column:has(.mf-elementor-product-deals-carousel) > .elementor-widget-wrap {
-    min-width: 0
+/* Home page product sections (front-page.php): the spacing the Elementor layout had - 10px above "On Sale",
+   the "More On-Sale Products" button 40px below the carousel, "Latest Adult Products" further down, and
+   the two links under the grid. */
+.ul-home-products {
+    padding-top: 10px
 }
 
-/* The parent theme gives the "On Sale" deals cards no padding, so the hover shadow sat right against
-   the product image and cart row. Same 20px inset as the grid cards, plus 20px below the cart row. */
-.mf-product-deals-day ul.products li.product .product-inner {
-    padding: 20px!important
+.ul-home-more {
+    margin-top: 40px;
+    text-align: center
 }
 
-.mf-product-deals-day ul.products li.product .product-inner > form.cart {
-    margin-top: auto!important;
-    padding-top: 12px
+.ul-home-latest {
+    margin-top: 65px
 }
 
-#carousel .elementor-element-65e395a {
-    margin-top: 40px!important
+.ul-home-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 25px;
+    padding-bottom: 15px
 }
 
 /* Out of stock loop items: the quantity + button row is shown disabled (see
@@ -2693,9 +2674,7 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     }
 }
 
-/* Home page navigation row, printed below the banner inside the banner's full-width Elementor section
-   (see ultralove_print_home_nav_after_banner() in functions.php). The widget wrapper there is a
-   wrapping flex row, so the row claims the full width. */
+/* Home page navigation row, printed below the banner by front-page.php. */
 .ul-home-nav {
     flex: 0 0 100%;
     width: 100%;
@@ -2703,11 +2682,10 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     z-index: 5
 }
 
-/* 24px of white below the home banner slides, between them and the navigation row. On the Elementor
-   widget wrapping the banner rather than .ub-banner-home itself, whose height is fixed by its aspect
-   ratio - a border there would crop 24px off the slides. */
-.elementor-widget:has(> .elementor-widget-container .ub-banner-home),
-.elementor-widget:has(> .elementor-shortcode .ub-banner-home) {
+/* 24px of white below the home banner slides, between them and the navigation row. On the section
+   wrapping the banner rather than .ub-banner-home itself, whose height is fixed by its aspect ratio - a
+   border there would crop 24px off the slides. */
+.ul-home-banner {
     border-bottom: 24px solid #fff
 }
 
