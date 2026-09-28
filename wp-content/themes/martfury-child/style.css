@@ -1849,6 +1849,16 @@ body:not(.shop-view-list) ul.products:not(.slick-slider) li.product {
     display: flex
 }
 
+/* 4 columns instead of the shop's 5 from 1200px (where the parent theme's .col-mf-5 starts) to 1399px:
+   in that band a fifth of the grid leaves the cart row too narrow and the buttons' labels are cut off
+   ("Add to cart" up to ~1330px, the wider "Out of stock" up to ~1380px). Flex-wrapped grid, so only
+   the width changes. The carousels size their own cards (width:auto!important) and aren't affected. */
+@media (min-width: 1200px) and (max-width: 1399.98px) {
+    ul.products.columns-5 > li.product.col-mf-5 {
+        width: 25%
+    }
+}
+
 /* 10px corners (as on the shop sidebar and toolbar cards) so the card's edge follows the rounded
    corners of its hover glow - a blurred shadow always rounds off square corners. */
 body:not(.shop-view-list) ul.products li.product .product-inner {
