@@ -2230,7 +2230,7 @@ section.up-sells .related-title,
  * no .slick-slider class, so the grid card rules above apply as is (flex cards, hover shadow, fixed
  * title box, cart row). What tells visitors it scrolls sideways:
  *  - the edge(s) with more cards beyond fade out,
- *  - round previous/next buttons over the product images, hidden at either end,
+ *  - round previous/next buttons over the product images (wrapping round at either end),
  *  - a progress bar under the cards, sized to the share in view.
  */
 /* Cards per view match the product grid's columns at every width (2, 3 from 768px, 4 from 1200px, 5
@@ -2346,9 +2346,10 @@ section.up-sells .related-title,
 }
 
 /* Previous/next: solid brand-pink circles like the site's other buttons, with a slight plum shadow
-   that drops deeper on hover as the circle lifts, vertically centred on the cards (the carousel's height less the 30px progress bar
-   below them - the arrows only show when it does), straddling the carousel's edges where there's room
-   and just inside them otherwise. Hidden at either end, and on phones (swipe instead). */
+   that drops deeper on hover as the circle lifts, vertically centred on the cards (the carousel's
+   height less the 30px progress bar below them - the arrows only show when it does), straddling the
+   carousel's edges where there's room and just inside them otherwise. Hidden when there's nothing to
+   scroll, and on phones (swipe instead). */
 /* The arrows are the button system's primary icon buttons (ul-btn ul-btn--primary ul-btn--icon - colours,
    border, 46px circle, focus ring; see "Buttons" below); here only their placement and motion. */
 .ul-carousel__arrow {

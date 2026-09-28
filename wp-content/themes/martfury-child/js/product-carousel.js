@@ -1,11 +1,13 @@
 /**
- * Product carousel - related products, upsells and the footer's recently viewed products
+ * Product carousel - the home page's "On Sale" deals, related products, upsells and the footer's
+ * recently viewed products
  * (.ul-carousel[data-ul-carousel] around a standard ul.products list; styles in style.css).
  *
  * The list itself is the scroller (native horizontal scrolling with scroll-snap), so touch swipe,
  * trackpads and the browser's own keyboard/focus scrolling all work, and the cards keep the product
  * grid's CSS. This script adds what makes it read as a carousel and drive like one:
- *  - previous/next buttons that page by the number of whole cards in view (hidden at either end),
+ *  - previous/next buttons that page by the number of whole cards in view, and wrap round at either
+ *    end (next from the last cards goes back to the first, previous from the first to the last),
  *  - a progress bar under the cards (click to jump, drag the thumb to scrub),
  *  - start/end state classes for the fade on whichever edge has more cards,
  *  - mouse drag-to-scroll (a drag doesn't also click the card under the pointer),
@@ -95,8 +97,10 @@
             root.classList.toggle('is-scrollable', scrollable);
             root.classList.toggle('is-at-start', atStart);
             root.classList.toggle('is-at-end', atEnd);
-            prev.disabled = !scrollable || atStart;
-            next.disabled = !scrollable || atEnd;
+            prev.disabled = !scrollable;
+            next.disabled = !scrollable;
+            prev.setAttribute('aria-label', atStart ? 'Go to the last products' : 'Previous products');
+            next.setAttribute('aria-label', atEnd ? 'Back to the first products' : 'Next products');
 
             thumb.style.width = (ratio * 100) + '%';
             thumb.style.transform = 'translateX(' + (progress * (1 - ratio) / ratio * 100) + '%)';
@@ -118,12 +122,21 @@
             track.scrollTo({left: Math.round(track.scrollLeft / width) * width, behavior: scrollBehavior()});
         }
 
+        // At either end the buttons wrap round to the other end.
         prev.addEventListener('click', function () {
-            scrollByCards(-1, pageWidth());
+            if (track.scrollLeft <= 2) {
+                track.scrollTo({left: maxScroll(), behavior: scrollBehavior()});
+            } else {
+                scrollByCards(-1, pageWidth());
+            }
         });
 
         next.addEventListener('click', function () {
-            scrollByCards(1, pageWidth());
+            if (track.scrollLeft >= maxScroll() - 2) {
+                track.scrollTo({left: 0, behavior: scrollBehavior()});
+            } else {
+                scrollByCards(1, pageWidth());
+            }
         });
 
         root.addEventListener('keydown', function (event) {
