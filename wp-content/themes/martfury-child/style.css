@@ -1661,7 +1661,7 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
     .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
     .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
     .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button,
-    ul.products li.product form.cart button,
+    ul.products li.product form.cart button, .am-collect-media button, .cwgstock_button,
     .ul-btn--secondary, .cwg_popup_submit, .btn-secondary,
     .ul-btn--tertiary, .show-password-input
 ) {
@@ -3199,6 +3199,11 @@ body .swal2-container .swal2-popup {
     color: #4a3558
 }
 
+body .swal2-container :is(.swal2-content, .swal2-html-container) {
+    margin: 0;
+    padding: 0
+}
+
 body .swal2-container .swal2-close {
     color: #3b1d4a;
     font-weight: 300
@@ -3226,8 +3231,7 @@ body .cwginstock-subscribe-form :is(.panel, .panel-primary, .panel-heading, .pan
     color: #3b1d4a
 }
 
-.cwginstock-subscribe-form .row,
-.cwginstock-subscribe-form [class*="col-"] {
+body .cwginstock-subscribe-form :is(.row, [class*="col-"]) {
     margin: 0;
     padding: 0
 }
