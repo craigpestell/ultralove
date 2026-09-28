@@ -10,7 +10,7 @@ if ( ! shortcode_exists( 'ultralove_banner' ) ) {
 <div class="sideslidertopmobile">
     <?php echo do_shortcode('[ultralove_banner group="menu-bar"]'); ?>
 </div>
-<div class="header-main-row">
+<div class="header-main-row <?php echo martfury_header_container_classes(); ?>">
 <div class="header-main">
     <div class="<?php echo martfury_header_container_classes(); ?>">
         <div class="row header-row">

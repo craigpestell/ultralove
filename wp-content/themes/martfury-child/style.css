@@ -1372,9 +1372,17 @@ h1,h2,h3,h4 {
     align-items: center;
 }
 
+/* The row is the page container (.martfury-container - see "Content edges"), so the logo starts and the
+   header banner ends on the same edges as the menu, breadcrumbs, content and footer. The container nested
+   inside .header-main adds no padding of its own, so the logo lands exactly on that edge. */
 .header-main-row .header-main {
     float: none;
-    padding-left: 20px;
+    padding-left: 0;
+}
+
+.header-main-row .header-main > .martfury-container {
+    padding-left: 0;
+    padding-right: 0;
 }
 
 .header-main-row .sideslidertop {
