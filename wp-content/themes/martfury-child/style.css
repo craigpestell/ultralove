@@ -1849,10 +1849,13 @@ body:not(.shop-view-list) ul.products:not(.slick-slider) li.product {
     display: flex
 }
 
+/* 10px corners (as on the shop sidebar and toolbar cards) so the card's edge follows the rounded
+   corners of its hover glow - a blurred shadow always rounds off square corners. */
 body:not(.shop-view-list) ul.products li.product .product-inner {
     display: flex;
     flex-direction: column;
     width: 100%;
+    border-radius: 10px;
     transition: box-shadow .2s ease
 }
 
