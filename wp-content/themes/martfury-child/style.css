@@ -1607,8 +1607,8 @@ html body {
 /* More breathing room above/below the logo + search row on desktop (the parent theme uses 20px). */
 @media (min-width:992px) {
     .site-header .header-main {
-        padding-top: 32px!important;
-        padding-bottom: 32px!important
+        padding-top: 24px!important;
+        padding-bottom: 24px!important
     }
 }
 
