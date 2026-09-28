@@ -1176,11 +1176,12 @@ h1,h2,h3,h4 {
     }
 }
 
-/* Three columns (from 992px): the columns' pills (.widget-title) form one row and their cards another - a
+/* Three columns (from 1025px - where the footer box widens to 950px; see the #topcta / footer edges): the
+   columns' pills (.widget-title) form one row and their cards another - a
    two-row grid the columns and their widget pass through (subgrid) - so the pills line up along the row's
    bottom even when one wraps to two lines, and the cards all start on the same line below them. Same
    column widths and spacing as the parent theme's flex row (32% each, spread across the row). */
-@media (min-width: 992px) {
+@media (min-width: 1025px) {
     .site-footer .footer-widgets {
         display: grid;
         grid-template-columns: repeat(3, 32%);
@@ -1213,8 +1214,9 @@ h1,h2,h3,h4 {
 }
 
 /* Footer columns go straight from 3 across to 1 stacked - never 2 (the parent theme drops to
-   width:50% columns in between, which left the Email Us form alone on a second row). */
-@media (max-width:991px) {
+   width:50% columns in between, which left the Email Us form alone on a second row) - at the same
+   width the footer box narrows to 700px (1024px), so three columns never share that narrow box. */
+@media (max-width:1024px) {
     .site-footer .footer-widgets .footer-sidebar {
         width: 100%;
         flex: 0 0 100%;
