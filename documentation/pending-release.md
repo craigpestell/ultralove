@@ -22,19 +22,26 @@ Run on the production app server from `/var/www/html`, as `sudo -u www-data wp .
    wp post get 16575 --field=post_content > /root/brands-page-content-before-shortcode-$(date +%Y%m%d%H%M%S).html
    wp post update 16575 --post_content='[ultralove_brand_grid]'
    ```
-2. **Deactivate Elementor** - nothing renders with it any more (home = `front-page.php`, the other
+2. **Contact Us page (post 70)** - its form (Gravity Forms #3) came from an Elementor widget; add it to
+   the page content, after the text:
+   ```bash
+   wp post get 70 --field=post_content > /root/contact-page-content-before-form-$(date +%Y%m%d%H%M%S).html
+   { wp post get 70 --field=post_content; printf '\n\n[gravityform id="3" title="false" description="false"]\n'; } > /tmp/contact.html
+   wp post update 70 /tmp/contact.html
+   ```
+3. **Deactivate Elementor** - nothing renders with it any more (home = `front-page.php`, the other
    former Elementor pages are plain page content):
    ```bash
    wp plugin deactivate elementor
    ```
-3. **Flush the object cache**: `wp cache flush`
-4. **Check** `/`, `/brands/` (73 brands with names), `/contact-us/`, `/sale-products/`, `/shop/`,
+4. **Flush the object cache**: `wp cache flush`
+5. **Check** `/`, `/brands/` (73 brands with names), `/contact-us/` (the contact form), `/sale-products/`, `/shop/`,
    `/my-account/`, `/become-a-retailer/`, a product page: 200, no PHP errors.
-5. **Cloudflare**: purge `https://ultralove.ca/` and `https://ultralove.ca/brands/` (cached HTML), in the
+6. **Cloudflare**: purge `https://ultralove.ca/`, `https://ultralove.ca/brands/` and `https://ultralove.ca/contact-us/` (cached HTML), in the
    dashboard (Caching > Configuration > Custom Purge).
 
-Rollback: reactivate Elementor (`wp plugin activate elementor`), restore the Brands content from the
-backup file, redeploy the previous code.
+Rollback: reactivate Elementor (`wp plugin activate elementor`), restore the Brands and Contact Us content from the
+backup files, redeploy the previous code.
 
 ## Already on production (not part of the release)
 
