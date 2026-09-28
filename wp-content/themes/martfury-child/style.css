@@ -1856,10 +1856,10 @@ body:not(.shop-view-list) ul.products li.product .product-inner {
     transition: box-shadow .2s ease
 }
 
-/* Hover: the same purple shadow as the #topcta and footer pills - the only hover effect on the card (no
-   growing card or zooming image). */
+/* Hover: the same even purple glow as the #topcta and footer pills (--ul-purple-shadow) - the only
+   hover effect on the card (no growing card or zooming image). */
 body:not(.shop-view-list) ul.products li.product .product-inner:hover {
-    box-shadow: 0 6px 18px rgba(177,101,255,.35)
+    box-shadow: var(--ul-purple-shadow)
 }
 
 /* The theme's jQuery UI tooltips (e.g. "Quick View" over the thumbnail icons) are appended to <body>,
