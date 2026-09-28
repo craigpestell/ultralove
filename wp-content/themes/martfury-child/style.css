@@ -2345,6 +2345,20 @@ section.up-sells .related-title,
     transform: translateY(-50%) scale(1.06)
 }
 
+/* Arrow colours inverted from the tertiary button: a white arrow on a filled plum circle (pink on
+   hover), with the border in the circle's colour so it reads as one solid disc. */
+:is(#page, #mf-quick-view-modal) .ul-carousel__arrow {
+    color: #fff;
+    background: var(--ul-btn-plum);
+    border-color: var(--ul-btn-plum)
+}
+
+:is(#page, #mf-quick-view-modal) .ul-carousel__arrow:is(:hover, :focus-visible) {
+    color: #fff;
+    background: var(--ul-btn-pink);
+    border-color: var(--ul-btn-pink)
+}
+
 .ul-carousel__arrow:disabled,
 .ul-carousel:not(.is-scrollable) .ul-carousel__arrow {
     opacity: 0;
