@@ -143,28 +143,25 @@ body.ub-hero-combo .elementor-section:has(> .elementor-container .ub-banner-home
 }
 
 /* Saved crop shown with CSS, when Cloudinary can't crop the image (dev, or an image not synced yet -
-   see ub_css_crop()). The .ub-crop box has the crop's shape and is fitted into the slide the way
-   object-fit: contain fits a Cloudinary-cropped image; the whole image sits inside it, sized and
-   offset inline so only the crop area shows. The slide is the size container the fit is measured
-   against. The selector outranks .ub-banner-home/.ub-banner-menu-bar .ub-banner-img. */
+   see ub_css_crop()). The .ub-crop box has the crop's shape and its width (set inline) fits it into
+   the slide the way object-fit: contain fits a Cloudinary-cropped image; the whole image sits inside
+   it, sized and offset inline with negative margins so only the crop area shows. The image stays in
+   normal flow because the header strip takes its width from its content. The selector outranks
+   .ub-banner-home/.ub-banner-menu-bar .ub-banner-img. */
 .ub-banner-slide--cropped {
-	container-type: size;
 	display: flex;
 	align-items: center;
 	justify-content: center;
 }
 
 .ub-crop {
-	position: relative;
 	display: block;
 	flex: none;
 	overflow: hidden;
-	aspect-ratio: var(--ub-crop-ratio);
-	width: min(100cqw, 100cqh * var(--ub-crop-ratio));
 }
 
 .ub-banner .ub-crop > .ub-banner-img {
-	position: absolute;
+	height: auto;
 	max-width: none;
 	object-fit: fill;
 }
