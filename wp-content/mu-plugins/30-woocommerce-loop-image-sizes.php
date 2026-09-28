@@ -10,10 +10,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Martfury product grid breakpoints (see wp-content/themes/martfury/css/responsive.scss
- * and bootstrap.min.css): 2 columns below 768px (full-bleed, no fixed container), 3 columns
- * from 768px-1199px (Bootstrap .container width 750-970px), 5 columns at 1200px+
- * (.container width 1170px, ~230px per column after gutters).
+ * Product card widths (see "Product grids and carousels - one sizing rule" in the child theme's
+ * style.css): every grid and carousel shows as many cards as fit its container at 215px or more, never
+ * fewer than 2 - so cards are half the width below 576px, and about 215-290px wide everywhere else.
  */
 add_filter(
 	'wp_calculate_image_sizes',
@@ -32,7 +31,7 @@ add_filter(
 			return $sizes;
 		}
 
-		return '(max-width: 767px) 50vw, (max-width: 1199px) 33vw, 230px';
+		return '(max-width: 575px) 50vw, 290px';
 	},
 	10,
 	2
