@@ -2915,6 +2915,13 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     outline: 0
 }
 
+/* The Register tab only links to the wholesale signup (WooCommerce's own register form is hidden above):
+   centre that button under its heading. */
+.woocommerce .customer-login .tabs-panel > .footlink {
+    display: table;
+    margin: 0 auto
+}
+
 .woocommerce .customer-login .lost-password,
 .woocommerce .customer-login .woocommerce-privacy-policy-text a {
     color: var(--ul-btn-pink)
