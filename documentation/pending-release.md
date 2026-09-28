@@ -43,6 +43,14 @@ Run on the production app server from `/var/www/html`, as `sudo -u www-data wp .
 Rollback: reactivate Elementor (`wp plugin activate elementor`), restore the Brands and Contact Us content from the
 backup files, redeploy the previous code.
 
+## Optional
+
+- **UltraLove Backdrops** (new plugin, deployed with the code) - Appearance > Backdrops picks the call to
+  action's and the footer box's backdrop styles. Inactive until activated (`wp plugin activate
+  ultralove-backdrops`); while active it outputs nothing until a non-default style is saved, so activating
+  it changes nothing by itself. On dev it's active for trying styles out; carry over the chosen styles by
+  saving the same choices on production.
+
 ## Already on production (not part of the release)
 
 - Home page call to action: "UltraLove" -> "Ultra Love" (Elementor data of post 14, 2026-09-28). The
