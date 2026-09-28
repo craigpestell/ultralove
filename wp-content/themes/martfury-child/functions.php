@@ -475,21 +475,6 @@ add_action( 'woocommerce_account_dashboard', function() {
 
 	ob_start();
 ?>
-<style>
-button[name="collect-media"] {
-  background-color: var(--mf-background-primary-color);
-  color: var(--mf-background-primary-text-color);
-  height: 50px;
-  line-height: 50px;
-  padding: 0 25px;
-  transition: all 0.5s;
-  font-size: 16px;
-  font-weight: 600;
-  text-align: center;
-  border: none;
-  border-radius: 0;
-}
-</style>
 <p>Thank you for choosing Ultra Love as your adult product supplier. We truly appreciate your business.</p>
 <p><a class="button" target="_blank" href="https://ultralove.ca/export-stock">Download the Latest Stock level export file</a></p>
 <p><?= do_shortcode( '[am-collect-media]' ) ?></p>
