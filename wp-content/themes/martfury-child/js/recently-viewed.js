@@ -129,9 +129,21 @@
         }
     }
 
+    // YITH Wishlist renders each card's Add to favourites button as an empty placeholder
+    // (.wishlist-fragment) and fills them all in one request at page load - before these cards
+    // arrive. Ask it to fill the ones in the recently viewed block too.
+    function loadWishlistButtons() {
+        $('#footer-recently-viewed, #footer-bot-recently-viewed').each(function () {
+            if ($(this).find('.wishlist-fragment').length) {
+                $(document).trigger('yith_wcwl_reload_fragments', {container: $(this), firstLoad: false});
+            }
+        });
+    }
+
     $(document).ajaxComplete(function (event, xhr, settings) {
         if (/martfury_footer_recently_viewed/.test(settings.url || '')) {
             initCardsCarousel();
+            loadWishlistButtons();
         }
     });
 
