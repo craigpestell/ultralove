@@ -672,7 +672,7 @@ h1,h2,h3,h4 {
         linear-gradient(to right, #fff 0, rgba(255,255,255,.75) 4%, rgba(255,255,255,0) 12%, rgba(255,255,255,0) 88%, rgba(255,255,255,.75) 96%, #fff 100%)
 }
 
-#topcta > .ul-home-container {
+#topcta > .martfury-container {
     position: relative;
     z-index: 1
 }
@@ -1456,47 +1456,11 @@ html body {
 }
 
 /*
- * One set of content edges for the home page sections (.ul-home-container in front-page.php: #topcta,
- * the product lists) and the #bottomcta + footer box (#hero-footer-combo) on every page, while the
- * sections themselves (and their backdrop/fades) stay full width: 1150 / 950 / 700px wide at >=1200 /
- * >=1025 / >=768px, 25px in from each side on phones (the widths the home page's Elementor boxes used to
- * have). The footer's Bootstrap .container normally has a fixed width (1170 / 970 / 750px), so it's
- * switched to width:auto + max-width here.
+ * Content edges: every section of every page - the header, the page content, the home page sections
+ * (front-page.php), #bottomcta and the footer - sits in Martfury's page container (.martfury-container:
+ * the window less 30px of padding each side, 15px on phones, 1650px wide at most), so all content shares
+ * one set of edges and product lists get their width (and card count) from it.
  */
-.ul-home-container,
-#bottomcta,
-#hero-footer-combo .site-footer .container {
-    width: auto;
-    max-width: 1150px;
-    margin-left: auto;
-    margin-right: auto
-}
-
-@media (max-width:1199px) {
-    .ul-home-container,
-    #bottomcta,
-    #hero-footer-combo .site-footer .container {
-        max-width: 950px
-    }
-}
-
-@media (max-width:1024px) {
-    .ul-home-container,
-    #bottomcta,
-    #hero-footer-combo .site-footer .container {
-        max-width: 700px
-    }
-}
-
-@media (max-width:767px) {
-    .ul-home-container,
-    #bottomcta,
-    #hero-footer-combo .site-footer .container {
-        max-width: none;
-        margin-left: 25px;
-        margin-right: 25px
-    }
-}
 
 /* Turnstile's flexible widget has a 300px minimum width; cap it at the form card's width so it
    can't overflow the card where the footer columns are narrower than that (~992-1199px). */
@@ -1520,32 +1484,6 @@ html body {
     #bottomcta h2 {
         margin-bottom: 34px!important
     }
-}
-
-/* Footer content edges: everything in the footer (cards, dividers, the links row) and #bottomcta's
-   pill/buttons sit within the product grid's edges at every width - see the content-width block
-   above, which also constrains #bottomcta. At >=1025px the Bootstrap gutters already line up; below that the footer container's own
-   15px padding pushed content 15px inside the grid, and on phones the parent theme also drops the
-   row's -15px margin, which left the cards at one inset and the dividers/links at another. */
-@media (max-width:1024px) {
-    #hero-footer-combo .site-footer .container {
-        padding-left: 0;
-        padding-right: 0
-    }
-}
-
-@media (max-width:767px) {
-    .site-footer .footer-widgets:before,
-    .site-footer .footer-widgets:after {
-        left: 0!important;
-        right: 0!important
-    }
-
-    #footer-links {
-        margin-left: 0;
-        margin-right: 0
-    }
-
 }
 
 /* More breathing room above/below the logo + search row on desktop (the parent theme uses 20px). */
@@ -2135,18 +2073,6 @@ ul.products.slick-slider .slick-list {
     margin-top: 65px
 }
 
-/* From 1200px the product sections are as wide as the product pages' and the shop grid's content (see
-   "Large screens (>=1200px)" further up: 0.81 x min(width - 30px, 1680px) - 30px), but never narrower than
-   the 1150px the rest of the home page uses - so they fill 1150px up to ~1487px, then grow, and like every
-   other product list reach 6 cards across from ~1660px (a 1290px container - the column rule's 6th step).
-   The call to action above and #bottomcta / the footer below keep the 1150px edges. */
-@media (min-width: 1200px) {
-    .ul-home-products > .ul-home-container {
-        width: max(1150px, calc(0.81 * min(100% - 30px, 1680px) - 30px));
-        max-width: none
-    }
-}
-
 .ul-home-links {
     display: flex;
     flex-wrap: wrap;
@@ -2192,27 +2118,6 @@ ul.products li.product form.cart label.label {
 body:not(.home) #content .elementor-section.elementor-section-boxed > .elementor-container {
     width: auto;
     max-width: none
-}
-
-/*
- * Large screens (>=1200px): the product page's content, the related products / upsells carousels and the
- * recently viewed carousel - on every page it appears on, the shop included - sit in a narrower column with
- * wider side margins, all the same: the shop's product grid width, so their cards are the grid's card size.
- * The breadcrumbs keep the site-wide page container, like on every other page. The shop puts the
- * grid in an 81% column of a row that's the viewport minus 30px, capped at 1680px, less the column's 15px
- * padding each side: 0.81 x min(width - 30px, 1680px) - 30px of content, e.g. 1112px at 1440, 1331px at
- * 1920. The container keeps its 30px side padding around that.
- */
-@media (min-width: 1200px) {
-    .single-product #content > .martfury-container,
-    section.related > .martfury-container,
-    #footer-recently-viewed > .container,
-    #footer-recently-viewed > .rv-container {
-        width: calc(0.81 * min(100% - 30px, 1680px) - 30px + 60px);
-        max-width: none;
-        padding-left: 30px;
-        padding-right: 30px
-    }
 }
 
 /* Classic (non-Elementor) pages - e.g. Buy Wholesale, About, Ordering Info, My Account, Checkout - inset

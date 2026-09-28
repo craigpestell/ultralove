@@ -14,10 +14,11 @@
 
 <div id="hero-footer-combo">
 <div id="bottomcta">
+<div class="martfury-container">
 <h2>
 		Ordering wholesale products has never been easier.</h2>
 <div class="ul-cta-buttons"><a href="/shop/"> View Products </a> <a href="/become-a-retailer/">Wholesale Signup </a></div>
-
+</div>
 </div>
 <?php if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_location( 'footer' ) ) {
 	?>

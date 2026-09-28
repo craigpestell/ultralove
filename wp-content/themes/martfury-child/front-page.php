@@ -3,7 +3,7 @@
  * Home page, built in the theme rather than Elementor. The call to action's text is edited here.
  *
  * Sections, top to bottom - all full width (they break out of the page's Bootstrap .container), their
- * content in .ul-home-container, which has the same edges as #bottomcta and the footer (see style.css):
+ * content in the page container (.martfury-container), like every other section of the site:
  *  - the rotating banner (UltraLove Banners, group "home") and the navigation row below it (the header
  *    leaves the row out on this page - ultralove_home_nav_below_banner());
  *  - #topcta: heading, intro and the two main buttons on the aurora backdrop (which UltraLove Banners
@@ -27,7 +27,7 @@ get_header();
     </div>
 
     <section id="topcta" class="ul-home-bleed">
-        <div class="ul-home-container">
+        <div class="martfury-container">
             <div id="ctatop">
                 <div class="ul-home-cta-content">
                     <h1>Adult Wholesale Canada</h1>
@@ -40,7 +40,7 @@ get_header();
     </section>
 
     <section id="carousel" class="ul-home-bleed ul-home-products">
-        <div class="ul-home-container">
+        <div class="martfury-container">
             <div class="ul-home-section ul-home-sale">
                 <div class="cat-header">
                     <h2 class="cat-title">On Sale</h2>
