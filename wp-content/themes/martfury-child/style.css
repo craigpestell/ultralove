@@ -294,18 +294,8 @@ Template: martfury
     display: inherit
 }
 
-.cwgstock_button,.woocommerce .ribbons .ribbon {
+.woocommerce .ribbons .ribbon {
     background-color: #b3094b
-}
-
-.cwginstock-subscribe-form .panel-primary>.panel-heading {
-    color: #fff;
-    background-color: #b3094b;
-    border-color: #b3094b
-}
-
-.cwginstock-subscribe-form .panel-primary {
-    border-color: #b3094b
 }
 
 .woocommerce.shop-view-list ul.products:not(.slick-slider) li.product .mf-product-details h2 {
@@ -1647,7 +1637,8 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
  * Markup the child theme outputs carries the classes (Out of stock, the carousel arrows, "Shop Now");
  * buttons from the theme and plugins (WooCommerce, Gravity Forms, Elementor, Back In Stock Notifier) join
  * the same tiers through the selector lists below (product card buttons are listed on their own: the related
- * products and recently viewed carousels sit outside .site-content). Every rule is ":is(#page, #mf-quick-view-modal) :where(...)"
+ * products and recently viewed carousels sit outside .site-content). Every rule is ":is(#page, #mf-quick-view-modal, .swal2-container) :where(...)" (the page, the quick view
+ * popup, and SweetAlert dialogs such as Notify me, which are appended outside #page)
  * - :where() adds nothing, so every rule weighs exactly one id: enough to beat the theme's and plugins'
  * button rules without !important, and within the system the tiers apply in source order (base, variant,
  * size, state). The header's Search button (joined to its field) is left out, as is the image lightbox.
@@ -1665,7 +1656,7 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
 }
 
 /* Base - every button in the system (all the tiers' members). */
-:is(#page, #mf-quick-view-modal) :where(
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(
     .ul-btn,
     .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
     .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
@@ -1698,7 +1689,7 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
     transition: background-color .2s ease, border-color .2s ease, color .2s ease, opacity .2s ease, visibility .2s ease, transform .15s ease
 }
 
-:is(#page, #mf-quick-view-modal) :where(
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(
     .ul-btn,
     .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
     .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
@@ -1712,22 +1703,22 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
 }
 
 /* Primary. */
-:is(#page, #mf-quick-view-modal) :where(
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(
     .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
     .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
     .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button,
-    ul.products li.product form.cart button, .am-collect-media button
+    ul.products li.product form.cart button, .am-collect-media button, .cwgstock_button
 ) {
     color: #fff;
     background: var(--ul-btn-pink);
     border-color: var(--ul-btn-pink)
 }
 
-:is(#page, #mf-quick-view-modal) :where(
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(
     .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
     .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
     .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button,
-    ul.products li.product form.cart button, .am-collect-media button
+    ul.products li.product form.cart button, .am-collect-media button, .cwgstock_button
 ):is(:hover, :focus-visible) {
     color: #fff;
     background: var(--ul-btn-pink-dark);
@@ -1735,7 +1726,7 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
 }
 
 /* Secondary (after primary: some of its members are also WooCommerce .buttons). */
-:is(#page, #mf-quick-view-modal) :where(
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(
     .ul-btn--secondary, .cwg_popup_submit, .btn-secondary,
     button[name="update_cart"], button[name="apply_coupon"], .widget_shopping_cart .buttons .button:not(.checkout)
 ) {
@@ -1744,7 +1735,7 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
     border-color: var(--ul-btn-pink)
 }
 
-:is(#page, #mf-quick-view-modal) :where(
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(
     .ul-btn--secondary, .cwg_popup_submit, .btn-secondary,
     button[name="update_cart"], button[name="apply_coupon"], .widget_shopping_cart .buttons .button:not(.checkout)
 ):is(:hover, :focus-visible) {
@@ -1754,20 +1745,20 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
 }
 
 /* Tertiary. */
-:is(#page, #mf-quick-view-modal) :where(.ul-btn--tertiary, .show-password-input) {
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(.ul-btn--tertiary, .show-password-input) {
     color: var(--ul-btn-plum);
     background: #fff;
     border-color: var(--ul-btn-lavender)
 }
 
-:is(#page, #mf-quick-view-modal) :where(.ul-btn--tertiary, .show-password-input):is(:hover, :focus-visible) {
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(.ul-btn--tertiary, .show-password-input):is(:hover, :focus-visible) {
     color: var(--ul-btn-pink);
     background: #fff;
     border-color: var(--ul-btn-pink)
 }
 
 /* Sizes (the default, 44px, is the base's). */
-:is(#page, #mf-quick-view-modal) :where(
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(
     .ul-btn--sm, .footlink, .site-footer .gform_button, ul.products li.product form.cart button,
     .ul-notify-row .cwg_popup_submit, .widget_shopping_cart .buttons .button, .show-password-input
 ) {
@@ -1775,13 +1766,13 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
     padding: 6px 16px
 }
 
-:is(#page, #mf-quick-view-modal) :where(.ul-btn--lg, #topcta a, #bottomcta a, .elementor-button) {
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(.ul-btn--lg, #topcta a, #bottomcta a, .elementor-button) {
     min-height: 54px;
     padding: 12px 32px;
     font-size: 20px
 }
 
-:is(#page, #mf-quick-view-modal) :where(.ul-btn--icon) {
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(.ul-btn--icon) {
     width: 46px;
     height: 46px;
     min-height: 0;
@@ -1793,7 +1784,7 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
    password field - borderless there, 34px, the eye drawn in the text colour (plum, pink on hover), crossed
    out while the password is shown (.display-password). WooCommerce's own icon comes from its stylesheet,
    which Martfury doesn't load, so it was an empty box. */
-:is(#page, #mf-quick-view-modal) :where(.password-input .show-password-input) {
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(.password-input .show-password-input) {
     top: calc(50% - 17px);
     right: 8px;
     width: 34px;
@@ -1803,7 +1794,7 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
     border-color: transparent
 }
 
-:is(#page, #mf-quick-view-modal) :where(.password-input .show-password-input):is(:hover, :focus-visible) {
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(.password-input .show-password-input):is(:hover, :focus-visible) {
     border-color: transparent
 }
 
@@ -1822,11 +1813,11 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
 }
 
 /* Disabled: greyed, no hover or pointer (the carousel arrows fade out instead - see the carousel). */
-:is(#page, #mf-quick-view-modal) :where(
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(
     .ul-out-of-stock-button, .ul-btn:disabled:not(.ul-btn--icon), .ul-btn.disabled,
     .site-content button.button:disabled, .site-content .button.disabled, .gform_wrapper .gform_button:disabled
 ),
-:is(#page, #mf-quick-view-modal) :where(
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(
     .ul-out-of-stock-button, .ul-btn:disabled:not(.ul-btn--icon), .ul-btn.disabled,
     .site-content button.button:disabled, .site-content .button.disabled, .gform_wrapper .gform_button:disabled
 ):is(:hover, :focus-visible) {
@@ -2375,12 +2366,12 @@ section.up-sells .related-title,
 /* The shadow carries the button system's id weight (and its transition list, plus box-shadow) - the
    base .ul-btn rule sets box-shadow:none at that weight. On hover the circle scales up as if lifted, so
    its shadow drops further and spreads softer to match. */
-:is(#page, #mf-quick-view-modal) .ul-carousel__arrow {
+:is(#page, #mf-quick-view-modal, .swal2-container) .ul-carousel__arrow {
     box-shadow: 0 4px 10px rgba(59,29,74,.3);
     transition: background-color .2s ease, border-color .2s ease, color .2s ease, opacity .2s ease, visibility .2s ease, transform .15s ease, box-shadow .15s ease
 }
 
-:is(#page, #mf-quick-view-modal) .ul-carousel__arrow:is(:hover, :focus-visible) {
+:is(#page, #mf-quick-view-modal, .swal2-container) .ul-carousel__arrow:is(:hover, :focus-visible) {
     box-shadow: 0 8px 18px rgba(59,29,74,.28)
 }
 
@@ -3031,12 +3022,13 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
 
 /*
  * Form fields - one style for the site's forms: log in / register and every My account form (addresses,
- * account details) and the form pages' Gravity Forms (Buy Wholesale, Contact Us). 44px, lavender border,
+ * account details), the form pages' Gravity Forms (Buy Wholesale, Contact Us) and the Notify me dialog. 44px, lavender border,
  * 5px corners, and the lavender focus ring.
  */
 :is(
     .woocommerce-account .woocommerce form :is(.input-text, select, textarea),
-    #content .entry-content > .gform_wrapper :is(input[type="text"], input[type="email"], input[type="tel"], input[type="password"], select, textarea)
+    #content .entry-content > .gform_wrapper :is(input[type="text"], input[type="email"], input[type="tel"], input[type="password"], select, textarea),
+    .cwginstock-subscribe-form :is(input[type="text"], input[type="email"], input[type="tel"])
 ) {
     min-height: 44px;
     padding: 8px 12px;
@@ -3049,7 +3041,8 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
 
 :is(
     .woocommerce-account .woocommerce form :is(.input-text, select, textarea),
-    #content .entry-content > .gform_wrapper :is(input[type="text"], input[type="email"], input[type="tel"], input[type="password"], select, textarea)
+    #content .entry-content > .gform_wrapper :is(input[type="text"], input[type="email"], input[type="tel"], input[type="password"], select, textarea),
+    .cwginstock-subscribe-form :is(input[type="text"], input[type="email"], input[type="tel"])
 ):focus {
     border-color: rgb(177,101,255);
     box-shadow: 0 0 0 3px rgba(177,101,255,.18);
@@ -3184,4 +3177,83 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
 .woocommerce-account .woocommerce .woocommerce-MyAccount-content .shop_table thead th {
     color: #3b1d4a;
     background: rgba(177,101,255,.06)
+}
+
+/*
+ * Dialogs - SweetAlert2 popups (e.g. Back In Stock Notifier's "Notify me when available"): the site's card
+ * - white, lavender border, purple glow, 10px corners - over a plum-tinted backdrop, with a plum close
+ * button (pink on hover). Inside, the notifier's form drops its Bootstrap panel chrome: a plum heading,
+ * the shared form fields, a full-width primary button (the button system), and its result messages in
+ * tinted boxes rather than bare green / red text.
+ */
+body .swal2-container.swal2-backdrop-show {
+    background: rgba(59,29,74,.45)
+}
+
+body .swal2-container .swal2-popup {
+    padding: 28px 30px 30px;
+    border: 1px solid rgb(177,101,255);
+    border-radius: 10px;
+    box-shadow: var(--ul-purple-shadow);
+    color: #4a3558
+}
+
+body .swal2-container .swal2-close {
+    color: #3b1d4a;
+    font-weight: 300
+}
+
+body .swal2-container .swal2-close:is(:hover, :focus-visible) {
+    color: var(--ul-btn-pink);
+    box-shadow: none
+}
+
+.cwginstock-subscribe-form .panel,
+.cwginstock-subscribe-form .panel-heading,
+.cwginstock-subscribe-form .panel-body {
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: 0;
+    box-shadow: none
+}
+
+.cwginstock-subscribe-form .panel-heading h4 {
+    margin: 0 0 22px;
+    font-size: 22px;
+    font-weight: 300;
+    line-height: 1.3;
+    color: #3b1d4a
+}
+
+.cwginstock-subscribe-form .row,
+.cwginstock-subscribe-form [class*="col-"] {
+    margin: 0;
+    padding: 0
+}
+
+.cwginstock-subscribe-form .cwginstock-panel-body :is(input[type="text"], input[type="email"], input[type="tel"]) {
+    margin-bottom: 14px
+}
+
+.cwginstock-subscribe-form .cwgstock_button {
+    width: 100%;
+    margin-top: 6px
+}
+
+.cwginstock-subscribe-form :is(.cwginstocksuccess, .cwginstockerror) {
+    margin-top: 14px;
+    padding: 10px 14px;
+    border-radius: 5px;
+    text-align: center
+}
+
+.cwginstock-subscribe-form .cwginstocksuccess {
+    color: #1f6b3d!important;
+    background: rgba(46,160,90,.1)
+}
+
+.cwginstock-subscribe-form .cwginstockerror {
+    color: var(--ul-btn-pink)!important;
+    background: rgba(179,9,75,.07)
 }
