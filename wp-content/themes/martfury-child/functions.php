@@ -1122,3 +1122,44 @@ function ultralove_breadcrumb_plain_product_title( $title, $post_id = 0 ) {
 	$title = preg_replace( '/<br\s*\/?>/i', ' ', $title );
 	return trim( preg_replace( '/\s+/', ' ', wp_strip_all_tags( $title ) ) );
 }
+
+/**
+ * [ultralove_brand_grid] - the Brands We Carry page's grid: every brand with products (A-Z), its logo and
+ * name linking to the brand's products. The same markup as the martfury-addons Elementor "Brand Images"
+ * widget the page used to have (so its styles still apply); Martfury's own [brand_images] shortcode leaves
+ * the names out. Columns via columns="" (default 6).
+ */
+add_shortcode( 'ultralove_brand_grid', 'ultralove_brand_grid_shortcode' );
+function ultralove_brand_grid_shortcode( $atts ) {
+	$atts  = shortcode_atts( array( 'columns' => 6 ), $atts, 'ultralove_brand_grid' );
+	$terms = get_terms( array(
+		'taxonomy' => 'product_brand',
+		'orderby'  => 'name',
+		'order'    => 'ASC',
+	) );
+
+	if ( is_wp_error( $terms ) || empty( $terms ) ) {
+		return '';
+	}
+
+	$items = array();
+	foreach ( $terms as $term ) {
+		$link = get_term_link( $term );
+		if ( is_wp_error( $link ) ) {
+			continue;
+		}
+		$thumb_id = get_term_meta( $term->term_id, 'brand_thumbnail_id', true );
+		$items[]  = sprintf(
+			'<div class="image-item"><a href="%1$s">%2$s</a><h4 class="b-title"><a href="%1$s">%3$s</a></h4></div>',
+			esc_url( $link ),
+			$thumb_id ? wp_get_attachment_image( (int) $thumb_id, 'full', false, array( 'alt' => $term->name ) ) : '',
+			esc_html( $term->name )
+		);
+	}
+
+	return sprintf(
+		'<div class="mf-elementor-brand-images mf-brand-images martfury-images-grid"><div class="images-list columns-%d">%s</div></div>',
+		absint( $atts['columns'] ),
+		implode( '', $items )
+	);
+}
