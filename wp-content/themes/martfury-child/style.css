@@ -2229,7 +2229,6 @@ section.up-sells .related-title,
  * The list is a native horizontal scroller with snapping, and its cards are the product grid's cards:
  * no .slick-slider class, so the grid card rules above apply as is (flex cards, hover shadow, fixed
  * title box, cart row). What tells visitors it scrolls sideways:
- *  - the edge(s) with more cards beyond fade out,
  *  - round previous/next buttons over the product images (wrapping round at either end),
  *  - a progress bar under the cards, sized to the share in view.
  */
@@ -2241,7 +2240,6 @@ section.up-sells .related-title,
    through it, so the carousel's box starts at the cards - which the arrows' centring relies on. */
 .ul-carousel {
     --ul-per-view: 2;
-    --ul-fade: 48px;
     position: relative;
     display: flow-root
 }
@@ -2312,22 +2310,6 @@ section.up-sells .related-title,
     float: none!important;
     margin: 0!important;
     scroll-snap-align: start
-}
-
-/* Edge fades on whichever side has more cards (none at the start's left or the end's right). */
-.ul-carousel.is-scrollable ul.products {
-    --ul-fade-left: var(--ul-fade);
-    --ul-fade-right: var(--ul-fade);
-    -webkit-mask-image: linear-gradient(to right, transparent 0, #000 var(--ul-fade-left), #000 calc(100% - var(--ul-fade-right)), transparent 100%);
-    mask-image: linear-gradient(to right, transparent 0, #000 var(--ul-fade-left), #000 calc(100% - var(--ul-fade-right)), transparent 100%)
-}
-
-.ul-carousel.is-scrollable.is-at-start ul.products {
-    --ul-fade-left: 0px
-}
-
-.ul-carousel.is-scrollable.is-at-end ul.products {
-    --ul-fade-right: 0px
 }
 
 /* Dragging (mouse, or the progress bar's thumb): no snapping or smoothing mid-drag, no text selection. */

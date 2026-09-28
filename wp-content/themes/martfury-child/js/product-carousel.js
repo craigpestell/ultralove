@@ -9,7 +9,7 @@
  *  - previous/next buttons that page by the number of whole cards in view, and wrap round at either
  *    end (next from the last cards goes back to the first, previous from the first to the last),
  *  - a progress bar under the cards (click to jump, drag the thumb to scrub),
- *  - start/end state classes for the fade on whichever edge has more cards,
+ *  - start/end state classes (is-at-start / is-at-end) for styling either end,
  *  - mouse drag-to-scroll (a drag doesn't also click the card under the pointer),
  *  - left/right arrow keys while focus is inside the carousel.
  * Motion is instant for visitors who ask for reduced motion.
