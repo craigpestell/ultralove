@@ -1401,16 +1401,17 @@ h1,h2,h3,h4 {
    header banner ends on the same edges as the menu, breadcrumbs, content and footer. The container nested
    inside .header-main adds no padding of its own, so the logo lands exactly on that edge. */
 /* The logo, search and account icons get half the row and the header banner the other half, so the
-   header is balanced on the content edges at any width. The logo group never gets narrower than 662px
-   (logo 180 + gaps 50 + a 260px search box, the narrowest that's still usable + icons 172); below that,
-   the banner shrinks instead. The banner keeps its 728x90 shape, so its height follows. Inside the group
-   the logo is a fixed 180px (it used to scale with Martfury's 25% Bootstrap column) and the search box
-   takes whatever is left. */
+   header is balanced on the content edges at any width. The logo group never gets narrower than its
+   contents need (the flex item's automatic minimum): the 180px logo, a search box of at least 260px (the
+   narrowest that's still usable) and the account icons at their natural width - "Log in / Register" for
+   logged-out visitors is wider than the icons alone. Where half the row is less than that, the banner
+   shrinks instead. The banner keeps its 728x90 shape, so its height follows. Inside the group the logo
+   is a fixed 180px (it used to scale with Martfury's 25% Bootstrap column) and the search box takes
+   whatever is left. */
 .header-main-row .header-main {
     float: none;
     padding-left: 0;
-    flex: 0 0 max(50% - 10px, 662px);
-    min-width: 0;
+    flex: 0 0 max(50% - 10px, 0px);
     max-width: none;
 }
 
@@ -1438,6 +1439,13 @@ h1,h2,h3,h4 {
 
 .header-main-row .header-extras .products-search {
     width: 100%;
+}
+
+/* The account icons never shrink (they'd slide under the banner), and the row's 20px gap already
+   separates them from the banner, so they lose the theme's right margin here. */
+.header-main-row .header-extras .extras-menu {
+    flex: 0 0 auto;
+    margin-right: 0;
 }
 
 .header-main-row .header-main > .martfury-container {
