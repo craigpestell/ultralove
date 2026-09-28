@@ -11,7 +11,7 @@
  *              "attached" to the pointer during a drag/swipe - matching RevSlider's own click-drag
  *              and touch-swipe navigation. A clone of the last slide is prepended and a clone of the
  *              first is appended so dragging past either end loops seamlessly.
- * Version: 2.1.1
+ * Version: 2.1.2
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -53,6 +53,31 @@ function ub_home_bg_style() {
  * Saved crop for a slide as array( x, y, w, h ) in original-image pixels, or null. Stored as
  * "attachment_id,x,y,w,h" and ignored if the featured image has since changed.
  */
+/**
+ * Factor from the attachment's WordPress pixels to its original upload's pixels. Crops are saved in
+ * WordPress's pixels (the admin cropper shows the 'full' image), but WordPress shrinks uploads wider
+ * than 2560px to a "-scaled" copy while Cloudinary holds - and crops - the original, so a saved crop
+ * has to be scaled up by this before it goes into a Cloudinary c_crop. 1 when the image wasn't
+ * scaled or the original's size can't be read (dev has no uploads); cached per file in post meta.
+ */
+function ub_original_scale( $thumb_id, $meta ) {
+	if ( empty( $meta['original_image'] ) || empty( $meta['width'] ) ) {
+		return 1;
+	}
+	$cached = get_post_meta( $thumb_id, '_ub_original_size', true );
+	if ( is_array( $cached ) && isset( $cached['file'], $cached['width'] ) && $cached['file'] === $meta['original_image'] ) {
+		$orig_w = (int) $cached['width'];
+	} else {
+		$path   = wp_get_original_image_path( $thumb_id );
+		$size   = $path && is_readable( $path ) ? wp_getimagesize( $path ) : false;
+		$orig_w = $size ? (int) $size[0] : 0;
+		if ( $orig_w ) {
+			update_post_meta( $thumb_id, '_ub_original_size', array( 'file' => $meta['original_image'], 'width' => $orig_w, 'height' => (int) $size[1] ) );
+		}
+	}
+	return $orig_w > $meta['width'] ? $orig_w / $meta['width'] : 1;
+}
+
 function ub_get_crop( $post_id, $thumb_id ) {
 	$raw = get_post_meta( $post_id, '_ub_crop', true );
 	if ( empty( $raw ) ) {
@@ -184,9 +209,18 @@ add_action(
 						$seg   = '';
 
 						if ( preg_match( '/\sdata-ub-crop="(\d+),(\d+),(\d+),(\d+)"/', $tag, $crop_match ) ) {
-							$full = preg_match( '/\sdata-ub-full="(\d+),(\d+),([\d.]*)"/', $tag, $full_match ) ? array( (int) $full_match[1], (int) $full_match[2], (float) $full_match[3] ) : null;
+							$full = preg_match( '/\sdata-ub-full="(\d+),(\d+),([\d.]*)(?:,([\d.]+))?"/', $tag, $full_match ) ? array( (int) $full_match[1], (int) $full_match[2], (float) $full_match[3], isset( $full_match[4] ) ? (float) $full_match[4] : 1.0 ) : null;
 							$tag  = preg_replace( '/\sdata-ub-(crop|full)="[^"]*"/', '', $tag );
-							$out  = ub_apply_transform( $tag, sprintf( 'c_crop,x_%d,y_%d,w_%d,h_%d', $crop_match[1], $crop_match[2], $crop_match[3], $crop_match[4] ), (int) $crop_match[3], (int) $crop_match[4] );
+							// Cloudinary crops the original upload, which can be larger than the image the
+							// crop was drawn on - scale the crop into its pixels.
+							$k    = $full && $full[3] > 0 ? $full[3] : 1;
+							$c    = array_map(
+								function ( $v ) use ( $k ) {
+									return (int) round( $v * $k );
+								},
+								array_slice( $crop_match, 1 )
+							);
+							$out  = ub_apply_transform( $tag, sprintf( 'c_crop,x_%d,y_%d,w_%d,h_%d', $c[0], $c[1], $c[2], $c[3] ), $c[2], $c[3] );
 							// Unchanged means the image isn't served by Cloudinary (dev, or not synced yet):
 							// show the crop with CSS on the local image instead.
 							if ( $out === $tag && $full ) {
@@ -726,9 +760,10 @@ add_shortcode(
 				if ( $crop ) {
 					$img_atts['data-ub-crop'] = implode( ',', $crop );
 					if ( ! empty( $full_meta['width'] ) && ! empty( $full_meta['height'] ) ) {
-						// The original's size and the slide's shape, for the CSS crop used when
-						// Cloudinary can't apply it.
-						$img_atts['data-ub-full'] = $full_meta['width'] . ',' . $full_meta['height'] . ',' . round( (float) ub_group_ratio( $atts['group'] ), 5 );
+						// The image's size and the slide's shape, for the CSS crop used when Cloudinary
+						// can't apply it, and the factor to the original upload's pixels for the
+						// Cloudinary crop (see ub_original_scale()).
+						$img_atts['data-ub-full'] = $full_meta['width'] . ',' . $full_meta['height'] . ',' . round( (float) ub_group_ratio( $atts['group'] ), 5 ) . ',' . round( ub_original_scale( $thumb_id, $full_meta ), 6 );
 					}
 				}
 				if ( is_admin() && $crop && ! empty( $full_meta['width'] ) && ! empty( $full_meta['height'] ) ) {
