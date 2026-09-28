@@ -892,8 +892,7 @@ function ultralove_convert_url_to_cloudinary($url) {
 
 
 /**
- * The header's navigation row (Store / On Sale / ... ), moved here from template-parts/headers/layout-1.php
- * so it can also be printed outside the header - see ultralove_home_nav_below_banner().
+ * The header's navigation row (Store / On Sale / ... ), printed by template-parts/headers/layout-1.php.
  */
 function ultralove_main_menu_row() {
 	$css_header_menu = 'col-md-9 col-sm-9';
@@ -924,14 +923,6 @@ function ultralove_main_menu_row() {
 	<?php
 }
 
-/**
- * Home page (front-page.php): the navigation row sits below the banner slides rather than above them -
- * the header template skips the row there and front-page.php prints it after the banner. Only while the
- * UltraLove Banners plugin (which provides the banner) is active; without it the header prints the row as usual.
- */
-function ultralove_home_nav_below_banner() {
-	return is_front_page() && shortcode_exists( 'ultralove_banner' );
-}
 
 /**
  * The home page is front-page.php. Elementor's page templates (the page still has "Elementor Theme" set)

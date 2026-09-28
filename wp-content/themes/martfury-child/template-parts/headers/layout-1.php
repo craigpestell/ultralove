@@ -46,11 +46,8 @@ if ( ! shortcode_exists( 'ultralove_banner' ) ) {
 </div>
 
 <?php
-// The navigation row - on the home page it's printed below the banner instead (see
-// ultralove_home_nav_below_banner() in functions.php).
-if ( ! ultralove_home_nav_below_banner() ) {
-	ultralove_main_menu_row();
-}
+// The navigation row (ultralove_main_menu_row() in functions.php), directly below the logo row on every page.
+ultralove_main_menu_row();
 ?>
 <div class="mobile-menu hidden-lg hidden-md">
     <div class="container">

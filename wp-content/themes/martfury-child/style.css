@@ -1654,7 +1654,7 @@ html body {
 /* More breathing room above/below the logo + search row on desktop (the parent theme uses 20px). With the
    header banner beside it (.header-main-row), the 24px goes on the whole row instead, so whichever is
    taller - the logo group or the banner - has 24px above and below it. That matches the 24px between the
-   home banner slides and the navigation row below them (.ul-home-banner). */
+   navigation row and the home banner slides below it (.ul-home-banner). */
 @media (min-width:992px) {
     .site-header .header-main {
         padding-top: 24px!important;
@@ -2804,19 +2804,12 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     }
 }
 
-/* Home page navigation row, printed below the banner by front-page.php. */
-.ul-home-nav {
-    flex: 0 0 100%;
-    width: 100%;
-    position: relative;
-    z-index: 5
-}
-
-/* 24px of white below the home banner slides, between them and the navigation row. On the section
-   wrapping the banner rather than .ub-banner-home itself, whose height is fixed by its aspect ratio - a
-   border there would crop 24px off the slides. */
+/* 24px of white above the home banner slides, between the header's navigation row and them - the same 24px
+   the header row has above and below it. On the section wrapping the banner rather than .ub-banner-home
+   itself, whose height is fixed by its aspect ratio - a border there would crop 24px off the slides. Below
+   the slides there's no gap: #topcta shares their aurora backdrop. */
 .ul-home-banner {
-    border-bottom: 24px solid #fff
+    border-top: 24px solid #fff
 }
 
 /* Header navigation: a white underline that grows from the centre on hover / keyboard focus, and stays

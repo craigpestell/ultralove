@@ -4,8 +4,7 @@
  *
  * Sections, top to bottom - all full width (they break out of the page's Bootstrap .container), their
  * content in the page container (.martfury-container), like every other section of the site:
- *  - the rotating banner (UltraLove Banners, group "home") and the navigation row below it (the header
- *    leaves the row out on this page - ultralove_home_nav_below_banner());
+ *  - the rotating banner (UltraLove Banners, group "home"), 24px below the header's navigation row;
  *  - #topcta: heading, intro and the two main buttons on the aurora backdrop (which UltraLove Banners
  *    extends up behind the banner - #ub-hero-combo-bg);
  *  - #carousel: "On Sale" (12 random on-sale products in the product carousel, js/product-carousel.js),
@@ -21,10 +20,6 @@ get_header();
     <section class="ul-home-bleed ul-home-banner">
 		<?php echo do_shortcode( '[ultralove_banner group="home"]' ); ?>
     </section>
-
-    <div class="ul-home-bleed site-header ul-home-nav">
-		<?php ultralove_main_menu_row(); ?>
-    </div>
 
     <section id="topcta" class="ul-home-bleed">
         <div class="martfury-container">
