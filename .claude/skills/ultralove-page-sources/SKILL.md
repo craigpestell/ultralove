@@ -119,11 +119,14 @@ Until Login hides price and cart row for logged-out visitors (`.footer-button` i
 - **"Product carousel - ..."** (`.ul-carousel`) - scroller, arrows (`.ul-carousel__arrow`), progress bar
 - **"Buttons"** - one button system (`ul-btn`, `--primary/--secondary/--tertiary`, `--icon`); every rule
   is `:is(#page, #mf-quick-view-modal) :where(...)`, so beating it needs that id weight
-- **One content container everywhere**: every section of every page - the header's logo/search row and
-  menu, page content, home page sections (`front-page.php`), `#bottomcta` and the footer - uses Martfury's
-  `.martfury-container` (window less 30px padding each side, 15px on phones, 1650px wide at most). Don't
-  give a page or section its own width; product lists get their card count from this width via the
-  column rule. (Catalog grids are narrower only because the filter sidebar sits beside them.)
+- **Content widths** ("Content width" in style.css): the page container `.martfury-container` - header rows,
+  page content, the home page's product sections - is the window less 30px each side (15px on phones), at
+  most **1440px of content**, so large screens get side margins. The home page's `#topcta` and the
+  `#bottomcta` + footer box keep their own narrower edges (1150 / 950 / 700px, 25px in on phones).
+  Don't give other pages or sections widths of their own.
+- **Product card widths**: at least 215px (what the cart row needs; phones are 2-up at ~175-185px), about
+  215-285px on desktop/tablet and at most ~240px on large screens - from the column rule plus the 1440px
+  cap. Pages with the filter sidebar may not reach 6 columns; that's fine.
 - Home page sections: `.ul-home-*` (`.ul-home-bleed` breaks full width out of the front page's Bootstrap
   `.container`, with a `.martfury-container` inside); product section headings `.cat-header`
 - The parent theme's own card CSS is in `martfury/style.css` (`.woocommerce ul.products li.product ...`)
