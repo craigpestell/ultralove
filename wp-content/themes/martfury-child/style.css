@@ -2980,8 +2980,10 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
 }
 
 /* No bottom padding on the main content wrapper - the page content runs straight into the footer
-   area (#hero-footer-combo, which has its own top spacing and fade). */
-.site-content {
+   area (#hero-footer-combo, which has its own top spacing and fade). Except My account (log in /
+   register, and the logged-in account pages): its form cards end in a hard edge, so they keep their
+   own 60px gap above the footer (.woocommerce-account ... .site-content below). */
+body:not(.woocommerce-account) .site-content {
     padding-bottom: 0!important
 }
 
