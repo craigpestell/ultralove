@@ -24,7 +24,7 @@ define( 'UB_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 if ( is_admin() ) {
 	require_once UB_PLUGIN_PATH . 'admin-pages.php';
 }
-define( 'UB_ASSET_VERSION', '2.0.10' );
+define( 'UB_ASSET_VERSION', '2.0.12' );
 
 /**
  * Banner slot aspect ratio (width / height) per group. Slides are cropped to this in the admin.
@@ -53,6 +53,31 @@ function ub_home_bg_style() {
  * Saved crop for a slide as array( x, y, w, h ) in original-image pixels, or null. Stored as
  * "attachment_id,x,y,w,h" and ignored if the featured image has since changed.
  */
+/**
+ * Factor from the attachment's WordPress pixels to its original upload's pixels. Crops are saved in
+ * WordPress's pixels (the admin cropper shows the 'full' image), but WordPress shrinks uploads wider
+ * than 2560px to a "-scaled" copy while Cloudinary holds - and crops - the original, so a saved crop
+ * has to be scaled up by this before it goes into a Cloudinary c_crop. 1 when the image wasn't
+ * scaled or the original's size can't be read (dev has no uploads); cached per file in post meta.
+ */
+function ub_original_scale( $thumb_id, $meta ) {
+	if ( empty( $meta['original_image'] ) || empty( $meta['width'] ) ) {
+		return 1;
+	}
+	$cached = get_post_meta( $thumb_id, '_ub_original_size', true );
+	if ( is_array( $cached ) && isset( $cached['file'], $cached['width'] ) && $cached['file'] === $meta['original_image'] ) {
+		$orig_w = (int) $cached['width'];
+	} else {
+		$path   = wp_get_original_image_path( $thumb_id );
+		$size   = $path && is_readable( $path ) ? wp_getimagesize( $path ) : false;
+		$orig_w = $size ? (int) $size[0] : 0;
+		if ( $orig_w ) {
+			update_post_meta( $thumb_id, '_ub_original_size', array( 'file' => $meta['original_image'], 'width' => $orig_w, 'height' => (int) $size[1] ) );
+		}
+	}
+	return $orig_w > $meta['width'] ? $orig_w / $meta['width'] : 1;
+}
+
 function ub_get_crop( $post_id, $thumb_id ) {
 	$raw = get_post_meta( $post_id, '_ub_crop', true );
 	if ( empty( $raw ) ) {
