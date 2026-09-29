@@ -353,10 +353,6 @@ Template: martfury
     letter-spacing: -.5px!important
 }
 
-.woocommerce-cart .woocommerce table.shop_table td.product-name a {
-    color: #b3094b!important
-}
-
 /* Product names on product cards at 16px (parent theme: 14px). The grid's fixed 6-line title box is in
    em, so it grows with it. */
 .woocommerce ul.products li.product .woo-loop-product__title {
