@@ -62,6 +62,35 @@ if ( intval( martfury_get_option( 'sticky_header' ) ) && intval( martfury_get_op
 }
 
 ?>
+<?php
+// Off production only (dev): the logo is a button that swaps between the inline SVG and the original PNG
+// from the theme options, for showing the difference - instead of the link home. A small SVG/PNG tag
+// under it says which one is showing. On production the logo stays the ordinary link below.
+$logo_demo = $logo_svg && function_exists( 'wp_get_environment_type' ) && 'production' !== wp_get_environment_type();
+if ( $logo_demo ) :
+	$logo_png = martfury_get_option( 'logo' );
+	?>
+    <div class="logo">
+        <button type="button" class="ul-logo-swap" aria-pressed="false"
+                title="<?php esc_attr_e( 'Click to swap between the SVG and the original PNG logo', 'martfury' ); ?>">
+			<?php echo $logo_svg; // phpcs:ignore WordPress.Security.EscapeOutput -- the theme's own SVG file ?>
+            <img class="ul-logo-png" alt="<?php echo esc_attr( get_bloginfo( 'name' ) ); ?>"
+                 src="<?php echo esc_url( $logo_png ); ?>" width="246" height="100"/>
+            <span class="ul-logo-swap__label" aria-live="polite">SVG</span>
+        </button>
+    </div>
+    <script>
+    document.addEventListener( 'click', function ( e ) {
+        var b = e.target.closest ? e.target.closest( '.ul-logo-swap' ) : null;
+        if ( ! b ) {
+            return;
+        }
+        var png = b.classList.toggle( 'is-png' );
+        b.setAttribute( 'aria-pressed', png ? 'true' : 'false' );
+        b.querySelector( '.ul-logo-swap__label' ).textContent = png ? 'PNG' : 'SVG';
+    } );
+    </script>
+<?php else : ?>
     <div class="logo">
         <a href="<?php echo esc_url( home_url( '/' ) ); ?>">
 			<?php if ( $logo_svg ) : ?>
@@ -73,6 +102,7 @@ if ( intval( martfury_get_option( 'sticky_header' ) ) && intval( martfury_get_op
 			<?php echo wp_kses_post( $logo_sticky_img ); ?>
         </a>
     </div>
+<?php endif; ?>
 <?php
 $custom_title_tag = get_post_meta( get_the_ID(), 'site_title_tag_homepage', true );
 $custom_title_tag = empty( $custom_title_tag ) ? 'h1' : $custom_title_tag;

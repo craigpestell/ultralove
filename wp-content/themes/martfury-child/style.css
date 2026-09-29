@@ -1452,6 +1452,55 @@ h1,h2,h3,h4 {
     overflow: visible;
 }
 
+/* Off production only: the logo is a button that swaps between the SVG and the original PNG (see
+   template-parts/logo.php), with a small tag under it saying which one is showing. */
+.site-header .ul-logo-swap {
+    position: relative;
+    display: block;
+    padding: 0;
+    margin: 0;
+    background: none;
+    border: 0;
+    cursor: pointer;
+}
+
+.site-header .ul-logo-swap:focus-visible {
+    outline: 2px solid var(--ul-btn-focus);
+    outline-offset: 4px;
+    border-radius: 4px;
+}
+
+.site-header .ul-logo-swap .ul-logo-png,
+.site-header .ul-logo-swap.is-png .site-logo {
+    display: none;
+}
+
+.site-header .ul-logo-swap.is-png .ul-logo-png {
+    display: block;
+}
+
+.header-main-row .header-logo .d-logo .ul-logo-swap .ul-logo-png {
+    width: 180px;
+    max-width: none;
+    height: auto;
+}
+
+.site-header .ul-logo-swap__label {
+    position: absolute;
+    left: 0;
+    top: 100%;
+    margin-top: 4px;
+    padding: 1px 7px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.5;
+    letter-spacing: .06em;
+    color: #3b1d4a;
+    background: #faf5fc;
+    border: 1px solid rgba(177,101,255,.4);
+    border-radius: 999px;
+}
+
 /* Header logo: the logo is the shadow-free SVG, printed inline in the page (template-parts/logo.php; as an
    <img> via ultralove_svg_site_logo() where it can't be); its purple drop shadow is drawn here. Fitted to the original PNG's shadow - 2.5 left, 3.5 down, blurred (sigma) 1.5 in the
    logo's own 246-wide units, in #b858f0 - and scaled to the 180px it's shown at (x 180/246; the blur radius
