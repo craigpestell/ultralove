@@ -13,6 +13,118 @@ Tags: one-column, two-columns, left-sidebar, right-sidebar, full-width-template,
 Template: martfury
 */
 
+/*
+ * Site-wide type weights: regular text 300, bold text 500.
+ * The parent theme, its customizer typography (body 400, headings 700) and plugins set explicit
+ * Work Sans weights in hundreds of rules, so instead of overriding each one, Work Sans itself is
+ * remapped: these self-hosted static faces (fonts/, from Google Fonts, OFL) are declared after
+ * Google's, so they win, and every request for 300/400 draws the 300 glyphs and every request for
+ * 500/600/700 draws the 500 glyphs. DevTools still shows the requested weight (e.g. 400/700); what
+ * renders is 300/500. Vietnamese characters fall back to Google's variable font at the real weight.
+ */
+
+@font-face {
+    font-family: 'Work Sans';
+    font-style: normal;
+    font-weight: 300;
+    font-display: swap;
+    src: url(fonts/work-sans-300-latin-ext.woff2) format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF
+}
+
+@font-face {
+    font-family: 'Work Sans';
+    font-style: normal;
+    font-weight: 300;
+    font-display: swap;
+    src: url(fonts/work-sans-300-latin.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD
+}
+
+@font-face {
+    font-family: 'Work Sans';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(fonts/work-sans-300-latin-ext.woff2) format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF
+}
+
+@font-face {
+    font-family: 'Work Sans';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(fonts/work-sans-300-latin.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD
+}
+
+@font-face {
+    font-family: 'Work Sans';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url(fonts/work-sans-500-latin-ext.woff2) format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF
+}
+
+@font-face {
+    font-family: 'Work Sans';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url(fonts/work-sans-500-latin.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD
+}
+
+@font-face {
+    font-family: 'Work Sans';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url(fonts/work-sans-500-latin-ext.woff2) format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF
+}
+
+@font-face {
+    font-family: 'Work Sans';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url(fonts/work-sans-500-latin.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD
+}
+
+@font-face {
+    font-family: 'Work Sans';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url(fonts/work-sans-500-latin-ext.woff2) format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF
+}
+
+@font-face {
+    font-family: 'Work Sans';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url(fonts/work-sans-500-latin.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD
+}
+
+/*
+ * Display text weight: one weight for the site's display text - the header navigation, Log in / Register
+ * and the Search button, the pill headings (#topcta, #bottomcta, footer widget titles), the text box under
+ * #topcta's heading, the product section and carousel titles, the footer's text boxes and the copyright
+ * line. Regular 300 by default; the UltraLove Backdrops plugin's "Text weight" setting (Appearance >
+ * Backdrops) switches it to the bold 500.
+ */
+:root {
+    --ul-display-weight: 300
+}
+
+
 .brndimg,.sideslidertopmobile {
     display: none
 }
@@ -104,7 +216,7 @@ Template: martfury
     padding-top: 65px
 }
 
-.mf-product-deals-day .cart label,.mf-products-grid .cart label,.mf-shop-content .cart label,.product_tag-discontinued .ribbons,.product_tag-discontinued .stock {
+.ul-home-products .cart label,.mf-shop-content .cart label,.product_tag-discontinued .ribbons,.product_tag-discontinued .stock {
     display: none!important
 }
 
@@ -123,7 +235,7 @@ Template: martfury
     margin-top: 16px
 }
 
-.mf-product-deals-day .cart .quantity .qty-box,.mf-products-grid .mf-product-price-box .quantity .qty-box,.mf-shop-content .cart .quantity .qty-box {
+.ul-home-products .cart .quantity .qty-box,.mf-shop-content .cart .quantity .qty-box {
     border: 1px solid #ccc
 }
 
@@ -132,14 +244,14 @@ Template: martfury
     font-size: 13px!important
 }
 
-.mf-products-grid .mf-product-price-box .quantity {
+.ul-home-products .mf-product-price-box .quantity {
     display: inline-block!important;
     width: 38%!important;
     vertical-align: top;
     margin-top: 16px
 }
 
-.mf-product-deals-day .cart button,.mf-products-grid .mf-product-price-box button,.mf-shop-content .cart button {
+.ul-home-products .cart button,.mf-shop-content .cart button {
     display: inline-block!important;
     height: 35px!important;
     line-height: 35px!important;
@@ -148,23 +260,11 @@ Template: martfury
     letter-spacing: -1px!important
 }
 
-.mf-product-deals-day .cart button.add_to_cart_button,.mf-products-grid .mf-product-price-box button.add_to_cart_button,.mf-shop-content .cart button.add_to_cart_button {
+.ul-home-products .cart button.add_to_cart_button,.mf-shop-content .cart button.add_to_cart_button {
     color: #fff!important
 }
 
-.mf-products-grid .quantity .qty {
-    width: 22px;
-    font-size: 13px!important
-}
-
-.mf-product-deals-day .cart .quantity {
-    display: inline-block!important;
-    width: 38%!important;
-    vertical-align: top;
-    margin-top: 16px
-}
-
-.mf-product-deals-day .quantity .qty {
+.ul-home-products .quantity .qty {
     width: 22px;
     font-size: 13px!important
 }
@@ -179,7 +279,7 @@ Template: martfury
     position: relative
 }
 
-#carousel .mf-product-deals-day ul.products li.product .price {
+#carousel ul.products li.product .price {
     margin: auto!important;
     display: inline-block
 }
@@ -205,18 +305,8 @@ Template: martfury
     display: inherit
 }
 
-.cwgstock_button,.woocommerce .ribbons .ribbon {
+.woocommerce .ribbons .ribbon {
     background-color: #b3094b
-}
-
-.cwginstock-subscribe-form .panel-primary>.panel-heading {
-    color: #fff;
-    background-color: #b3094b;
-    border-color: #b3094b
-}
-
-.cwginstock-subscribe-form .panel-primary {
-    border-color: #b3094b
 }
 
 .woocommerce.shop-view-list ul.products:not(.slick-slider) li.product .mf-product-details h2 {
@@ -247,16 +337,8 @@ Template: martfury
     width: 100%!important
 }
 
-.mf-product-deals-day .header-content .cat-title {
-    font-size: 24px!important
-}
-
 #gform_1 .gform_footer {
     margin-top: 19px!important
-}
-
-#text-2 {
-    min-height: 407px
 }
 
 .footer-row {
@@ -271,9 +353,10 @@ Template: martfury
     float: none!important
 }
 
+/* Same nav bar height at every width - the parent theme halves this padding below 1200px. */
 .site-header .primary-nav>ul>li {
-    padding-top: 20px;
-    padding-bottom: 20px
+    padding-top: 20px!important;
+    padding-bottom: 20px!important
 }
 
 #mf_product_categories-2 ul li a {
@@ -281,8 +364,33 @@ Template: martfury
     letter-spacing: -.5px!important
 }
 
-.page-header .breadcrumbs a,.woocommerce ul.products li.product .woo-loop-product__title a,.woocommerce ul.products li.product h2 a,.woocommerce-cart .woocommerce table.shop_table td.product-name a {
-    color: #b3094b!important
+/* Product names on product cards at 16px (parent theme: 14px). The grid's fixed 6-line title box is in
+   em, so it grows with it. */
+.woocommerce ul.products li.product .woo-loop-product__title {
+    font-size: 16px
+}
+
+/* Product names on product cards in the Product Categories sidebar's text style: plum, -.5px letter
+   spacing (same Work Sans 16px/400 and 1.3 line height already), brand pink while the name itself is
+   hovered. Hovering elsewhere on the card leaves it plum. The parent theme's hover selectors (grid, list
+   view, products-of-category widget) are repeated so the same-specificity rules here win. Product names in
+   the header's cart dropdown (.woocommerce-mini-cart) and the cart page's table get the same plum, and
+   stay plum on hover like the cards; their bold parts are pink (see "Bold parts of product card titles"). */
+.woocommerce ul.products li.product .woo-loop-product__title a,
+.woocommerce ul.products li.product h2 a,
+.mf-products-of-category .products-box ul.products li.product .product-inner:hover .mf-product-content h2 a,
+.site-header .woocommerce-mini-cart .mini_cart_item .product-name a,
+.woocommerce-cart .woocommerce table.shop_table td.product-name a {
+    color: #3b1d4a;
+    letter-spacing: -.5px;
+    transition: color .15s ease
+}
+
+.woocommerce ul.products li.product .woo-loop-product__title:hover a,
+.woocommerce ul.products li.product .woo-loop-product__title a:focus-visible,
+.woocommerce.shop-view-list ul.products:not(.slick-slider) li.product .mf-product-details h2 a:hover,
+.mf-products-of-category .products-box ul.products li.product .mf-product-content h2 a:hover {
+    color: #b3094b
 }
 
 .mf-recently-products .recently-header .title,.site-footer .footer-widgets .widget .widget-title {
@@ -331,12 +439,15 @@ Template: martfury
     margin: auto
 }
 
-.site-footer .footer-widgets:after {
-    border-bottom: 1px solid #825ba5
+/* In a .martfury-container header (the site-wide page container - see functions.php) Martfury sizes the
+   menu column to 83.4%, to sit beside its 300px department menu. There's no department menu here (the
+   column is col-md-12), so it takes the full row and the centred menu is centred on the page. */
+.site-header .martfury-container .mr-header-menu.col-md-12 {
+    width: 100%
 }
 
-.mf-products-grid .cat-header h2,.mf-products-grid .cat-header h3 {
-    font-size: 24px
+.site-footer .footer-widgets:after {
+    border-bottom: 1px solid rgba(130,91,165,.28)
 }
 
 .header-countdown,.martfury-countdown {
@@ -344,26 +455,30 @@ Template: martfury
 }
 
 #input_1_1,#input_1_2,#input_1_3,#input_1_4 {
-    background-color: #271a38!important;
-    border: 1px solid #684686!important;
+    background-color: #fff!important;
+    border: 1px solid #d9c8e6!important;
     border-radius: 6px!important;
-    color: #fff!important
+    color: #3b1d4a!important
 }
 
 #input_1_1::placeholder,#input_1_2::placeholder,#input_1_3::placeholder,#input_1_4::placeholder {
-    color: #fff!important
+    color: #8a7a96!important
 }
 
 h1,h2,h3,h4 {
-    font-weight: 500!important
+    font-weight: 500
 }
 
 .footer-copyright {
     text-align: center
 }
 
-#welcome,#welcome h2,#welcome p,.footer-copyright,.site-footer .footer-layout,.site-footer .footer-layout .widget-title {
+#welcome,#welcome h2,#welcome p {
     color: #fff!important
+}
+
+.footer-copyright,.site-footer .footer-layout,.site-footer .footer-layout .widget-title {
+    color: #3b1d4a!important
 }
 
 #welcome,.site-footer .footer-layout {
@@ -380,21 +495,6 @@ h1,h2,h3,h4 {
     display: inherit
 }
 
-#topcta:before,#welcome:after {
-    content: "";
-    width: 100%;
-    height: 55px;
-    background-image: url(https://ultralove.ca/wp-content/uploads/2021/07/shadow.png);
-    background-size: 100% 45px;
-    background-repeat: no-repeat;
-    display: inline-block
-}
-
-#welcome:after {
-    position: absolute!important;
-    z-index: 2
-}
-
 .ced_hpul_single_summary_wrapper {
     margin-bottom: 15px!important;
     margin-left: -10px!important
@@ -404,231 +504,678 @@ h1,h2,h3,h4 {
     display: none!important
 }
 
-#topcta:before {
-    position: relative
+#bottomcta,#topcta {
+    color: #3b1d4a!important
 }
 
-#topcta:after {
-    position: absolute;
-    left: 0;
-    margin-top: 45px;
-    z-index: 2
-}
-
-#bottomcta:after,#bottomcta:before,#topcta:after,.main-menu:after,.page-header-page .entry-title:after {
-    content: "";
-    width: 100%;
-    height: 55px;
-    background-image: url(https://ultralove.ca/wp-content/uploads/2021/07/shadow.png);
-    background-size: 100% 45px;
-    background-repeat: no-repeat;
-    display: inline-block
-}
-
-.main-menu:after {
-    position: absolute;
-    left: 0;
-    z-index: 2
-}
-
-#bottomcta:after,#bottomcta:before,.page-header-page .entry-title:after {
-    position: relative
-}
-
-#bottomcta:after,.page-header-page .entry-title:after {
-    position: absolute;
-    left: 0;
-    margin-top: 82px
-}
-
-.page-header-page .entry-title:after {
-    margin-top: 103px
-}
-
-#bottomcta,#topcta,.page-header-page .entry-title {
-    color: #fff!important
-}
-
-#topcta,.page-header-page .entry-title {
+#topcta {
     background: url(https://ultralove.ca/wp-content/uploads/2021/07/bg.jpg);
     background-size: cover
 }
 
-.page-header-page .entry-title {
-    padding-top: 55px;
-    padding-bottom: 55px
-}
-
+/* Breathing room above the heading pill and below the buttons. All three pill-headed blocks
+   (#topcta, #bottomcta, the footer widget columns) land on the same 88px gap above the pill and
+   ~72px below the last row. #topcta's Elementor widget wrappers add ~10px of their own above the
+   h1 (and ~8px below the buttons), so its padding is that much smaller to match. */
 #bottomcta,#topcta {
-    text-align: center;
-    padding-bottom: 45px
+    text-align: center
 }
 
-/* Divider between the View Products/Wholesale Signup buttons and the footer columns below - same
-   spot #bottomcta and the footer used to visibly separate before they shared #hero-footer-combo's
-   one continuous background. Matches the divider further down between the footer columns and the
-   copyright line (.footer-widgets:after) in both color and rendered width (that one is inset
-   15px within a 1200px-wide .footer-widgets, i.e. 1170px; #bottomcta has no such container to
-   inset within since it's full-bleed, so max-width:1170px + auto margins is used instead to land
-   on the same size). Implemented on #bottomcta:after below, which used to hold the old
-   shadow.png transition graphic this divider replaces. */
+#topcta {
+    padding-top: 78px;
+    padding-bottom: 64px
+}
+
+#bottomcta {
+    padding-top: 88px;
+    padding-bottom: 72px
+}
+
+/* Divider between the View Products/Wholesale Signup buttons and the footer columns below. It's
+   drawn as .footer-widgets:before (see further down) rather than on full-bleed #bottomcta, so it
+   sits in the same container - and matches the width - of the other footer dividers
+   (.footer-widgets:after, #footer-links) at every screen size. */
 #bottomcta {
     position: relative
 }
 
-/* Pure-CSS replacement for bg.jpg (blurred purple/teal aurora on near-black) on the home CTA blocks.
-   #bottomcta no longer paints its own copy - it and the site footer share one #hero-footer-combo
-   wrapper (see footer.php) with a single copy of this same gradient below, so the two read as one
-   continuous backdrop instead of two independent copies with a seam between them. */
-#topcta {
-    background:
-        radial-gradient(ellipse 14% 20% at 65% 25%, rgba(155, 215, 225, .95) 0, rgba(120, 190, 215, .5) 50%, transparent 100%),
-        radial-gradient(ellipse 16% 14% at 80% 32%, rgba(175, 205, 235, .75) 0, transparent 100%),
-        radial-gradient(ellipse 12% 16% at 50% 8%, rgba(115, 155, 205, .65) 0, transparent 100%),
-        radial-gradient(ellipse 12% 14% at 73% 8%, rgba(60, 110, 195, .60) 0, transparent 100%),
-        radial-gradient(ellipse 12% 16% at 14% 32%, rgba(175, 105, 195, .85) 0, rgba(140, 75, 170, .4) 55%, transparent 100%),
-        radial-gradient(ellipse 10% 22% at 6% 52%, rgba(150, 70, 170, .70) 0, transparent 100%),
-        radial-gradient(ellipse 12% 20% at 29% 18%, rgba(135, 75, 175, .70) 0, transparent 100%),
-        radial-gradient(ellipse 12% 14% at 36% 3%, rgba(120, 85, 175, .55) 0, transparent 100%),
-        radial-gradient(ellipse 18% 22% at 91% 45%, rgba(85, 55, 155, .60) 0, transparent 100%),
-        radial-gradient(ellipse 8% 10% at 43% 40%, rgba(145, 85, 175, .70) 0, transparent 100%),
-        radial-gradient(ellipse 10% 14% at 48% 68%, rgba(135, 85, 175, .55) 0, transparent 100%),
-        radial-gradient(ellipse 9% 12% at 60% 63%, rgba(60, 135, 175, .50) 0, transparent 100%),
-        radial-gradient(ellipse 12% 16% at 74% 72%, rgba(95, 65, 165, .50) 0, transparent 100%),
-        radial-gradient(ellipse 12% 14% at 14% 94%, rgba(145, 85, 175, .60) 0, transparent 100%),
-        radial-gradient(ellipse 60% 70% at 40% 60%, rgba(15, 12, 55, .70) 0, transparent 100%),
-        #06060f!important
+/* Light aurora backdrop for the home CTA blocks: soft lavender/teal/pink glows on a pale lavender
+   base, so these sections read as part of the white site around them rather than a dark band.
+   #bottomcta doesn't paint its own copy - it and the site footer share one #hero-footer-combo
+   wrapper (see footer.php), so the two read as one continuous backdrop. On the home page the
+   ultralove-banners plugin also paints this same gradient behind the banner row + #topcta
+   (#ub-hero-combo-bg in its banner.css) - keep the two in sync. */
+:root {
+    --ul-aurora:
+        radial-gradient(ellipse 14% 20% at 65% 25%, rgba(170, 225, 232, .60) 0, rgba(170, 225, 232, .25) 50%, transparent 100%),
+        radial-gradient(ellipse 16% 14% at 80% 32%, rgba(200, 220, 245, .55) 0, transparent 100%),
+        radial-gradient(ellipse 12% 16% at 50% 8%, rgba(190, 205, 240, .50) 0, transparent 100%),
+        radial-gradient(ellipse 12% 14% at 73% 8%, rgba(175, 195, 240, .45) 0, transparent 100%),
+        radial-gradient(ellipse 12% 16% at 14% 32%, rgba(215, 170, 230, .60) 0, rgba(215, 170, 230, .25) 55%, transparent 100%),
+        radial-gradient(ellipse 10% 22% at 6% 52%, rgba(225, 175, 215, .50) 0, transparent 100%),
+        radial-gradient(ellipse 12% 20% at 29% 18%, rgba(205, 175, 235, .50) 0, transparent 100%),
+        radial-gradient(ellipse 12% 14% at 36% 3%, rgba(200, 185, 235, .45) 0, transparent 100%),
+        radial-gradient(ellipse 18% 22% at 91% 45%, rgba(220, 180, 225, .50) 0, transparent 100%),
+        radial-gradient(ellipse 8% 10% at 43% 40%, rgba(240, 180, 205, .45) 0, transparent 100%),
+        radial-gradient(ellipse 10% 14% at 48% 68%, rgba(210, 180, 235, .45) 0, transparent 100%),
+        radial-gradient(ellipse 9% 12% at 60% 63%, rgba(170, 215, 230, .45) 0, transparent 100%),
+        radial-gradient(ellipse 12% 16% at 74% 72%, rgba(215, 190, 240, .45) 0, transparent 100%),
+        radial-gradient(ellipse 12% 14% at 14% 94%, rgba(235, 185, 215, .45) 0, transparent 100%),
+        radial-gradient(ellipse 60% 70% at 40% 60%, rgba(255, 255, 255, .55) 0, transparent 100%),
+        #f6f1fa;
+    --ul-purple-shadow: 0 0 18px rgba(177,101,255,.5)
 }
 
+#topcta,#hero-footer-combo {
+    background: var(--ul-aurora)!important
+}
+
+/* Even purple glow (no offset, so it shows on all four sides) in the pills'/cards'
+   rgb(177,101,255) border colour, shared by the #topcta and #bottomcta pills, the #topcta text
+   box, and the footer widget heading pills and cards. Those are Elementor/widget markup, so
+   they're listed here by selector; anything new can opt in by adding the ul-purple-shadow class
+   (e.g. an Elementor widget's Advanced > CSS Classes field). */
+.ul-purple-shadow,
+#topcta h1,
+#topcta p,
+#bottomcta h2,
+.site-footer .footer-widgets .widget-title,
+.site-footer .footer-widgets .textwidget,
+.site-footer .footer-widgets .gform_wrapper {
+    box-shadow: var(--ul-purple-shadow)
+}
+
+/* Same white fade-out at the edges as #topcta (see #topcta:before), on the shared #bottomcta +
+   footer backdrop - including the same fixed 85px top/bottom fade depth, so the pattern starts at
+   the same distance from the top of both sections. */
 #hero-footer-combo {
-    background:
-        radial-gradient(ellipse 14% 20% at 65% 25%, rgba(155, 215, 225, .95) 0, rgba(120, 190, 215, .5) 50%, transparent 100%),
-        radial-gradient(ellipse 16% 14% at 80% 32%, rgba(175, 205, 235, .75) 0, transparent 100%),
-        radial-gradient(ellipse 12% 16% at 50% 8%, rgba(115, 155, 205, .65) 0, transparent 100%),
-        radial-gradient(ellipse 12% 14% at 73% 8%, rgba(60, 110, 195, .60) 0, transparent 100%),
-        radial-gradient(ellipse 12% 16% at 14% 32%, rgba(175, 105, 195, .85) 0, rgba(140, 75, 170, .4) 55%, transparent 100%),
-        radial-gradient(ellipse 10% 22% at 6% 52%, rgba(150, 70, 170, .70) 0, transparent 100%),
-        radial-gradient(ellipse 12% 20% at 29% 18%, rgba(135, 75, 175, .70) 0, transparent 100%),
-        radial-gradient(ellipse 12% 14% at 36% 3%, rgba(120, 85, 175, .55) 0, transparent 100%),
-        radial-gradient(ellipse 18% 22% at 91% 45%, rgba(85, 55, 155, .60) 0, transparent 100%),
-        radial-gradient(ellipse 8% 10% at 43% 40%, rgba(145, 85, 175, .70) 0, transparent 100%),
-        radial-gradient(ellipse 10% 14% at 48% 68%, rgba(135, 85, 175, .55) 0, transparent 100%),
-        radial-gradient(ellipse 9% 12% at 60% 63%, rgba(60, 135, 175, .50) 0, transparent 100%),
-        radial-gradient(ellipse 12% 16% at 74% 72%, rgba(95, 65, 165, .50) 0, transparent 100%),
-        radial-gradient(ellipse 12% 14% at 14% 94%, rgba(145, 85, 175, .60) 0, transparent 100%),
-        radial-gradient(ellipse 60% 70% at 40% 60%, rgba(15, 12, 55, .70) 0, transparent 100%),
-        #06060f
+    position: relative
 }
 
-/* .footer-layout's own bg.jpg (and #bottomcta:after, the shadow strip that used to mark the
-   transition into it) are no longer needed - #hero-footer-combo now supplies one continuous
-   background behind both. */
+#hero-footer-combo:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+        linear-gradient(to bottom, #fff 0, rgba(255,255,255,.75) 34px, rgba(255,255,255,0) 85px, rgba(255,255,255,0) calc(100% - 85px), rgba(255,255,255,.75) calc(100% - 34px), #fff 100%),
+        linear-gradient(to right, #fff 0, rgba(255,255,255,.75) 4%, rgba(255,255,255,0) 12%, rgba(255,255,255,0) 88%, rgba(255,255,255,.75) 96%, #fff 100%)
+}
+
+#hero-footer-combo > #bottomcta,#hero-footer-combo > .site-footer {
+    position: relative;
+    z-index: 1
+}
+
+/* .footer-layout's own bg.jpg is no longer needed - #hero-footer-combo now supplies one
+   continuous background behind #bottomcta and the footer. */
 .site-footer .footer-layout {
     background: none!important
 }
 
-#bottomcta:after {
+.site-footer .footer-widgets:before {
     content: "";
     display: block;
     position: absolute;
-    left: 50%;
-    bottom: 0;
-    width: 100%;
+    top: 0;
+    left: 15px;
+    right: 15px;
     height: 0;
-    max-width: 1170px;
-    margin: 0;
-    transform: translateX(-50%);
-    background: none;
-    border-bottom: 1px solid #825ba5
+    border-top: 1px solid rgba(130,91,165,.28)
 }
 
 #bottomcta h2,#topcta h2 {
-    color: #fff!important;
+    color: #3b1d4a!important;
     margin-top: 0!important
 }
 
 #topcta h1 {
     display: inline-block;
-    color: #fff!important;
-    background: rgba(0,0,0,.52);
+    color: #3b1d4a!important;
+    background: rgba(255,255,255,.8);
+    border: 1px solid rgb(177,101,255);
     border-radius: 999px;
     padding: 10px 28px;
-    margin: 0 15px 18px!important;
-    line-height: 1.2;
-    box-shadow: 0 6px 18px rgba(0,0,0,.18)
+    margin: 0 15px 30px!important;
+    line-height: 1.2
+}
+
+/* Fade #topcta's backdrop out to white at the bottom and sides, so the pattern never runs into the page
+   edges or the section below: the bottom over a fixed 85px (same as #hero-footer-combo), the top left
+   unfaded so the pattern starts right under the banner/navigation,
+   left and right over 12% of its width. Done as one overlay rather than extra background layers so it also covers the
+   ultralove-banners plugin's shared #ub-hero-combo-bg (which sits behind a transparent #topcta in
+   its aurora mode). The content container is lifted above it so the pills and buttons aren't
+   washed out. */
+#topcta {
+    position: relative
+}
+
+#topcta:before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+        linear-gradient(to bottom, rgba(255,255,255,0) 0, rgba(255,255,255,0) calc(100% - 85px), rgba(255,255,255,.75) calc(100% - 34px), #fff 100%),
+        linear-gradient(to right, #fff 0, rgba(255,255,255,.75) 4%, rgba(255,255,255,0) 12%, rgba(255,255,255,0) 88%, rgba(255,255,255,.75) 96%, #fff 100%)
+}
+
+#topcta > .martfury-container {
+    position: relative;
+    z-index: 1
+}
+
+/* The space the Elementor column and widget wrappers used to add around the call to action's content
+   (.ul-home-cta-content inside is the wrapping flex row the button spacing rule further down sets up). */
+#ctatop {
+    padding: 10px 0 8px
 }
 
 #topcta p {
     display: block;
-    width: fit-content;
-    max-width: calc(100% - 30px);
-    color: #fff!important;
-    background: rgba(0,0,0,.38);
+    width: auto;
+    max-width: none;
+    color: #4a3558!important;
+    background: rgba(255,255,255,.7);
+    border: 1px solid rgb(177,101,255);
     border-radius: 8px;
     padding: 10px 18px;
-    margin: 0 auto 32px!important;
-    line-height: 1.5;
-    box-shadow: 0 6px 18px rgba(0,0,0,.14)
+    margin: 0 0 44px!important;
+    font-size: 21px;
+    font-weight: var(--ul-display-weight);
+    line-height: 1.5
 }
 
-.page-id-14 .elementor-element-28ad42c {
-    margin-bottom: 32px!important
+#topcta {
+    margin-bottom: 32px
 }
 
 @media (max-width:678px) {
     #topcta h1 {
         padding: 8px 18px;
         margin-left: 10px!important;
-        margin-right: 10px!important
+        margin-right: 10px!important;
+        margin-bottom: 24px!important
+    }
+
+    #topcta {
+        padding-top: 46px;
+        padding-bottom: 48px
+    }
+
+    #bottomcta {
+        padding-top: 56px;
+        padding-bottom: 56px
     }
 
     #topcta p {
         padding: 9px 14px;
-        margin: 0 10px 24px!important
+        margin: 0 0 34px!important;
+        font-size: 18px
     }
 }
 
-#bottomcta a,#topcta a {
-    background-color: #b3094b;
-    padding: 7px 15px;
-    font-size: 24px;
-    margin: 5px
+/* Page headers (pages such as Brands, Buy Wholesale and Contact): just the breadcrumb strip, as on the
+   catalog and product pages; the trail's last item names the page. The title stays in the markup as the
+   page's h1 for screen readers and search engines, visually hidden. The content below starts 30px under
+   the strip, as on catalog and product pages (parent theme: 90px on pages). */
+.page-header-page .entry-title {
+    position: absolute!important;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    white-space: nowrap;
+    border: 0
 }
 
-#gform_submit_button_1,.footlink,.gform_footer button,.site-header .main-menu {
+.page-header-page + .site-content {
+    padding-top: 30px
+}
+
+/* Breadcrumbs (every page header - catalog, product and other pages): a soft lavender strip with a lavender rule instead of the
+   parent theme's #f1f1f1 bar. Links in muted plum (brand pink on hover), the current page in plum,
+   lavender separators. */
+.page-header .page-breadcrumbs {
+    background: #faf5fc;
+    border-bottom: 1px solid rgba(177,101,255,.2)
+}
+
+.page-header .page-breadcrumbs .breadcrumbs {
+    align-items: center;
+    padding-top: 14px;
+    padding-bottom: 14px;
+    font-size: 18px
+}
+
+/* The trail is inset 20px inside the page container on both sides, on every page: the inset of the
+   text on the pages built in Elementor (Contact, Brands, Cart), whose section and inner section each pad
+   their columns by 10px - so the breadcrumbs start where those pages' text does, at the same place
+   everywhere. */
+.page-header .page-breadcrumbs .breadcrumbs {
+    padding-left: 20px;
+    padding-right: 20px
+}
+
+.page-header .breadcrumbs a {
+    color: #7a5a8c!important;
+    transition: color .15s ease
+}
+
+.page-header .breadcrumbs a:hover,
+.page-header .breadcrumbs a:focus-visible {
+    color: #b3094b!important
+}
+
+.page-header .breadcrumbs li:last-child a {
+    color: #3b1d4a!important
+}
+
+.page-header .breadcrumbs .sep {
+    margin: 0 8px;
+    color: #c9a3dc
+}
+
+/* No root "Home" item: the trail starts at Shop. Hidden rather than removed so the BreadcrumbList
+   microdata keeps its full path (Home at position 1). */
+.page-header .breadcrumbs > li:first-child,
+.page-header .breadcrumbs > li:first-child + .sep {
+    display: none
+}
+
+/* Catalog sidebar - Product Categories. From 768px up (below that the sidebar is the parent theme's
+   off-canvas Filter panel, left as is) the widget is a white card with a lavender border and a soft
+   purple shadow in place of the #f5f5f5 box. At every size: the heading in plum over a lavender rule,
+   each category a rounded row with a lavender tint on hover and on the current category, and the
+   sub-category lists hung off a lavender line. */
+@media (min-width:768px) {
+    .catalog-sidebar .mf_widget_product_categories,
+    .catalog-sidebar .woocommerce-widget-layered-nav {
+        background: #fff;
+        border: 1px solid rgba(177,101,255,.3);
+        border-radius: 10px;
+        padding: 22px 14px 16px;
+        box-shadow: 0 6px 18px rgba(177,101,255,.12)
+    }
+}
+
+.catalog-sidebar .mf_widget_product_categories .widget-title,
+.catalog-sidebar .woocommerce-widget-layered-nav .widget-title {
+    color: #3b1d4a;
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: .08em;
+    padding: 0 8px 12px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid rgba(177,101,255,.25)
+}
+
+.catalog-sidebar .mf_widget_product_categories ul li {
+    padding: 1px 0
+}
+
+.catalog-sidebar .mf_widget_product_categories ul li a {
+    display: block;
+    padding: 6px 34px 6px 8px;
+    color: #3b1d4a;
+    line-height: 1.3;
+    border-radius: 6px;
+    transition: background-color .15s ease, color .15s ease
+}
+
+.catalog-sidebar .mf_widget_product_categories ul li a:hover,
+.catalog-sidebar .mf_widget_product_categories ul li a:focus-visible {
+    color: #b3094b;
+    background: rgba(215,170,230,.22)
+}
+
+.catalog-sidebar .mf_widget_product_categories ul li.current-cat > a,
+.catalog-sidebar .mf_widget_product_categories ul li.current-cat-parent > a {
+    color: #b3094b;
+    background: rgba(215,170,230,.35)
+}
+
+.catalog-sidebar .mf_widget_product_categories ul li .children {
+    margin: 2px 0 4px 10px;
+    padding-left: 6px;
+    border-left: 2px solid rgba(177,101,255,.35)
+}
+
+.catalog-sidebar .mf_widget_product_categories ul li .children li a {
+    color: #6b5578
+}
+
+.catalog-sidebar .mf_widget_product_categories ul li .children li a:hover,
+.catalog-sidebar .mf_widget_product_categories ul li .children li.current-cat > a {
+    color: #b3094b
+}
+
+/* The expand/collapse chevron: a round 28px target inside the row's right padding. */
+.catalog-sidebar .mf_widget_product_categories ul li .cat-menu-close {
+    z-index: 1;
+    top: 3px;
+    right: 3px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #7a5a8c;
+    border-radius: 50%;
+    transition: background-color .15s ease, color .15s ease
+}
+
+.catalog-sidebar .mf_widget_product_categories ul li .cat-menu-close:hover {
+    color: #b3094b;
+    background: rgba(215,170,230,.35)
+}
+
+/* Catalog sidebar - "Filter by" (brand layered nav): the Product Categories card's treatment. The card
+   and heading share the rules above; here the search field is a lavender-bordered pill, each brand a
+   rounded row with a lavender tint on hover (and on chosen brands, with pink text), rounded lavender
+   checkboxes that fill purple with a white tick when chosen (drawn in CSS - the tick glyph isn't in the
+   site's icon font subset), muted counts, and a lavender/purple scrollbar for the scrolling list. */
+.catalog-sidebar .woocommerce-widget-layered-nav {
+    margin-bottom: 30px
+}
+
+.catalog-sidebar .woocommerce-widget-layered-nav:after {
+    display: none
+}
+
+.catalog-sidebar .woocommerce-widget-layered-nav .search_layered_nav {
+    margin: 0 0 12px
+}
+
+.catalog-sidebar .woocommerce-widget-layered-nav .search_layered_nav .mf-input-search-nav {
+    height: 38px;
+    line-height: 38px;
+    padding: 0 36px 0 16px;
+    color: #3b1d4a;
+    background: #fff;
+    border: 1px solid rgba(177,101,255,.45);
+    border-radius: 999px;
+    transition: border-color .15s ease, box-shadow .15s ease
+}
+
+.catalog-sidebar .woocommerce-widget-layered-nav .search_layered_nav .mf-input-search-nav:focus {
+    outline: 0;
+    border-color: rgb(177,101,255);
+    box-shadow: 0 0 0 3px rgba(177,101,255,.18)
+}
+
+.catalog-sidebar .woocommerce-widget-layered-nav .search_layered_nav:after {
+    right: 14px;
+    color: #7a5a8c
+}
+
+.catalog-sidebar .woocommerce-widget-layered-nav .woocommerce-widget-layered-nav-list .woocommerce-widget-layered-nav-list__item {
+    padding: 7px 8px 7px 34px;
+    margin-bottom: 1px;
+    font-size: 16px;
+    letter-spacing: -.5px;
+    line-height: 1.3;
+    border-radius: 6px;
+    transition: background-color .15s ease
+}
+
+.catalog-sidebar .woocommerce-widget-layered-nav .woocommerce-widget-layered-nav-list .woocommerce-widget-layered-nav-list__item:hover {
+    background: rgba(215,170,230,.22)
+}
+
+.catalog-sidebar .woocommerce-widget-layered-nav .woocommerce-widget-layered-nav-list .woocommerce-widget-layered-nav-list__item.chosen {
+    background: rgba(215,170,230,.35)
+}
+
+.catalog-sidebar .woocommerce-widget-layered-nav .woocommerce-widget-layered-nav-list .woocommerce-widget-layered-nav-list__item a {
+    color: #3b1d4a;
+    transition: color .15s ease
+}
+
+.catalog-sidebar .woocommerce-widget-layered-nav .woocommerce-widget-layered-nav-list .woocommerce-widget-layered-nav-list__item:hover a,
+.catalog-sidebar .woocommerce-widget-layered-nav .woocommerce-widget-layered-nav-list .woocommerce-widget-layered-nav-list__item.chosen a {
+    color: #b3094b
+}
+
+.catalog-sidebar .woocommerce-widget-layered-nav .woocommerce-widget-layered-nav-list .woocommerce-widget-layered-nav-list__item a:before {
+    top: 50%;
+    left: 9px;
+    width: 16px;
+    height: 16px;
+    border: 1px solid rgba(177,101,255,.55);
+    border-radius: 4px;
+    transform: translateY(-50%);
+    transition: background-color .15s ease, border-color .15s ease
+}
+
+.catalog-sidebar .woocommerce-widget-layered-nav .woocommerce-widget-layered-nav-list .woocommerce-widget-layered-nav-list__item:hover a:before {
+    border-color: rgb(177,101,255)
+}
+
+.catalog-sidebar .woocommerce-widget-layered-nav .woocommerce-widget-layered-nav-list .woocommerce-widget-layered-nav-list__item.chosen a:before {
+    background: rgb(177,101,255);
+    border-color: rgb(177,101,255)
+}
+
+.catalog-sidebar .woocommerce-widget-layered-nav .woocommerce-widget-layered-nav-list .woocommerce-widget-layered-nav-list__item a:after {
+    content: "";
+    top: 50%;
+    left: 17px;
+    width: 5px;
+    height: 9px;
+    font: inherit;
+    border: solid #fff;
+    border-width: 0 2px 2px 0;
+    transform: translate(-50%, -60%) rotate(45deg)
+}
+
+.catalog-sidebar .woocommerce-widget-layered-nav .woocommerce-widget-layered-nav-list .woocommerce-widget-layered-nav-list__item .count {
+    color: #9a86a6;
+    font-size: 13px;
+    letter-spacing: 0
+}
+
+.catalog-sidebar .woocommerce-widget-layered-nav .woocommerce-widget-layered-nav-list {
+    scrollbar-color: rgb(177,101,255) rgba(177,101,255,.12)
+}
+
+.catalog-sidebar .woocommerce-widget-layered-nav .woocommerce-widget-layered-nav-list::-webkit-scrollbar-thumb {
+    background: rgb(177,101,255);
+    border-radius: 999px
+}
+
+.catalog-sidebar .woocommerce-widget-layered-nav .woocommerce-widget-layered-nav-list::-webkit-scrollbar-track {
+    background: rgba(177,101,255,.12);
+    border-radius: 999px
+}
+
+.catalog-sidebar .woocommerce-widget-layered-nav.mf-widget-layered-nav .slimScrollBar {
+    background: rgb(177,101,255)!important;
+    border-radius: 999px!important
+}
+
+.catalog-sidebar .woocommerce-widget-layered-nav.mf-widget-layered-nav .slimScrollRail {
+    background: rgba(177,101,255,.12)!important;
+    border-radius: 999px!important
+}
+
+/* Catalog toolbar (products found / sort / grid-list view): a white card matching the sidebar's instead
+   of the #f5f5f5 strip; the sort menu as a lavender-bordered pill with a rounded dropdown, the view
+   icons in muted lavender with the current one in plum. */
+.woocommerce #mf-catalog-toolbar {
+    background: #fff;
+    border: 1px solid rgba(177,101,255,.3);
+    border-radius: 10px;
+    padding: 0 16px;
+    box-shadow: 0 6px 18px rgba(177,101,255,.12)
+}
+
+.woocommerce #mf-catalog-toolbar .products-found {
+    color: #7a5a8c
+}
+
+.woocommerce #mf-catalog-toolbar .products-found strong {
+    color: #3b1d4a
+}
+
+.woocommerce #mf-catalog-toolbar .woocommerce-ordering .current {
+    color: #3b1d4a;
+    border: 1px solid rgba(177,101,255,.45);
+    border-radius: 999px;
+    padding: 0 34px 0 18px;
+    transition: border-color .15s ease, box-shadow .15s ease
+}
+
+.woocommerce #mf-catalog-toolbar .woocommerce-ordering .current:hover {
+    border-color: rgb(177,101,255);
+    box-shadow: 0 3px 10px rgba(177,101,255,.2)
+}
+
+.woocommerce #mf-catalog-toolbar .woocommerce-ordering .current:after {
+    right: 14px;
+    color: #3b1d4a
+}
+
+.woocommerce #mf-catalog-toolbar .woocommerce-ordering li > ul {
+    border: 1px solid rgba(177,101,255,.3);
+    border-radius: 10px;
+    padding: 8px 18px;
+    box-shadow: 0 6px 18px rgba(177,101,255,.25)
+}
+
+.woocommerce #mf-catalog-toolbar .woocommerce-ordering li > ul li a {
+    color: #6b5578
+}
+
+.woocommerce #mf-catalog-toolbar .woocommerce-ordering li > ul li a.active,
+.woocommerce #mf-catalog-toolbar .woocommerce-ordering li > ul li a:hover {
+    color: #b3094b
+}
+
+.woocommerce #mf-catalog-toolbar .shop-view {
+    color: #7a5a8c
+}
+
+.woocommerce #mf-catalog-toolbar .shop-view .mf-shop-view {
+    color: #c9a3dc;
+    transition: color .15s ease
+}
+
+.woocommerce #mf-catalog-toolbar .shop-view .mf-shop-view:hover {
+    color: #b3094b
+}
+
+.woocommerce #mf-catalog-toolbar .shop-view .mf-shop-view.current {
+    color: #3b1d4a
+}
+
+/* (The #topcta / #bottomcta links, .footlink and the footer form's button are styled by the button system -
+   see "Buttons" below.) */
+.site-header .main-menu {
     background-color: #b3094b!important
 }
 
-#bottomcta a,#gform_submit_button_1,#topcta a,.footlink {
-    color: #fff!important;
-    border-radius: 5px;
-    border: 1px solid #ff5679!important
-}
-
-#gform_submit_button_1,.footlink {
-    padding: 7px
-}
-
-#gform_submit_button_1 {
-    height: auto!important;
-    font-weight: 500!important
-}
-
+/* No top/bottom border on the header menu bar - the parent theme adds a 1px #e1e1e1 one. */
 .site-header .main-menu {
-    border-top: 1px solid #c15ceb;
-    border-bottom: 1px solid #c36af9;
+    border-top: 0!important;
+    border-bottom: 0!important;
     color: #fff!important
 }
 
 .site-header .primary-nav>ul>li>a {
-    font-size: 16px!important;
+    font-size: 24px!important;
     text-transform: uppercase!important;
-    color: #fff!important;
-    font-weight: 600!important
+    color: #fff!important
+}
+
+/* Header navigation items: the display text weight (the parent theme's layouts use 600), and white
+   text on hover / keyboard focus. */
+.site-header .primary-nav>ul>li>a {
+    font-weight: var(--ul-display-weight)
+}
+
+.site-header .primary-nav>ul>li>a:hover,
+.site-header .primary-nav>ul>li>a:focus-visible {
+    color: #fff
+}
+
+/* "Log in / Register" in the header at the display text weight, like the rest of the header text (the
+   parent theme sets 700, drawn at 500). The Search button follows it too (see the button exception
+   below), and the cart / wishlist count badges keep their bold. */
+.site-header .extras-menu .menu-item-account > a {
+    font-weight: var(--ul-display-weight)
+}
+
+/* Logged out, the account item is two stacked links ("Log in" / "Register", ~41px tall at the 17px body
+   size) and the parent theme pins the 30px user icon to the top of the first one, so it sat ~5px above
+   the wishlist and cart icons, which are centred. Centre it on the whole item instead. (Logged in, the
+   parent shows the icon inline, and the link's dropdown arrow needs the link positioned - left alone.)
+   From 768px only: below that the parent hides the text and shows the icon inline (position: static), so
+   it already sits in line with the other icons - the transform would still pull it 12px up. */
+@media (min-width: 768px) {
+    .site-header .extras-menu .menu-item-account:not(.logined) {
+        position: relative
+    }
+
+    .site-header .extras-menu .menu-item-account:not(.logined) > a {
+        position: static
+    }
+
+    .site-header .extras-menu .menu-item-account:not(.logined) .extra-icon {
+        top: 50%;
+        left: 20px;
+        transform: translateY(-50%)
+    }
+}
+
+/* Header icons (wishlist, cart, account) on one line with the logo and search at every width. The icons
+   row centres its items, but the wishlist and cart icons were inline in taller links (their line-height),
+   so they sat at the top of the link, ~3px above centre; as blocks the links are the icon's height. Below
+   768px the parent gives the account link a fixed 30px height and a 4px top padding (with the logged-in
+   avatar pulled back up by -4px), which also put its icon off the others' line: the item and link are the 24px
+   icon's height there instead. */
+.site-header .header-extras .extras-menu > li:not(.menu-item-account) > a > i {
+    display: block
+}
+
+/* The parent gives the account item a 30px minimum height at every width, taller than the 24/30px icons -
+   with its icon at the top of that, it sat above the others' line. Logged in, the link (icon + dropdown
+   arrow) is centred on the icon. */
+.site-header .extras-menu .menu-item-account {
+    min-height: 0
+}
+
+@media (min-width: 768px) {
+    .site-header .header-extras .menu-item-account.logined > a {
+        display: flex;
+        align-items: center
+    }
+}
+
+@media (max-width: 767px) {
+    .site-header .header-extras .menu-item-account > a {
+        height: 24px;
+        padding-top: 0
+    }
+
+    .site-header .header-extras .menu-item-account > a img {
+        margin-top: 0
+    }
 }
 
 #text-4 a {
-    color: #b78bde!important
+    color: #b3094b!important
 }
 
 .site-footer .footer-widgets .footer-sidebar {
@@ -641,20 +1188,56 @@ h1,h2,h3,h4 {
     }
 }
 
-@media (max-width:991px) {
+/* Three columns (from 1025px - where the footer box widens to 950px; see the #topcta / footer edges): the
+   columns' pills (.widget-title) form one row and their cards another - a
+   two-row grid the columns and their widget pass through (subgrid) - so the pills line up along the row's
+   bottom even when one wraps to two lines, and the cards all start on the same line below them. Same
+   column widths and spacing as the parent theme's flex row (32% each, spread across the row). */
+@media (min-width: 1025px) {
+    .site-footer .footer-widgets {
+        display: grid;
+        grid-template-columns: repeat(3, 32%);
+        grid-template-rows: auto auto;
+        justify-content: space-between
+    }
+
     .site-footer .footer-widgets .footer-sidebar {
-        max-width: 50%!important
+        display: grid;
+        grid-row: span 2;
+        grid-template-rows: subgrid;
+        width: auto;
+        max-width: none!important
+    }
+
+    .site-footer .footer-widgets .footer-sidebar > .widget {
+        display: grid;
+        grid-row: span 2;
+        grid-template-rows: subgrid;
+        margin-bottom: 0
+    }
+
+    .site-footer .footer-widgets .widget-title {
+        align-self: end
+    }
+
+    .site-footer .footer-widgets :is(.textwidget, .gform_wrapper) {
+        align-self: start
     }
 }
 
-@media (max-width:771px) {
+/* Footer columns go straight from 3 across to 1 stacked - never 2 (the parent theme drops to
+   width:50% columns in between, which left the Email Us form alone on a second row) - at the same
+   width the footer box narrows to 700px (1024px), so three columns never share that narrow box. */
+@media (max-width:1024px) {
     .site-footer .footer-widgets .footer-sidebar {
+        width: 100%;
+        flex: 0 0 100%;
         max-width: 100%!important
     }
 }
 
 @media (max-width:678px) {
-    #input_1_5 div,.elementor-14 .elementor-element.elementor-element-53bc313,.elementor-14 .elementor-element.elementor-element-5f89bb2 {
+    #input_1_5 div {
         margin: auto
     }
 
@@ -664,10 +1247,6 @@ h1,h2,h3,h4 {
 
     #gform_1 .gform_footer {
         margin-top: 9px!important
-    }
-
-    #text-2 {
-        min-height: 7px
     }
 }
 
@@ -682,8 +1261,10 @@ h1,h2,h3,h4 {
 }
 
 #footer-links {
-    border-bottom-color: #825ba5
+    border-bottom-color: rgba(130,91,165,.28)
 }
+
+
 
 #footer-links .widget-title {
     display: none
@@ -693,17 +1274,23 @@ h1,h2,h3,h4 {
     text-align: center;
 }
 
+/* Footer quick links (Ordering / About Us / Contact): plain underlined text links in brand pink, so they
+   read as links - not pills, which on this footer are the headings' treatment. Lavender dots between them,
+   like the breadcrumb separators. The underline thickens and the pink darkens on hover / keyboard focus. */
 #footer-links .widget_nav_menu ul {
     display: flex;
     width: 100%;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 8px;
+    align-items: center;
+    gap: 4px 0;
     margin: 0;
     padding: 0;
 }
 
 #footer-links .widget_nav_menu ul li {
+    display: flex;
+    align-items: center;
     margin: 0;
 }
 
@@ -711,17 +1298,28 @@ h1,h2,h3,h4 {
     display: none
 }
 
+#footer-links .widget_nav_menu ul li + li:before {
+    content: "\00b7";
+    margin: 0 14px;
+    color: #c9a3dc;
+    font-size: 22px;
+    line-height: 1
+}
+
 #footer-links .widget_nav_menu ul li a {
     display: inline-flex;
     align-items: center;
     min-height: 36px;
-    padding: 6px 14px;
-    color: #fff!important;
-    text-decoration: none!important;
-    background: rgba(255,255,255,.12);
-    border: 1px solid rgba(255,255,255,.35);
-    border-radius: 999px;
-    transition: background-color .2s ease, border-color .2s ease, transform .2s ease;
+    padding: 0 2px;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--ul-btn-pink)!important;
+    text-decoration: underline!important;
+    text-decoration-thickness: 1px!important;
+    text-underline-offset: 4px;
+    background: none;
+    border: 0;
+    transition: color .15s ease, text-decoration-thickness .15s ease;
 }
 
 #footer-links .widget_nav_menu ul li a:before {
@@ -730,40 +1328,44 @@ h1,h2,h3,h4 {
 }
 
 #footer-links .widget_nav_menu ul li a:hover,
-#footer-links .widget_nav_menu ul li a:focus {
-    color: #fff!important;
-    text-decoration: none!important;
-    background: rgba(255,86,121,.32);
-    border-color: #ff5679;
-    transform: translateY(-1px);
+#footer-links .widget_nav_menu ul li a:focus-visible {
+    color: var(--ul-btn-pink-dark)!important;
+    text-decoration-thickness: 2px!important;
+}
+
+#footer-links .widget_nav_menu ul li a:focus-visible {
+    outline: 2px solid var(--ul-btn-focus);
+    outline-offset: 3px;
+    border-radius: 3px;
 }
 
 /* Footer widget cards (About Ultra Love / Become A Wholesale Buyer / Email Us): the same pill
    badge + semi-transparent rounded card treatment used on #topcta, so headings, body text, the
    "Learn More"/"Register" buttons and the contact form all stay readable over the footer's own
-   photographic background. The Learn More/Register buttons live in the same text widget as their
+   light aurora background. The Learn More/Register buttons live in the same text widget as their
    paragraphs now (see the About Ultra Love/Become A Wholesale Buyer widget text), so they share
    this one card instead of a second. */
 .site-footer .footer-widgets .widget-title {
     display: block;
     width: fit-content;
-    color: #fff!important;
-    background: rgba(0,0,0,.52);
+    color: #3b1d4a!important;
+    background: rgba(255,255,255,.8);
+    border: 1px solid rgb(177,101,255);
     border-radius: 999px;
     padding: 8px 22px;
-    margin: 0 auto 16px!important;
-    line-height: 1.2;
-    box-shadow: 0 6px 18px rgba(0,0,0,.18)
+    margin: 0 auto 24px!important;
+    line-height: 1.2
 }
 
 .site-footer .footer-widgets .textwidget,
 .site-footer .footer-widgets .gform_wrapper {
     display: block;
-    color: #fff!important;
-    background: rgba(0,0,0,.38);
+    color: #4a3558!important;
+    font-weight: var(--ul-display-weight);
+    background: rgba(255,255,255,.7);
+    border: 1px solid rgb(177,101,255);
     border-radius: 10px;
-    padding: 16px 18px;
-    box-shadow: 0 6px 18px rgba(0,0,0,.14)
+    padding: 16px 18px
 }
 
 /* Gravity Forms makes .gform_footer a flex container by default, so text-align doesn't move its
@@ -776,6 +1378,7 @@ h1,h2,h3,h4 {
 .site-footer .footer-widgets #gform_submit_button_1 {
     margin-bottom: 0!important
 }
+
 
 .site-footer .footer-widgets #gform_1 .gform_footer {
     display: flex;
@@ -802,25 +1405,21 @@ h1,h2,h3,h4 {
 #bottomcta h2 {
     display: block;
     width: fit-content;
-    background: rgba(0,0,0,.52);
+    background: rgba(255,255,255,.8);
+    border: 1px solid rgb(177,101,255);
     border-radius: 999px;
     padding: 10px 28px;
-    margin: 0 auto 18px!important;
-    line-height: 1.2;
-    box-shadow: 0 6px 18px rgba(0,0,0,.18)
+    margin: 0 auto 44px!important;
+    line-height: 1.2
 }
 
-/* Copyright line in the same pill treatment as the rest of the footer/#topcta. block + fit-content
-   + auto margins (rather than inline-block) keeps it centered regardless of its parent column's
-   own text-align, since .footer-copyright itself is the text node being pilled, not a wrapper. */
+/* Copyright line: plain centered text on the white #footer-copyright-row (no pill). block +
+   fit-content + auto margins keeps it centered regardless of its parent column's own text-align. */
 .footer-copyright {
     display: block;
     width: fit-content;
-    background: rgba(0,0,0,.52);
-    border-radius: 999px;
-    padding: 8px 22px;
     margin: 0 auto!important;
-    box-shadow: 0 6px 18px rgba(0,0,0,.18)
+    font-weight: var(--ul-display-weight)
 }
 
 /* Header layout used when the ultralove-banners plugin is active (the .header-main-row wrapper only
@@ -829,11 +1428,77 @@ h1,h2,h3,h4 {
 .header-main-row {
     display: flex;
     align-items: center;
+    gap: 20px;
 }
 
+/* The row is the page container (.martfury-container - see "Content edges"), so the logo starts and the
+   header banner ends on the same edges as the menu, breadcrumbs, content and footer. The container nested
+   inside .header-main adds no padding of its own, so the logo lands exactly on that edge. */
+/* The logo, search and account icons get half the row and the header banner the other half, so the
+   header is balanced on the content edges at any width. The logo group never gets narrower than its
+   contents need (the flex item's automatic minimum): the 180px logo, a search box of at least 260px (the
+   narrowest that's still usable) and the account icons at their natural width - "Log in / Register" for
+   logged-out visitors is wider than the icons alone. Where half the row is less than that, the banner
+   shrinks instead. The banner keeps its 728x90 shape, so its height follows. Inside the group the logo
+   is a fixed 180px (it used to scale with Martfury's 25% Bootstrap column) and the search box takes
+   whatever is left. */
 .header-main-row .header-main {
     float: none;
-    padding-left: 20px;
+    padding-left: 0;
+    flex: 0 0 max(50% - 10px, 0px);
+    max-width: none;
+}
+
+.header-main-row .header-row > .header-logo {
+    flex: 0 0 auto;
+    width: auto;
+}
+
+.header-main-row .header-logo .d-logo img,
+.header-main-row .header-logo .d-logo svg.site-logo {
+    width: 180px;
+    max-width: none;
+    height: auto;
+}
+
+.site-header .d-logo svg.site-logo {
+    display: block;
+    overflow: visible;
+}
+
+/* Header logo: the logo is the shadow-free SVG, printed inline in the page (template-parts/logo.php; as an
+   <img> via ultralove_svg_site_logo() where it can't be); its purple drop shadow is drawn here. Started from
+   a fit to the original PNG's shadow (-1.83px 2.56px 2.2px #b858f0 at the 180px the logo is shown at), which
+   read too thick next to the crisp letters; this is the value picked in the logo's shadow tuner: closer and tighter, at full strength. */
+.site-header .d-logo .site-logo {
+    filter: drop-shadow(-0.6px 2.4px 1px #b858f0);
+}
+
+.header-main-row .header-row > .header-extras {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+}
+
+.header-main-row .header-extras .product-extra-search {
+    flex: 1 1 auto;
+    min-width: 260px;
+}
+
+.header-main-row .header-extras .products-search {
+    width: 100%;
+}
+
+/* The account icons never shrink (they'd slide under the banner), and the row's 20px gap already
+   separates them from the banner, so they lose the theme's right margin here. */
+.header-main-row .header-extras .extras-menu {
+    flex: 0 0 auto;
+    margin-right: 0;
+}
+
+.header-main-row .header-main > .martfury-container {
+    padding-left: 0;
+    padding-right: 0;
 }
 
 .header-main-row .sideslidertop {
@@ -843,6 +1508,9 @@ h1,h2,h3,h4 {
     align-items: center;
     justify-content: flex-end;
     margin-left: auto;
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: none!important;
 }
 
 @media (max-width:992px) {
@@ -866,7 +1534,8 @@ html, body {
     overflow-x: hidden;
 }
 
-.elementor-section-stretched {
+.elementor-section-stretched,
+.ul-home-bleed {
     width: 100vw !important;
     margin-left: calc(50% - 50vw) !important;
     left: 0 !important;
@@ -883,4 +1552,1924 @@ html, body {
  */
 html body {
     --mf-background-primary-text-color: #fff;
+}
+
+/* Footer breathing room: more space above/below the widget columns, between stacked columns
+   (e.g. Email Us under the About/Wholesale cards on narrower screens) and around the copyright pill. */
+.site-footer .footer-widgets {
+    padding-top: 88px!important;
+    padding-bottom: 64px!important
+}
+
+.site-footer .footer-widgets .footer-sidebar {
+    margin-bottom: 48px
+}
+
+/* Copyright row - rendered after #hero-footer-combo (see footer.php), on the plain white page. */
+#footer-copyright-row {
+    background: #fff
+}
+
+#footer-copyright-row .footer-bottom {
+    padding-top: 36px;
+    padding-bottom: 44px
+}
+
+@media (max-width:678px) {
+    .site-footer .footer-widgets {
+        padding-top: 56px!important;
+        padding-bottom: 48px!important
+    }
+}
+
+/*
+ * Content width: the page container (.martfury-container - the header rows, the page content, the home
+ * page's product sections) is the window less 30px of padding each side (15px on phones), at most 1440px
+ * of content: larger screens get growing side margins rather than ever-wider pages, and product cards
+ * (as many 215px+ cards as fit, up to 6 - see "Product grids and carousels") stay at most ~240px wide
+ * there (about 215-285px across desktop and tablet widths).
+ */
+.martfury-container {
+    max-width: 1500px;
+    margin-left: auto;
+    margin-right: auto
+}
+
+/* Martfury only pads the container up to 1680px (a fixed 1650px with no padding above that) - keep the
+   30px so the content is 1440px there too. */
+@media (min-width: 1681px) {
+    .martfury-container {
+        padding-left: 30px;
+        padding-right: 30px
+    }
+}
+
+/*
+ * The home page's call to action (#topcta) and the #bottomcta + footer box (#hero-footer-combo, on every
+ * page) keep narrower edges of their own while their backdrops stay full width: 1150 / 950 / 700px wide at
+ * >=1200 / >=1025 / >=768px, 25px in from each side on phones. The footer's Bootstrap .container normally
+ * has a fixed width (1170 / 970 / 750px), so it's switched to width:auto + max-width here.
+ */
+#topcta > .martfury-container,
+#bottomcta,
+#hero-footer-combo .site-footer .container {
+    width: auto;
+    max-width: 1150px;
+    margin-left: auto;
+    margin-right: auto
+}
+
+#topcta > .martfury-container {
+    padding-left: 0;
+    padding-right: 0
+}
+
+@media (max-width:1199px) {
+    #topcta > .martfury-container,
+    #bottomcta,
+    #hero-footer-combo .site-footer .container {
+        max-width: 950px
+    }
+}
+
+@media (max-width:1024px) {
+    #topcta > .martfury-container,
+    #bottomcta,
+    #hero-footer-combo .site-footer .container {
+        max-width: 700px
+    }
+}
+
+@media (max-width:767px) {
+    #topcta > .martfury-container,
+    #bottomcta,
+    #hero-footer-combo .site-footer .container {
+        max-width: none;
+        margin-left: 25px;
+        margin-right: 25px
+    }
+}
+
+/* Footer content edges: everything in the footer (cards, dividers, the links row) and #bottomcta's
+   pill/buttons sit within those edges at every width. At >=1025px the Bootstrap gutters already line up;
+   below that the footer container's own 15px padding pushed content 15px inside them, and on phones the
+   parent theme also drops the row's -15px margin, which left the cards at one inset and the
+   dividers/links at another. */
+@media (max-width:1024px) {
+    #hero-footer-combo .site-footer .container {
+        padding-left: 0;
+        padding-right: 0
+    }
+}
+
+@media (max-width:767px) {
+    .site-footer .footer-widgets:before,
+    .site-footer .footer-widgets:after {
+        left: 0!important;
+        right: 0!important
+    }
+
+    #footer-links {
+        margin-left: 0;
+        margin-right: 0
+    }
+}
+
+/* Turnstile's flexible widget has a 300px minimum width; cap it at the form card's width so it
+   can't overflow the card where the footer columns are narrower than that (~992-1199px). */
+.site-footer .cf-turnstile,
+.site-footer .cf-turnstile iframe {
+    max-width: 100%!important
+}
+
+/* Center the text inside every pill, so a heading that wraps to two lines stays centered, and
+   use the display text weight rather than the 500 all h1-h4 get above. */
+#topcta h1,
+#bottomcta h2,
+.site-footer .footer-widgets .widget-title {
+    text-align: center!important;
+    font-weight: var(--ul-display-weight)!important
+}
+
+/* #bottomcta's pill-to-buttons gap matches #topcta's text-to-buttons gap (#topcta p's 44px bottom
+   margin, 34px on phones). */
+@media (max-width:678px) {
+    #bottomcta h2 {
+        margin-bottom: 34px!important
+    }
+}
+
+/* More breathing room above/below the logo + search row on desktop (the parent theme uses 20px). With the
+   header banner beside it (.header-main-row), the 24px goes on the whole row instead, so whichever is
+   taller - the logo group or the banner - has 24px above and below it. That matches the 24px between the
+   navigation row and the home banner slides below it (.ul-home-banner). */
+@media (min-width:992px) {
+    .site-header .header-main {
+        padding-top: 24px!important;
+        padding-bottom: 24px!important
+    }
+
+    .site-header .header-main-row {
+        padding-top: 24px;
+        padding-bottom: 24px
+    }
+
+    .site-header .header-main-row .header-main {
+        padding-top: 0!important;
+        padding-bottom: 0!important
+    }
+}
+
+/* Product section titles everywhere - "On Sale" / "Latest Adult Products" (.cat-header) and the carousel
+   headings ("Related products", upsells, "Your Recently Viewed Products" - further down) - share one size,
+   in the display text weight like the pill headings, instead of the 500 all h1-h4 get above. */
+:root {
+    --ul-section-title-size: 32px
+}
+
+.cat-header .cat-title,
+.cat-header h2,
+.cat-header h3 {
+    font-size: var(--ul-section-title-size)!important;
+    font-weight: var(--ul-display-weight)!important
+}
+
+/* Bold parts of product card titles (<b> inside the title link, e.g. "DISCOUNTS DO NOT APPLY") at 500, in
+   the theme's primary colour. Set on the <b> itself, so it stays that colour in every link state (hover,
+   focus, visited). The same for product names in the header's cart dropdown and the cart page. */
+.mf-product-content > h2 > a > b,
+.site-header .woocommerce-mini-cart .mini_cart_item .product-name a b,
+.woocommerce-cart .woocommerce table.shop_table td.product-name a b {
+    font-weight: 500;
+    color: var(--mf-primary-color)
+}
+
+/*
+ * Every button on the site in one weight (500). Don't give individual buttons their own weight; a
+ * genuine special case gets an explicit, commented exception after this rule. Covers native buttons
+ * and inputs, WooCommerce/Martfury (.button, .btn*, banner/slide buttons), Elementor, Gravity Forms
+ * and block buttons. No !important needed: the more specific parent-theme button rules that win ask
+ * for 600/700, which the Work Sans remap at the top of this file draws at 500 anyway, and Gravity
+ * Forms' buttons default to 500. Label spans/icons inside inherit it.
+ */
+html body :is(button, input[type="submit"], input[type="button"], input[type="reset"], .button,
+    .btn, .btn-primary, .btn-primary-small, .btn-primary-outline, .btn-primary-small-outline,
+    .btn-button, .banner-button, .mf-slide-button, .elementor-button, .gform_button, .wp-block-button__link) {
+    font-weight: 500
+}
+
+html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-primary-outline,
+    .btn-primary-small-outline, .btn-button, .banner-button, .mf-slide-button, .elementor-button,
+    .gform_button, .wp-block-button__link) * {
+    font-weight: inherit
+}
+
+/* Exception: the header's Search button label at the display text weight, to sit with the rest of the
+   header text (navigation, Log in / Register) rather than stand out as the one bold word there. */
+.site-header .product-extra-search .search-submit {
+    font-weight: var(--ul-display-weight)
+}
+
+/*
+ * Buttons - one system for every button on the site, as a hierarchy:
+ *
+ *   .ul-btn                  base: font, weight, 5px radius, 1px border, transitions, focus ring
+ *   .ul-btn--primary         solid brand pink, darker on hover - the main action (Add to cart, Send, CTAs)
+ *   .ul-btn--secondary       pink outline, filling pink on hover - a second action (Notify me, Update cart)
+ *   .ul-btn--tertiary        lavender outline, plum text, pink on hover - quiet controls (toggles)
+ *   (default size)           44px - forms, WooCommerce pages
+ *   .ul-btn--sm              36px - product cards, the footer, the mini cart
+ *   .ul-btn--lg              54px - the home page calls to action
+ *   .ul-btn--icon            46px circle, for an icon alone (carousel arrows - primary)
+ *   disabled                 greyed out, no hover (Out of stock)
+ *
+ * Markup the child theme outputs carries the classes (Out of stock, the carousel arrows, "Shop Now");
+ * buttons from the theme and plugins (WooCommerce, Gravity Forms, Elementor, Back In Stock Notifier) join
+ * the same tiers through the selector lists below (product card buttons are listed on their own: the related
+ * products and recently viewed carousels sit outside .site-content). Every rule is ":is(#page, #mf-quick-view-modal, .swal2-container) :where(...)" (the page, the quick view
+ * popup, and SweetAlert dialogs such as Notify me, which are appended outside #page)
+ * - :where() adds nothing, so every rule weighs exactly one id: enough to beat the theme's and plugins'
+ * button rules without !important, and within the system the tiers apply in source order (base, variant,
+ * size, state). The header's Search button (joined to its field) is left out, as is the image lightbox.
+ * Context rules that must keep a button's size (the product card's Add to cart and Notify me) use !important.
+ */
+:root {
+    --ul-btn-pink: #b3094b;
+    --ul-btn-pink-dark: #8e073b;
+    --ul-btn-plum: #3b1d4a;
+    --ul-btn-lavender: rgba(177,101,255,.45);
+    --ul-btn-focus: rgb(177,101,255);
+    --ul-btn-disabled-bg: #e3e0e6;
+    --ul-btn-disabled-text: #6f6578;
+    --ul-btn-radius: 5px
+}
+
+/* Base - every button in the system (all the tiers' members). */
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(
+    .ul-btn,
+    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
+    .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
+    .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button,
+    ul.products li.product form.cart button, .am-collect-media button, .cwgstock_button,
+    .ul-btn--secondary, .cwg_popup_submit, .btn-secondary,
+    .ul-btn--tertiary, .show-password-input
+) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-sizing: border-box;
+    height: auto;
+    min-height: 44px;
+    padding: 10px 28px;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: normal;
+    text-align: center;
+    text-decoration: none;
+    text-transform: none;
+    vertical-align: middle;
+    border: 1px solid transparent;
+    border-radius: var(--ul-btn-radius);
+    box-shadow: none;
+    cursor: pointer;
+    transition: background-color .2s ease, border-color .2s ease, color .2s ease, opacity .2s ease, visibility .2s ease, transform .15s ease
+}
+
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(
+    .ul-btn,
+    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
+    .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
+    .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button,
+    ul.products li.product form.cart button,
+    .ul-btn--secondary, .cwg_popup_submit, .btn-secondary,
+    .ul-btn--tertiary, .show-password-input
+):focus-visible {
+    outline: 2px solid var(--ul-btn-focus);
+    outline-offset: 2px
+}
+
+/* Primary. */
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(
+    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
+    .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
+    .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button,
+    ul.products li.product form.cart button, .am-collect-media button, .cwgstock_button
+) {
+    color: #fff;
+    background: var(--ul-btn-pink);
+    border-color: var(--ul-btn-pink)
+}
+
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(
+    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
+    .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
+    .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button,
+    ul.products li.product form.cart button, .am-collect-media button, .cwgstock_button
+):is(:hover, :focus-visible) {
+    color: #fff;
+    background: var(--ul-btn-pink-dark);
+    border-color: var(--ul-btn-pink-dark)
+}
+
+/* Secondary (after primary: some of its members are also WooCommerce .buttons). */
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(
+    .ul-btn--secondary, .cwg_popup_submit, .btn-secondary,
+    button[name="update_cart"], button[name="apply_coupon"], .widget_shopping_cart .buttons .button:not(.checkout)
+) {
+    color: var(--ul-btn-pink);
+    background: #fff;
+    border-color: var(--ul-btn-pink)
+}
+
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(
+    .ul-btn--secondary, .cwg_popup_submit, .btn-secondary,
+    button[name="update_cart"], button[name="apply_coupon"], .widget_shopping_cart .buttons .button:not(.checkout)
+):is(:hover, :focus-visible) {
+    color: #fff;
+    background: var(--ul-btn-pink);
+    border-color: var(--ul-btn-pink)
+}
+
+/* Tertiary. */
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(.ul-btn--tertiary, .show-password-input) {
+    color: var(--ul-btn-plum);
+    background: #fff;
+    border-color: var(--ul-btn-lavender)
+}
+
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(.ul-btn--tertiary, .show-password-input):is(:hover, :focus-visible) {
+    color: var(--ul-btn-pink);
+    background: #fff;
+    border-color: var(--ul-btn-pink)
+}
+
+/* Sizes (the default, 44px, is the base's). */
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(
+    .ul-btn--sm, .footlink, .site-footer .gform_button, ul.products li.product form.cart button,
+    .ul-notify-row .cwg_popup_submit, .widget_shopping_cart .buttons .button, .show-password-input
+) {
+    min-height: 36px;
+    padding: 6px 16px
+}
+
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(.ul-btn--lg, #topcta a, #bottomcta a, .elementor-button) {
+    min-height: 54px;
+    padding: 12px 32px;
+    font-size: 20px
+}
+
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(.ul-btn--icon) {
+    width: 46px;
+    height: 46px;
+    min-height: 0;
+    padding: 0;
+    border-radius: 50%
+}
+
+/* WooCommerce's show/hide password toggle (login and account forms): a tertiary icon button inside the
+   password field - borderless there, 34px, the eye drawn in the text colour (plum, pink on hover), crossed
+   out while the password is shown (.display-password). WooCommerce's own icon comes from its stylesheet,
+   which Martfury doesn't load, so it was an empty box. */
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(.password-input .show-password-input) {
+    top: calc(50% - 17px);
+    right: 8px;
+    width: 34px;
+    height: 34px;
+    min-height: 0;
+    padding: 0;
+    border-color: transparent
+}
+
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(.password-input .show-password-input):is(:hover, :focus-visible) {
+    border-color: transparent
+}
+
+.password-input .show-password-input:before {
+    content: "";
+    width: 20px;
+    height: 20px;
+    background: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E") center / contain no-repeat
+}
+
+.password-input .show-password-input.display-password:before {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M3 3l18 18'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3Cpath d='M3 3l18 18'/%3E%3C/svg%3E")
+}
+
+/* Disabled: greyed, no hover or pointer (the carousel arrows fade out instead - see the carousel). */
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(
+    .ul-out-of-stock-button, .ul-btn:disabled:not(.ul-btn--icon), .ul-btn.disabled,
+    .site-content button.button:disabled, .site-content .button.disabled, .gform_wrapper .gform_button:disabled
+),
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(
+    .ul-out-of-stock-button, .ul-btn:disabled:not(.ul-btn--icon), .ul-btn.disabled,
+    .site-content button.button:disabled, .site-content .button.disabled, .gform_wrapper .gform_button:disabled
+):is(:hover, :focus-visible) {
+    color: var(--ul-btn-disabled-text);
+    background: var(--ul-btn-disabled-bg);
+    border-color: var(--ul-btn-disabled-bg);
+    cursor: not-allowed;
+    opacity: 1
+}
+
+/* Product section headings (e.g. "On Sale"): plum text, no pill - no background, border, shadow
+   or padding (set explicitly so nothing from the parent theme shows through). The light 300 weight
+   comes from the product section title rule above. The header row keeps the parent theme's
+   grey bottom rule. */
+.cat-header .cat-title,
+.cat-header h2,
+.cat-header h3 {
+    color: #3b1d4a!important;
+    background: none!important;
+    border: 0!important;
+    box-shadow: none!important;
+    padding: 0!important
+}
+
+
+/*
+ * Product grid cards: consistent height + non-wrapping cart row.
+ * Titles (SKU / name / promo note, separated by <br>) get a fixed 6-line box
+ * (7 on phones) and are clamped with an ellipsis; the price/cart box is pinned to
+ * the bottom of the card. Quantity + Add to cart sit in a nowrap flex row.
+ * List view (.shop-view-list) is left alone.
+ */
+body:not(.shop-view-list) ul.products:not(.slick-slider) li.product {
+    display: flex
+}
+
+/* Product grids and carousels - one sizing rule everywhere: as many cards as fit the list's own
+   container at 215px or more each (the cart row's "Out of stock" needs ~214px; "Add to cart" ~204px),
+   never fewer than 2 and never more than 5. The element holding the list is a size container, and the column count steps
+   at multiples of 215px of its width - so the shop's filter sidebar, Martfury's page container and the
+   home page's fixed Elementor boxes need no breakpoints of their own. Replaces the parent theme's
+   col-xs-6 / col-sm-4 / col-mf-5 widths; the carousels read the same count (.ul-carousel below). List
+   view and Slick sliders are left alone. */
+body:not(.shop-view-list) :has(> ul.products:not(.slick-slider)) {
+    container-type: inline-size
+}
+
+body:not(.shop-view-list) ul.products:not(.slick-slider) {
+    --ul-cols: 2
+}
+
+@container (min-width: 645px) {
+    body:not(.shop-view-list) ul.products:not(.slick-slider) {
+        --ul-cols: 3
+    }
+}
+
+@container (min-width: 860px) {
+    body:not(.shop-view-list) ul.products:not(.slick-slider) {
+        --ul-cols: 4
+    }
+}
+
+/* At most 5 across: at the 1440px content width 6 cards (~240px each) looked crowded, so the widest
+   lists get ~288px cards instead. */
+@container (min-width: 1075px) {
+    body:not(.shop-view-list) ul.products:not(.slick-slider) {
+        --ul-cols: 5
+    }
+}
+
+body:not(.shop-view-list) ul.products:not(.slick-slider) > li.product {
+    width: calc(100% / var(--ul-cols))
+}
+
+/* 10px corners (as on the shop sidebar and toolbar cards) so the card's edge follows the rounded
+   corners of its hover glow - a blurred shadow always rounds off square corners. The same inner padding
+   on every card, in every grid and carousel at every width - so the hover glow never sits against the
+   image, title or cart row - scaled to the card: 7% of its width, 10px to 20px (the parent theme had
+   20px 20px 0 from 1200px and none at all below 992px). */
+body:not(.shop-view-list) ul.products li.product .product-inner {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: clamp(10px, 7%, 20px);
+    border-radius: 10px;
+    transition: box-shadow .2s ease
+}
+
+/* Hover: the same even purple glow as the #topcta and footer pills (--ul-purple-shadow) - the only
+   hover effect on the card (no growing card or zooming image). The parent theme's grey #c0c0c0 hover
+   border (on the card and its hover details panel) is kept transparent, so the glow alone marks the
+   card's edge; the 1px border itself stays so nothing shifts on hover. */
+body:not(.shop-view-list) ul.products li.product .product-inner:hover {
+    border-color: transparent;
+    box-shadow: var(--ul-purple-shadow)
+}
+
+body:not(.shop-view-list) ul.products li.product .product-inner:hover .mf-product-details-hover {
+    border-color: transparent
+}
+
+/* The whole card clicks through to the product page (js/product-card-link.js), padding included. */
+ul.products li.product .product-inner {
+    cursor: pointer
+}
+
+/* The theme's jQuery UI tooltips (e.g. "Quick View" over the thumbnail icons) are appended to <body>,
+   outside the card, and positioned once when they open - while the icons are still sliding in - so one
+   can land under the pointer; hovering it counts as leaving the card. Tooltips are labels only, so let
+   the pointer pass through them. */
+.martfury-tooltip {
+    pointer-events: none
+}
+
+/* Quick view / wishlist on the thumbnail: the parent theme's (and production's) white bar that slides up
+   over the bottom of the image on hover, icons inside. Only fixes on top of it:
+   - the heart is centred in its hover circle: YITH Wishlist 4 draws it as an SVG with a 5px right margin
+     and a 25px width, and the parent theme adds a 2px top margin, which pushed it off-centre;
+   - in the "added" / "already in wishlist" states YITH outputs a text link, so the text is hidden and a
+     filled heart drawn in the brand pink instead (white on the pink hover circle);
+   - the bar also shows when the card has keyboard focus;
+   - the bar is semi-transparent white (with a light blur behind it, so the icons stay legible);
+   - it fades as well as slides, both ways: the parent theme only transitions bottom, so its opacity
+     snapped to 0 on un-hover and the slide back down happened out of sight. */
+.woocommerce ul.products li.product .mf-product-thumbnail .footer-button {
+    background-color: rgba(255,255,255,.75);
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+    transition: bottom .3s ease, opacity .3s ease
+}
+
+body:not(.shop-view-list) ul.products li.product .product-inner:focus-within .mf-product-thumbnail .footer-button {
+    bottom: 0;
+    opacity: 1
+}
+
+ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist a .yith-wcwl-icon,
+ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist a .yith-wcwl-icon-svg {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+    font-size: 18px;
+    line-height: 1;
+    color: inherit;
+    vertical-align: middle
+}
+
+ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist .feedback {
+    display: none
+}
+
+body ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist .yith-wcwl-wishlistaddedbrowse a,
+body ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist .yith-wcwl-wishlistexistsbrowse a {
+    font-size: 0;
+    color: var(--mf-background-primary-color)
+}
+
+body ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist .yith-wcwl-wishlistaddedbrowse a:hover,
+body ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist .yith-wcwl-wishlistexistsbrowse a:hover {
+    color: var(--mf-background-primary-text-color)
+}
+
+body ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist .yith-wcwl-wishlistaddedbrowse a > *,
+body ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist .yith-wcwl-wishlistexistsbrowse a > * {
+    display: none
+}
+
+body ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist .yith-wcwl-wishlistaddedbrowse a::before,
+body ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist .yith-wcwl-wishlistexistsbrowse a::before {
+    content: "";
+    display: block;
+    width: 18px;
+    height: 18px;
+    background-color: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E") center / contain no-repeat
+}
+
+body:not(.shop-view-list) ul.products li.product .mf-product-details {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto
+}
+
+body:not(.shop-view-list) ul.products li.product .woo-loop-product__title {
+    min-height: 0;
+    height: calc(6 * 1.3em);
+    line-height: 1.3em;
+    overflow: hidden;
+    margin-bottom: 0;
+    padding-bottom: 0!important
+}
+
+body:not(.shop-view-list) ul.products li.product .woo-loop-product__title a {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 6;
+    line-clamp: 6;
+    overflow: hidden;
+    line-height: 1.3em
+}
+
+body:not(.shop-view-list) ul.products li.product .mf-product-price-box {
+    margin-top: auto;
+    min-height: 53px
+}
+
+/* The quantity box and the button share a row where the button's label fits beside it; on narrower cards
+   (phones) the button wraps onto its own line below instead of cutting its label off - it can grow but
+   never shrink below its label (flex: 1 0 auto below). */
+body:not(.shop-view-list) ul.products li.product form.cart {
+    display: flex!important;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px 12px;
+    margin-top: 12px
+}
+
+body:not(.shop-view-list) ul.products li.product form.cart .quantity {
+    flex: 0 0 auto;
+    width: auto!important;
+    margin: 0!important
+}
+
+body:not(.shop-view-list) ul.products li.product form.cart .qty-box {
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+    height: 36px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 3px;
+    white-space: nowrap
+}
+
+/* Input and button metrics that the older grid-only rules near the top of this file set for the shop
+   and home page widgets, applied to every product card so the related products / upsells carousels
+   on product pages don't fall back to Martfury's product-page sizes (wide input, 25px button padding). */
+body:not(.shop-view-list) ul.products li.product form.cart .qty-box .qty {
+    width: 22px;
+    height: 35px;
+    font-size: 13px!important
+}
+
+body:not(.shop-view-list) ul.products li.product form.cart button {
+    flex: 1 0 auto;
+    width: auto!important;
+    max-width: 150px;
+    padding: 0 5px!important;
+    letter-spacing: -1px!important;
+    min-width: 0;
+    margin: 0!important;
+    box-sizing: border-box;
+    height: 36px!important;
+    line-height: 34px!important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis
+}
+
+@media (max-width: 767px) {
+    body:not(.shop-view-list) ul.products li.product .woo-loop-product__title {
+        height: calc(7 * 1.3em)
+    }
+
+    /* Two-up phone cards are ~170px wide: tighter gap and smaller button text so
+       "Add to cart" fits next to the padded quantity box. */
+    body:not(.shop-view-list) ul.products li.product form.cart {
+        gap: 6px
+    }
+
+    body:not(.shop-view-list) ul.products li.product form.cart button {
+        font-size: 14px!important
+    }
+
+    body:not(.shop-view-list) ul.products li.product .woo-loop-product__title a {
+        -webkit-line-clamp: 7;
+        line-clamp: 7
+    }
+}
+
+/*
+ * Product carousels (the home page "On Sale" deals carousel, and the related products / upsells
+ * carousels on product pages): every slide stretches to the tallest one, the same as the grid
+ * cards above. Slick sizes the track to its tallest slide, including off-screen ones, so without
+ * this shorter slides (e.g. out of stock ones, or short titles) end at different heights and their
+ * cart rows don't line up. The cart row is pinned to the bottom of each card, and on the home page
+ * the "More On-Sale Products" button sits a fixed 40px below the carousel.
+ */
+ul.products.slick-slider .slick-track {
+    display: flex!important
+}
+
+ul.products.slick-slider .slick-track > li.product {
+    display: flex!important;
+    float: none!important;
+    height: auto!important
+}
+
+/* Slick clips its slides (.slick-list is overflow: hidden), which cut off the cards' purple hover
+   shadow above and below (it reaches ~12px up and ~24px down). Move the clip edge out vertically
+   with padding and cancel it with equal negative margins, so the carousel's size and position are
+   unchanged. Not horizontally - that would reveal the neighbouring off-screen slides. */
+ul.products.slick-slider .slick-list {
+    padding-top: 16px!important;
+    padding-bottom: 28px!important;
+    margin-top: -16px!important;
+    margin-bottom: -28px!important
+}
+
+/* Home page product sections (front-page.php): the spacing the Elementor layout had - 10px above "On Sale",
+   the "More On-Sale Products" button 40px below the carousel, "Latest Adult Products" further down, and
+   the two links under the grid. */
+.ul-home-products {
+    padding-top: 10px
+}
+
+/* Section headings: Martfury's product grid widget heading - a row with a light rule under it, 15px
+   below the title, 30px above the products. */
+.ul-home-products .cat-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #e3e3e3;
+    padding-bottom: 15px;
+    margin-bottom: 30px
+}
+
+.ul-home-products .cat-header .cat-title {
+    line-height: 1;
+    margin: 0
+}
+
+.ul-home-more {
+    margin-top: 40px;
+    text-align: center
+}
+
+.ul-home-latest {
+    margin-top: 65px
+}
+
+.ul-home-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    margin-top: 25px;
+    padding-bottom: 15px
+}
+
+/* Out of stock loop items: the quantity + button row is shown disabled (see
+   woocommerce_template_loop_add_to_cart() in functions.php). */
+form.cart.ul-out-of-stock .quantity {
+    opacity: .45
+}
+
+form.cart.ul-out-of-stock .quantity,
+form.cart.ul-out-of-stock .quantity * {
+    pointer-events: none;
+    cursor: not-allowed
+}
+
+form.cart.ul-out-of-stock .quantity .qty {
+    background: transparent;
+    color: inherit
+}
+
+/* (The Out of stock button itself is the button system's disabled state - see "Buttons" below.) */
+
+/* The quantity template's visible "Quantity" label - already hidden in the shop grid and home page
+   widgets by the older rules near the top of this file, but not in the related products / upsells
+   carousels on product pages. The screen-reader label is kept. */
+ul.products li.product form.cart label.label {
+    display: none!important
+}
+
+/*
+ * Page container: every page type now uses the wide .martfury-container (see functions.php). Pages built
+ * in Elementor put their content in boxed sections, which Martfury caps at Bootstrap's 1170 / 970 / 750px
+ * and centres; on those pages (not the home page, whose sections, #topcta/#bottomcta and footer are laid
+ * out around that width) the boxes fill the page container instead, so their content lines up with the
+ * header and breadcrumbs like every other page's.
+ */
+body:not(.home) #content .elementor-section.elementor-section-boxed > .elementor-container {
+    width: auto;
+    max-width: none
+}
+
+/* Classic (non-Elementor) pages - e.g. Buy Wholesale, About, Ordering Info, My Account, Checkout - inset
+   their content 20px on both sides, the same inset the Elementor pages' text has (their section and inner
+   section each pad their columns by 10px) and the breadcrumbs have, so every page's text starts at the
+   same place. */
+body.page:not(.elementor-page):not(.home) #content .entry-content {
+    padding-left: 20px;
+    padding-right: 20px
+}
+
+/*
+ * Product page section headings - "Related products" (and upsells, which share the class) and the
+ * "Your Recently Viewed Products" block - in the same style as the home page product section headings
+ * (.cat-header, e.g. "On Sale"): left-aligned plum text in Work Sans' light 300 weight over a thin grey
+ * rule, instead of the parent theme's centered text on a grey bar.
+ */
+section.related .related-title,
+section.up-sells .related-title,
+#footer-recently-viewed .recently-header,
+#footer-bot-recently-viewed .recently-header {
+    background: none!important;
+    border: 0!important;
+    border-bottom: 1px solid #e1e1e1!important;
+    border-radius: 0;
+    text-align: left!important;
+    padding: 0 0 13px!important;
+    margin: 0 0 30px!important
+}
+
+section.related .related-title,
+section.up-sells .related-title,
+#footer-recently-viewed .recently-header .title,
+#footer-bot-recently-viewed .recently-header .title {
+    font-size: var(--ul-section-title-size)!important;
+    font-weight: var(--ul-display-weight)!important;
+    line-height: 1.2!important;
+    color: #3b1d4a!important;
+    text-align: left!important
+}
+
+#footer-recently-viewed .recently-header,
+#footer-bot-recently-viewed .recently-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between
+}
+
+#footer-recently-viewed .recently-header .title,
+#footer-bot-recently-viewed .recently-header .title {
+    margin: 0!important
+}
+
+/*
+ * Product carousel - the home page's "On Sale" deals, related products, upsells and the footer's
+ * recently viewed products
+ * (.ul-carousel around a standard ul.products; js/product-carousel.js adds the buttons and progress bar).
+ * The list is a native horizontal scroller with snapping, and its cards are the product grid's cards:
+ * no .slick-slider class, so the grid card rules above apply as is (flex cards, hover shadow, fixed
+ * title box, cart row). What tells visitors it scrolls sideways:
+ *  - round previous/next buttons over the product images (wrapping round at either end),
+ *  - a progress bar under the cards, sized to the share in view.
+ */
+/* Cards per view: the same count as the product grids (--ul-cols, set from the carousel's own width by
+   the container queries above - the carousel is the list's container). The home page's "On Sale" deals
+   carousel is this carousel too (js/deals-carousel.js replaces Martfury's Slick slider with it). */
+/* flow-root: the scroller's negative top margin (below) stays inside the carousel instead of collapsing
+   through it, so the carousel's box starts at the cards - which the arrows' centring relies on. */
+.ul-carousel {
+    position: relative;
+    display: flow-root
+}
+
+/* The scroller. Its padding gives the cards' hover shadow room (a scroller clips on both axes),
+   cancelled by equal negative margins so the cards sit where the list did. isolation keeps everything in
+   the cards (e.g. the thumbnail's Quick view / favourites bar, z-index 10) in its own layer, below the
+   previous/next buttons. */
+.ul-carousel ul.products {
+    isolation: isolate;
+    display: flex!important;
+    flex-wrap: nowrap!important;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 10px;
+    scrollbar-width: none;
+    padding: 16px 10px 28px!important;
+    margin: -16px -10px -28px!important;
+    -webkit-overflow-scrolling: touch
+}
+
+.ul-carousel ul.products::-webkit-scrollbar {
+    display: none
+}
+
+.ul-carousel ul.products > li.product {
+    flex: 0 0 calc(100% / var(--ul-cols));
+    width: auto!important;
+    max-width: none!important;
+    float: none!important;
+    margin: 0!important;
+    scroll-snap-align: start
+}
+
+/* Dragging (mouse, or the progress bar's thumb): no snapping or smoothing mid-drag, no text selection. */
+@media (hover: hover) and (pointer: fine) {
+    .ul-carousel.is-scrollable ul.products {
+        cursor: grab
+    }
+}
+
+.ul-carousel.is-dragging ul.products {
+    scroll-snap-type: none;
+    scroll-behavior: auto;
+    cursor: grabbing;
+    user-select: none;
+    -webkit-user-select: none
+}
+
+/* Previous/next: solid brand-pink circles like the site's other buttons, with a slight plum shadow
+   that drops deeper on hover as the circle lifts, vertically centred on the cards (the carousel's
+   height less the 30px progress bar below them - the arrows only show when it does), straddling the
+   carousel's edges, their outer edges on the content's (see below). Hidden when there's nothing to
+   scroll, and on phones (swipe instead). */
+/* The arrows are the button system's primary icon buttons (ul-btn ul-btn--primary ul-btn--icon - colours,
+   border, 46px circle, focus ring; see "Buttons" below); here only their placement and motion. */
+.ul-carousel__arrow {
+    position: absolute;
+    top: calc((100% - 30px) / 2);
+    z-index: 3;
+    transform: translateY(-50%)
+}
+
+/* The arrows straddle the carousel's edges, and wherever they show (from 768px) the carousel is inset by
+   half an arrow (23px) each side - so each circle's outer edge lines up with the content above it (the
+   section heading, the page's content edges). */
+.ul-carousel__arrow--prev {
+    left: -23px
+}
+
+.ul-carousel__arrow--prev svg {
+    transform: scaleX(-1)
+}
+
+.ul-carousel__arrow--next {
+    right: -23px
+}
+
+@media (min-width: 768px) {
+    .ul-carousel {
+        margin-left: 23px;
+        margin-right: 23px
+    }
+}
+
+.ul-carousel__arrow:hover,
+.ul-carousel__arrow:focus-visible {
+    transform: translateY(-50%) scale(1.06)
+}
+
+/* The shadow carries the button system's id weight (and its transition list, plus box-shadow) - the
+   base .ul-btn rule sets box-shadow:none at that weight. On hover the circle scales up as if lifted, so
+   its shadow drops further and spreads softer to match. */
+:is(#page, #mf-quick-view-modal, .swal2-container) .ul-carousel__arrow {
+    box-shadow: 0 4px 10px rgba(59,29,74,.3);
+    transition: background-color .2s ease, border-color .2s ease, color .2s ease, opacity .2s ease, visibility .2s ease, transform .15s ease, box-shadow .15s ease
+}
+
+:is(#page, #mf-quick-view-modal, .swal2-container) .ul-carousel__arrow:is(:hover, :focus-visible) {
+    box-shadow: 0 8px 18px rgba(59,29,74,.28)
+}
+
+.ul-carousel__arrow:disabled,
+.ul-carousel:not(.is-scrollable) .ul-carousel__arrow {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none
+}
+
+@media (max-width: 767px) {
+    .ul-carousel__arrow {
+        display: none
+    }
+}
+
+/* Progress bar: a thin lavender track with a purple thumb as wide as the share of cards in view.
+   The element is a 16px hit area; the visible track is 4px (6px while hovered or dragged). */
+.ul-carousel__progress {
+    position: relative;
+    height: 16px;
+    margin-top: 14px;
+    cursor: pointer;
+    touch-action: none
+}
+
+.ul-carousel:not(.is-scrollable) .ul-carousel__progress {
+    display: none
+}
+
+.ul-carousel__progress:before,
+.ul-carousel__thumb {
+    position: absolute;
+    top: 6px;
+    height: 4px;
+    border-radius: 999px;
+    transition: top .15s ease, height .15s ease
+}
+
+.ul-carousel__progress:before {
+    content: "";
+    left: 0;
+    right: 0;
+    background: rgba(177,101,255,.15)
+}
+
+.ul-carousel__thumb {
+    left: 0;
+    background: linear-gradient(90deg, #d7aae6, rgb(177,101,255));
+    cursor: grab
+}
+
+.ul-carousel__progress:hover:before,
+.ul-carousel__progress:hover .ul-carousel__thumb,
+.ul-carousel.is-dragging .ul-carousel__progress:before,
+.ul-carousel.is-dragging .ul-carousel__thumb {
+    top: 5px;
+    height: 6px
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ul-carousel ul.products {
+        scroll-behavior: auto
+    }
+}
+
+/* Out of stock cards for logged-in users: the Back In Stock Notifier's "Notify Me When Available"
+   button takes the cart row's place (see woocommerce_template_loop_add_to_cart() in functions.php),
+   as an outline version of the Add to cart button. The older .cwg_popup_submit rule near the top of
+   this file (relative, top:-29px) is for the product page and is undone here. */
+body:not(.shop-view-list) ul.products li.product .ul-notify-row {
+    display: flex;
+    justify-content: center;
+    margin-top: 12px
+}
+
+body:not(.shop-view-list) ul.products li.product .ul-notify-row .cwg_popup_submit {
+    position: static;
+    top: auto!important;
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 226px;
+    /* Colours, border and states: the button system's secondary variant ("Buttons" below). The card's own
+       compact sizing wins over the system's small size, like the Add to cart button's. */
+    height: 36px!important;
+    min-height: 0!important;
+    margin: 0;
+    padding: 0 8px!important;
+    font-size: 14px!important;
+    line-height: 1.1!important;
+    letter-spacing: -.3px;
+    display: block!important;
+    /* The label wraps to two lines inside the 36px button when the card is too narrow for one. */
+    white-space: normal;
+    overflow: hidden
+}
+
+@media (max-width: 767px) {
+    body:not(.shop-view-list) ul.products li.product .ul-notify-row .cwg_popup_submit {
+        font-size: 13px!important;
+        padding: 0 6px!important
+    }
+}
+
+/*
+ * Product page summary for guests (logged out). The stock status is hidden from guests (.stock above),
+ * which left Martfury's summary header (.mf-summary-header - just the stock status) as an empty box
+ * whose bottom rule floated under the title, with the "Please Register/Login to see the price" prompt
+ * below it. Hide the header when the stock status is all it holds, and give the prompt the header's
+ * rule and spacing, so it takes the price + status block's place for guests. The prompt's first,
+ * empty span (and the -10px margin that offset it) is dropped so its rule lines up with the others.
+ */
+body:not(.logged-in) .entry-summary .mf-summary-header:not(:has(> :not(.mf-summary-meta))):not(:has(.mf-summary-meta > :not(.stock))) {
+    display: none
+}
+
+body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper {
+    margin: 0 0 15px!important;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e1e1e1
+}
+
+body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:first-child:empty {
+    display: none
+}
+
+body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:first-child:empty + .ced_hpul_login_link {
+    margin-left: 0
+}
+
+/*
+ * Quick view popup. The parent theme floats a 43%-wide, 430px-tall gallery and absolutely positions the
+ * summary beside it, so the popup was always 430px tall and the summary scrolled inside it. The name /
+ * brand / SKU header is moved ahead of the gallery by ultralove_replace_quick_view_header() in
+ * functions.php, and here:
+ * - At >=992px, two columns in a grid: the image on the left, vertically centred and as tall as the
+ *   window allows; the header over the summary (price, quantity, Add to cart, wishlist) on the right.
+ *   The popup is 960px wide, as tall as its content, centred (top: 50% + translate(-50%, -50%) in the
+ *   parent theme), capped at the window height minus 40px top and bottom, and scrolls as a whole beyond that.
+ * - Below 992px, the parent theme's side sheet (85% wide, max 600px) holds one column - header, image
+ *   (centred, up to 400px tall), summary - and scrolls as a whole.
+ */
+#mf-quick-view-modal div.product .mf-product-detail {
+    display: flex;
+    flex-direction: column
+}
+
+/* The header and the summary below it have 30px of padding each side, at every size. */
+#mf-quick-view-modal div.product .mf-entry-product-header {
+    margin: 0 0 20px;
+    padding: 20px 30px 8px
+}
+
+#mf-quick-view-modal div.product .woocommerce-product-gallery {
+    float: none;
+    width: 100%;
+    min-height: 0;
+    padding: 0 20px
+}
+
+#mf-quick-view-modal div.product .woocommerce-product-gallery__image img {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    max-height: 400px;
+    margin: 0 auto;
+    object-fit: contain
+}
+
+#mf-quick-view-modal div.product .entry-summary {
+    position: static;
+    width: 100%;
+    float: none;
+    overflow: visible;
+    padding: 20px 30px
+}
+
+@media (min-width: 992px) {
+    #mf-quick-view-modal .modal-content {
+        max-width: 960px
+    }
+
+    #mf-quick-view-modal div.product .mf-product-detail {
+        display: grid;
+        grid-template-columns: minmax(0, 45%) minmax(0, 1fr);
+        grid-template-rows: auto 1fr;
+        grid-template-areas: "gallery header" "gallery summary";
+        max-height: calc(100vh - 80px);
+        overflow-y: auto
+    }
+
+    #mf-quick-view-modal div.product .mf-entry-product-header {
+        grid-area: header;
+        margin: 0 0 20px;
+        padding: 30px 30px 8px
+    }
+
+    #mf-quick-view-modal div.product .woocommerce-product-gallery {
+        grid-area: gallery;
+        align-self: center;
+        padding: 30px
+    }
+
+    #mf-quick-view-modal div.product .woocommerce-product-gallery__image img {
+        max-height: calc(100vh - 140px)
+    }
+
+    #mf-quick-view-modal div.product .entry-summary {
+        grid-area: summary;
+        padding: 0 30px 30px
+    }
+}
+
+/*
+ * Product page: the quantity, Add to cart and wishlist heart sit vertically centred between the rule
+ * above (under the short description) and the rule below (above the categories/meta). They were
+ * floats with uneven margins (19px above the row, 32px below, the heart 10px lower than the others).
+ * Now a flex row with the items centred on each other and 25px above and below. Simple products only
+ * (the variations form is laid out differently); the quick view popup is left as is.
+ */
+.site-content .entry-summary form.cart:not(.variations_form) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 25px 0!important
+}
+
+/* The form's clearfix ::before/::after would become empty flex items (and take a gap each). */
+.site-content .entry-summary form.cart:not(.variations_form)::before,
+.site-content .entry-summary form.cart:not(.variations_form)::after {
+    display: none
+}
+
+.site-content .entry-summary form.cart:not(.variations_form) > .quantity,
+.site-content .entry-summary form.cart:not(.variations_form) > .single_add_to_cart_button,
+.site-content .entry-summary form.cart:not(.variations_form) > .actions-button {
+    float: none!important;
+    margin-top: 0!important;
+    margin-bottom: 0!important;
+    top: 0!important
+}
+
+.site-content .entry-summary form.cart:not(.variations_form) > .actions-button {
+    display: flex;
+    align-items: center;
+    padding-top: 0!important
+}
+
+.site-content .entry-summary form.cart:not(.variations_form) > .actions-button .yith-wcwl-add-to-wishlist {
+    float: none;
+    margin-top: 0!important;
+    margin-bottom: 0!important
+}
+
+.site-content .entry-summary form.cart:not(.variations_form) > .actions-button .yith-wcwl-add-to-wishlist a {
+    display: flex;
+    align-items: center
+}
+
+.site-content .entry-summary .woocommerce-product-details__short-description {
+    margin-bottom: 0!important
+}
+
+/* Phones: quantity, button and heart on one line - 12px gaps, the button takes the remaining width. */
+@media (max-width: 767px) {
+    .site-content .entry-summary form.cart:not(.variations_form) {
+        flex-wrap: nowrap;
+        gap: 12px
+    }
+
+    .site-content .entry-summary form.cart:not(.variations_form) > .quantity,
+    .site-content .entry-summary form.cart:not(.variations_form) > .single_add_to_cart_button,
+    .site-content .entry-summary form.cart:not(.variations_form) > .actions-button {
+        margin-left: 0!important;
+        margin-right: 0!important
+    }
+
+    .site-content .entry-summary form.cart:not(.variations_form) > .single_add_to_cart_button {
+        flex: 1 1 auto;
+        width: auto!important;
+        min-width: 0!important
+    }
+
+    /* Martfury gives the wishlist wrapper a percentage width on phones; size it to the heart instead. */
+    .site-content .entry-summary form.cart:not(.variations_form) > .actions-button {
+        flex: 0 0 auto;
+        width: auto!important
+    }
+}
+
+/*
+ * More of the aurora backdrop above and below the content of #topcta and the #bottomcta + footer box
+ * (#hero-footer-combo): 60px more at each outer edge (32px on phones). The 85px white fades at the
+ * top and bottom edges stay as they are, so the extra space shows pattern rather than white before
+ * it fades out.
+ */
+#topcta {
+    padding-top: 64px;
+    padding-bottom: 124px
+}
+
+#bottomcta {
+    padding-top: 148px
+}
+
+#hero-footer-combo {
+    padding-bottom: 60px
+}
+
+@media (max-width:678px) {
+    #topcta {
+        padding-top: 40px;
+        padding-bottom: 80px
+    }
+
+    #bottomcta {
+        padding-top: 88px
+    }
+
+    #hero-footer-combo {
+        padding-bottom: 32px
+    }
+}
+
+/* 24px of white above the home banner slides, between the header's navigation row and them - the same 24px
+   the header row has above and below it. On the section wrapping the banner rather than .ub-banner-home
+   itself, whose height is fixed by its aspect ratio - a border there would crop 24px off the slides. Below
+   the slides there's no gap: #topcta shares their aurora backdrop. */
+.ul-home-banner {
+    border-top: 24px solid #fff
+}
+
+/* Header navigation: a white underline that grows from the centre on hover / keyboard focus, and stays
+   on the current page's item in lavender (the aurora backdrop's rgb(215, 170, 230)), turning white
+   while that item is hovered / focused. */
+.site-header .primary-nav>ul>li>a {
+    position: relative;
+    padding-left: 10px!important;
+    padding-right: 10px!important
+}
+
+.site-header .primary-nav>ul>li>a::after {
+    content: "";
+    position: absolute;
+    /* inset by the link's horizontal padding, so the underline is the width of the text */
+    left: 10px;
+    right: 10px;
+    bottom: -6px;
+    height: 2px;
+    background: #fff;
+    transform: scaleX(0);
+    transform-origin: center;
+    transition: transform .25s ease, background-color .25s ease
+}
+
+.site-header .primary-nav>ul>li>a:hover::after,
+.site-header .primary-nav>ul>li>a:focus-visible::after,
+.site-header .primary-nav>ul>li.current-menu-item>a::after,
+.site-header .primary-nav>ul>li.current-menu-ancestor>a::after {
+    transform: scaleX(1)
+}
+
+.site-header .primary-nav>ul>li.current-menu-item>a::after,
+.site-header .primary-nav>ul>li.current-menu-ancestor>a::after {
+    background: #d7aae6
+}
+
+/* after the rule above, which has the same specificity */
+.site-header .primary-nav>ul>li>a:hover::after,
+.site-header .primary-nav>ul>li>a:focus-visible::after {
+    background: #fff
+}
+
+
+
+/* Quick view popup: quantity, Add to cart and the wishlist heart vertically centred on each other (they
+   were floats with uneven top margins) - the same alignment as the product page's cart row above, but
+   keeping the popup's own spacing around the row. Simple products only. */
+#mf-quick-view-modal .entry-summary form.cart:not(.variations_form) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center
+}
+
+#mf-quick-view-modal .entry-summary form.cart:not(.variations_form)::before,
+#mf-quick-view-modal .entry-summary form.cart:not(.variations_form)::after {
+    display: none
+}
+
+#mf-quick-view-modal .entry-summary form.cart:not(.variations_form) > .quantity,
+#mf-quick-view-modal .entry-summary form.cart:not(.variations_form) > .single_add_to_cart_button,
+#mf-quick-view-modal .entry-summary form.cart:not(.variations_form) > .actions-button {
+    float: none!important;
+    margin-top: 0!important;
+    margin-bottom: 0!important;
+    top: 0!important
+}
+
+#mf-quick-view-modal .entry-summary form.cart:not(.variations_form) > .actions-button {
+    display: flex;
+    align-items: center;
+    padding-top: 0!important
+}
+
+#mf-quick-view-modal .entry-summary form.cart:not(.variations_form) > .actions-button .yith-wcwl-add-to-wishlist {
+    float: none;
+    margin-top: 0!important;
+    margin-bottom: 0!important
+}
+
+#mf-quick-view-modal .entry-summary form.cart:not(.variations_form) > .actions-button .yith-wcwl-add-to-wishlist a {
+    display: flex;
+    align-items: center
+}
+
+/* Quick view popup: the product name's container is the link (<a class="ul-qv-title"><h2>, see
+   ultralove_quick_view_header() in functions.php), with the brand/SKU list outside it. The name is
+   underlined while the link is hovered or has keyboard focus. */
+#mf-quick-view-modal .ul-qv-title {
+    display: block;
+    color: inherit;
+    text-decoration: none!important
+}
+
+#mf-quick-view-modal .ul-qv-title:hover .product_title,
+#mf-quick-view-modal .ul-qv-title:focus-visible .product_title {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 2px
+}
+
+/* View Products / Wholesale Signup in #topcta and #bottomcta: 30px apart - the same gap as the home page's
+   "View More New Products" / "Browse Products by Brand" buttons - and 30px apart vertically when they wrap
+   on narrow screens (they were 10px apart from their 5px margins, and nearly touching when wrapped). The
+   buttons' container becomes a centred, wrapping flex row; its 5px top/bottom padding stands in for the
+   buttons' old vertical margins so the spacing around the row is unchanged. */
+#topcta *:has(> a.elementor-button, > a[href]:not(.elementor-button)):not(p):not(h1):not(h2),
+#bottomcta *:has(> a[href]):not(p):not(h1):not(h2) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    padding-top: 5px;
+    padding-bottom: 5px
+}
+
+#topcta a,
+#bottomcta a {
+    margin: 0!important
+}
+
+/* No bottom padding on the main content wrapper - the page content runs straight into the footer
+   area (#hero-footer-combo, which has its own top spacing and fade). */
+.site-content {
+    padding-bottom: 0!important
+}
+
+/*
+ * Log in / Register (My account, logged out): the site's card treatment instead of Martfury's grey
+ * band. The Log in / Register tabs are a pill toggle (active = brand pink, like the buttons), each form
+ * sits in a lavender-bordered card with the purple glow, and the inputs get the lavender focus ring.
+ */
+.woocommerce-account:not(.logged-in) .site-content {
+    background-color: transparent;
+    padding-top: 50px;
+    padding-bottom: 60px
+}
+
+.woocommerce .customer-login .tabs-nav {
+    display: flex;
+    justify-content: center;
+    width: fit-content;
+    margin: 0 auto 28px;
+    padding: 4px;
+    background: #fff;
+    border: 1px solid rgb(177,101,255);
+    border-radius: 999px;
+    box-shadow: var(--ul-purple-shadow)
+}
+
+.woocommerce .customer-login .tabs-nav li {
+    display: block;
+    margin: 0
+}
+
+.woocommerce .customer-login .tabs-nav a {
+    display: block;
+    padding: 8px 26px;
+    border-radius: 999px;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.4;
+    color: #3b1d4a;
+    transition: background-color .2s ease, color .2s ease
+}
+
+.woocommerce .customer-login .tabs-nav a:hover {
+    color: var(--ul-btn-pink)
+}
+
+.woocommerce .customer-login .tabs-nav a.active {
+    color: #fff;
+    background: var(--ul-btn-pink)
+}
+
+.woocommerce .customer-login .tabs-content {
+    max-width: 440px
+}
+
+.woocommerce .customer-login .tabs-panel {
+    padding: 32px 30px 28px;
+    border: 1px solid rgb(177,101,255);
+    border-radius: 10px;
+    box-shadow: var(--ul-purple-shadow)
+}
+
+.woocommerce .customer-login .tabs-panel h2 {
+    margin: 0 0 24px;
+    font-size: 20px;
+    color: #3b1d4a;
+    text-align: center
+}
+
+
+/* The Register tab only links to the wholesale signup (WooCommerce's own register form is hidden above):
+   centre that button under its heading. */
+.woocommerce .customer-login .tabs-panel > .footlink {
+    display: table;
+    margin: 0 auto
+}
+
+.woocommerce .customer-login .lost-password,
+.woocommerce .customer-login .woocommerce-privacy-policy-text a {
+    color: var(--ul-btn-pink)
+}
+
+/* Remember me: Martfury hides the real checkbox and draws one with a Linearicons glyph - an empty glyph
+   when unchecked (so no box showed at all) and one the child theme's icon subset doesn't include when
+   checked. Drawn in CSS instead: a lavender-bordered box, pink with a white tick when checked. */
+.woocommerce .customer-login .woocommerce-form__label-for-checkbox span:before {
+    content: "";
+    top: -2px;
+    width: 18px;
+    height: 18px;
+    box-sizing: border-box;
+    border: 1px solid rgb(177,101,255);
+    border-radius: 4px;
+    background: #fff;
+    font: inherit;
+    transition: background-color .15s ease, border-color .15s ease
+}
+
+.woocommerce .customer-login .woocommerce-form__label-for-checkbox .woocommerce-form__input-checkbox:checked + span:before {
+    content: "";
+    border-color: var(--ul-btn-pink);
+    background: var(--ul-btn-pink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / 14px no-repeat
+}
+
+.woocommerce .customer-login .woocommerce-form__label-for-checkbox .woocommerce-form__input-checkbox:focus-visible + span:before {
+    box-shadow: 0 0 0 3px rgba(177,101,255,.3)
+}
+
+/*
+ * Form pages - any page whose content is intro text plus a Gravity Form (Buy Wholesale's signup, form 2;
+ * Contact Us, form 3): a readable column instead of text and form stretched across the whole container
+ * (the signup form was 1,600px wide at 1920px). Below 1200px one centred 760px column; from 1200px the
+ * intro sits beside the form. The form is a lavender card with the purple glow, its inputs match the
+ * account forms. The footer's contact form (#gform_wrapper_1, in a widget, not page content) is left alone.
+ */
+.entry-content:has(> .gform_wrapper) {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 20px 0 50px
+}
+
+.entry-content:has(> .gform_wrapper) > p {
+    font-size: 17px;
+    line-height: 1.6;
+    color: #4a3558
+}
+
+.entry-content:has(> .gform_wrapper) > p a {
+    color: var(--ul-btn-pink);
+    text-decoration: underline;
+    text-underline-offset: 3px
+}
+
+@media (min-width: 1200px) {
+    .entry-content:has(> .gform_wrapper) {
+        display: grid;
+        grid-template-columns: minmax(0, 340px) minmax(0, 760px);
+        justify-content: center;
+        align-items: start;
+        column-gap: 56px;
+        max-width: none
+    }
+
+    .entry-content:has(> .gform_wrapper) > p {
+        grid-column: 1;
+        margin: 0 0 18px
+    }
+
+    .entry-content:has(> .gform_wrapper) > .gform_wrapper {
+        grid-column: 2;
+        grid-row: 1 / span 20
+    }
+}
+
+#content .entry-content > .gform_wrapper {
+    padding: 32px 36px 30px;
+    background: #fff;
+    border: 1px solid rgb(177,101,255);
+    border-radius: 10px;
+    box-shadow: var(--ul-purple-shadow)
+}
+
+#content .entry-content > .gform_wrapper .gfield_label {
+    font-size: 15px;
+    color: #3b1d4a
+}
+
+#content .entry-content > .gform_wrapper .gform-field-label--type-sub,
+#content .entry-content > .gform_wrapper .gform_fileupload_rules {
+    font-size: 13px;
+    color: #6f6578
+}
+
+
+#content .entry-content > .gform_wrapper textarea {
+    height: 170px;
+    min-height: 0
+}
+
+
+@media (max-width: 767px) {
+    #content .entry-content > .gform_wrapper {
+        padding: 22px 16px
+    }
+}
+
+/*
+ * Form fields - one style for the site's forms: log in / register and every My account form (addresses,
+ * account details), the form pages' Gravity Forms (Buy Wholesale, Contact Us) and the Notify me dialog. 44px, lavender border,
+ * 5px corners, and the lavender focus ring.
+ */
+:is(
+    .woocommerce-account .woocommerce form :is(.input-text, select, textarea),
+    #content .entry-content > .gform_wrapper :is(input[type="text"], input[type="email"], input[type="tel"], input[type="password"], select, textarea),
+    .cwginstock-subscribe-form :is(input[type="text"], input[type="email"], input[type="tel"])
+) {
+    min-height: 44px;
+    padding: 8px 12px;
+    border: 1px solid var(--ul-btn-lavender);
+    border-radius: 5px;
+    background: #fff;
+    color: #3b1d4a;
+    transition: border-color .15s ease, box-shadow .15s ease
+}
+
+:is(
+    .woocommerce-account .woocommerce form :is(.input-text, select, textarea),
+    #content .entry-content > .gform_wrapper :is(input[type="text"], input[type="email"], input[type="tel"], input[type="password"], select, textarea),
+    .cwginstock-subscribe-form :is(input[type="text"], input[type="email"], input[type="tel"])
+):focus {
+    border-color: rgb(177,101,255);
+    box-shadow: 0 0 0 3px rgba(177,101,255,.18);
+    outline: 0
+}
+
+/*
+ * My account (logged in): the account name and a navigation card on the left, the content on the right
+ * (one column below 992px), in the site's card language - the navigation is a lavender card with the purple
+ * glow, its items plain plum links with the current one a brand-pink pill (like the Log in / Register
+ * toggle); addresses sit in lavender cards; order tables get light lavender rules. Buttons are the button
+ * system's.
+ */
+.woocommerce-account.logged-in .site-content {
+    padding-top: 40px;
+    padding-bottom: 60px
+}
+
+.woocommerce-account.logged-in #content .woocommerce {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px
+}
+
+@media (min-width: 992px) {
+    .woocommerce-account.logged-in #content .woocommerce {
+        grid-template-columns: 260px minmax(0, 1fr);
+        grid-template-rows: auto 1fr;
+        column-gap: 48px;
+        row-gap: 20px;
+        align-items: start
+    }
+
+    .woocommerce-account.logged-in #content .woocommerce > .account-info {
+        grid-column: 1;
+        grid-row: 1
+    }
+
+    .woocommerce-account.logged-in #content .woocommerce > .woocommerce-MyAccount-navigation {
+        grid-column: 1;
+        grid-row: 2
+    }
+
+    .woocommerce-account.logged-in #content .woocommerce > .woocommerce-MyAccount-content {
+        grid-column: 2;
+        grid-row: 1 / span 2
+    }
+}
+
+.woocommerce-account.logged-in #content .woocommerce > :is(.woocommerce-MyAccount-navigation, .woocommerce-MyAccount-content) {
+    width: auto;
+    float: none
+}
+
+.woocommerce-account .woocommerce .account-info {
+    margin: 0
+}
+
+.woocommerce-account .woocommerce .account-info .account-name,
+.woocommerce-account .woocommerce .account-info .account-name h3 {
+    color: #3b1d4a
+}
+
+.woocommerce-account .woocommerce .woocommerce-MyAccount-navigation ul {
+    padding: 8px;
+    background: #fff;
+    border: 1px solid rgb(177,101,255);
+    border-radius: 10px;
+    box-shadow: var(--ul-purple-shadow)
+}
+
+.woocommerce-account .woocommerce .woocommerce-MyAccount-navigation ul li,
+.woocommerce-account .woocommerce .woocommerce-MyAccount-navigation ul li:last-child,
+.woocommerce-account .woocommerce .woocommerce-MyAccount-navigation ul li.is-active {
+    padding: 0;
+    background: none;
+    border: 0
+}
+
+.woocommerce-account .woocommerce .woocommerce-MyAccount-navigation ul li a {
+    display: block;
+    padding: 11px 16px;
+    border-radius: 999px;
+    font-weight: 500;
+    text-transform: none;
+    line-height: 1.3;
+    color: #3b1d4a;
+    transition: background-color .2s ease, color .2s ease
+}
+
+.woocommerce-account .woocommerce .woocommerce-MyAccount-navigation ul li a:is(:hover, :focus-visible) {
+    color: var(--ul-btn-pink)
+}
+
+.woocommerce-account .woocommerce .woocommerce-MyAccount-navigation ul li.is-active a {
+    color: #fff;
+    background: var(--ul-btn-pink)
+}
+
+.woocommerce-account .woocommerce .woocommerce-MyAccount-content {
+    color: #4a3558
+}
+
+.woocommerce-account .woocommerce .woocommerce-MyAccount-content :is(h2, h3) {
+    color: #3b1d4a;
+    font-weight: 300
+}
+
+.woocommerce-account .woocommerce .woocommerce-MyAccount-content a:not(.button) {
+    color: var(--ul-btn-pink)
+}
+
+.woocommerce-account .woocommerce .woocommerce-MyAccount-content .woocommerce-Addresses .woocommerce-Address {
+    padding: 22px 24px;
+    background: #fff;
+    border: 1px solid rgb(177,101,255);
+    border-radius: 10px;
+    box-shadow: var(--ul-purple-shadow)
+}
+
+.woocommerce-account .woocommerce .woocommerce-MyAccount-content .shop_table {
+    border: 1px solid rgba(177,101,255,.35);
+    border-radius: 10px;
+    border-collapse: separate;
+    overflow: hidden
+}
+
+.woocommerce-account .woocommerce .woocommerce-MyAccount-content .shop_table :is(th, td) {
+    border-color: rgba(177,101,255,.2)
+}
+
+.woocommerce-account .woocommerce .woocommerce-MyAccount-content .shop_table thead th {
+    color: #3b1d4a;
+    background: rgba(177,101,255,.06)
+}
+
+/*
+ * Dialogs - SweetAlert2 popups (e.g. Back In Stock Notifier's "Notify me when available"): the site's card
+ * - white, lavender border, purple glow, 10px corners - over a plum-tinted backdrop, with a plum close
+ * button (pink on hover). Inside, the notifier's form drops its Bootstrap panel chrome: a plum heading,
+ * the shared form fields, a full-width primary button (the button system), and its result messages in
+ * tinted boxes rather than bare green / red text.
+ */
+body .swal2-container.swal2-backdrop-show {
+    background: rgba(59,29,74,.45)
+}
+
+body .swal2-container .swal2-popup {
+    width: min(440px, 100vw - 32px);
+    padding: 28px 30px 30px;
+    border: 1px solid rgb(177,101,255);
+    border-radius: 10px;
+    box-shadow: var(--ul-purple-shadow);
+    color: #4a3558
+}
+
+body .swal2-container :is(.swal2-content, .swal2-html-container) {
+    margin: 0;
+    padding: 0
+}
+
+body .swal2-container .swal2-close {
+    color: #3b1d4a;
+    font-weight: 300
+}
+
+body .swal2-container .swal2-close:is(:hover, :focus-visible) {
+    color: var(--ul-btn-pink);
+    box-shadow: none
+}
+
+/* body + the panel-primary forms: outranks the plugin's own prefixed Bootstrap, which loads after this. */
+body .cwginstock-subscribe-form :is(.panel, .panel-primary, .panel-heading, .panel-primary > .panel-heading, .panel-body) {
+    margin: 0;
+    padding: 0;
+    background: none;
+    border: 0;
+    box-shadow: none
+}
+
+.cwginstock-subscribe-form .panel-heading h4 {
+    margin: 0 0 22px;
+    font-size: 22px;
+    font-weight: 300;
+    line-height: 1.3;
+    color: #3b1d4a
+}
+
+body .cwginstock-subscribe-form :is(.row, [class*="col-"]) {
+    margin: 0;
+    padding: 0
+}
+
+.cwginstock-subscribe-form .cwginstock-panel-body :is(input[type="text"], input[type="email"], input[type="tel"]) {
+    margin-bottom: 14px
+}
+
+.cwginstock-subscribe-form .cwgstock_button {
+    width: 100%;
+    margin-top: 6px
+}
+
+.cwginstock-subscribe-form :is(.cwginstocksuccess, .cwginstockerror) {
+    margin-top: 14px;
+    padding: 10px 14px;
+    border-radius: 5px;
+    text-align: center
+}
+
+.cwginstock-subscribe-form .cwginstocksuccess {
+    color: #1f6b3d!important;
+    background: rgba(46,160,90,.1)
+}
+
+.cwginstock-subscribe-form .cwginstockerror {
+    color: var(--ul-btn-pink)!important;
+    background: rgba(179,9,75,.07)
+}
+
+/* Brands We Carry ([ultralove_brand_grid], the markup of martfury-addons' Brand Images widget): brand cards
+   in the product cards' style - white, 10px corners, the shared purple hover glow, the name in the product
+   names' plum (brand pink on hover). As many 170px+ cards as fit the page container (7 across at 1440px),
+   which keeps every logo at or below its 215px size. Every logo image has the same grey bevelled frame and
+   drop shadow drawn into it; the logo is drawn at 115% inside a rounded, clipped tile so that frame (about
+   5% top/left, 8% right/bottom, the shadow side) falls outside it. */
+.mf-brand-images .images-list {
+    display: grid!important;
+    grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+    gap: 20px;
+    margin: 0!important
+}
+
+.mf-brand-images .images-list .image-item {
+    width: auto!important;
+    max-width: none!important;
+    float: none!important;
+    margin: 0!important;
+    padding: 12px!important;
+    background: #fff;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    text-align: center;
+    transition: box-shadow .2s ease
+}
+
+.mf-brand-images .images-list .image-item:hover,
+.mf-brand-images .images-list .image-item:focus-within {
+    box-shadow: var(--ul-purple-shadow)
+}
+
+.mf-brand-images .image-item > a {
+    display: block;
+    aspect-ratio: 1;
+    overflow: hidden;
+    border-radius: 6px
+}
+
+.mf-brand-images .image-item > a img {
+    display: block;
+    width: 115%!important;
+    max-width: none!important;
+    height: auto!important;
+    margin: -5.75% 0 0 -5.75%!important
+}
+
+.mf-brand-images .image-item .b-title {
+    margin: 10px 0 0!important;
+    font-size: 16px!important;
+    font-weight: 400!important;
+    line-height: 1.3!important
+}
+
+.mf-brand-images .image-item .b-title a {
+    color: #3b1d4a!important;
+    letter-spacing: -.5px;
+    transition: color .15s ease
+}
+
+.mf-brand-images .image-item .b-title a:hover,
+.mf-brand-images .image-item .b-title a:focus-visible {
+    color: #b3094b!important
 }

@@ -15,7 +15,8 @@
 <div id="hero-footer-combo">
 <div id="bottomcta">
 <h2>
-		Ordering wholesale products has never been easier.</h2> <a href="/shop/"> View Products </a> <a href="/become-a-retailer/">Wholesale Signup </a>
+		Ordering wholesale products has never been easier.</h2>
+<div class="ul-cta-buttons"><a href="/shop/"> View Products </a> <a href="/become-a-retailer/">Wholesale Signup </a></div>
 
 </div>
 <?php if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_location( 'footer' ) ) {
@@ -30,6 +31,26 @@
       // aurora gradient below (see style.css) paints behind both with no seam between them -
       // the same technique used for the home banner + #topcta, but here as a real DOM wrapper
       // (both pieces are plain theme template output, so no JS-measured backdrop is needed). ?>
+<?php if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_location( 'footer' ) ) {
+	// The copyright/payments row, moved out of the site footer (see the child
+	// template-parts/footers/layout-1.php) so it sits on plain white below the backdrop. Keeps the
+	// parent's .footer-layout-1/.footer-bottom classes so its layout styles still apply.
+	?>
+    <div id="footer-copyright-row" class="footer-layout footer-layout-1">
+        <div class="<?php echo martfury_footer_container_classes(); ?>">
+            <div class="footer-bottom">
+                <div class="row footer-row">
+                    <div class="col-footer-copyright col-lg-6 col-md-12 col-sm-12 col-xs-12">
+						<?php martfury_footer_copyright(); ?>
+                    </div>
+                    <div class="col-footer-payments col-lg-6 col-md-12 col-sm-12 col-xs-12">
+						<?php martfury_footer_payments(); ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<?php } ?>
 </div><!-- #page -->
 <?php if( is_checkout() ) :?>
 	<script>
@@ -50,6 +71,11 @@
             document.addEventListener('DOMContentLoaded', function () {
                 const table = document.getElementById('exportMe');
                 const exportBtn = document.getElementById('export');
+
+                // Only the page with the [exportstock] shortcode has the table and button.
+                if (!table || !exportBtn) {
+                    return;
+                }
 
                 const toCsv = function (table) {
                     // Query all rows

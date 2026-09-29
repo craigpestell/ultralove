@@ -6,18 +6,11 @@ if ( ! shortcode_exists( 'ultralove_banner' ) ) {
 	return;
 }
 
-$css_header_menu = 'col-md-9 col-sm-9';
-$show_department = true;
-$extras          = martfury_menu_extras();
-if ( empty( $extras ) || ! in_array( 'department', $extras ) ) {
-	$show_department = false;
-	$css_header_menu = 'col-md-12 col-sm-12';
-}
 ?>
 <div class="sideslidertopmobile">
     <?php echo do_shortcode('[ultralove_banner group="menu-bar"]'); ?>
 </div>
-<div class="header-main-row">
+<div class="header-main-row <?php echo martfury_header_container_classes(); ?>">
 <div class="header-main">
     <div class="<?php echo martfury_header_container_classes(); ?>">
         <div class="row header-row">
@@ -52,23 +45,10 @@ if ( empty( $extras ) || ! in_array( 'department', $extras ) ) {
 </div>
 </div>
 
-<div class="main-menu hidden-xs hidden-sm">
-    <div class="<?php echo martfury_header_container_classes(); ?>">
-        <div class="row header-row">
-			<?php if ( $show_department ) : ?>
-                <div class="col-md-3 col-sm-3 i-product-cats mr-extra-department">
-					<?php martfury_extra_department( true ); ?>
-                </div>
-			<?php endif; ?>
-            <div class="<?php echo esc_attr( $css_header_menu ); ?> mr-header-menu">
-                <div class="col-header-menu">
-					<?php martfury_header_menu(); ?>
-					<?php martfury_header_bar(); ?>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<?php
+// The navigation row (ultralove_main_menu_row() in functions.php), directly below the logo row on every page.
+ultralove_main_menu_row();
+?>
 <div class="mobile-menu hidden-lg hidden-md">
     <div class="container">
         <div class="mobile-menu-row">

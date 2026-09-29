@@ -11,7 +11,7 @@
  *              "attached" to the pointer during a drag/swipe - matching RevSlider's own click-drag
  *              and touch-swipe navigation. A clone of the last slide is prepended and a clone of the
  *              first is appended so dragging past either end loops seamlessly.
- * Version: 2.1.2
+ * Version: 2.1.1
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -24,7 +24,7 @@ define( 'UB_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 if ( is_admin() ) {
 	require_once UB_PLUGIN_PATH . 'admin-pages.php';
 }
-define( 'UB_ASSET_VERSION', '2.0.11' );
+define( 'UB_ASSET_VERSION', '2.0.12' );
 
 /**
  * Banner slot aspect ratio (width / height) per group. Slides are cropped to this in the admin.
@@ -209,18 +209,9 @@ add_action(
 						$seg   = '';
 
 						if ( preg_match( '/\sdata-ub-crop="(\d+),(\d+),(\d+),(\d+)"/', $tag, $crop_match ) ) {
-							$full = preg_match( '/\sdata-ub-full="(\d+),(\d+),([\d.]*)(?:,([\d.]+))?"/', $tag, $full_match ) ? array( (int) $full_match[1], (int) $full_match[2], (float) $full_match[3], isset( $full_match[4] ) ? (float) $full_match[4] : 1.0 ) : null;
+							$full = preg_match( '/\sdata-ub-full="(\d+),(\d+),([\d.]*)"/', $tag, $full_match ) ? array( (int) $full_match[1], (int) $full_match[2], (float) $full_match[3] ) : null;
 							$tag  = preg_replace( '/\sdata-ub-(crop|full)="[^"]*"/', '', $tag );
-							// Cloudinary crops the original upload, which can be larger than the image the
-							// crop was drawn on - scale the crop into its pixels.
-							$k    = $full && $full[3] > 0 ? $full[3] : 1;
-							$c    = array_map(
-								function ( $v ) use ( $k ) {
-									return (int) round( $v * $k );
-								},
-								array_slice( $crop_match, 1 )
-							);
-							$out  = ub_apply_transform( $tag, sprintf( 'c_crop,x_%d,y_%d,w_%d,h_%d', $c[0], $c[1], $c[2], $c[3] ), $c[2], $c[3] );
+							$out  = ub_apply_transform( $tag, sprintf( 'c_crop,x_%d,y_%d,w_%d,h_%d', $crop_match[1], $crop_match[2], $crop_match[3], $crop_match[4] ), (int) $crop_match[3], (int) $crop_match[4] );
 							// Unchanged means the image isn't served by Cloudinary (dev, or not synced yet):
 							// show the crop with CSS on the local image instead.
 							if ( $out === $tag && $full ) {
@@ -244,14 +235,19 @@ add_action(
 					$html
 				);
 
-				// Preload the header's first (LCP) slide image so the browser's preload scanner finds
-				// it right in <head>, ahead of where the banner container actually sits in <body>.
-				if ( preg_match( '/<img\b(?=[^>]*\bub-banner-img\b)(?=[^>]*\bfetchpriority="high")[^>]*>/', $html, $lcp_match ) ) {
-					$tag = $lcp_match[0];
-					preg_match( '/\ssrc="([^"]*)"/', $tag, $src_match );
-					preg_match( '/\ssrcset="([^"]*)"/', $tag, $srcset_match );
-					preg_match( '/\ssizes="([^"]*)"/', $tag, $sizes_match );
-					if ( ! empty( $src_match[1] ) ) {
+				// Preload each banner's first slide image (the ones marked fetchpriority=high - the header
+				// strip's, and on the home page the home banner's, which is the larger LCP image there) so
+				// the browser's preload scanner finds them right in <head>, ahead of where the banners
+				// actually sit in <body>. One preload per distinct image.
+				if ( preg_match_all( '/<img\b(?=[^>]*\bub-banner-img\b)(?=[^>]*\bfetchpriority="high")[^>]*>/', $html, $lcp_matches ) ) {
+					$preloads = array();
+					foreach ( $lcp_matches[0] as $tag ) {
+						preg_match( '/\ssrc="([^"]*)"/', $tag, $src_match );
+						preg_match( '/\ssrcset="([^"]*)"/', $tag, $srcset_match );
+						preg_match( '/\ssizes="([^"]*)"/', $tag, $sizes_match );
+						if ( empty( $src_match[1] ) || isset( $preloads[ $src_match[1] ] ) ) {
+							continue;
+						}
 						$preload = '<link rel="preload" as="image" fetchpriority="high" href="' . esc_url( html_entity_decode( $src_match[1], ENT_QUOTES ) ) . '"';
 						if ( ! empty( $srcset_match[1] ) ) {
 							$preload .= ' imagesrcset="' . esc_attr( html_entity_decode( $srcset_match[1], ENT_QUOTES ) ) . '"';
@@ -259,8 +255,10 @@ add_action(
 						if ( ! empty( $sizes_match[1] ) ) {
 							$preload .= ' imagesizes="' . esc_attr( html_entity_decode( $sizes_match[1], ENT_QUOTES ) ) . '"';
 						}
-						$preload .= '>' . "\n";
-						$html     = preg_replace( '/<head\b[^>]*>/', '$0' . $preload, $html, 1 );
+						$preloads[ $src_match[1] ] = $preload . '>' . "\n";
+					}
+					if ( $preloads ) {
+						$html = preg_replace( '/<head\b[^>]*>/', '$0' . str_replace( '$', '\\$', implode( '', $preloads ) ), $html, 1 );
 					}
 				}
 
@@ -760,10 +758,9 @@ add_shortcode(
 				if ( $crop ) {
 					$img_atts['data-ub-crop'] = implode( ',', $crop );
 					if ( ! empty( $full_meta['width'] ) && ! empty( $full_meta['height'] ) ) {
-						// The image's size and the slide's shape, for the CSS crop used when Cloudinary
-						// can't apply it, and the factor to the original upload's pixels for the
-						// Cloudinary crop (see ub_original_scale()).
-						$img_atts['data-ub-full'] = $full_meta['width'] . ',' . $full_meta['height'] . ',' . round( (float) ub_group_ratio( $atts['group'] ), 5 ) . ',' . round( ub_original_scale( $thumb_id, $full_meta ), 6 );
+						// The original's size and the slide's shape, for the CSS crop used when
+						// Cloudinary can't apply it.
+						$img_atts['data-ub-full'] = $full_meta['width'] . ',' . $full_meta['height'] . ',' . round( (float) ub_group_ratio( $atts['group'] ), 5 );
 					}
 				}
 				if ( is_admin() && $crop && ! empty( $full_meta['width'] ) && ! empty( $full_meta['height'] ) ) {

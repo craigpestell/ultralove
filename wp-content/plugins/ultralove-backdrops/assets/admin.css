@@ -1,0 +1,166 @@
+/* Appearance > Backdrops */
+.ulbd .ulbd-intro {
+	max-width: 760px;
+	font-size: 14px;
+}
+
+.ulbd-picker {
+	margin: 24px 0;
+	padding: 20px 24px 8px;
+	background: #fff;
+	border: 1px solid #dcdcde;
+	border-radius: 8px;
+}
+
+.ulbd-picker__header {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 16px;
+}
+
+.ulbd-picker__header h2 {
+	margin: 0 0 4px;
+}
+
+.ulbd-picker__header p {
+	margin: 0;
+	color: #50575e;
+}
+
+.ulbd-intensity {
+	display: flex;
+	gap: 4px;
+	padding: 4px;
+	border: 1px solid #c3c4c7;
+	border-radius: 999px;
+}
+
+.ulbd-intensity legend {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+}
+
+.ulbd-intensity label {
+	cursor: pointer;
+}
+
+.ulbd-intensity input {
+	position: absolute;
+	opacity: 0;
+}
+
+.ulbd-intensity span {
+	display: block;
+	padding: 5px 14px;
+	border-radius: 999px;
+}
+
+.ulbd-intensity input:checked + span {
+	background: #3b1d4a;
+	color: #fff;
+}
+
+.ulbd-intensity input:focus-visible + span {
+	outline: 2px solid #b165ff;
+	outline-offset: 2px;
+}
+
+.ulbd-kind {
+	margin: 22px 0 10px;
+	font-size: 12px;
+	letter-spacing: .06em;
+	text-transform: uppercase;
+	color: #646970;
+}
+
+.ulbd-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+	gap: 14px;
+}
+
+.ulbd-tile {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 8px;
+	border: 2px solid transparent;
+	border-radius: 10px;
+	cursor: pointer;
+}
+
+.ulbd-tile:hover {
+	border-color: #dcc6ff;
+}
+
+.ulbd-tile input {
+	position: absolute;
+	opacity: 0;
+}
+
+.ulbd-tile:has(input:checked) {
+	border-color: #b165ff;
+	box-shadow: 0 0 14px rgba(177, 101, 255, .45);
+}
+
+.ulbd-tile:has(input:focus-visible) {
+	outline: 2px solid #b165ff;
+	outline-offset: 2px;
+}
+
+/* The swatch is a small copy of the area: the backdrop, the theme's white edge fades, and a pill. */
+.ulbd-swatch {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 120px;
+	border-radius: 6px;
+	overflow: hidden;
+}
+
+.ulbd-swatch__fade {
+	position: absolute;
+	inset: 0;
+	background:
+		linear-gradient(to bottom, rgba(255, 255, 255, 0) 0, rgba(255, 255, 255, 0) 70%, #fff 100%),
+		linear-gradient(to right, #fff 0, rgba(255, 255, 255, 0) 12%, rgba(255, 255, 255, 0) 88%, #fff 100%);
+}
+
+.ulbd-swatch__pill {
+	position: relative;
+	padding: 4px 16px;
+	border: 1px solid #b165ff;
+	border-radius: 999px;
+	background: rgba(255, 255, 255, .8);
+	color: #3b1d4a;
+	font-size: 15px;
+	font-weight: 300;
+	box-shadow: 0 0 10px rgba(177, 101, 255, .45);
+}
+
+.ulbd-tile__label {
+	font-weight: 600;
+}
+
+.ulbd-tile__desc {
+	color: #646970;
+	font-size: 12px;
+	line-height: 1.4;
+}
+
+.ulbd-actions {
+	margin: 18px 0 12px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.ulbd-swatch {
+		animation: none !important;
+	}
+}
