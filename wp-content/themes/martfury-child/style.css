@@ -567,7 +567,7 @@ h1,h2,h3,h4 {
 }
 
 #topcta,#hero-footer-combo {
-    background: var(--ul-aurora)!important
+    background: var(--ul-aurora)
 }
 
 /* Even purple glow (no offset, so it shows on all four sides) in the pills'/cards'

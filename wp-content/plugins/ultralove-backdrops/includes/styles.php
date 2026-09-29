@@ -100,7 +100,8 @@ function ulbd_night_layers( $k ) {
 /**
  * All styles, keyed by id: array( label, kind, description, css callable, optional dark and fade flags -
  * dark off and fade on when left out).
- * Kinds group the picker: 'css' (gradients / patterns), 'svg' (SVG images), 'animated', 'plain', 'dark'.
+ * Kinds group the picker: 'css' (gradients / patterns), 'svg' (SVG images), 'animated', 'plain', 'dark',
+ * 'seasonal' (holiday backdrops, dark or light).
  */
 function ulbd_styles() {
 	$base  = '#f6f1fa';
@@ -340,6 +341,179 @@ function ulbd_styles() {
 							$night,
 						)
 					),
+				);
+			},
+		),
+		'halloween'    => array(
+			'label'       => 'Halloween',
+			'kind'        => 'seasonal',
+			'dark'        => true,
+			'fade'        => false,
+			'description' => 'A harvest moon, bats and stars over pumpkin-orange and purple glows on near-black.',
+			'css'         => function ( $k ) {
+				$bat = 'M0 7c3-4 6-3 8-1 1-2 2-3 4-3s3 1 4 3c2-2 5-3 8 1-3 0-4 2-5 4-2-2-4-1-5 1l-2-2-2 2c-1-2-3-3-5-1-1-2-2-4-5-4z';
+				$svg = sprintf(
+					'<svg xmlns="http://www.w3.org/2000/svg" width="240" height="200" viewBox="0 0 240 200">
+						<path d="%1$s" transform="translate(28 40) rotate(-10 12 7) scale(2.2)" fill="rgb(92,52,120)" fill-opacity="%2$s"/>
+						<path d="%1$s" transform="translate(150 120) rotate(12 12 7) scale(1.6)" fill="rgb(92,52,120)" fill-opacity="%2$s"/>
+						<circle cx="120" cy="28" r="1.4" fill="rgb(255,230,190)" fill-opacity="%3$s"/>
+						<circle cx="206" cy="66" r="1" fill="rgb(255,230,190)" fill-opacity="%3$s"/>
+						<circle cx="66" cy="150" r="1.2" fill="rgb(255,230,190)" fill-opacity="%3$s"/>
+						<circle cx="190" cy="182" r=".9" fill="rgb(255,230,190)" fill-opacity="%3$s"/>
+					</svg>',
+					$bat,
+					min( 1, .75 * $k ),
+					min( 1, .8 * $k )
+				);
+
+				return array(
+					'background' => implode(
+						', ',
+						array(
+							ulbd_svg_url( $svg ),
+							'radial-gradient(circle 150px at 84% 26%, ' . ulbd_rgba( 255, 236, 190, .95, $k ) . ' 0 38px, ' . ulbd_rgba( 255, 170, 80, .35, $k ) . ' 42px, transparent 150px)',
+							'radial-gradient(ellipse 70% 55% at 50% 110%, ' . ulbd_rgba( 255, 120, 30, .55, $k ) . ' 0, transparent 100%)',
+							'radial-gradient(ellipse 40% 60% at 8% 30%, ' . ulbd_rgba( 120, 50, 170, .55, $k ) . ' 0, transparent 100%)',
+							'radial-gradient(ellipse 35% 45% at 66% 0%, ' . ulbd_rgba( 90, 40, 150, .5, $k ) . ' 0, transparent 100%)',
+							'#0e0716',
+						)
+					),
+					'size'       => '240px 200px, auto, auto, auto, auto, auto',
+				);
+			},
+		),
+		'thanksgiving' => array(
+			'label'       => 'Thanksgiving',
+			'kind'        => 'seasonal',
+			'description' => 'Scattered autumn leaves in rust, amber, gold and plum over warm harvest glows on cream.',
+			'css'         => function ( $k ) {
+				$leaf = 'M12 1c6 5 8 13 0 22C4 14 6 6 12 1z';
+				$svg  = sprintf(
+					'<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+						<g fill-opacity="%2$s" stroke-opacity="%3$s" stroke-width="1" stroke-linecap="round">
+							<path d="%1$s" transform="translate(22 20) rotate(-30 12 12) scale(1.1)" fill="rgb(196,86,44)"/>
+							<path d="M12 4v19" transform="translate(22 20) rotate(-30 12 12) scale(1.1)" stroke="rgb(196,86,44)"/>
+							<path d="%1$s" transform="translate(128 44) rotate(40 12 12) scale(.8)" fill="rgb(226,150,60)"/>
+							<path d="M12 4v19" transform="translate(128 44) rotate(40 12 12) scale(.8)" stroke="rgb(226,150,60)"/>
+							<path d="%1$s" transform="translate(70 120) rotate(15 12 12)" fill="rgb(214,176,70)"/>
+							<path d="M12 4v19" transform="translate(70 120) rotate(15 12 12)" stroke="rgb(214,176,70)"/>
+							<path d="%1$s" transform="translate(160 150) rotate(-60 12 12) scale(.7)" fill="rgb(150,70,110)"/>
+							<path d="M12 4v19" transform="translate(160 150) rotate(-60 12 12) scale(.7)" stroke="rgb(150,70,110)"/>
+						</g>
+					</svg>',
+					$leaf,
+					min( 1, .28 * $k ),
+					min( 1, .45 * $k )
+				);
+
+				return array(
+					'background' => implode(
+						', ',
+						array(
+							ulbd_svg_url( $svg ),
+							'radial-gradient(ellipse 60% 60% at 50% 45%, rgba(255, 255, 255, .6) 0, transparent 100%)',
+							'radial-gradient(ellipse 45% 55% at 12% 20%, ' . ulbd_rgba( 240, 170, 90, .45, $k ) . ' 0, transparent 100%)',
+							'radial-gradient(ellipse 40% 50% at 90% 72%, ' . ulbd_rgba( 210, 110, 70, .35, $k ) . ' 0, transparent 100%)',
+							'radial-gradient(ellipse 45% 40% at 55% 0%, ' . ulbd_rgba( 240, 205, 130, .4, $k ) . ' 0, transparent 100%)',
+							'#fbf5ec',
+						)
+					),
+					'size'       => '200px 200px, auto, auto, auto, auto, auto',
+				);
+			},
+		),
+		'christmas'    => array(
+			'label'       => 'Christmas',
+			'kind'        => 'seasonal',
+			'dark'        => true,
+			'fade'        => false,
+			'description' => 'Slowly falling snow over red and gold glows on deep pine green (a 60s loop).',
+			'css'         => function ( $k ) {
+				// Two snow tiles falling at different speeds, for depth. Each moves a whole number of tiles per
+				// loop, so the loop is seamless.
+				$dots  = sprintf(
+					'<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+						<g fill="rgb(255,255,255)" fill-opacity="%s">
+							<circle cx="20" cy="30" r="1.6"/><circle cx="90" cy="12" r="1.2"/><circle cx="160" cy="48" r="1.8"/>
+							<circle cx="56" cy="96" r="1.3"/><circle cx="130" cy="120" r="1.6"/><circle cx="186" cy="150" r="1.1"/>
+							<circle cx="30" cy="170" r="1.5"/><circle cx="100" cy="186" r="1.2"/>
+						</g>
+					</svg>',
+					min( 1, .6 * $k )
+				);
+				$flake = 'M0-9V9M-7.8-4.5L7.8 4.5M-7.8 4.5L7.8-4.5';
+				$flakes = sprintf(
+					'<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+						<g fill="none" stroke="rgb(255,255,255)" stroke-opacity="%2$s" stroke-width="1.4" stroke-linecap="round">
+							<path d="%1$s" transform="translate(60 70)"/>
+							<path d="%1$s" transform="translate(210 40) scale(.7)"/>
+							<path d="%1$s" transform="translate(160 200) scale(1.2)"/>
+							<path d="%1$s" transform="translate(40 250) scale(.8)"/>
+						</g>
+					</svg>',
+					$flake,
+					min( 1, .45 * $k )
+				);
+
+				return array(
+					'background' => implode(
+						', ',
+						array(
+							ulbd_svg_url( $dots ),
+							ulbd_svg_url( $flakes ),
+							'radial-gradient(ellipse 40% 55% at 10% 25%, ' . ulbd_rgba( 190, 30, 50, .55, $k ) . ' 0, transparent 100%)',
+							'radial-gradient(ellipse 35% 45% at 85% 20%, ' . ulbd_rgba( 245, 190, 110, .26, $k ) . ' 0, transparent 100%)',
+							'radial-gradient(ellipse 60% 50% at 60% 100%, ' . ulbd_rgba( 40, 130, 80, .5, $k ) . ' 0, transparent 100%)',
+							'#0b1d16',
+						)
+					),
+					'size'       => '200px 200px, 300px 300px, auto, auto, auto, auto',
+					'animation'  => 'ulbd-christmas 60s linear infinite',
+					'keyframes'  => '0% { background-position: 0 0, 0 0, 0 0, 0 0, 0 0; } 100% { background-position: 200px 400px, 0 300px, 0 0, 0 0, 0 0; }',
+				);
+			},
+		),
+		'new-year'     => array(
+			'label'       => 'New Year\'s',
+			'kind'        => 'seasonal',
+			'dark'        => true,
+			'fade'        => false,
+			'description' => 'Gold, lavender and pink confetti with sparkles over gold and violet glows on midnight blue.',
+			'css'         => function ( $k ) {
+				$spark = 'M12 0l2 10 10 2-10 2-2 10-2-10-10-2 10-2z';
+				$svg   = sprintf(
+					'<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180" viewBox="0 0 180 180">
+						<g fill-opacity="%2$s">
+							<rect x="20" y="24" width="10" height="4" rx="1" transform="rotate(30 25 26)" fill="rgb(232,196,110)"/>
+							<rect x="120" y="18" width="8" height="4" rx="1" transform="rotate(-40 124 20)" fill="rgb(177,101,255)"/>
+							<rect x="80" y="84" width="10" height="4" rx="1" transform="rotate(70 85 86)" fill="rgb(235,150,195)"/>
+							<rect x="150" y="110" width="9" height="4" rx="1" transform="rotate(15 154 112)" fill="rgb(232,196,110)"/>
+							<rect x="30" y="140" width="8" height="4" rx="1" transform="rotate(-20 34 142)" fill="rgb(170,225,232)"/>
+							<circle cx="60" cy="60" r="2" fill="rgb(235,150,195)"/>
+							<circle cx="110" cy="160" r="2" fill="rgb(177,101,255)"/>
+						</g>
+						<g fill="rgb(255,236,190)" fill-opacity="%3$s">
+							<path d="%1$s" transform="translate(150 50) scale(.55)"/>
+							<path d="%1$s" transform="translate(52 100) scale(.4)"/>
+						</g>
+					</svg>',
+					$spark,
+					min( 1, .65 * $k ),
+					min( 1, .85 * $k )
+				);
+
+				return array(
+					'background' => implode(
+						', ',
+						array(
+							ulbd_svg_url( $svg ),
+							'radial-gradient(ellipse 60% 50% at 50% 105%, ' . ulbd_rgba( 230, 185, 90, .4, $k ) . ' 0, transparent 100%)',
+							'radial-gradient(ellipse 40% 55% at 12% 20%, ' . ulbd_rgba( 130, 80, 200, .55, $k ) . ' 0, transparent 100%)',
+							'radial-gradient(ellipse 35% 45% at 88% 15%, ' . ulbd_rgba( 60, 80, 180, .45, $k ) . ' 0, transparent 100%)',
+							'#0a0a1f',
+						)
+					),
+					'size'       => '180px 180px, auto, auto, auto, auto',
 				);
 			},
 		),

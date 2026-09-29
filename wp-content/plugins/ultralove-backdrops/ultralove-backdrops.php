@@ -8,7 +8,7 @@
  *              backdrop, hard edges instead of the theme's white edge fades and light text for what sits
  *              straight on it; the areas' content is the theme's. Also sets the site's display text weight
  *              (regular or bold).
- * Version: 1.1.0
+ * Version: 1.2.0
  *
  * @package UltraLove_Backdrops
  */
@@ -17,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ULBD_VERSION', '1.1.0' );
+define( 'ULBD_VERSION', '1.2.0' );
 define( 'ULBD_OPTION', 'ulbd_settings' );
 
 require_once __DIR__ . '/includes/styles.php';
@@ -133,10 +133,10 @@ function ulbd_style_css( $style_id, $intensity ) {
 	$k   = ulbd_intensities()[ $intensity ][1];
 	$css = call_user_func( $styles[ $style_id ]['css'], $k );
 
-	$decl = 'background: ' . $css['background'] . ' !important;';
+	$decl = 'background: ' . $css['background'] . ';';
 	foreach ( array( 'size', 'position', 'repeat' ) as $prop ) {
 		if ( ! empty( $css[ $prop ] ) ) {
-			$decl .= ' background-' . $prop . ': ' . $css[ $prop ] . ' !important;';
+			$decl .= ' background-' . $prop . ': ' . $css[ $prop ] . ';';
 		}
 	}
 	$keyframes = '';
@@ -185,7 +185,7 @@ add_action(
 			}
 		}
 		if ( $animated ) {
-			$out[] = '@media (prefers-reduced-motion: reduce) { ' . implode( ', ', $animated ) . ' { animation: none !important; } }';
+			$out[] = '@media (prefers-reduced-motion: reduce) { ' . implode( ', ', $animated ) . ' { animation: none; } }'; // Same selectors, later: wins without !important.
 		}
 		if ( $out ) {
 			echo "<style id=\"ulbd-backdrops\">\n" . implode( "\n", array_merge( array_values( $keyframes ), $out ) ) . "\n</style>\n"; // phpcs:ignore WordPress.Security.EscapeOutput -- built from the style library.
@@ -283,6 +283,7 @@ function ulbd_render_admin() {
 		'svg'      => 'SVG',
 		'animated' => 'Animated',
 		'dark'     => 'Dark',
+		'seasonal' => 'Seasonal',
 		'plain'    => 'Plain',
 	);
 
