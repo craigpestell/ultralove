@@ -11,7 +11,7 @@
  *              "attached" to the pointer during a drag/swipe - matching RevSlider's own click-drag
  *              and touch-swipe navigation. A clone of the last slide is prepended and a clone of the
  *              first is appended so dragging past either end loops seamlessly.
- * Version: 2.1.1
+ * Version: 2.1.3
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -209,9 +209,18 @@ add_action(
 						$seg   = '';
 
 						if ( preg_match( '/\sdata-ub-crop="(\d+),(\d+),(\d+),(\d+)"/', $tag, $crop_match ) ) {
-							$full = preg_match( '/\sdata-ub-full="(\d+),(\d+),([\d.]*)"/', $tag, $full_match ) ? array( (int) $full_match[1], (int) $full_match[2], (float) $full_match[3] ) : null;
+							$full = preg_match( '/\sdata-ub-full="(\d+),(\d+),([\d.]*)(?:,([\d.]+))?"/', $tag, $full_match ) ? array( (int) $full_match[1], (int) $full_match[2], (float) $full_match[3], isset( $full_match[4] ) ? (float) $full_match[4] : 1.0 ) : null;
 							$tag  = preg_replace( '/\sdata-ub-(crop|full)="[^"]*"/', '', $tag );
-							$out  = ub_apply_transform( $tag, sprintf( 'c_crop,x_%d,y_%d,w_%d,h_%d', $crop_match[1], $crop_match[2], $crop_match[3], $crop_match[4] ), (int) $crop_match[3], (int) $crop_match[4] );
+							// Cloudinary crops the original upload, which can be larger than the image the
+							// crop was drawn on - scale the crop into its pixels.
+							$k    = $full && $full[3] > 0 ? $full[3] : 1;
+							$c    = array_map(
+								function ( $v ) use ( $k ) {
+									return (int) round( $v * $k );
+								},
+								array_slice( $crop_match, 1 )
+							);
+							$out  = ub_apply_transform( $tag, sprintf( 'c_crop,x_%d,y_%d,w_%d,h_%d', $c[0], $c[1], $c[2], $c[3] ), $c[2], $c[3] );
 							// Unchanged means the image isn't served by Cloudinary (dev, or not synced yet):
 							// show the crop with CSS on the local image instead.
 							if ( $out === $tag && $full ) {
@@ -758,9 +767,10 @@ add_shortcode(
 				if ( $crop ) {
 					$img_atts['data-ub-crop'] = implode( ',', $crop );
 					if ( ! empty( $full_meta['width'] ) && ! empty( $full_meta['height'] ) ) {
-						// The original's size and the slide's shape, for the CSS crop used when
-						// Cloudinary can't apply it.
-						$img_atts['data-ub-full'] = $full_meta['width'] . ',' . $full_meta['height'] . ',' . round( (float) ub_group_ratio( $atts['group'] ), 5 );
+						// The image's size and the slide's shape, for the CSS crop used when Cloudinary
+						// can't apply it, and the factor to the original upload's pixels for the
+						// Cloudinary crop (see ub_original_scale()).
+						$img_atts['data-ub-full'] = $full_meta['width'] . ',' . $full_meta['height'] . ',' . round( (float) ub_group_ratio( $atts['group'] ), 5 ) . ',' . round( ub_original_scale( $thumb_id, $full_meta ), 6 );
 					}
 				}
 				if ( is_admin() && $crop && ! empty( $full_meta['width'] ) && ! empty( $full_meta['height'] ) ) {
