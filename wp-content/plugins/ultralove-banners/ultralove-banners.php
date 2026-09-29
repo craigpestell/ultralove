@@ -119,19 +119,22 @@ function ub_apply_transform( $html, $seg, $out_w, $out_h ) {
 		return sprintf( '%sq_auto,f_auto/%sc_scale,w_%d,h_%d/%s%s', $base, $pre, $n, round( $n * $out_h / $out_w ), $path, $query );
 	};
 
+	// Capped at 1920 (the 'ub_banner' size, the widest a banner is ever shown): a crop scaled up to a
+	// large original (see ub_original_scale()) would otherwise offer, say, a 4164w candidate.
+	$max_w  = min( $out_w, 1920 );
 	$widths = array();
-	foreach ( array( 370, 600, 768, 1024, 1536, 1920 ) as $n ) {
-		if ( $n < $out_w ) {
+	foreach ( array( 370, 600, 768, 1024, 1536 ) as $n ) {
+		if ( $n < $max_w ) {
 			$widths[] = $n;
 		}
 	}
-	$widths[] = $out_w;
+	$widths[] = $max_w;
 
 	$srcset = array();
 	foreach ( $widths as $n ) {
 		$srcset[] = $url_for( $n ) . ' ' . $n . 'w';
 	}
-	$src_w = min( $out_w, 1920 );
+	$src_w = $max_w;
 
 	$html = preg_replace( '/\ssrc="[^"]*"/', ' src="' . esc_url( $url_for( $src_w ) ) . '"', $html, 1 );
 	if ( preg_match( '/\ssrcset="/', $html ) ) {
@@ -719,7 +722,9 @@ add_shortcode(
 		// visibly-upscaled srcset candidate regardless of the source's real resolution. Overriding it
 		// here with the banner's actual responsive width (matching --ub-per-view in banner.css) fixes
 		// that mismatch for every slide, not just the ones with a genuinely small source image.
-		$img_sizes = $is_home ? '(min-width: 768px) 50vw, 100vw' : '100vw';
+		// The header strip sits in .sideslidertop - at most 45% of the header row above 992px (the
+		// theme's style.css), full width below that.
+		$img_sizes = $is_home ? '(min-width: 768px) 50vw, 100vw' : '(min-width: 993px) 45vw, 100vw';
 
 		$group_id    = 'ub-banner-' . sanitize_html_class( $atts['group'] );
 		$group_class = ' ub-banner-' . sanitize_html_class( $atts['group'] );
@@ -746,6 +751,9 @@ add_shortcode(
 				$bg_html = wp_get_attachment_image( $thumb_id, 'medium_large' );
 				if ( preg_match( '/\ssrc="([^"]*)"/', $bg_html, $bg_match ) ) {
 					$bg_url = html_entity_decode( $bg_match[1], ENT_QUOTES );
+					// It's blurred by 22px and scaled up (banner.css), so a small, low-quality copy in the
+					// browser's best format looks the same: swap the Cloudinary transform for one.
+					$bg_url = preg_replace( '#^(https://res\.cloudinary\.com/[^/]+/images/)(?:[^/?]+/)*?(v\d+/)#', '$1q_auto:low,f_auto/c_scale,w_320/$2', $bg_url, 1 );
 				}
 			}
 			$crop = ub_get_crop( $slide->ID, $thumb_id );
