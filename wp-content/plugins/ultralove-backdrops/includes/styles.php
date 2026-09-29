@@ -10,7 +10,9 @@
  *  - optional 'animation' + 'keyframes' (@keyframes body, named ulbd-<id>): slow ambient motion,
  *    switched off for visitors who ask for reduced motion.
  * Colours are the site's: lavender rgb(177,101,255), plum #3b1d4a, brand pink #b3094b, plus the aurora's
- * soft teal / periwinkle / rose, on the pale lavender base #f6f1fa.
+ * soft teal / periwinkle / rose, on the pale lavender base #f6f1fa. The 'dark' kind sits on near-black
+ * #06060f instead; a style with 'dark' => true also switches the text drawn straight on the backdrop to
+ * light colours (the area's 'dark_css' in ulbd_areas()).
  *
  * To add a style: add an entry to ulbd_styles() - it shows up in the admin picker with a live preview.
  *
@@ -61,11 +63,46 @@ function ulbd_aurora_layers( $k ) {
 }
 
 /**
- * All styles, keyed by id: array( label, kind, description, css callable ).
- * Kinds group the picker: 'css' (gradients / patterns), 'svg' (SVG images), 'animated', 'plain'.
+ * The night aurora's glows - the live site's pure-CSS stand-in for its old bg.jpg (blurred purple / teal
+ * aurora on near-black), with the alphas scaled - shared by 'night-aurora' and 'night-drift'. At normal
+ * intensity this is the production backdrop exactly.
+ */
+function ulbd_night_layers( $k ) {
+	// Shape, colour, alpha, and optionally a mid stop (colour, alpha, position %).
+	$glows = array(
+		array( '14% 20% at 65% 25%', array( 155, 215, 225 ), .95, array( 120, 190, 215 ), .5, 50 ),
+		array( '16% 14% at 80% 32%', array( 175, 205, 235 ), .75 ),
+		array( '12% 16% at 50% 8%', array( 115, 155, 205 ), .65 ),
+		array( '12% 14% at 73% 8%', array( 60, 110, 195 ), .60 ),
+		array( '12% 16% at 14% 32%', array( 175, 105, 195 ), .85, array( 140, 75, 170 ), .4, 55 ),
+		array( '10% 22% at 6% 52%', array( 150, 70, 170 ), .70 ),
+		array( '12% 20% at 29% 18%', array( 135, 75, 175 ), .70 ),
+		array( '12% 14% at 36% 3%', array( 120, 85, 175 ), .55 ),
+		array( '18% 22% at 91% 45%', array( 85, 55, 155 ), .60 ),
+		array( '8% 10% at 43% 40%', array( 145, 85, 175 ), .70 ),
+		array( '10% 14% at 48% 68%', array( 135, 85, 175 ), .55 ),
+		array( '9% 12% at 60% 63%', array( 60, 135, 175 ), .50 ),
+		array( '12% 16% at 74% 72%', array( 95, 65, 165 ), .50 ),
+		array( '12% 14% at 14% 94%', array( 145, 85, 175 ), .60 ),
+	);
+	$layers = array();
+	foreach ( $glows as $g ) {
+		list( $shape, $rgb, $a ) = $g;
+		$mid                     = isset( $g[3] ) ? ', ' . ulbd_rgba( $g[3][0], $g[3][1], $g[3][2], $g[4], $k ) . ' ' . $g[5] . '%' : '';
+		$layers[]                = sprintf( 'radial-gradient(ellipse %s, %s 0%s, transparent 100%%)', $shape, ulbd_rgba( $rgb[0], $rgb[1], $rgb[2], $a, $k ), $mid );
+	}
+	$layers[] = 'radial-gradient(ellipse 60% 70% at 40% 60%, rgba(15, 12, 55, .7) 0, transparent 100%)';
+
+	return $layers;
+}
+
+/**
+ * All styles, keyed by id: array( label, kind, description, css callable, optional dark flag ).
+ * Kinds group the picker: 'css' (gradients / patterns), 'svg' (SVG images), 'animated', 'plain', 'dark'.
  */
 function ulbd_styles() {
-	$base = '#f6f1fa';
+	$base  = '#f6f1fa';
+	$night = '#06060f';
 
 	return array(
 		'aurora'       => array(
@@ -255,6 +292,49 @@ function ulbd_styles() {
 					'size'       => '200% 200%',
 					'animation'  => 'ulbd-mesh-shift 30s ease-in-out infinite alternate',
 					'keyframes'  => '0% { background-position: 0% 0%; } 100% { background-position: 100% 100%; }',
+				);
+			},
+		),
+		'night-aurora' => array(
+			'label'       => 'Night aurora (live site)',
+			'kind'        => 'dark',
+			'dark'        => true,
+			'description' => 'Purple and teal glows on near-black - the backdrop on the live site today.',
+			'css'         => function ( $k ) use ( $night ) {
+				return array( 'background' => implode( ', ', array_merge( ulbd_night_layers( $k ), array( $night ) ) ) );
+			},
+		),
+		'night-drift'  => array(
+			'label'       => 'Drifting night aurora',
+			'kind'        => 'dark',
+			'dark'        => true,
+			'description' => 'The night aurora, oversized and slowly drifting (a 40s loop).',
+			'css'         => function ( $k ) use ( $night ) {
+				return array(
+					'background' => implode( ', ', array_merge( ulbd_night_layers( $k ), array( $night ) ) ),
+					'size'       => '160% 160%',
+					'animation'  => 'ulbd-night-drift 40s ease-in-out infinite alternate',
+					'keyframes'  => '0% { background-position: 0% 0%; } 50% { background-position: 100% 40%; } 100% { background-position: 30% 100%; }',
+				);
+			},
+		),
+		'night-mesh'   => array(
+			'label'       => 'Night mesh',
+			'kind'        => 'dark',
+			'dark'        => true,
+			'description' => 'Purple, teal and violet colour fields from the corners, on near-black.',
+			'css'         => function ( $k ) use ( $night ) {
+				return array(
+					'background' => implode(
+						', ',
+						array(
+							'radial-gradient(at 0% 0%, ' . ulbd_rgba( 150, 70, 170, .7, $k ) . ' 0, transparent 55%)',
+							'radial-gradient(at 100% 0%, ' . ulbd_rgba( 60, 135, 175, .6, $k ) . ' 0, transparent 55%)',
+							'radial-gradient(at 100% 100%, ' . ulbd_rgba( 95, 65, 165, .65, $k ) . ' 0, transparent 55%)',
+							'radial-gradient(at 0% 100%, ' . ulbd_rgba( 60, 110, 195, .55, $k ) . ' 0, transparent 55%)',
+							$night,
+						)
+					),
 				);
 			},
 		),

@@ -2,11 +2,12 @@
 /**
  * Plugin Name: UltraLove Backdrops
  * Description: Pick the background style of the home page's call to action (#topcta) and of the footer box
- *              (#hero-footer-combo - #bottomcta + the site footer, on every page) from a library of CSS, SVG
- *              and animated backdrops, with live previews (Appearance > Backdrops) and an admin-only preview
- *              on the site before saving. Only the background layer changes: the areas' white edge fades and
- *              their content are the theme's.
- * Version: 1.0.0
+ *              (#hero-footer-combo - #bottomcta + the site footer, on every page) from a library of CSS, SVG,
+ *              animated and dark backdrops, with live previews (Appearance > Backdrops) and an admin-only
+ *              preview on the site before saving. Only the background layer changes (plus light text for
+ *              what sits straight on a dark backdrop): the areas' white edge fades and their content are the
+ *              theme's. Also sets the site's display text weight (regular or bold).
+ * Version: 1.1.0
  *
  * @package UltraLove_Backdrops
  */
@@ -15,12 +16,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ULBD_VERSION', '1.0.0' );
+define( 'ULBD_VERSION', '1.1.0' );
 define( 'ULBD_OPTION', 'ulbd_settings' );
 
 require_once __DIR__ . '/includes/styles.php';
 
-/** The two areas: key => label, and the elements each one's background goes on. */
+/**
+ * The two areas: key => label, the elements each one's background goes on, and 'dark_css' - rules for the
+ * text drawn straight on the backdrop (not on one of the theme's white pills / boxes), printed when the
+ * area's style is a dark one.
+ */
 function ulbd_areas() {
 	return array(
 		'topcta' => array(
@@ -29,11 +34,17 @@ function ulbd_areas() {
 			// With UltraLove Banners' combined "aurora" backdrop on, #topcta is transparent and one element behind
 			// the banner and #topcta (#ub-hero-combo-bg) carries the backdrop instead - style that one then.
 			'selectors'   => array( 'body:not(.ub-hero-combo) #topcta', 'body #ub-hero-combo-bg' ),
+			// Its heading, text box and buttons all have their own backgrounds.
+			'dark_css'    => '',
 		),
 		'footer' => array(
 			'label'       => 'Footer box',
 			'description' => '"Ordering wholesale products has never been easier." and the site footer below it (#hero-footer-combo), on every page.',
 			'selectors'   => array( 'body #hero-footer-combo' ),
+			// The quick links (Ordering · About Us · Contact) are underlined pink text on the backdrop itself.
+			'dark_css'    => '#hero-footer-combo #footer-links .widget_nav_menu ul li a { color: #fff !important; }'
+				. ' #hero-footer-combo #footer-links .widget_nav_menu ul li a:hover, #hero-footer-combo #footer-links .widget_nav_menu ul li a:focus-visible { color: #f4c3d9 !important; }'
+				. ' #hero-footer-combo #footer-links .widget_nav_menu ul li + li:before { color: #b98ad6; }',
 		),
 	);
 }
@@ -47,10 +58,24 @@ function ulbd_intensities() {
 	);
 }
 
-/** Saved settings, with defaults (the theme's own aurora at normal intensity everywhere). */
+/**
+ * Display text weights: key => array( label, CSS weight ). The theme's --ul-display-weight (header navigation
+ * and Search, pill headings, the #topcta text box, section titles, footer text boxes and copyright) is set
+ * to it. The theme draws only two weights of Work Sans - 300 and 500 - so those are the choices.
+ */
+function ulbd_text_weights() {
+	return array(
+		'regular' => array( 'Regular', 300 ),
+		'bold'    => array( 'Bold', 500 ),
+	);
+}
+
+/** Saved settings, with defaults (the theme's own aurora at normal intensity everywhere, regular text). */
 function ulbd_settings() {
 	$saved    = get_option( ULBD_OPTION, array() );
-	$settings = array();
+	$settings = array(
+		'text_weight' => isset( $saved['text_weight'] ) && isset( ulbd_text_weights()[ $saved['text_weight'] ] ) ? $saved['text_weight'] : 'regular',
+	);
 	foreach ( array_keys( ulbd_areas() ) as $area ) {
 		$settings[ $area ] = array(
 			'style'     => isset( $saved[ $area ]['style'] ) && isset( ulbd_styles()[ $saved[ $area ]['style'] ] ) ? $saved[ $area ]['style'] : 'aurora',
@@ -62,13 +87,20 @@ function ulbd_settings() {
 }
 
 /**
- * Settings in effect for this request: the saved ones, overridden by ?ulbd_<area>=<style> and
- * ?ulbd_<area>_intensity=<preset> for users who can manage options (the "Preview on the site" links).
+ * Settings in effect for this request: the saved ones, overridden by ?ulbd_<area>=<style>,
+ * ?ulbd_<area>_intensity=<preset> and ?ulbd_text=<weight> for users who can manage options (the "Preview on
+ * the site" links).
  */
 function ulbd_active_settings() {
 	$settings = ulbd_settings();
 	if ( ! is_admin() && current_user_can( 'manage_options' ) ) {
-		foreach ( array_keys( $settings ) as $area ) {
+		// phpcs:disable WordPress.Security.NonceVerification.Recommended -- read-only preview, admins only.
+		if ( isset( $_GET['ulbd_text'] ) && isset( ulbd_text_weights()[ sanitize_key( $_GET['ulbd_text'] ) ] ) ) {
+			$settings['text_weight'] = sanitize_key( $_GET['ulbd_text'] );
+			$settings['preview']     = true;
+		}
+		// phpcs:enable
+		foreach ( array_keys( ulbd_areas() ) as $area ) {
 			// phpcs:disable WordPress.Security.NonceVerification.Recommended -- read-only preview, admins only.
 			if ( isset( $_GET[ 'ulbd_' . $area ] ) && isset( ulbd_styles()[ sanitize_key( $_GET[ 'ulbd_' . $area ] ) ] ) ) {
 				$settings[ $area ]['style']   = sanitize_key( $_GET[ 'ulbd_' . $area ] );
@@ -119,15 +151,23 @@ add_action(
 		$out       = array();
 		$keyframes = array();
 		$animated  = array();
-		$preview   = false;
-		foreach ( ulbd_active_settings() as $area => $s ) {
+		$active    = ulbd_active_settings();
+		$preview   = ! empty( $active['preview'] );
+		if ( 'regular' !== $active['text_weight'] ) {
+			$out[] = ':root { --ul-display-weight: ' . ulbd_text_weights()[ $active['text_weight'] ][1] . '; }';
+		}
+		foreach ( ulbd_areas() as $area => $info ) {
+			$s       = $active[ $area ];
 			$preview = $preview || ! empty( $s['preview'] );
 			if ( 'aurora' === $s['style'] && 'normal' === $s['intensity'] ) {
 				continue;
 			}
 			list( $decl, $kf ) = ulbd_style_css( $s['style'], $s['intensity'] );
-			$selectors         = implode( ', ', ulbd_areas()[ $area ]['selectors'] );
+			$selectors         = implode( ', ', $info['selectors'] );
 			$out[]             = $selectors . ' { ' . $decl . ' }';
+			if ( ! empty( ulbd_styles()[ $s['style'] ]['dark'] ) && $info['dark_css'] ) {
+				$out[] = $info['dark_css'];
+			}
 			if ( $kf ) {
 				$keyframes[ $s['style'] ] = $kf;
 				$animated[]               = $selectors;
@@ -145,7 +185,7 @@ add_action(
 				'wp_footer',
 				function () {
 					printf(
-						'<div id="ulbd-preview-badge">Backdrop preview (not saved)<a href="%s">Back to settings</a></div>',
+						'<div id="ulbd-preview-badge">Preview (not saved)<a href="%s">Back to settings</a></div>',
 						esc_url( admin_url( 'themes.php?page=ulbd-backdrops' ) )
 					);
 				}
@@ -180,9 +220,12 @@ add_action(
 	}
 );
 
-/** Keep only known areas, styles and intensities. */
+/** Keep only known areas, styles, intensities and text weights. */
 function ulbd_sanitize( $input ) {
-	$clean = array();
+	$weight = isset( $input['text_weight'] ) ? sanitize_key( $input['text_weight'] ) : 'regular';
+	$clean  = array(
+		'text_weight' => isset( ulbd_text_weights()[ $weight ] ) ? $weight : 'regular',
+	);
 	foreach ( array_keys( ulbd_areas() ) as $area ) {
 		$style     = isset( $input[ $area ]['style'] ) ? sanitize_key( $input[ $area ]['style'] ) : 'aurora';
 		$intensity = isset( $input[ $area ]['intensity'] ) ? sanitize_key( $input[ $area ]['intensity'] ) : 'normal';
@@ -211,6 +254,7 @@ add_action(
 				'pages' => array(
 					'topcta' => home_url( '/' ),
 					'footer' => home_url( '/' ),
+					'text'   => home_url( '/' ),
 				),
 			)
 		);
@@ -227,6 +271,7 @@ function ulbd_render_admin() {
 		'css'      => 'CSS',
 		'svg'      => 'SVG',
 		'animated' => 'Animated',
+		'dark'     => 'Dark',
 		'plain'    => 'Plain',
 	);
 
@@ -245,15 +290,39 @@ function ulbd_render_admin() {
 	?>
 	<div class="wrap ulbd">
 		<h1>Backdrops</h1>
-		<p class="ulbd-intro">The background behind the home page's call to action and behind the footer box. Pick a style and an
-			intensity for each, use <strong>Preview on the site</strong> to see the combination on the home page (only you see it,
-			nothing is saved), then <strong>Save</strong>. The white fades at the edges and everything in front of the backdrop
-			stay as they are. Animated styles stand still for visitors who ask their device for reduced motion.</p>
+		<p class="ulbd-intro">The background behind the home page's call to action and behind the footer box, and the weight of
+			the site's display text. Pick a style and an intensity for each area, use <strong>Preview on the site</strong> to see
+			the combination on the home page (only you see it, nothing is saved), then <strong>Save</strong>. The white fades at
+			the edges and everything in front of the backdrop stay as they are; on a dark style, the footer's quick links turn
+			white. Animated styles stand still for visitors who ask their device for reduced motion.</p>
 
 		<style><?php echo implode( "\n", array_merge( array_values( $keyframes ), $tile_css ) ); // phpcs:ignore WordPress.Security.EscapeOutput -- built from the style library. ?></style>
 
 		<form method="post" action="options.php">
 			<?php settings_fields( 'ulbd' ); ?>
+
+			<section class="ulbd-picker ulbd-text" data-area="text">
+				<header class="ulbd-picker__header">
+					<div>
+						<h2>Text weight</h2>
+						<p>The header navigation, Log in / Register and the Search button; the "Adult Wholesale Canada" heading and the
+							text box under it; the product section titles (On Sale, Latest Adult Products, the carousels); and the
+							footer's headings, text boxes and copyright line. Other buttons are always bold.</p>
+					</div>
+					<fieldset class="ulbd-intensity">
+						<legend>Weight</legend>
+						<?php foreach ( ulbd_text_weights() as $key => $weight ) : ?>
+							<label>
+								<input type="radio" name="<?php echo esc_attr( ULBD_OPTION . '[text_weight]' ); ?>" value="<?php echo esc_attr( $key ); ?>" <?php checked( $settings['text_weight'], $key ); ?>>
+								<span style="font-weight: <?php echo (int) $weight[1]; ?>"><?php echo esc_html( $weight[0] ); ?></span>
+							</label>
+						<?php endforeach; ?>
+					</fieldset>
+				</header>
+				<p class="ulbd-actions">
+					<a class="button ulbd-preview-link" target="_blank" rel="noopener" href="<?php echo esc_url( home_url( '/' ) ); ?>">Preview on the site</a>
+				</p>
+			</section>
 
 			<?php foreach ( ulbd_areas() as $area => $info ) : ?>
 				<section class="ulbd-picker" data-area="<?php echo esc_attr( $area ); ?>" data-intensity="<?php echo esc_attr( $settings[ $area ]['intensity'] ); ?>">

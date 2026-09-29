@@ -1,6 +1,7 @@
 /**
  * Appearance > Backdrops: the intensity buttons switch the tiles' previews, and the "Preview on the site"
- * links follow the current (unsaved) choices - both areas' - so any combination can be tried on the home page.
+ * links follow the current (unsaved) choices - both areas' and the text weight - so any combination can be
+ * tried on the home page.
  */
 (function () {
 	'use strict';
@@ -16,6 +17,10 @@
 		var params = [];
 		pickers.forEach(function (picker) {
 			var area = picker.getAttribute('data-area');
+			if (area === 'text') {
+				params.push('ulbd_text=' + encodeURIComponent(checked(picker, 'text_weight')));
+				return;
+			}
 			params.push('ulbd_' + area + '=' + encodeURIComponent(checked(picker, 'style')));
 			params.push('ulbd_' + area + '_intensity=' + encodeURIComponent(checked(picker, 'intensity')));
 		});

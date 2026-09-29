@@ -113,6 +113,17 @@ Template: martfury
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD
 }
 
+/*
+ * Display text weight: one weight for the site's display text - the header navigation, Log in / Register
+ * and the Search button, the pill headings (#topcta, #bottomcta, footer widget titles), the text box under
+ * #topcta's heading, the product section and carousel titles, the footer's text boxes and the copyright
+ * line. Regular 300 by default; the UltraLove Backdrops plugin's "Text weight" setting (Appearance >
+ * Backdrops) switches it to the bold 500.
+ */
+:root {
+    --ul-display-weight: 300
+}
+
 
 .brndimg,.sideslidertopmobile {
     display: none
@@ -680,6 +691,7 @@ h1,h2,h3,h4 {
     padding: 10px 18px;
     margin: 0 0 44px!important;
     font-size: 21px;
+    font-weight: var(--ul-display-weight);
     line-height: 1.5
 }
 
@@ -1087,10 +1099,10 @@ h1,h2,h3,h4 {
     color: #fff!important
 }
 
-/* Header navigation items: the site's regular 300 weight (the parent theme's layouts use 600), and
-   white text on hover / keyboard focus. */
+/* Header navigation items: the display text weight (the parent theme's layouts use 600), and white
+   text on hover / keyboard focus. */
 .site-header .primary-nav>ul>li>a {
-    font-weight: 300
+    font-weight: var(--ul-display-weight)
 }
 
 .site-header .primary-nav>ul>li>a:hover,
@@ -1098,11 +1110,11 @@ h1,h2,h3,h4 {
     color: #fff
 }
 
-/* "Log in / Register" in the header at the site's regular 300, like the rest of the header text (the
-   parent theme sets 700, drawn at 500). The Search button stays 500 like every button, and the cart /
-   wishlist count badges keep their bold. */
+/* "Log in / Register" in the header at the display text weight, like the rest of the header text (the
+   parent theme sets 700, drawn at 500). The Search button follows it too (see the button exception
+   below), and the cart / wishlist count badges keep their bold. */
 .site-header .extras-menu .menu-item-account > a {
-    font-weight: 300
+    font-weight: var(--ul-display-weight)
 }
 
 /* Logged out, the account item is two stacked links ("Log in" / "Register", ~41px tall at the 17px body
@@ -1349,6 +1361,7 @@ h1,h2,h3,h4 {
 .site-footer .footer-widgets .gform_wrapper {
     display: block;
     color: #4a3558!important;
+    font-weight: var(--ul-display-weight);
     background: rgba(255,255,255,.7);
     border: 1px solid rgb(177,101,255);
     border-radius: 10px;
@@ -1405,7 +1418,8 @@ h1,h2,h3,h4 {
 .footer-copyright {
     display: block;
     width: fit-content;
-    margin: 0 auto!important
+    margin: 0 auto!important;
+    font-weight: var(--ul-display-weight)
 }
 
 /* Header layout used when the ultralove-banners plugin is active (the .header-main-row wrapper only
@@ -1669,12 +1683,12 @@ html body {
 }
 
 /* Center the text inside every pill, so a heading that wraps to two lines stays centered, and
-   use Work Sans' light (300) weight rather than the 500 all h1-h4 get above. */
+   use the display text weight rather than the 500 all h1-h4 get above. */
 #topcta h1,
 #bottomcta h2,
 .site-footer .footer-widgets .widget-title {
     text-align: center!important;
-    font-weight: 300!important
+    font-weight: var(--ul-display-weight)!important
 }
 
 /* #bottomcta's pill-to-buttons gap matches #topcta's text-to-buttons gap (#topcta p's 44px bottom
@@ -1708,7 +1722,7 @@ html body {
 
 /* Product section titles everywhere - "On Sale" / "Latest Adult Products" (.cat-header) and the carousel
    headings ("Related products", upsells, "Your Recently Viewed Products" - further down) - share one size,
-   in the same light (300) weight as the pill headings, instead of the 500 all h1-h4 get above. */
+   in the display text weight like the pill headings, instead of the 500 all h1-h4 get above. */
 :root {
     --ul-section-title-size: 32px
 }
@@ -1717,7 +1731,7 @@ html body {
 .cat-header h2,
 .cat-header h3 {
     font-size: var(--ul-section-title-size)!important;
-    font-weight: 300!important
+    font-weight: var(--ul-display-weight)!important
 }
 
 /* Bold parts of product card titles (<b> inside the title link, e.g. "DISCOUNTS DO NOT APPLY") at 500, in
@@ -1750,10 +1764,10 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
     font-weight: inherit
 }
 
-/* Exception: the header's Search button label at the regular 300, to sit with the rest of the header
-   text (navigation, Log in / Register) rather than stand out as the one bold word there. */
+/* Exception: the header's Search button label at the display text weight, to sit with the rest of the
+   header text (navigation, Log in / Register) rather than stand out as the one bold word there. */
 .site-header .product-extra-search .search-submit {
-    font-weight: 300
+    font-weight: var(--ul-display-weight)
 }
 
 /*
@@ -2378,7 +2392,7 @@ section.up-sells .related-title,
 #footer-recently-viewed .recently-header .title,
 #footer-bot-recently-viewed .recently-header .title {
     font-size: var(--ul-section-title-size)!important;
-    font-weight: 300!important;
+    font-weight: var(--ul-display-weight)!important;
     line-height: 1.2!important;
     color: #3b1d4a!important;
     text-align: left!important
