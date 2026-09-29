@@ -4,9 +4,10 @@
  * Description: Pick the background style of the home page's call to action (#topcta) and of the footer box
  *              (#hero-footer-combo - #bottomcta + the site footer, on every page) from a library of CSS, SVG,
  *              animated and dark backdrops, with live previews (Appearance > Backdrops) and an admin-only
- *              preview on the site before saving. Only the background layer changes (plus light text for
- *              what sits straight on a dark backdrop): the areas' white edge fades and their content are the
- *              theme's. Also sets the site's display text weight (regular or bold).
+ *              preview on the site before saving. Only the background layer changes - plus, on a dark
+ *              backdrop, hard edges instead of the theme's white edge fades and light text for what sits
+ *              straight on it; the areas' content is the theme's. Also sets the site's display text weight
+ *              (regular or bold).
  * Version: 1.1.0
  *
  * @package UltraLove_Backdrops
@@ -22,9 +23,10 @@ define( 'ULBD_OPTION', 'ulbd_settings' );
 require_once __DIR__ . '/includes/styles.php';
 
 /**
- * The two areas: key => label, the elements each one's background goes on, and 'dark_css' - rules for the
+ * The two areas: key => label, the elements each one's background goes on, 'dark_css' - rules for the
  * text drawn straight on the backdrop (not on one of the theme's white pills / boxes), printed when the
- * area's style is a dark one.
+ * area's style is a dark one - and 'fade_selector', the theme's white edge-fade overlay, hidden for a style
+ * without fades.
  */
 function ulbd_areas() {
 	return array(
@@ -35,7 +37,8 @@ function ulbd_areas() {
 			// the banner and #topcta (#ub-hero-combo-bg) carries the backdrop instead - style that one then.
 			'selectors'   => array( 'body:not(.ub-hero-combo) #topcta', 'body #ub-hero-combo-bg' ),
 			// Its heading, text box and buttons all have their own backgrounds.
-			'dark_css'    => '',
+			'dark_css'      => '',
+			'fade_selector' => '#topcta:before',
 		),
 		'footer' => array(
 			'label'       => 'Footer box',
@@ -45,6 +48,7 @@ function ulbd_areas() {
 			'dark_css'    => '#hero-footer-combo #footer-links .widget_nav_menu ul li a { color: #fff !important; }'
 				. ' #hero-footer-combo #footer-links .widget_nav_menu ul li a:hover, #hero-footer-combo #footer-links .widget_nav_menu ul li a:focus-visible { color: #f4c3d9 !important; }'
 				. ' #hero-footer-combo #footer-links .widget_nav_menu ul li + li:before { color: #b98ad6; }',
+			'fade_selector' => '#hero-footer-combo:before',
 		),
 	);
 }
@@ -165,8 +169,12 @@ add_action(
 			list( $decl, $kf ) = ulbd_style_css( $s['style'], $s['intensity'] );
 			$selectors         = implode( ', ', $info['selectors'] );
 			$out[]             = $selectors . ' { ' . $decl . ' }';
-			if ( ! empty( ulbd_styles()[ $s['style'] ]['dark'] ) && $info['dark_css'] ) {
+			$style = ulbd_styles()[ $s['style'] ];
+			if ( ! empty( $style['dark'] ) && $info['dark_css'] ) {
 				$out[] = $info['dark_css'];
+			}
+			if ( isset( $style['fade'] ) && ! $style['fade'] ) {
+				$out[] = $info['fade_selector'] . ' { display: none; }';
 			}
 			if ( $kf ) {
 				$keyframes[ $s['style'] ] = $kf;
@@ -279,6 +287,9 @@ function ulbd_render_admin() {
 	$tile_css  = array();
 	$keyframes = array();
 	foreach ( ulbd_styles() as $id => $style ) {
+		if ( isset( $style['fade'] ) && ! $style['fade'] ) {
+			$tile_css[] = '.ulbd-tile--' . $id . ' .ulbd-swatch__fade { display: none; }';
+		}
 		foreach ( array_keys( ulbd_intensities() ) as $intensity ) {
 			list( $decl, $kf ) = ulbd_style_css( $id, $intensity );
 			$tile_css[]        = '.ulbd-picker[data-intensity="' . $intensity . '"] .ulbd-tile--' . $id . ' .ulbd-swatch { ' . $decl . ' }';
@@ -293,8 +304,8 @@ function ulbd_render_admin() {
 		<p class="ulbd-intro">The background behind the home page's call to action and behind the footer box, and the weight of
 			the site's display text. Pick a style and an intensity for each area, use <strong>Preview on the site</strong> to see
 			the combination on the home page (only you see it, nothing is saved), then <strong>Save</strong>. The white fades at
-			the edges and everything in front of the backdrop stay as they are; on a dark style, the footer's quick links turn
-			white. Animated styles stand still for visitors who ask their device for reduced motion.</p>
+			the edges and everything in front of the backdrop stay as they are, except on a dark style: like the live site's
+			backdrop it has hard edges, and the footer's quick links turn white. Animated styles stand still for visitors who ask their device for reduced motion.</p>
 
 		<style><?php echo implode( "\n", array_merge( array_values( $keyframes ), $tile_css ) ); // phpcs:ignore WordPress.Security.EscapeOutput -- built from the style library. ?></style>
 

@@ -12,7 +12,8 @@
  * Colours are the site's: lavender rgb(177,101,255), plum #3b1d4a, brand pink #b3094b, plus the aurora's
  * soft teal / periwinkle / rose, on the pale lavender base #f6f1fa. The 'dark' kind sits on near-black
  * #06060f instead; a style with 'dark' => true also switches the text drawn straight on the backdrop to
- * light colours (the area's 'dark_css' in ulbd_areas()).
+ * light colours (the area's 'dark_css' in ulbd_areas()), and one with 'fade' => false drops the theme's
+ * white fades at the area's edges (its 'fade_selector'), with hard edges like the live site's backdrop.
  *
  * To add a style: add an entry to ulbd_styles() - it shows up in the admin picker with a live preview.
  *
@@ -97,7 +98,8 @@ function ulbd_night_layers( $k ) {
 }
 
 /**
- * All styles, keyed by id: array( label, kind, description, css callable, optional dark flag ).
+ * All styles, keyed by id: array( label, kind, description, css callable, optional dark and fade flags -
+ * dark off and fade on when left out).
  * Kinds group the picker: 'css' (gradients / patterns), 'svg' (SVG images), 'animated', 'plain', 'dark'.
  */
 function ulbd_styles() {
@@ -299,6 +301,7 @@ function ulbd_styles() {
 			'label'       => 'Night aurora (live site)',
 			'kind'        => 'dark',
 			'dark'        => true,
+			'fade'        => false,
 			'description' => 'Purple and teal glows on near-black - the backdrop on the live site today.',
 			'css'         => function ( $k ) use ( $night ) {
 				return array( 'background' => implode( ', ', array_merge( ulbd_night_layers( $k ), array( $night ) ) ) );
@@ -308,6 +311,7 @@ function ulbd_styles() {
 			'label'       => 'Drifting night aurora',
 			'kind'        => 'dark',
 			'dark'        => true,
+			'fade'        => false,
 			'description' => 'The night aurora, oversized and slowly drifting (a 40s loop).',
 			'css'         => function ( $k ) use ( $night ) {
 				return array(
@@ -322,6 +326,7 @@ function ulbd_styles() {
 			'label'       => 'Night mesh',
 			'kind'        => 'dark',
 			'dark'        => true,
+			'fade'        => false,
 			'description' => 'Purple, teal and violet colour fields from the corners, on near-black.',
 			'css'         => function ( $k ) use ( $night ) {
 				return array(
