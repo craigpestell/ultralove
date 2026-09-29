@@ -1446,6 +1446,14 @@ h1,h2,h3,h4 {
     height: auto;
 }
 
+/* Header logo: the logo is the shadow-free SVG (ultralove_svg_site_logo() in functions.php); its purple drop
+   shadow is drawn here. Fitted to the original PNG's shadow - 2.5 left, 3.5 down, blurred (sigma) 1.5 in the
+   logo's own 246-wide units, in #b858f0 - and scaled to the 180px it's shown at (x 180/246; the blur radius
+   is twice sigma). */
+.site-header .d-logo img.site-logo {
+    filter: drop-shadow(-1.83px 2.56px 2.2px #b858f0);
+}
+
 .header-main-row .header-row > .header-extras {
     flex: 1 1 0;
     width: auto;

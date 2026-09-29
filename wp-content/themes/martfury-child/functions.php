@@ -1139,3 +1139,18 @@ function ultralove_brand_grid_shortcode( $atts ) {
 		implode( '', $items )
 	);
 }
+
+/**
+ * Header logo: the redrawn vector logo (images/ultra-love-logo.svg, no shadow) instead of the 246x100 PNG set in
+ * the theme options, so it stays sharp at any size and screen density. Its purple drop shadow is CSS
+ * (style.css, "Header logo"). ?ver= is the file's modification time, so a changed logo isn't served stale.
+ */
+add_filter( 'martfury_site_logo', 'ultralove_svg_site_logo' );
+function ultralove_svg_site_logo( $logo ) {
+	$file = get_stylesheet_directory() . '/images/ultra-love-logo.svg';
+	if ( ! file_exists( $file ) ) {
+		return $logo;
+	}
+
+	return get_stylesheet_directory_uri() . '/images/ultra-love-logo.svg?ver=' . filemtime( $file );
+}
