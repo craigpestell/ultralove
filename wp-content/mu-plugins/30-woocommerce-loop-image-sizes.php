@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WooCommerce Loop Image Sizes Correction
  * Description: Corrects the responsive "sizes" attribute on WooCommerce product loop thumbnails (shop, category/tag archives, search results, and the homepage product grids) to match the Martfury theme's actual grid column widths, instead of WordPress core's default full-viewport-width assumption. Reduces oversized image fetches on Cloudinary-delivered srcset images.
- * Version: 1.0.0
+ * Version: 1.1.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -37,4 +37,25 @@ add_filter(
 	},
 	10,
 	2
+);
+
+/**
+ * Home page: lazy-load the product card images. The home page renders 42 product cards (the "On Sale"
+ * carousel and "Latest Adult Products"), all below the banner and the call to action on a phone, and
+ * WordPress adds no loading="lazy" to images outside post content here - so all 42 (~1 MB) were fetched
+ * at once, competing with the banner (the page's largest contentful paint) for a phone's bandwidth.
+ * Banner slides (.ub-banner-img) set their own loading and are left alone. Not applied on shop and
+ * archive pages, where the first row of cards can be the largest contentful paint.
+ */
+add_filter(
+	'wp_get_attachment_image_attributes',
+	static function ( $attr ) {
+		if ( ! is_front_page() || ( isset( $attr['class'] ) && false !== strpos( $attr['class'], 'ub-banner-img' ) ) ) {
+			return $attr;
+		}
+		$attr['loading'] = 'lazy';
+		unset( $attr['fetchpriority'] );
+
+		return $attr;
+	}
 );
