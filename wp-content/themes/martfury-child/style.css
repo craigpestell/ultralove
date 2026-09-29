@@ -1506,7 +1506,7 @@ h1,h2,h3,h4 {
    a fit to the original PNG's shadow (-1.83px 2.56px 2.2px #b858f0 at the 180px the logo is shown at), which
    read too thick next to the crisp letters; this is the value picked in the logo's shadow tuner: closer and tighter, at full strength. */
 .site-header .d-logo .site-logo {
-    filter: drop-shadow(-0.7px 2.1px 1.1px #b858f0);
+    filter: drop-shadow(-0.6px 2.4px 1px #b858f0);
 }
 
 .header-main-row .header-row > .header-extras {
