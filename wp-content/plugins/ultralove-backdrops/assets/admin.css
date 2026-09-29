@@ -160,7 +160,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-	.ulbd-swatch {
-		animation: none !important;
+	/* Specific enough to beat the per-tile rules printed on the page (.ulbd-picker[data-intensity] .ulbd-tile--<id> .ulbd-swatch). */
+	.ulbd .ulbd-picker[data-intensity] .ulbd-tile .ulbd-swatch {
+		animation: none;
 	}
 }
