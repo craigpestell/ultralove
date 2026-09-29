@@ -97,7 +97,7 @@ function ub_get_crop( $post_id, $thumb_id ) {
 
 /**
  * Applies a Cloudinary transform (a crop, a white pad, or a plain scale-to-fit) to a
- * Cloudinary-served <img>, always leading with q_auto,f_auto so every banner image is compressed
+ * Cloudinary-served <img>, always leading with f_auto,q_80 so every banner image is compressed
  * and served in the browser's best format - not just the ones with a saved crop. The Cloudinary
  * plugin only swaps local URLs for res.cloudinary.com URLs when the page is output, and for a
  * slide with no local WP intermediate generated for the requested size, falls back to serving the
@@ -115,8 +115,11 @@ function ub_apply_transform( $html, $seg, $out_w, $out_h ) {
 	$query = isset( $m[3] ) ? $m[3] : '';
 	$pre   = $seg ? $seg . '/' : '';
 
+	// q_80 rather than q_auto: with q_auto, Cloudinary's f_auto served some banners at some widths as
+	// JPEG even to browsers that take WebP/AVIF (15 of the home page's 87 banner URLs); at q_80 every
+	// one is WebP/AVIF, and the set is ~14% smaller.
 	$url_for = function ( $n ) use ( $base, $path, $query, $pre, $out_w, $out_h ) {
-		return sprintf( '%sq_auto,f_auto/%sc_scale,w_%d,h_%d/%s%s', $base, $pre, $n, round( $n * $out_h / $out_w ), $path, $query );
+		return sprintf( '%sf_auto,q_80/%sc_scale,w_%d,h_%d/%s%s', $base, $pre, $n, round( $n * $out_h / $out_w ), $path, $query );
 	};
 
 	// Capped at 1920 (the 'ub_banner' size, the widest a banner is ever shown): a crop scaled up to a
@@ -270,7 +273,13 @@ add_action(
 						$preloads[ $src_match[1] ] = $preload . '>' . "\n";
 					}
 					if ( $preloads ) {
-						$html = preg_replace( '/<head\b[^>]*>/', '$0' . str_replace( '$', '\\$', implode( '', $preloads ) ), $html, 1 );
+						// After the viewport meta tag, not straight after <head>: the browser picks a preload's
+						// imagesrcset candidate as soon as it sees the tag, and before the viewport tag it
+						// assumes a 980px desktop layout - so a phone fetched the 1024w image instead of 768w.
+						$links = str_replace( '$', '\\$', implode( '', $preloads ) );
+						$html  = preg_match( '/<meta\s[^>]*name=["\']viewport["\'][^>]*>/i', $html )
+							? preg_replace( '/<meta\s[^>]*name=["\']viewport["\'][^>]*>\s*/i', '$0' . $links, $html, 1 )
+							: preg_replace( '/<head\b[^>]*>/', '$0' . $links, $html, 1 );
 					}
 				}
 
