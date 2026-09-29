@@ -47,6 +47,48 @@ add_filter(
 	}
 );
 
+/**
+ * The group page a slide belongs to, or the groups overview if it has no (known) group.
+ */
+function ub_slide_group_url( $slide_id, $args = array() ) {
+	$group = get_post_meta( $slide_id, '_ub_group', true );
+	if ( ! array_key_exists( $group, ub_groups() ) ) {
+		return add_query_arg( $args, admin_url( 'admin.php?page=ub-banners' ) );
+	}
+	return ub_group_url( $group, $args );
+}
+
+// Slide edit screen: link back to the slide's group page.
+add_action(
+	'edit_form_top',
+	function ( $post ) {
+		if ( 'ub_banner_slide' !== $post->post_type ) {
+			return;
+		}
+		$groups = ub_groups();
+		$group  = get_post_meta( $post->ID, '_ub_group', true );
+		$label  = isset( $groups[ $group ] ) ? $groups[ $group ] : 'All banner groups';
+		?>
+		<p><a href="<?php echo esc_url( ub_slide_group_url( $post->ID ) ); ?>">&larr; <?php echo esc_html( $label ); ?></a></p>
+		<?php
+	}
+);
+
+// After saving a slide, go back to its group page instead of staying on the edit screen.
+add_filter(
+	'redirect_post_location',
+	function ( $location, $post_id ) {
+		if ( 'ub_banner_slide' !== get_post_type( $post_id ) ) {
+			return $location;
+		}
+		// Encoded because add_query_arg() doesn't, and a title may contain & or #.
+		$msg = 'Slide “' . wp_strip_all_tags( get_the_title( $post_id ) ) . '” saved.';
+		return ub_slide_group_url( $post_id, array( 'ub_msg' => rawurlencode( $msg ) ) );
+	},
+	10,
+	2
+);
+
 add_action(
 	'admin_enqueue_scripts',
 	function () {
