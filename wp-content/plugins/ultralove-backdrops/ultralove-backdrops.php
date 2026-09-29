@@ -23,29 +23,32 @@ define( 'ULBD_OPTION', 'ulbd_settings' );
 require_once __DIR__ . '/includes/styles.php';
 
 /**
- * The two areas: key => label, the elements each one's background goes on, 'dark_css' - rules for the
- * text drawn straight on the backdrop (not on one of the theme's white pills / boxes), printed when the
- * area's style is a dark one - and 'fade_selector', the theme's white edge-fade overlay, hidden for a style
+ * The two areas: key => label, the elements each one's background goes on, 'dark_css' - printed when the
+ * area's style is a dark one: its pills and text boxes as the live site's see-through dark glass (black at
+ * .52 / .38) with white text, their purple borders and shadows kept, and white text for anything drawn
+ * straight on the backdrop - and 'fade_selector', the theme's white edge-fade overlay, hidden for a style
  * without fades.
  */
 function ulbd_areas() {
 	return array(
 		'topcta' => array(
-			'label'       => 'Home page call to action',
-			'description' => 'The "Adult Wholesale Canada" block under the home banner (#topcta).',
+			'label'         => 'Home page call to action',
+			'description'   => 'The "Adult Wholesale Canada" block under the home banner (#topcta).',
 			// With UltraLove Banners' combined "aurora" backdrop on, #topcta is transparent and one element behind
 			// the banner and #topcta (#ub-hero-combo-bg) carries the backdrop instead - style that one then.
-			'selectors'   => array( 'body:not(.ub-hero-combo) #topcta', 'body #ub-hero-combo-bg' ),
-			// Its heading, text box and buttons all have their own backgrounds.
-			'dark_css'      => '',
+			'selectors'     => array( 'body:not(.ub-hero-combo) #topcta', 'body #ub-hero-combo-bg' ),
+			'dark_css'      => 'body #topcta h1 { background: rgba(0, 0, 0, .52); color: #fff !important; }'
+				. ' body #topcta p { background: rgba(0, 0, 0, .38); color: #fff !important; }',
 			'fade_selector' => '#topcta:before',
 		),
 		'footer' => array(
-			'label'       => 'Footer box',
-			'description' => '"Ordering wholesale products has never been easier." and the site footer below it (#hero-footer-combo), on every page.',
-			'selectors'   => array( 'body #hero-footer-combo' ),
+			'label'         => 'Footer box',
+			'description'   => '"Ordering wholesale products has never been easier." and the site footer below it (#hero-footer-combo), on every page.',
+			'selectors'     => array( 'body #hero-footer-combo' ),
 			// The quick links (Ordering · About Us · Contact) are underlined pink text on the backdrop itself.
-			'dark_css'    => '#hero-footer-combo #footer-links .widget_nav_menu ul li a { color: #fff !important; }'
+			'dark_css'      => 'body #bottomcta h2, body .site-footer .footer-widgets .widget-title { background: rgba(0, 0, 0, .52); color: #fff !important; }'
+				. ' body .site-footer .footer-widgets .textwidget, body .site-footer .footer-widgets .gform_wrapper { background: rgba(0, 0, 0, .38); color: #fff !important; }'
+				. ' #hero-footer-combo #footer-links .widget_nav_menu ul li a { color: #fff !important; }'
 				. ' #hero-footer-combo #footer-links .widget_nav_menu ul li a:hover, #hero-footer-combo #footer-links .widget_nav_menu ul li a:focus-visible { color: #f4c3d9 !important; }'
 				. ' #hero-footer-combo #footer-links .widget_nav_menu ul li + li:before { color: #b98ad6; }',
 			'fade_selector' => '#hero-footer-combo:before',
@@ -305,7 +308,8 @@ function ulbd_render_admin() {
 			the site's display text. Pick a style and an intensity for each area, use <strong>Preview on the site</strong> to see
 			the combination on the home page (only you see it, nothing is saved), then <strong>Save</strong>. The white fades at
 			the edges and everything in front of the backdrop stay as they are, except on a dark style: like the live site's
-			backdrop it has hard edges, and the footer's quick links turn white. Animated styles stand still for visitors who ask their device for reduced motion.</p>
+			backdrop it has hard edges, the pills and text boxes turn to see-through dark glass with white text, and the
+			footer's quick links turn white. Animated styles stand still for visitors who ask their device for reduced motion.</p>
 
 		<style><?php echo implode( "\n", array_merge( array_values( $keyframes ), $tile_css ) ); // phpcs:ignore WordPress.Security.EscapeOutput -- built from the style library. ?></style>
 
