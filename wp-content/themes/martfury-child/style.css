@@ -1504,9 +1504,9 @@ h1,h2,h3,h4 {
 /* Header logo: the logo is the shadow-free SVG, printed inline in the page (template-parts/logo.php; as an
    <img> via ultralove_svg_site_logo() where it can't be); its purple drop shadow is drawn here. Started from
    a fit to the original PNG's shadow (-1.83px 2.56px 2.2px #b858f0 at the 180px the logo is shown at), which
-   read too thick next to the crisp letters; this is about 30% closer and tighter, at full strength. */
+   read too thick next to the crisp letters; this is the value picked in the logo's shadow tuner: closer and tighter, at full strength. */
 .site-header .d-logo .site-logo {
-    filter: drop-shadow(-1.3px 1.8px 1.6px #b858f0);
+    filter: drop-shadow(-0.7px 1.4px 1px #b858f0);
 }
 
 .header-main-row .header-row > .header-extras {
