@@ -26,7 +26,8 @@ add_action(
 		if ( isset( $styles->registered['martfury-fonts'] ) ) {
 			$styles->registered['martfury-fonts']->src = false;
 		}
-	}
+	},
+	100 // After Martfury has registered it.
 );
 
 /**
@@ -43,5 +44,5 @@ function ultralove_dequeue_unused_block_styles() {
 		wp_dequeue_style( $handle );
 	}
 }
-add_action( 'wp_enqueue_scripts', 'ultralove_dequeue_unused_block_styles', 100 ); // After Martfury, WooCommerce and core.
+add_action( 'wp_enqueue_scripts', 'ultralove_dequeue_unused_block_styles', 100 ); // After WooCommerce and core.
 add_action( 'wp_footer', 'ultralove_dequeue_unused_block_styles', 2 );
