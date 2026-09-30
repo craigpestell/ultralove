@@ -111,6 +111,21 @@ function ultralove_preload_icon_font() {
 	);
 }
 
+/*
+ * Header search dropdown (Martfury's AJAX search): let Relevanssi run its text search. Relevanssi blanks the SQL of
+ * every front-end search query ("WHERE 1=2") but only answers the main query or one flagged 'relevanssi' => true, so
+ * Martfury's own get_posts() search always came back "Nothing found" (only SKU matches got through). Flagged, it
+ * uses the same index and ranking as the search results page.
+ */
+add_filter( 'martfury_get_search_products_query', 'ultralove_search_query_use_relevanssi' );
+add_filter( 'martfury_get_search_posts_query', 'ultralove_search_query_use_relevanssi' );
+function ultralove_search_query_use_relevanssi( $args ) {
+    if ( function_exists( 'relevanssi_query' ) ) {
+        $args['relevanssi'] = true;
+    }
+    return $args;
+}
+
 add_action( 'init', 'ultralove_bootstrap_recently_viewed', 30 );
 function ultralove_bootstrap_recently_viewed() {
     if ( ! class_exists( 'WooCommerce' ) ) {
