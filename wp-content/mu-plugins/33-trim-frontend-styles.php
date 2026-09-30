@@ -26,13 +26,22 @@ add_action(
 		if ( isset( $styles->registered['martfury-fonts'] ) ) {
 			$styles->registered['martfury-fonts']->src = false;
 		}
-
-		$post = get_post();
-		if ( ! ( is_singular() && $post && has_blocks( $post ) ) ) {
-			foreach ( array( 'wp-block-library', 'wp-block-library-theme', 'wc-blocks-style', 'classic-theme-styles', 'global-styles' ) as $handle ) {
-				wp_dequeue_style( $handle );
-			}
-		}
-	},
-	100 // After Martfury, WooCommerce and core have enqueued theirs.
+	}
 );
+
+/**
+ * Block styles come back after wp_enqueue_scripts: WooCommerce enqueues its block styles while rendering
+ * product shortcodes, and core re-enqueues global styles at wp_footer (priority 1), so they are dequeued
+ * again just before the late styles print.
+ */
+function ultralove_dequeue_unused_block_styles() {
+	$post = is_singular() ? get_queried_object() : null; // Not get_post(): product loops can leave it changed.
+	if ( $post instanceof WP_Post && has_blocks( $post ) ) {
+		return;
+	}
+	foreach ( array( 'wp-block-library', 'wp-block-library-theme', 'wc-blocks-style', 'classic-theme-styles', 'global-styles' ) as $handle ) {
+		wp_dequeue_style( $handle );
+	}
+}
+add_action( 'wp_enqueue_scripts', 'ultralove_dequeue_unused_block_styles', 100 ); // After Martfury, WooCommerce and core.
+add_action( 'wp_footer', 'ultralove_dequeue_unused_block_styles', 2 );
