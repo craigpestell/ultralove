@@ -2,6 +2,10 @@
 import { PurgeCSS } from 'purgecss';
 import fs from 'fs';
 import { minify } from 'csso';
+// Also kept whatever the samples show: states WooCommerce's scripts add on interaction (the log-in
+// password eye's revealed state, the product gallery's zoom trigger) and tags that only appear in
+// editor content (hr).
+const alwaysKeep = ['hr', 'display-password', 'show-password-input', 'woocommerce-product-gallery__trigger'];
 const states = ['open','opened','active','show','shown','hover','selected','current','current-menu-item','current-menu-ancestor','loading','loaded','displayed','visible','fixed','sticky','focus','error','invalid','disabled','processing','added','in','out','fade','collapse','collapsing','collapsed','hide','hidden','expanded','is-active','has-children','menu-item-has-children','no-js','js','yes-js','js_active','rtl','touch','mobile','scrolled','minimized','closed','done','success','wc-block','added_to_cart'];
 const r = await new PurgeCSS().purge({
   content: ['work/html/*.html', 'work/dom/*.html', 'work/js/*.js'],
@@ -9,7 +13,7 @@ const r = await new PurgeCSS().purge({
   fontFace: false, keyframes: false, variables: false,
   rejected: true,
   safelist: {
-    standard: states,
+    standard: [...states, ...alwaysKeep],
     deep: [/^slick/, /^pswp/, /^mfp/, /^ui-/, /tooltip/, /^nprogress/, /^notify/, /select2/, /^pp_/, /^yith/, /^blockUI/, /^blockOverlay/, /^blockMsg/, /^woocommerce-(error|message|info|notice|NoticeGroup)/, /^star-rating/, /^stars/],
     greedy: [/slick/, /pswp/, /tooltip/, /mfp/, /flex-/, /^gform/, /^ginput/, /^gfield/, /select2/]
   }

@@ -30,7 +30,8 @@ while read -r u; do
 	i=$((i + 1))
 	curl -s "$u" -o "work/js/$i.js"
 	if grep -q '404 Not Found' "work/js/$i.js"; then
-		ssh ultralove-dev-app "curl -s -H 'Host: dev.ultralove.ca' -H 'X-Forwarded-Proto: https' 'http://127.0.0.1${u#https://ultralove.ca}'" > "work/js/$i.js"
+		# -n: without it ssh reads the rest of the URL list from stdin and the loop stops early.
+		ssh -n ultralove-dev-app "curl -s -H 'Host: dev.ultralove.ca' -H 'X-Forwarded-Proto: https' 'http://127.0.0.1${u#https://ultralove.ca}'" > "work/js/$i.js"
 	fi
 done < work/js-urls.txt
 cp ../../wp-content/themes/martfury/js/scripts.js work/js/martfury-scripts-src.js
@@ -45,4 +46,8 @@ for f in work/html/out-*.html work/html/in-*.html work/html/ajax-*.html; do
 		--dump-dom "file://$PWD/work/render/$n.html" > "work/dom/$n.html" 2>/dev/null || true
 done
 
-echo "html: $(ls work/html | wc -l)  js: $(ls work/js | wc -l)  dom: $(ls work/dom | wc -l)"
+echo "html: $(ls work/html | wc -l)  js: $(ls work/js | wc -l) (of $(wc -l < work/js-urls.txt) urls + theme sources)  dom: $(ls work/dom | wc -l)"
+if [ "$(ls work/js | wc -l)" -lt "$(wc -l < work/js-urls.txt)" ]; then
+	echo "Not every script was downloaded - don't build from this; rerun." >&2
+	exit 1
+fi
