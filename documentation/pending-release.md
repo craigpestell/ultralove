@@ -34,10 +34,19 @@ Run on the production app server from `/var/www/html`, as `sudo -u www-data wp .
    ```bash
    wp plugin deactivate elementor
    ```
-4. **Flush the object cache**: `wp cache flush`
-5. **Check** `/`, `/brands/` (73 brands with names), `/contact-us/` (the contact form), `/sale-products/`, `/shop/`,
+4. **Autoptimize: combine CSS** - one stylesheet per page instead of ~20 render-blocking ones. Inline CSS is
+   combined too, so the cascade order doesn't change (the code deploy already drops Google Fonts and the
+   unused block styles, `mu-plugins/33-trim-frontend-styles.php`):
+   ```bash
+   wp option update autoptimize_css_aggregate on
+   wp option update autoptimize_css_include_inline on
+   wp autoptimize clear
+   ```
+   Rollback: set both back to `''` and clear again.
+5. **Flush the object cache**: `wp cache flush`
+6. **Check** `/`, `/brands/` (73 brands with names), `/contact-us/` (the contact form), `/sale-products/`, `/shop/`,
    `/my-account/`, `/become-a-retailer/`, a product page: 200, no PHP errors.
-6. **Cloudflare**: purge `https://ultralove.ca/`, `https://ultralove.ca/brands/` and `https://ultralove.ca/contact-us/` (cached HTML), in the
+7. **Cloudflare**: purge `https://ultralove.ca/`, `https://ultralove.ca/brands/` and `https://ultralove.ca/contact-us/` (cached HTML), in the
    dashboard (Caching > Configuration > Custom Purge).
 
 Rollback: reactivate Elementor (`wp plugin activate elementor`), restore the Brands and Contact Us content from the
