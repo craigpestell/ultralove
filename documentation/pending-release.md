@@ -7,60 +7,24 @@ in the order listed.
 
 ## Code
 
-Branch `preview/glow-on-card-hover` (the product card / carousel work, the container-based product
-columns, the account and Buy Wholesale page styling, the home page as the child theme's `front-page.php`,
-the `[ultralove_brand_grid]` shortcode, the `ultralove-page-sources` skill). Merge to `main` via PR, let
-the dev auto-deploy run, then deploy prod from `main`.
+Nothing pending: production runs `main` (`86a1b18`, deployed 2026-09-30).
 
 ## Production steps after the code deploy
 
-Run on the production app server from `/var/www/html`, as `sudo -u www-data wp ...`.
+None pending.
 
-1. **Brands We Carry page (post 16575)** - replace its content (a frozen HTML copy of the old Elementor
-   logo grid) with the shortcode. Back the old content up first:
-   ```bash
-   wp post get 16575 --field=post_content > /root/brands-page-content-before-shortcode-$(date +%Y%m%d%H%M%S).html
-   wp post update 16575 --post_content='[ultralove_brand_grid]'
-   ```
-2. **Contact Us page (post 70)** - its form (Gravity Forms #3) came from an Elementor widget; add it to
-   the page content, after the text:
-   ```bash
-   wp post get 70 --field=post_content > /root/contact-page-content-before-form-$(date +%Y%m%d%H%M%S).html
-   { wp post get 70 --field=post_content; printf '\n\n[gravityform id="3" title="false" description="false"]\n'; } > /tmp/contact.html
-   wp post update 70 /tmp/contact.html
-   ```
-3. **Deactivate Elementor** - nothing renders with it any more (home = `front-page.php`, the other
-   former Elementor pages are plain page content):
-   ```bash
-   wp plugin deactivate elementor
-   ```
-4. **Autoptimize: combine CSS** - one stylesheet per page instead of ~20 render-blocking ones. Inline CSS is
-   combined too, so the cascade order doesn't change (the code deploy already drops Google Fonts and the
-   unused block styles, `mu-plugins/33-trim-frontend-styles.php`):
-   ```bash
-   wp option update autoptimize_css_aggregate on
-   wp option update autoptimize_css_include_inline on
-   wp autoptimize clear
-   ```
-   Rollback: set both back to `''` and clear again.
-5. **Flush the object cache**: `wp cache flush`
-6. **Check** `/`, `/brands/` (73 brands with names), `/contact-us/` (the contact form), `/sale-products/`, `/shop/`,
-   `/my-account/`, `/become-a-retailer/`, a product page: 200, no PHP errors.
-7. **Cloudflare**: purge `https://ultralove.ca/`, `https://ultralove.ca/brands/` and `https://ultralove.ca/contact-us/` (cached HTML), in the
-   dashboard (Caching > Configuration > Custom Purge).
+## Already on production (not part of a release)
 
-Rollback: reactivate Elementor (`wp plugin activate elementor`), restore the Brands and Contact Us content from the
-backup files, redeploy the previous code.
+Release of 2026-09-29 / 2026-09-30 (code: product cards and carousels, container-based product columns,
+account and Buy Wholesale styling, home page as `front-page.php`, `[ultralove_brand_grid]`, trimmed Martfury
+CSS, deferred jQuery, trimmed stylesheets, header search fix). Backups of the replaced content are in `/root`
+on the production server.
 
-## Optional
-
-- **UltraLove Backdrops** (new plugin, deployed with the code) - Appearance > Backdrops picks the call to
-  action's and the footer box's backdrop styles. Inactive until activated (`wp plugin activate
-  ultralove-backdrops`); while active it outputs nothing until a non-default style is saved, so activating
-  it changes nothing by itself. On dev it's active for trying styles out; carry over the chosen styles by
-  saving the same choices on production.
-
-## Already on production (not part of the release)
-
-- Home page call to action: "UltraLove" -> "Ultra Love" (Elementor data of post 14, 2026-09-28). The
-  same text is now in `front-page.php`.
+- Brands We Carry page (post 16575) content is `[ultralove_brand_grid]` (2026-09-29).
+- Contact Us page (post 70) has the Gravity Forms #3 shortcode after its text (2026-09-29).
+- Elementor removed; nothing renders with it (2026-09-29). Its `_elementor_data` post meta is still in the
+  database, unused.
+- UltraLove Backdrops active.
+- Autoptimize combines CSS, inline CSS included: `autoptimize_css_aggregate` and
+  `autoptimize_css_include_inline` = `on` (2026-09-30). Rollback: set both to `''`, `wp autoptimize clear`.
+- Home page call to action: "UltraLove" -> "Ultra Love" (2026-09-28); the text is in `front-page.php`.
