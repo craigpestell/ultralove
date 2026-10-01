@@ -1,0 +1,13 @@
+{
+  "private": true,
+  "type": "module",
+  "description": "Builds wp-content/themes/martfury-child/css/critical.css - see README.md",
+  "scripts": { "generate": "node generate.mjs" },
+  "dependencies": {
+    "csso": "^5.0.5",
+    "pixelmatch": "^6.0.0",
+    "pngjs": "^7.0.0",
+    "postcss": "^8.4.47",
+    "puppeteer-core": "^23.5.0"
+  }
+}
