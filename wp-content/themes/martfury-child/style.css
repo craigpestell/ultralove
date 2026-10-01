@@ -1826,6 +1826,16 @@ h1,h2,h3,h4 {
     .site-header .mobile-menu-row .product-extra-search {
         flex: 1 1 auto
     }
+
+    /* 12px above and below the logo row and below the search (they were 20px and 15px). */
+    .header-main-row .header-main {
+        padding-top: 12px;
+        padding-bottom: 12px
+    }
+
+    .site-header .mobile-menu {
+        padding-bottom: 12px
+    }
 }
 
 /* Phones: the account and cart icons only (the wishlist is in the side menu - ultralove_mobile_menu_wishlist()
