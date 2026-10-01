@@ -50,6 +50,10 @@ node generate.mjs                          # all pages
 node generate.mjs --pages=/,/shop/ --no-verify   # quick look while working on it (result in work/ only)
 ```
 
+A run whose critical CSS comes out identical to the committed file stops there (nothing to check or ship).
+Check results are kept in `.check-cache/` (between CI runs by the workflow's cache, saved even when a run
+fails): a page/size whose critical CSS and full CSS haven't changed since an earlier check isn't rendered again.
+
 The log has a line per page render and per page checked, with the time since the start. Only a full run
 writes the theme's file.
 

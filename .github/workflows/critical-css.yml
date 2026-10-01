@@ -81,6 +81,16 @@ jobs:
           printf 'Host ultralove-dev-app\n  HostName %s\n  User root\n  IdentityFile ~/.ssh/dev_deploy\n  IdentitiesOnly yes\n  StrictHostKeyChecking yes\n' "$DEV_HOST" > ~/.ssh/config
           ssh ultralove-dev-app true
 
+      # Earlier screenshot-check results (ops/critical-css/.check-cache), so checks whose page, screen size,
+      # critical CSS and page CSS are unchanged aren't rendered again - also on a rerun after a failure.
+      - name: Restore earlier check results
+        if: steps.changes.outputs.skip != 'true'
+        uses: actions/cache/restore@v4
+        with:
+          path: ops/critical-css/.check-cache
+          key: critical-css-checks-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: critical-css-checks-
+
       - name: Generate and verify
         if: steps.changes.outputs.skip != 'true'
         working-directory: ops/critical-css
@@ -89,6 +99,13 @@ jobs:
         run: |
           npm ci --no-audit --no-fund
           node generate.mjs
+
+      - name: Save check results
+        if: always() && steps.changes.outputs.skip != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: ops/critical-css/.check-cache
+          key: critical-css-checks-${{ github.run_id }}-${{ github.run_attempt }}
 
       - name: Keep the renders
         if: always() && steps.changes.outputs.skip != 'true'
