@@ -15,6 +15,10 @@ None pending.
 
 ## Already on production (not part of a release)
 
+- Martfury's phone-version fixed Add to cart bar off (2026-10-01, dev and prod): theme mod
+  `product_add_to_cart_fixed_mobile` = 0 (`wp theme mod set product_add_to_cart_fixed_mobile 0`; unset it to
+  restore Martfury's default, on). The child theme's add-to-cart button rules pinned the bar to the top-left over
+  the header instead of along the bottom; the phone version goes away with the responsive switch anyway.
 - Cloudflare Turnstile instead of reCAPTCHA v2 on all three forms (footer form 1, Registration 2, Contact Us 3),
   2026-10-01: Gravity Forms Turnstile add-on 1.5.0 with a production widget for `ultralove.ca`, fields switched
   by `ops/gravityforms/switch-recaptcha-to-turnstile.php`. Backup of the forms before:
