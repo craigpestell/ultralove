@@ -1273,9 +1273,11 @@ h1,h2,h3,h4 {
 }
 
 /* "Log in / Register" in the header at the display text weight, like the rest of the header text (the
-   parent theme sets 700, drawn at 500). The Search button follows it too (see the button exception
-   below), and the cart / wishlist count badges keep their bold. */
+   parent theme sets 700, drawn at 500), at 14px at every width (it inherited the 17px body size). The
+   Search button follows the weight too (see the button exception below), and the cart / wishlist count
+   badges keep their bold. */
 .site-header .extras-menu .menu-item-account > a {
+    font-size: 14px;
     font-weight: var(--ul-display-weight)
 }
 
@@ -1294,9 +1296,23 @@ h1,h2,h3,h4 {
         position: static
     }
 
+    /* The icon is tied to the link's own left edge (its static position less the link's padding) and the
+       labels start the icon's width + 10px in, so the gap is 10px at every width. It used to sit 20px into
+       the item while the labels sat at the link's 42px padding, so the gap followed the item's padding:
+       12px on desktop, overlapping on tablets. */
+    .site-header .extras-menu .menu-item-account:not(.logined) {
+        --ul-account-icon: 24px
+    }
+
+    .site-header .extras-menu .menu-item-account:not(.logined) > a {
+        padding-left: calc(var(--ul-account-icon) + 10px)
+    }
+
     .site-header .extras-menu .menu-item-account:not(.logined) .extra-icon {
         top: 50%;
-        left: 20px;
+        left: auto;
+        margin-left: calc(-1 * (var(--ul-account-icon) + 10px));
+        font-size: var(--ul-account-icon);
         transform: translateY(-50%)
     }
 }
@@ -1611,18 +1627,16 @@ h1,h2,h3,h4 {
 /* The row is the page container (.martfury-container - see "Content edges"), so the logo starts and the
    header banner ends on the same edges as the menu, breadcrumbs, content and footer. The container nested
    inside .header-main adds no padding of its own, so the logo lands exactly on that edge. */
-/* The logo, search and account icons get half the row and the header banner the other half, so the
-   header is balanced on the content edges at any width. The logo group never gets narrower than its
-   contents need (the flex item's automatic minimum): the 180px logo, a search box of at least 260px (the
-   narrowest that's still usable) and the account icons at their natural width - "Log in / Register" for
-   logged-out visitors is wider than the icons alone. Where half the row is less than that, the banner
-   shrinks instead. The banner keeps its 728x90 shape, so its height follows. Inside the group the logo
-   is a fixed 180px (it used to scale with Martfury's 25% Bootstrap column) and the search box takes
-   whatever is left. */
+/* The header banner is 590x73 (its 728x90 shape at the logo's 73px height) on the right content edge, and
+   the logo and the account icons take the rest of the row, the icons at its end, 20px from the banner - so
+   the logo row is the same height (73px + 24px above and below) at every desktop width. Below ~1072px the
+   logo, the icons and "Log in / Register" leave less than 590px, so the banner gives way (510x63 at 992px);
+   the logo group never shrinks. It used to take half the row, so its height followed the window (56px at
+   992px, 84px at 1440px). The search has its own row below (.ul-search-row). */
 .header-main-row .header-main {
     float: none;
     padding-left: 0;
-    flex: 0 0 max(50% - 10px, 0px);
+    flex: 1 0 auto;
     max-width: none;
 }
 
@@ -1653,17 +1667,47 @@ h1,h2,h3,h4 {
 
 .header-main-row .header-row > .header-extras {
     flex: 1 1 0;
+    justify-content: flex-end;
     width: auto;
     min-width: 0;
 }
 
-.header-main-row .header-extras .product-extra-search {
-    flex: 1 1 auto;
-    min-width: 260px;
+/* The search row (template-parts/headers/layout-1.php), below the logo row at every width: the search fills the
+   content width, 24px above the navigation row on desktop (the logo row's own 24px is above it) - 12px below
+   992px (below). It used to sit in the logo row on desktop, squeezed between the logo, the icons and the
+   banner to ~60px of typing room behind a category dropdown and a "Search" button. */
+.site-header .ul-search-row {
+    padding: 0 0 24px
 }
 
-.header-main-row .header-extras .products-search {
-    width: 100%;
+.site-header .ul-search-row .mobile-menu-row {
+    display: flex
+}
+
+.site-header .ul-search-row .product-extra-search {
+    flex: 1 1 auto
+}
+
+.site-header .ul-search-row .products-search {
+    width: 100%
+}
+
+/* The search button is the magnifier icon at every width, square like the field - the parent theme's phone
+   version (its desktop one was a 100px "Search" text button with rounded right corners). */
+.site-header .ul-search-row .search-submit {
+    flex: none;
+    width: 60px;
+    min-width: 0;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 0
+}
+
+.site-header .ul-search-row .search-submit::before {
+    content: "\e922";
+    display: block;
+    height: 42px;
+    font: 20px/42px linearicons
 }
 
 /* The account icons never shrink (they'd slide under the banner), and the row's 20px gap already
@@ -1685,7 +1729,8 @@ h1,h2,h3,h4 {
     align-items: center;
     justify-content: flex-end;
     margin-left: auto;
-    flex: 1 1 0;
+    flex: 0 1 590px;
+    width: 590px;
     min-width: 0;
     max-width: none!important;
 }
@@ -1693,6 +1738,121 @@ h1,h2,h3,h4 {
 @media (max-width:991px) {
     .header-main-row {
         display: block;
+    }
+}
+
+/* Header icons at every width, so desktop, tablets and phones match: 24px icons (desktop had 30px), 20px
+   apart (desktop had 20px or 40px, from the items' padding, depending on the width). The cart comes last in
+   the markup (template-parts/headers/layout-1.php). */
+.site-header .header-main-row .header-extras .extras-menu {
+    display: flex;
+    align-items: center;
+    gap: 20px
+}
+
+.site-header .header-main-row .header-extras .extras-menu > li {
+    padding: 0!important
+}
+
+.site-header .header-main-row .header-extras .extras-menu .extra-icon {
+    font-size: 24px
+}
+
+/* Count badges (wishlist, cart) overhang their icon's right edge by 4px (the parent theme's cart badge; the
+   wishlist's was flush - now the same), and the icons row ends 4px in, so the cart's badge - last in the
+   row - ends on the content edge. */
+.site-header .header-main-row .header-extras .extras-menu > li > a .mini-item-counter {
+    right: -4px
+}
+
+.site-header .header-main-row .header-extras .extras-menu {
+    margin-right: 4px
+}
+
+/* The font's heart is a shorter glyph than the bag and the user (its top starts ~2px lower at 24px), so
+   centred in the same box, with its count badge on its lower edge, it read as sitting low: lift the glyph
+   2px so the icons' tops line up (the badges stay level). */
+.site-header .header-main-row .header-extras .extras-menu .menu-item-wishlist .extra-icon {
+    transform: translateY(-2px)
+}
+
+/* Header below 992px (template-parts/headers/layout-1.php): one row - the menu button then the logo on the
+   left, the header icons on the right with the cart last - and the search on the row below, edge to edge.
+   The menu button is a 44px tap target round its 24px icon, pulled 10px out so the icon itself sits on the
+   content edge, like the search below it. (The icons used to sit at a fixed spot - past the right edge on a
+   360px phone, short of it on wider ones - and the menu button, 30px in, started the search row.) */
+@media (max-width: 991px) {
+    .header-main-row .header-row > .header-logo {
+        align-items: center;
+        gap: 6px
+    }
+
+    .site-header .ul-header-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+        width: 44px;
+        height: 44px;
+        margin-left: -10px;
+        padding: 0;
+        /* Black like the header icons - out of Martfury's menu row it took the site's link colour. */
+        color: #000
+    }
+
+    .site-header .ul-header-toggle .icon-menu {
+        font-size: 24px;
+        line-height: 1
+    }
+
+    .header-main-row .header-row > .header-extras {
+        flex: 1 1 auto
+    }
+
+    .site-header .header-main-row .header-extras .extras-menu {
+        margin: 0 4px 0 auto
+    }
+
+    /* 12px above and below the logo row and below the search (they were 20px and 15px). */
+    .header-main-row .header-main {
+        padding-top: 12px;
+        padding-bottom: 12px
+    }
+
+    .site-header .ul-search-row {
+        padding-bottom: 12px
+    }
+}
+
+/* Phones: the account and cart icons only (the wishlist is in the side menu - ultralove_mobile_menu_wishlist()
+   in functions.php), each a 44px tap target, the row pulled 6px out (the icons sit 10px inside their boxes)
+   so the cart's count badge ends on the right content edge; the logo at 140px. */
+@media (max-width: 767px) {
+    .site-header .header-main-row .header-extras .extras-menu > .menu-item-wishlist {
+        display: none
+    }
+
+    .site-header .header-main-row .header-extras .extras-menu {
+        gap: 0;
+        margin-right: -6px
+    }
+
+    .site-header .header-main-row .header-extras .extras-menu > li > a:first-child {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        height: 44px
+    }
+
+    /* The icons sit 10px inside their 44px boxes, so their count badges (4px past the icon) are 6px in. */
+    .site-header .header-main-row .header-extras .extras-menu > li > a .mini-item-counter {
+        right: 6px
+    }
+
+    .header-main-row .header-logo .d-logo img,
+    .header-main-row .header-logo .d-logo svg.site-logo {
+        width: 140px
     }
 }
 

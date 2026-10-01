@@ -15,6 +15,10 @@ if ( ! shortcode_exists( 'ultralove_banner' ) ) {
     <div class="<?php echo martfury_header_container_classes(); ?>">
         <div class="row header-row">
             <div class="header-logo col-lg-3 col-md-3 col-sm-6 col-xs-6">
+                <?php // Below 992px the menu button starts the row, before the logo (style.css, "Header below 992px"). ?>
+                <a class="mf-toggle-menu ul-header-toggle hidden-lg hidden-md" id="mf-toggle-menu" href="#" aria-label="<?php esc_attr_e( 'Menu', 'martfury' ); ?>">
+                    <i class="icon-menu" aria-hidden="true"></i>
+                </a>
                 <div class="d-logo">
 					<?php get_template_part( 'template-parts/logo' ); ?>
                 </div>
@@ -25,14 +29,14 @@ if ( ! shortcode_exists( 'ultralove_banner' ) ) {
 				<?php endif; ?>
             </div>
             <div class="header-extras col-lg-9 col-md-9 col-sm-6 col-xs-6">
-				<?php martfury_extra_search(); ?>
                 <ul class="extras-menu">
 					<?php
 					martfury_extra_hotline();
 					martfury_extra_compare();
 					martfury_extra_wislist();
-					martfury_extra_cart();
 					martfury_extra_account();
+					// The cart last, at every width.
+					martfury_extra_cart();
 					?>
                 </ul>
             </div>
@@ -45,18 +49,19 @@ if ( ! shortcode_exists( 'ultralove_banner' ) ) {
 </div>
 </div>
 
-<?php
-// The navigation row (ultralove_main_menu_row() in functions.php), directly below the logo row on every page.
-ultralove_main_menu_row();
-?>
-<div class="mobile-menu hidden-lg hidden-md">
-    <div class="container">
+<?php // The search on its own row below the logo row at every width, the content width, without the category
+// dropdown. (Martfury's .mobile-menu styles its icon button.) In the page container, so it ends on the same
+// edges as the rows above and below. ?>
+<div class="mobile-menu ul-search-row">
+    <div class="<?php echo martfury_header_container_classes(); ?>">
         <div class="mobile-menu-row">
-            <a class="mf-toggle-menu" id="mf-toggle-menu" href="#">
-                <i class="icon-menu"></i>
-            </a>
 			<?php martfury_extra_search( false ); ?>
         </div>
     </div>
 </div>
+
+<?php
+// The navigation row (ultralove_main_menu_row() in functions.php), below the search from 992px.
+ultralove_main_menu_row();
+?>
 
