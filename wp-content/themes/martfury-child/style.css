@@ -364,16 +364,75 @@ Template: martfury
     color: #b3092c
 }
 
-.col-coupon {
-    width: 20%!important
+/* Cart page, from 992px: the coupon in a 20% column (beside an empty 20% spacer that starts the collaterals
+   row), then the shipping calculator and the totals at 39% each. Below 992px each takes the full width, as the
+   template's col-sm-12 intends - the 20/39% widths at every size squeezed the calculator and totals to 125px
+   and the coupon field to 34px on a phone. */
+@media (min-width: 992px) {
+    .col-coupon {
+        width: 20%!important
+    }
+
+    .cart-collaterals .col-colla {
+        width: 39%!important
+    }
+
+    .cart-collaterals .row > div:first-of-type {
+        width: 20%!important
+    }
 }
 
-.cart-collaterals .col-colla {
-    width: 39%!important
-}
+@media (max-width: 991px) {
+    .col-coupon,
+    .cart-collaterals .col-colla {
+        width: 100%;
+        float: none
+    }
 
-.cart-collaterals .row > div:first-of-type {
-    width: 20%!important
+    .cart-collaterals .row > .col-colla:first-child:not(:has(*)) {
+        display: none
+    }
+
+    /* Stacked, the coupon, the shipping calculator and the totals are 40px apart - their own outer margins
+       and padding (20px under the coupon, 29px under the calculator's button, 17px above the checkout
+       button) left the gaps at 20px and 46px. */
+    .col-coupon .coupon {
+        margin-bottom: 0!important
+    }
+
+    .cart-collaterals {
+        margin-top: 40px
+    }
+
+    .cart-collaterals .row {
+        display: flex;
+        flex-direction: column;
+        gap: 40px
+    }
+
+    .cart-collaterals .row::before,
+    .cart-collaterals .row::after {
+        content: none
+    }
+
+    /* The calculator's last paragraph (the Update button - hidden inputs follow it, hence last-of-type), and
+       its "Calculate shipping" link, whose 35px space moves to the top of the fields (only there when open). */
+    .cart-collaterals .shipping-calculator-form > p:last-of-type {
+        margin-bottom: 0!important
+    }
+
+    .cart-collaterals .woocommerce-shipping-calculator > .shipping-calculator-button {
+        margin-bottom: 0!important
+    }
+
+    .cart-collaterals .shipping-calculator-form {
+        margin-top: 35px!important
+    }
+
+    .cart-collaterals .cart_totals > :first-child {
+        margin-top: 0;
+        padding-top: 0
+    }
 }
 
 .cart_totals,.wc-proceed-to-checkout {
