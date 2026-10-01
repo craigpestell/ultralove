@@ -11,12 +11,15 @@
  *    its "More On-Sale Products" button, and "Latest Adult Products" (the 30 newest), with the two links
  *    below. Both lists are WooCommerce [products] shortcodes, so their cards are the shop's.
  *
+ * The sections sit in <main> - the page's main landmark for screen readers, like Martfury's page.php and the
+ * child's WooCommerce wrapper (woocommerce/global/wrapper-start.php) give every other page.
+ *
  * @package Martfury
  */
 
 get_header();
 ?>
-<div id="ul-home" class="ul-home">
+<main id="ul-home" class="ul-home">
     <section class="ul-home-bleed ul-home-banner">
 		<?php echo do_shortcode( '[ultralove_banner group="home"]' ); ?>
     </section>
@@ -61,6 +64,6 @@ get_header();
             </div>
         </div>
     </section>
-</div>
+</main>
 <?php
 get_footer();
