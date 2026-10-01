@@ -1749,6 +1749,12 @@ h1,h2,h3,h4 {
     .header-main-row .header-row > .header-extras {
         flex: 0 0 auto
     }
+
+    /* The old 20px left margin on the icons (from when the search sat before them) would leave the banner
+       off-centre between the logo and the icons. */
+    .site-header .header-main-row .header-extras .extras-menu {
+        margin-left: 0
+    }
 }
 
 /* The search row (template-parts/headers/layout-1.php), below the logo row at every width: the search fills the
