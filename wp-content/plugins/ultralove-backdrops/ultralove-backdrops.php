@@ -9,7 +9,7 @@
  *              straight on it; the areas' content is the theme's. A pattern size slider scales the
  *              tiled SVG motifs (bats, hearts, leaves...) from half to three times their size. Also sets the site's display text weight
  *              (regular or bold).
- * Version: 1.3.4
+ * Version: 1.4.0
  *
  * @package UltraLove_Backdrops
  */
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ULBD_VERSION', '1.3.4' );
+define( 'ULBD_VERSION', '1.4.0' );
 define( 'ULBD_OPTION', 'ulbd_settings' );
 
 require_once __DIR__ . '/includes/styles.php';
@@ -240,12 +240,77 @@ add_action(
 );
 
 /*
- * Admin: Appearance > Backdrops.
+ * New backdrops: each admin's list of styles they have seen (user meta), so styles added since their last visit
+ * to Appearance > Backdrops are counted in the admin menu and labelled "New" in the picker. Visiting the page
+ * marks every style seen. An admin with no list yet starts from the styles the plugin had before the count
+ * existed, so the ones added alongside it show as new once.
+ */
+define( 'ULBD_SEEN_META', 'ulbd_seen_styles' );
+
+/** The styles in the plugin before the new-backdrop count existed: everyone's starting "seen" list. */
+function ulbd_baseline_styles() {
+	return array( 'aurora', 'aurora-drift', 'mesh', 'silk', 'dots', 'stripes', 'tint', 'waves', 'blobs', 'grain', 'hearts', 'mesh-shift', 'night-aurora', 'night-drift', 'night-mesh', 'halloween', 'thanksgiving', 'christmas', 'new-year', 'none' );
+}
+
+/** Style ids the current user hasn't seen yet. */
+function ulbd_new_styles() {
+	$seen = get_user_meta( get_current_user_id(), ULBD_SEEN_META, true );
+	if ( ! is_array( $seen ) ) {
+		$seen = ulbd_baseline_styles();
+	}
+
+	return array_values( array_diff( array_keys( ulbd_styles() ), $seen ) );
+}
+
+/** WordPress's own count bubble (as on Plugins or Comments), for a menu title. */
+function ulbd_count_bubble( $count ) {
+	return $count ? sprintf( ' <span class="awaiting-mod count-%1$d"><span class="pending-count" aria-hidden="true">%1$d</span><span class="screen-reader-text">%1$d new backdrops</span></span>', $count ) : '';
+}
+
+/*
+ * Admin: Appearance > Backdrops, with the new-backdrop count on it and on Appearance.
  */
 add_action(
 	'admin_menu',
 	function () {
-		add_theme_page( 'Backdrops', 'Backdrops', 'manage_options', 'ulbd-backdrops', 'ulbd_render_admin' );
+		global $menu;
+
+		$count = current_user_can( 'manage_options' ) ? count( ulbd_new_styles() ) : 0;
+		add_theme_page( 'Backdrops', 'Backdrops' . ulbd_count_bubble( $count ), 'manage_options', 'ulbd-backdrops', 'ulbd_render_admin' );
+		if ( $count ) {
+			foreach ( $menu as $i => $item ) {
+				if ( 'themes.php' === $item[2] ) {
+					$menu[ $i ][0] .= ulbd_count_bubble( $count ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited -- adding the count bubble, as core does.
+				}
+			}
+		}
+	}
+);
+
+/*
+ * Visiting the page: remember which styles are new for this visit's labels, mark them all seen, and take the
+ * bubbles off this page's menu (built before this runs).
+ */
+add_action(
+	'load-appearance_page_ulbd-backdrops',
+	function () {
+		global $menu, $submenu;
+
+		$GLOBALS['ulbd_new_this_visit'] = ulbd_new_styles();
+		update_user_meta( get_current_user_id(), ULBD_SEEN_META, array_keys( ulbd_styles() ) );
+		$strip = function ( $title ) {
+			return preg_replace( '/ <span class="awaiting-mod count-\d+">.*$/s', '', $title );
+		};
+		foreach ( $menu as $i => $item ) {
+			if ( 'themes.php' === $item[2] ) {
+				$menu[ $i ][0] = $strip( $item[0] ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+			}
+		}
+		foreach ( isset( $submenu['themes.php'] ) ? $submenu['themes.php'] : array() as $i => $item ) {
+			if ( 'ulbd-backdrops' === $item[2] ) {
+				$submenu['themes.php'][ $i ][0] = $strip( $item[0] ); // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+			}
+		}
 	}
 );
 
@@ -320,6 +385,12 @@ add_action(
 function ulbd_render_admin() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
+	}
+	// New since this admin's last visit (worked out before the visit marked them seen).
+	$new_styles  = isset( $GLOBALS['ulbd_new_this_visit'] ) ? $GLOBALS['ulbd_new_this_visit'] : array();
+	$new_by_kind = array();
+	foreach ( ulbd_styles() as $id => $style ) {
+		$new_by_kind[ $style['kind'] ] = ( isset( $new_by_kind[ $style['kind'] ] ) ? $new_by_kind[ $style['kind'] ] : 0 ) + ( in_array( $id, $new_styles, true ) ? 1 : 0 );
 	}
 	$settings    = ulbd_settings();
 	$scale_range = ulbd_scale_range();
@@ -451,7 +522,7 @@ function ulbd_render_admin() {
 					?>
 					<div class="ulbd-kind-tabs" role="tablist" aria-label="<?php echo esc_attr( $info['label'] . ' styles' ); ?>">
 						<?php foreach ( $kinds as $kind => $kind_label ) : ?>
-							<button type="button" role="tab" class="ulbd-kind-tab" id="ulbd-kind-tab-<?php echo esc_attr( $area . '-' . $kind ); ?>" aria-controls="ulbd-kind-<?php echo esc_attr( $area . '-' . $kind ); ?>" aria-selected="<?php echo $kind === $current_kind ? 'true' : 'false'; ?>" tabindex="<?php echo $kind === $current_kind ? '0' : '-1'; ?>" data-kind="<?php echo esc_attr( $kind ); ?>"><?php echo esc_html( $kind_label ); ?><span class="ulbd-kind-tab__dot" <?php echo $kind === $current_kind ? '' : 'hidden'; ?>><span class="screen-reader-text"> (selected style)</span></span></button>
+							<button type="button" role="tab" class="ulbd-kind-tab" id="ulbd-kind-tab-<?php echo esc_attr( $area . '-' . $kind ); ?>" aria-controls="ulbd-kind-<?php echo esc_attr( $area . '-' . $kind ); ?>" aria-selected="<?php echo $kind === $current_kind ? 'true' : 'false'; ?>" tabindex="<?php echo $kind === $current_kind ? '0' : '-1'; ?>" data-kind="<?php echo esc_attr( $kind ); ?>"><?php echo esc_html( $kind_label ); ?><?php echo $new_by_kind[ $kind ] ? '<span class="ulbd-new-count">' . (int) $new_by_kind[ $kind ] . ' new</span>' : ''; ?><span class="ulbd-kind-tab__dot" <?php echo $kind === $current_kind ? '' : 'hidden'; ?>><span class="screen-reader-text"> (selected style)</span></span></button>
 						<?php endforeach; ?>
 					</div>
 
@@ -466,7 +537,7 @@ function ulbd_render_admin() {
 								<label class="ulbd-tile ulbd-tile--<?php echo esc_attr( $id ); ?>">
 									<input type="radio" name="<?php echo esc_attr( ULBD_OPTION . '[' . $area . '][style]' ); ?>" value="<?php echo esc_attr( $id ); ?>" <?php checked( $settings[ $area ]['style'], $id ); ?>>
 									<span class="ulbd-swatch"><span class="ulbd-swatch__fade"></span><span class="ulbd-swatch__pill">Aa</span></span>
-									<span class="ulbd-tile__label"><?php echo esc_html( $style['label'] ); ?></span>
+									<span class="ulbd-tile__label"><?php echo esc_html( $style['label'] ); ?><?php echo in_array( $id, $new_styles, true ) ? ' <span class="ulbd-new">New</span>' : ''; ?></span>
 									<span class="ulbd-tile__desc"><?php echo esc_html( $style['description'] ); ?></span>
 								</label>
 							<?php endforeach; ?>
