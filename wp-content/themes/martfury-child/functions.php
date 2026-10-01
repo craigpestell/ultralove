@@ -80,6 +80,16 @@ function martfury_child_enqueue_scripts() {
         $card_link_path = get_stylesheet_directory() . '/js/product-card-link.js';
         wp_enqueue_script( 'ultralove-product-card-link', get_stylesheet_directory_uri() . '/js/product-card-link.js', array(), (string) filemtime( $card_link_path ), true );
 
+        // Product cards: the checkmark on an Add to cart button after adding goes back to the cart after a moment.
+        $card_cart_path = get_stylesheet_directory() . '/js/product-card-cart.js';
+        wp_enqueue_script( 'ultralove-product-card-cart', get_stylesheet_directory_uri() . '/js/product-card-cart.js', array( 'jquery' ), (string) filemtime( $card_cart_path ), true );
+
+        // Product page: no vertical thumbnail slider at phone width (the thumbnails are a row there).
+        if ( is_singular( 'product' ) ) {
+            $thumbs_path = get_stylesheet_directory() . '/js/product-gallery-thumbs.js';
+            wp_enqueue_script( 'ultralove-product-gallery-thumbs', get_stylesheet_directory_uri() . '/js/product-gallery-thumbs.js', array( 'jquery', 'martfury' ), (string) filemtime( $thumbs_path ), true );
+        }
+
         $script_path = get_stylesheet_directory() . '/js/recently-viewed.js';
         $script_url  = get_stylesheet_directory_uri() . '/js/recently-viewed.js';
         $version     = file_exists( $script_path ) ? (string) filemtime( $script_path ) : null;
@@ -389,6 +399,22 @@ if (!function_exists('woocommerce_template_loop_add_to_cart')) {
 		}
 		wc_get_template('loop/add-to-cart.php');
 	}
+}
+
+/**
+ * Loop Add to cart buttons carry a cart icon beside their label: on phones the card shows only the icon
+ * (a round button beside the quantity, on one row) and the label stays for screen readers; wider cards
+ * show only the label (style.css, "Cart row on phones"). After the Quantity Field on Shop Page plugin,
+ * which rebuilds the button at priority 10.
+ */
+add_filter( 'woocommerce_loop_add_to_cart_link', 'ultralove_loop_add_to_cart_icon', 20 );
+function ultralove_loop_add_to_cart_icon( $html ) {
+	return preg_replace(
+		'#(<(button|a)\b[^>]*\badd_to_cart_button\b[^>]*>)(.*?)(</\2>)#s',
+		'$1<span class="ul-cart-icon" aria-hidden="true"></span><span class="ul-cart-label">$3</span>$4',
+		$html,
+		1
+	);
 }
 
 add_filter( 'wc_order_statuses', 'wc_renaming_order_status' );

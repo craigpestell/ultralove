@@ -2429,6 +2429,142 @@ body:not(.shop-view-list) ul.products li.product form.cart button {
     }
 }
 
+/* Touch screens and phones never see the hover glow, so each card keeps a light edge at rest - otherwise
+   it's hard to tell which product a cart row belongs to. (Martfury only gives the card a border on desktop.) */
+@media (hover: none), (max-width: 767px) {
+    body:not(.shop-view-list) ul.products li.product .product-inner,
+    body:not(.shop-view-list) ul.products li.product .product-inner:hover {
+        border: 1px solid #e3e3e3
+    }
+}
+
+/* Cart row on phones: the quantity and a round cart-icon button on one row - the "Add to cart" label
+   didn't fit beside the quantity on ~175px cards and wrapped onto a second row. The label stays in the
+   button for screen readers (ultralove_loop_add_to_cart_icon() in functions.php adds the icon's element). Out of
+   stock cards drop their disabled quantity, so "Out of stock" has the row to itself. At the button
+   system's id weight - it sets the buttons' shape. */
+.ul-cart-icon {
+    display: none
+}
+
+/* After an item is added from a card, its button shows a checkmark (WooCommerce gives it .added): before the
+   label on wider cards, in place of the cart icon on phones. WooCommerce's "View cart" link and the Quantity
+   Field plugin's "Item Added" text, both inserted after the button, are hidden - they broke the cart row
+   (the plugin adds another "Item Added" to every card each time anything is added). The header cart count
+   updates as well. The checkmark shows for 2.5 seconds (js/product-card-cart.js), then the button is back to
+   Add to cart. */
+ul.products li.product form.cart .added_to_cart,
+ul.products li.product form.cart .confirm_add {
+    display: none!important
+}
+
+ul.products li.product form.cart button.added:not(.loading)::after {
+    content: none
+}
+
+ul.products li.product form.cart button.added:not(.loading)::before {
+    content: "";
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    margin-right: 6px;
+    vertical-align: -2px;
+    background-color: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M9 16.2 4.8 12l-1.4 1.4L9 19 21 7l-1.4-1.4z'/%3E%3C/svg%3E") center / contain no-repeat
+}
+
+@media (max-width: 767px) {
+    body:not(.shop-view-list) ul.products li.product form.cart {
+        flex-wrap: nowrap;
+        justify-content: space-between
+    }
+
+    /* The quantity fills the row beside the button, and its - and + are full-height targets sharing the
+       space either side of the number (they were 17px squares). */
+    body:not(.shop-view-list) ul.products li.product form.cart .quantity {
+        flex: 1 1 auto;
+        min-width: 0
+    }
+
+    body:not(.shop-view-list) ul.products li.product form.cart .qty-box {
+        width: 100%;
+        height: 40px;
+        padding: 0
+    }
+
+    body:not(.shop-view-list) ul.products li.product form.cart .qty-box .decrease,
+    body:not(.shop-view-list) ul.products li.product form.cart .qty-box .increase {
+        flex: 1 1 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        align-self: stretch;
+        margin: 0;
+        cursor: pointer;
+        touch-action: manipulation
+    }
+
+    body:not(.shop-view-list) ul.products li.product form.cart .qty-box .qty {
+        flex: 0 0 24px;
+        height: 38px;
+        font-size: 15px!important
+    }
+
+    body:not(.shop-view-list) #page ul.products li.product form.cart button.add_to_cart_button {
+        flex: 0 0 40px;
+        display: flex!important;
+        align-items: center;
+        justify-content: center;
+        width: 40px!important;
+        height: 40px!important;
+        max-width: none;
+        padding: 0!important;
+        border-radius: 50%
+    }
+
+    /* A cart with a plus (Material's "add shopping cart"): "add to cart", where the header's bag means the
+       cart itself. */
+    body:not(.shop-view-list) ul.products li.product .ul-cart-icon {
+        display: block;
+        width: 20px;
+        height: 20px;
+        background-color: currentColor;
+        -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-9.83-3.25.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4h-.01l-1.1 2-2.76 5H8.53l-.13-.27L6.16 6l-.95-2-.94-2H1v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.13 0-.25-.11-.25-.25z'/%3E%3C/svg%3E") center / contain no-repeat;
+        mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M11 9h2V6h3V4h-3V1h-2v3H8v2h3v3zm-4 9c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zm10 0c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2zm-9.83-3.25.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.86-7.01L19.42 4h-.01l-1.1 2-2.76 5H8.53l-.13-.27L6.16 6l-.95-2-.94-2H1v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.13 0-.25-.11-.25-.25z'/%3E%3C/svg%3E") center / contain no-repeat
+    }
+
+    body:not(.shop-view-list) ul.products li.product form.cart button.added:not(.loading) .ul-cart-icon {
+        display: none
+    }
+
+    body:not(.shop-view-list) ul.products li.product form.cart button.added:not(.loading)::before {
+        width: 20px;
+        height: 20px;
+        margin: 0
+    }
+
+    body:not(.shop-view-list) ul.products li.product .ul-cart-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap
+    }
+
+    body:not(.shop-view-list) ul.products li.product form.cart.ul-out-of-stock .quantity {
+        display: none!important
+    }
+
+    body:not(.shop-view-list) #page ul.products li.product form.cart.ul-out-of-stock button {
+        flex: 1 1 auto;
+        width: 100%!important;
+        max-width: none;
+        height: 40px!important
+    }
+}
+
 /*
  * Product carousels (the home page "On Sale" deals carousel, and the related products / upsells
  * carousels on product pages): every slide stretches to the tallest one, the same as the grid
