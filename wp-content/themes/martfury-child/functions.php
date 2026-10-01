@@ -80,6 +80,10 @@ function martfury_child_enqueue_scripts() {
         $card_link_path = get_stylesheet_directory() . '/js/product-card-link.js';
         wp_enqueue_script( 'ultralove-product-card-link', get_stylesheet_directory_uri() . '/js/product-card-link.js', array(), (string) filemtime( $card_link_path ), true );
 
+        // Product cards: the checkmark on an Add to cart button after adding goes back to the cart after a moment.
+        $card_cart_path = get_stylesheet_directory() . '/js/product-card-cart.js';
+        wp_enqueue_script( 'ultralove-product-card-cart', get_stylesheet_directory_uri() . '/js/product-card-cart.js', array( 'jquery' ), (string) filemtime( $card_cart_path ), true );
+
         // Product page: no vertical thumbnail slider at phone width (the thumbnails are a row there).
         if ( is_singular( 'product' ) ) {
             $thumbs_path = get_stylesheet_directory() . '/js/product-gallery-thumbs.js';
@@ -407,7 +411,7 @@ add_filter( 'woocommerce_loop_add_to_cart_link', 'ultralove_loop_add_to_cart_ico
 function ultralove_loop_add_to_cart_icon( $html ) {
 	return preg_replace(
 		'#(<(button|a)\b[^>]*\badd_to_cart_button\b[^>]*>)(.*?)(</\2>)#s',
-		'$1<i class="icon-bag2 ul-cart-icon" aria-hidden="true"></i><span class="ul-cart-label">$3</span>$4',
+		'$1<span class="ul-cart-icon" aria-hidden="true"></span><span class="ul-cart-label">$3</span>$4',
 		$html,
 		1
 	);
