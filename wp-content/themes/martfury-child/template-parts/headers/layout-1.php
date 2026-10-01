@@ -15,6 +15,10 @@ if ( ! shortcode_exists( 'ultralove_banner' ) ) {
     <div class="<?php echo martfury_header_container_classes(); ?>">
         <div class="row header-row">
             <div class="header-logo col-lg-3 col-md-3 col-sm-6 col-xs-6">
+                <?php // Below 992px the menu button starts the row, before the logo (style.css, "Header below 992px"). ?>
+                <a class="mf-toggle-menu ul-header-toggle hidden-lg hidden-md" id="mf-toggle-menu" href="#" aria-label="<?php esc_attr_e( 'Menu', 'martfury' ); ?>">
+                    <i class="icon-menu" aria-hidden="true"></i>
+                </a>
                 <div class="d-logo">
 					<?php get_template_part( 'template-parts/logo' ); ?>
                 </div>
@@ -34,12 +38,6 @@ if ( ! shortcode_exists( 'ultralove_banner' ) ) {
 					martfury_extra_cart();
 					martfury_extra_account();
 					?>
-                    <?php // Below 992px the menu button ends the icons row (the search has the row below to itself). ?>
-                    <li class="extra-menu-item menu-item-toggle hidden-lg hidden-md">
-                        <a class="mf-toggle-menu" id="mf-toggle-menu" href="#" aria-label="<?php esc_attr_e( 'Menu', 'martfury' ); ?>">
-                            <i class="icon-menu" aria-hidden="true"></i>
-                        </a>
-                    </li>
                 </ul>
             </div>
         </div>
