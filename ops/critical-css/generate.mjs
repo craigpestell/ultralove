@@ -69,14 +69,28 @@ function ssh(cmd) {
 	return execFileSync('ssh', [SSH_HOST, cmd], { encoding: 'utf8' }).trim();
 }
 
+// The tunnel keeps itself up for the whole run: keep-alives notice a dead connection within ~30 s, and when
+// ssh exits it's started again on the same local port (in-flight renders fail and are retried). A CI run once
+// lost its tunnel half-way and every request after that was refused.
 async function openTunnel() {
 	const port = await new Promise((res) => { const s = net.createServer().listen(0, () => { const p = s.address().port; s.close(() => res(p)); }); });
-	const proc = spawn('ssh', ['-N', '-o', 'ExitOnForwardFailure=yes', '-L', `${port}:127.0.0.1:80`, SSH_HOST], { stdio: 'ignore' });
+	let proc = null;
+	let closing = false;
+	const start = () => {
+		proc = spawn('ssh', ['-N', '-o', 'ExitOnForwardFailure=yes', '-o', 'ServerAliveInterval=10', '-o', 'ServerAliveCountMax=3', '-L', `${port}:127.0.0.1:80`, SSH_HOST], { stdio: 'ignore' });
+		proc.on('exit', (code) => {
+			if (closing) return;
+			log(`SSH tunnel to dev closed (exit ${code}); reconnecting`);
+			setTimeout(start, 2000);
+		});
+	};
+	start();
 	for (let i = 0; i < 50; i++) {
 		const ok = await new Promise((res) => { const c = net.connect(port, '127.0.0.1', () => { c.end(); res(true); }).on('error', () => res(false)); });
-		if (ok) return { port, close: () => proc.kill() };
+		if (ok) return { port, close: () => { closing = true; proc.kill(); } };
 		await new Promise((r) => setTimeout(r, 200));
 	}
+	closing = true;
 	proc.kill();
 	throw new Error('SSH tunnel to dev did not come up');
 }
