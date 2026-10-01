@@ -6,8 +6,8 @@
  *              api.js; Google's recaptcha/api.js for a reCAPTCHA field) loaded on every page view
  *              even though almost nobody uses the form on any given page. This holds all of them back
  *              until a form is near the viewport or the visitor interacts with one, then loads them:
- *              Gravity Forms' files first (the Turnstile add-on's set-up waits on them), then Turnstile's,
- *              then reCAPTCHA, each in page order. A form that's visible on load - Contact Us, Buy
+ *              Gravity Forms' utils, the Turnstile add-on's files, the rest of Gravity Forms, then reCAPTCHA
+ *              (each in page order - see load() for why). A form that's visible on load - Contact Us, Buy
  *              Wholesale - loads them straight away. Gravity Forms supports this: its form set-up code
  *              waits (gform.initializeOnLoaded) for the "scripts loaded" events its files fire. Without
  *              JavaScript the forms still submit as normal page posts.
@@ -102,11 +102,19 @@ add_action(
 				document.removeEventListener( 'focusin', onInteract );
 				document.removeEventListener( 'pointerdown', onInteract );
 
-				// Gravity Forms' files first, then the Turnstile add-on's (its set-up calls gform.utils.ready),
-				// then reCAPTCHA (its render callback is in Gravity Forms' files); page order within each.
+				// Gravity Forms' utils first (the Turnstile add-on's set-up calls gform.utils.ready), then the
+				// Turnstile add-on's files (its listener for gform_post_render, which draws the widget, must be in
+				// place before the rest of Gravity Forms loads and sets the forms up), then the rest of Gravity
+				// Forms, then reCAPTCHA (its render callback is in Gravity Forms' files); page order within each.
 				var rank = function ( el ) {
 					var id = el.getAttribute( 'data-ul-lazy-id' );
-					return 'gform_recaptcha-js' === id ? 2 : 0 === id.indexOf( 'gform_turnstile' ) ? 1 : 0;
+					if ( 'gform_gravityforms_utils-js' === id ) {
+						return 0;
+					}
+					if ( 0 === id.indexOf( 'gform_turnstile' ) ) {
+						return 1;
+					}
+					return 'gform_recaptcha-js' === id ? 3 : 2;
 				};
 				var list = Array.prototype.slice.call( held ).map( function ( el, i ) {
 					return { el: el, i: i };
