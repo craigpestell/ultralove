@@ -6,9 +6,10 @@
  *              animated and dark backdrops, with live previews (Appearance > Backdrops) and an admin-only
  *              preview on the site before saving. Only the background layer changes - plus, on a dark
  *              backdrop, hard edges instead of the theme's white edge fades and light text for what sits
- *              straight on it; the areas' content is the theme's. Also sets the site's display text weight
+ *              straight on it; the areas' content is the theme's. A pattern size slider scales the
+ *              tiled SVG motifs (bats, hearts, leaves...) from half to three times their size. Also sets the site's display text weight
  *              (regular or bold).
- * Version: 1.2.0
+ * Version: 1.3.0
  *
  * @package UltraLove_Backdrops
  */
@@ -17,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ULBD_VERSION', '1.2.0' );
+define( 'ULBD_VERSION', '1.3.0' );
 define( 'ULBD_OPTION', 'ulbd_settings' );
 
 require_once __DIR__ . '/includes/styles.php';
@@ -65,6 +66,21 @@ function ulbd_intensities() {
 	);
 }
 
+/** The pattern size slider: min, max and step, in percent of the styles' own tile sizes. */
+function ulbd_scale_range() {
+	return array( 50, 300, 10 );
+}
+
+/** A pattern size in percent, clamped to the slider's range and snapped to its step (100 when not a number). */
+function ulbd_clean_scale( $value ) {
+	list( $min, $max, $step ) = ulbd_scale_range();
+	if ( ! is_numeric( $value ) ) {
+		return 100;
+	}
+
+	return (int) max( $min, min( $max, round( $value / $step ) * $step ) );
+}
+
 /**
  * Display text weights: key => array( label, CSS weight ). The theme's --ul-display-weight (header navigation
  * and Search, pill headings, the #topcta text box, section titles, footer text boxes and copyright) is set
@@ -87,6 +103,7 @@ function ulbd_settings() {
 		$settings[ $area ] = array(
 			'style'     => isset( $saved[ $area ]['style'] ) && isset( ulbd_styles()[ $saved[ $area ]['style'] ] ) ? $saved[ $area ]['style'] : 'aurora',
 			'intensity' => isset( $saved[ $area ]['intensity'] ) && isset( ulbd_intensities()[ $saved[ $area ]['intensity'] ] ) ? $saved[ $area ]['intensity'] : 'normal',
+			'scale'     => isset( $saved[ $area ]['scale'] ) ? ulbd_clean_scale( $saved[ $area ]['scale'] ) : 100,
 		);
 	}
 
@@ -95,7 +112,7 @@ function ulbd_settings() {
 
 /**
  * Settings in effect for this request: the saved ones, overridden by ?ulbd_<area>=<style>,
- * ?ulbd_<area>_intensity=<preset> and ?ulbd_text=<weight> for users who can manage options (the "Preview on
+ * ?ulbd_<area>_intensity=<preset>, ?ulbd_<area>_scale=<percent> and ?ulbd_text=<weight> for users who can manage options (the "Preview on
  * the site" links).
  */
 function ulbd_active_settings() {
@@ -117,11 +134,24 @@ function ulbd_active_settings() {
 				$settings[ $area ]['intensity'] = sanitize_key( $_GET[ 'ulbd_' . $area . '_intensity' ] );
 				$settings[ $area ]['preview']   = true;
 			}
+			if ( isset( $_GET[ 'ulbd_' . $area . '_scale' ] ) ) {
+				$settings[ $area ]['scale']   = ulbd_clean_scale( sanitize_text_field( wp_unslash( $_GET[ 'ulbd_' . $area . '_scale' ] ) ) );
+				$settings[ $area ]['preview'] = true;
+			}
 			// phpcs:enable
 		}
 	}
 
 	return $settings;
+}
+
+/**
+ * A style's pixel lengths made scalable: every Npx becomes calc(Npx * var(--ulbd-scale, 1)), so the pattern
+ * size setting (--ulbd-scale on the area, or on the admin picker) resizes the tiles - and, in an animation's
+ * keyframes, the distances they travel, so a loop that moves whole tiles stays seamless at any size.
+ */
+function ulbd_scalable( $css ) {
+	return preg_replace( '/(\d*\.?\d+)px\b/', 'calc($1px * var(--ulbd-scale, 1))', $css );
 }
 
 /** A style's CSS declarations (background, size, ...) at an intensity, plus its @keyframes. */
@@ -136,13 +166,13 @@ function ulbd_style_css( $style_id, $intensity ) {
 	$decl = 'background: ' . $css['background'] . ';';
 	foreach ( array( 'size', 'position', 'repeat' ) as $prop ) {
 		if ( ! empty( $css[ $prop ] ) ) {
-			$decl .= ' background-' . $prop . ': ' . $css[ $prop ] . ';';
+			$decl .= ' background-' . $prop . ': ' . ( 'size' === $prop ? ulbd_scalable( $css[ $prop ] ) : $css[ $prop ] ) . ';';
 		}
 	}
 	$keyframes = '';
 	if ( ! empty( $css['animation'] ) ) {
 		$decl     .= ' animation: ' . $css['animation'] . ';';
-		$keyframes = '@keyframes ulbd-' . $style_id . ' { ' . $css['keyframes'] . ' }';
+		$keyframes = '@keyframes ulbd-' . $style_id . ' { ' . ulbd_scalable( $css['keyframes'] ) . ' }';
 	}
 
 	return array( $decl, $keyframes );
@@ -170,6 +200,9 @@ add_action(
 				continue;
 			}
 			list( $decl, $kf ) = ulbd_style_css( $s['style'], $s['intensity'] );
+			if ( 100 !== $s['scale'] ) {
+				$decl = '--ulbd-scale: ' . ( $s['scale'] / 100 ) . '; ' . $decl;
+			}
 			$selectors         = implode( ', ', $info['selectors'] );
 			$out[]             = $selectors . ' { ' . $decl . ' }';
 			$style = ulbd_styles()[ $s['style'] ];
@@ -231,7 +264,7 @@ add_action(
 	}
 );
 
-/** Keep only known areas, styles, intensities and text weights. */
+/** Keep only known areas, styles, intensities, pattern sizes and text weights. */
 function ulbd_sanitize( $input ) {
 	$weight = isset( $input['text_weight'] ) ? sanitize_key( $input['text_weight'] ) : 'regular';
 	$clean  = array(
@@ -244,6 +277,7 @@ function ulbd_sanitize( $input ) {
 		$clean[ $area ] = array(
 			'style'     => isset( ulbd_styles()[ $style ] ) ? $style : 'aurora',
 			'intensity' => isset( ulbd_intensities()[ $intensity ] ) ? $intensity : 'normal',
+			'scale'     => isset( $input[ $area ]['scale'] ) ? ulbd_clean_scale( $input[ $area ]['scale'] ) : 100,
 		);
 	}
 
@@ -272,13 +306,14 @@ add_action(
 	}
 );
 
-/** The settings page: per area, a grid of live preview tiles to pick from, an intensity, and a preview link. */
+/** The settings page: per area, a grid of live preview tiles to pick from, an intensity, a pattern size and a preview link. */
 function ulbd_render_admin() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
 	}
-	$settings = ulbd_settings();
-	$kinds    = array(
+	$settings    = ulbd_settings();
+	$scale_range = ulbd_scale_range();
+	$kinds       = array(
 		'css'      => 'CSS',
 		'svg'      => 'SVG',
 		'animated' => 'Animated',
@@ -310,7 +345,8 @@ function ulbd_render_admin() {
 			the combination on the home page (only you see it, nothing is saved), then <strong>Save</strong>. The white fades at
 			the edges and everything in front of the backdrop stay as they are, except on a dark style: like the live site's
 			backdrop it has hard edges, the pills and text boxes turn to see-through dark glass with white text, and the
-			footer's quick links turn white. Animated styles stand still for visitors who ask their device for reduced motion.</p>
+			footer's quick links turn white. <strong>Pattern size</strong> scales the repeating motifs (bats, hats, hearts, leaves,
+			snow...) from half to three times their size; glows and full-width shapes stay as they are. Animated styles stand still for visitors who ask their device for reduced motion.</p>
 
 		<style><?php echo implode( "\n", array_merge( array_values( $keyframes ), $tile_css ) ); // phpcs:ignore WordPress.Security.EscapeOutput -- built from the style library. ?></style>
 
@@ -341,7 +377,7 @@ function ulbd_render_admin() {
 			</section>
 
 			<?php foreach ( ulbd_areas() as $area => $info ) : ?>
-				<section class="ulbd-picker" data-area="<?php echo esc_attr( $area ); ?>" data-intensity="<?php echo esc_attr( $settings[ $area ]['intensity'] ); ?>">
+				<section class="ulbd-picker" data-area="<?php echo esc_attr( $area ); ?>" data-intensity="<?php echo esc_attr( $settings[ $area ]['intensity'] ); ?>" style="--ulbd-scale: <?php echo esc_attr( $settings[ $area ]['scale'] / 100 ); ?>">
 					<header class="ulbd-picker__header">
 						<div>
 							<h2><?php echo esc_html( $info['label'] ); ?></h2>
@@ -356,6 +392,10 @@ function ulbd_render_admin() {
 								</label>
 							<?php endforeach; ?>
 						</fieldset>
+						<label class="ulbd-scale">
+							<span>Pattern size <output><?php echo (int) $settings[ $area ]['scale']; ?>%</output></span>
+							<input type="range" name="<?php echo esc_attr( ULBD_OPTION . '[' . $area . '][scale]' ); ?>" min="<?php echo (int) $scale_range[0]; ?>" max="<?php echo (int) $scale_range[1]; ?>" step="<?php echo (int) $scale_range[2]; ?>" value="<?php echo (int) $settings[ $area ]['scale']; ?>">
+						</label>
 					</header>
 
 					<?php foreach ( $kinds as $kind => $kind_label ) : ?>

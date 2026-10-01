@@ -70,6 +70,23 @@
 	outline-offset: 2px;
 }
 
+.ulbd-scale {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 220px;
+}
+
+.ulbd-scale output {
+	font-variant-numeric: tabular-nums;
+	color: #50575e;
+}
+
+.ulbd-scale input {
+	accent-color: #3b1d4a;
+	width: 100%;
+}
+
 .ulbd-kind {
 	margin: 22px 0 10px;
 	font-size: 12px;
