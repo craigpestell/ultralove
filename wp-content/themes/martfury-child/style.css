@@ -1682,10 +1682,10 @@ h1,h2,h3,h4 {
    inside .header-main adds no padding of its own, so the logo lands exactly on that edge. */
 /* Desktop logo row (template-parts/headers/layout-1.php): the logo on the left content edge, the account icons
    on the right one (the cart last, as on phones and tablets), and the header banner centred in the space between,
-   at least 20px from each. The banner is 590x73 (its 728x90 shape at the logo's 73px height), so the row is the
-   same height (73px + 24px above and below) at every desktop width; below ~1072px the logo, the icons and
-   "Log in / Register" leave less than 590px, so the banner gives way (~500x62 at 992px) - the logo and the icons
-   never shrink. The search has its own row below (.ul-search-row). */
+   at least 20px from each. The banner is 785x97 (its 728x90 shape at the logo group's height, 73px + 12px above
+   and below), so it sits 12px from the row's edges and the logo 24px; where the logo, the icons and
+   "Log in / Register" leave less than 785px, the banner gives way and shrinks with the same shape - the logo and
+   the icons never shrink. The search has its own row below (.ul-search-row). */
 .header-main-row .header-main {
     float: none;
     padding-left: 0;
@@ -1752,11 +1752,10 @@ h1,h2,h3,h4 {
 }
 
 /* The search row (template-parts/headers/layout-1.php), below the logo row at every width: the search fills the
-   content width, 24px above the navigation row on desktop (the logo row's own 24px is above it) - 12px below
-   992px (below). It used to sit in the logo row on desktop, squeezed between the logo, the icons and the
+   content width, 12px above the navigation row (the header's spacing - see .header-main-row). It used to sit in the logo row on desktop, squeezed between the logo, the icons and the
    banner to ~60px of typing room behind a category dropdown and a "Search" button. */
 .site-header .ul-search-row {
-    padding: 0 0 24px
+    padding: 0 0 12px
 }
 
 .site-header .ul-search-row .mobile-menu-row {
@@ -1808,8 +1807,8 @@ h1,h2,h3,h4 {
     align-items: center;
     justify-content: flex-end;
     margin: 0 auto;
-    flex: 0 1 590px;
-    width: 590px;
+    flex: 0 1 785px;
+    width: 785px;
     min-width: 0;
     max-width: none!important;
 }
@@ -1895,10 +1894,6 @@ h1,h2,h3,h4 {
     /* 12px above and below the logo row and below the search (they were 20px and 15px). */
     .header-main-row .header-main {
         padding-top: 12px;
-        padding-bottom: 12px
-    }
-
-    .site-header .ul-search-row {
         padding-bottom: 12px
     }
 }
@@ -2116,9 +2111,10 @@ html body {
 }
 
 /* More breathing room above/below the logo + search row on desktop (the parent theme uses 20px). With the
-   header banner beside it (.header-main-row), the 24px goes on the whole row instead, so whichever is
-   taller - the logo group or the banner - has 24px above and below it. That matches the 24px between the
-   navigation row and the home banner slides below it (.ul-home-banner). */
+   header banner beside it (.header-main-row), the header's spacing is 12px: the row has 12px above and below,
+   the banner fills it to 12px from each edge, and the logo has another 12px of its own (24px from the edges, as
+   before). The same 12px is below the search (.ul-search-row) and between the navigation row and the home
+   banner slides (.ul-home-banner). */
 @media (min-width:992px) {
     .site-header .header-main {
         padding-top: 24px!important;
@@ -2126,8 +2122,13 @@ html body {
     }
 
     .site-header .header-main-row {
-        padding-top: 24px;
-        padding-bottom: 24px
+        padding-top: 12px;
+        padding-bottom: 12px
+    }
+
+    .site-header .header-main-row .header-row > .header-logo {
+        padding-top: 12px;
+        padding-bottom: 12px
     }
 
     .site-header .header-main-row .header-main {
@@ -3407,12 +3408,12 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     }
 }
 
-/* 24px of white above the home banner slides, between the header's navigation row and them - the same 24px
-   the header row has above and below it. On the section wrapping the banner rather than .ub-banner-home
+/* 12px of white above the home banner slides, between the header's navigation row and them - the header's
+   spacing (.header-main-row). On the section wrapping the banner rather than .ub-banner-home
    itself, whose height is fixed by its aspect ratio - a border there would crop 24px off the slides. Below
    the slides there's no gap: #topcta shares their aurora backdrop. */
 .ul-home-banner {
-    border-top: 24px solid #fff
+    border-top: 12px solid #fff
 }
 
 /* Header navigation: a white underline that grows from the centre on hover / keyboard focus, and stays
