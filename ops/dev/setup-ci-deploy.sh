@@ -2,7 +2,8 @@
 # Give the "Deploy to dev" GitHub Action access to the dev droplet.
 #   - Dedicated key: private half lives only in the GitHub "dev" environment secret
 #     DEV_SSH_KEY; public half is committed as ops/dev/ci-deploy-key.pub.
-#   - Authorized on dev with `restrict` (no forwarding/pty). Dev only, never prod.
+#   - Authorized on dev with `restrict` (no agent/X11 forwarding, no pty), except one port forward to dev's
+#     own nginx (127.0.0.1:80), which the Critical CSS workflow tunnels through. Dev only, never prod.
 #   - DEV_HOST / DEV_SSH_KNOWN_HOSTS secrets updated with dev's IP and pinned host key.
 # Re-run after every dev rebuild. --rotate issues a new key.
 #
@@ -28,7 +29,7 @@ PUB="$(cat "$PUB_FILE")"
 DEV_IP="$(ssh -G "$DEV_HOST_ALIAS" | awk '/^hostname /{print $2}')"
 
 log "Authorizing CI key on dev ($DEV_IP)"
-ssh "$DEV_HOST_ALIAS" "sed -i '/ultralove-ci-deploy/d' /root/.ssh/authorized_keys; echo 'restrict $PUB' >> /root/.ssh/authorized_keys"
+ssh "$DEV_HOST_ALIAS" "sed -i '/ultralove-ci-deploy/d' /root/.ssh/authorized_keys; echo 'restrict,port-forwarding,permitopen=\"127.0.0.1:80\" $PUB' >> /root/.ssh/authorized_keys"
 
 log "Updating DEV_HOST and DEV_SSH_KNOWN_HOSTS secrets"
 HOSTKEY="$(ssh "$DEV_HOST_ALIAS" 'cat /etc/ssh/ssh_host_ed25519_key.pub' | awk '{print $1" "$2}')"
