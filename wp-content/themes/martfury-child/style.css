@@ -1751,6 +1751,23 @@ h1,h2,h3,h4 {
     width: 100%
 }
 
+/* The search button is the magnifier icon at every width, square like the field - the parent theme's phone
+   version (its desktop one was a 100px "Search" text button with rounded right corners). */
+.site-header .ul-search-row .search-submit {
+    width: 60px;
+    min-width: 0;
+    padding: 0;
+    overflow: hidden;
+    border-radius: 0
+}
+
+.site-header .ul-search-row .search-submit::before {
+    content: "\e922";
+    display: block;
+    height: 42px;
+    font: 20px/42px linearicons
+}
+
 /* The account icons never shrink (they'd slide under the banner), and the row's 20px gap already
    separates them from the banner, so they lose the theme's right margin here. */
 .header-main-row .header-extras .extras-menu {
