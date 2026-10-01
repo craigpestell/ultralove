@@ -1332,9 +1332,11 @@ h1,h2,h3,h4 {
 }
 
 /* "Log in / Register" in the header at the display text weight, like the rest of the header text (the
-   parent theme sets 700, drawn at 500). The Search button follows it too (see the button exception
-   below), and the cart / wishlist count badges keep their bold. */
+   parent theme sets 700, drawn at 500), at 14px at every width (it inherited the 17px body size). The
+   Search button follows the weight too (see the button exception below), and the cart / wishlist count
+   badges keep their bold. */
 .site-header .extras-menu .menu-item-account > a {
+    font-size: 14px;
     font-weight: var(--ul-display-weight)
 }
 
