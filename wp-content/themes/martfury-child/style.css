@@ -1627,14 +1627,12 @@ h1,h2,h3,h4 {
 /* The row is the page container (.martfury-container - see "Content edges"), so the logo starts and the
    header banner ends on the same edges as the menu, breadcrumbs, content and footer. The container nested
    inside .header-main adds no padding of its own, so the logo lands exactly on that edge. */
-/* The logo, search and account icons get half the row and the header banner the other half, so the
-   header is balanced on the content edges at any width. The logo group never gets narrower than its
-   contents need (the flex item's automatic minimum): the 180px logo, a search box of at least 260px (the
-   narrowest that's still usable) and the account icons at their natural width - "Log in / Register" for
-   logged-out visitors is wider than the icons alone. Where half the row is less than that, the banner
-   shrinks instead. The banner keeps its 728x90 shape, so its height follows. Inside the group the logo
-   is a fixed 180px (it used to scale with Martfury's 25% Bootstrap column) and the search box takes
-   whatever is left. */
+/* The logo and the account icons get half the row and the header banner the other half, so the header is
+   balanced on the content edges at any width; the icons sit at the end of their half, 20px from the banner.
+   The logo group never gets narrower than its contents need (the flex item's automatic minimum): the 180px
+   logo and the icons at their natural width - "Log in / Register" for logged-out visitors is wider than the
+   icons alone. Where half the row is less than that, the banner shrinks instead. The banner keeps its 728x90
+   shape, so its height follows. The search has its own row below (.ul-search-row). */
 .header-main-row .header-main {
     float: none;
     padding-left: 0;
@@ -1669,17 +1667,29 @@ h1,h2,h3,h4 {
 
 .header-main-row .header-row > .header-extras {
     flex: 1 1 0;
+    justify-content: flex-end;
     width: auto;
     min-width: 0;
 }
 
-.header-main-row .header-extras .product-extra-search {
-    flex: 1 1 auto;
-    min-width: 260px;
+/* The search row (template-parts/headers/layout-1.php), below the logo row at every width: the search fills the
+   content width, 24px above the navigation row on desktop (the logo row's own 24px is above it) - 12px below
+   992px (below). It used to sit in the logo row on desktop, squeezed between the logo, the icons and the
+   banner to ~60px of typing room behind a category dropdown and a "Search" button. */
+.site-header .ul-search-row {
+    padding: 0 0 24px
 }
 
-.header-main-row .header-extras .products-search {
-    width: 100%;
+.site-header .ul-search-row .mobile-menu-row {
+    display: flex
+}
+
+.site-header .ul-search-row .product-extra-search {
+    flex: 1 1 auto
+}
+
+.site-header .ul-search-row .products-search {
+    width: 100%
 }
 
 /* The account icons never shrink (they'd slide under the banner), and the row's 20px gap already
@@ -1777,16 +1787,11 @@ h1,h2,h3,h4 {
     }
 
     .header-main-row .header-row > .header-extras {
-        flex: 1 1 auto;
-        justify-content: flex-end
+        flex: 1 1 auto
     }
 
     .site-header .header-main-row .header-extras .extras-menu {
         margin: 0 4px 0 auto
-    }
-
-    .site-header .mobile-menu-row .product-extra-search {
-        flex: 1 1 auto
     }
 
     /* 12px above and below the logo row and below the search (they were 20px and 15px). */
@@ -1795,7 +1800,7 @@ h1,h2,h3,h4 {
         padding-bottom: 12px
     }
 
-    .site-header .mobile-menu {
+    .site-header .ul-search-row {
         padding-bottom: 12px
     }
 }
