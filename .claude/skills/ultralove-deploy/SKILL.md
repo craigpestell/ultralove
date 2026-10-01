@@ -37,6 +37,24 @@ Adding a new custom plugin means updating **both** `.gitignore` and `owned-paths
 
 Even a one-line CSS fix follows dev → prod. Don't push to prod first and backfill dev.
 
+### Style changes ship with their critical CSS
+
+Logged-out pages inline `martfury-child/css/critical.css` (the first screen's CSS) and load the full
+stylesheet afterwards (`mu-plugins/34-critical-css.php`, `ops/critical-css/README.md`). A change to anything on the
+first screen - header, menu, banner, toolbar, product cards, page container - deployed without a regenerated
+critical CSS shows the old styles first and then jumps when the full stylesheet arrives. This happened on
+2026-10-01: #46's header menu fix went to prod before its critical CSS, and the menu wrapped, then unwrapped.
+
+So for any change to CSS (child `style.css`, trimmed copies, plugin stylesheets, markup the first screen uses):
+
+1. Merge it. The "Critical CSS" workflow runs after the dev deploy (~5-10 minutes) and opens or updates the PR
+   "Regenerate critical CSS" (branch `auto/critical-css`) if the inlined CSS changes.
+2. Check before deploying to prod: `gh run list --workflow critical-css.yml -L 1` (wait for it to finish) and
+   `gh pr list --head auto/critical-css`. If a regeneration PR is open, have it merged (and its dev deploy pass)
+   first, then deploy both together.
+3. After a prod deploy that changed CSS, confirm the live inlined critical CSS has the change (fetch a page with a
+   cache-busting query string and look inside `<style id="aoatfcss">`).
+
 ## What deploy.sh does (so you can explain failures)
 
 1. Resolves the ref to a SHA; requires it to be pushed (and on `origin/main` for prod).
