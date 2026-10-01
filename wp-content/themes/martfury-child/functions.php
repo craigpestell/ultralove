@@ -1261,6 +1261,21 @@ function ultralove_svg_site_logo( $logo ) {
 }
 
 /**
+ * Widget titles (the footer's "About Ultra Love" / "Become A Wholesale Buyer" / "Email Us", the shop's filter
+ * sidebar) are <h2>, not Martfury's <h4>: after the page's <h1> and the product cards' / sections' <h2>s an <h4>
+ * skipped a level (PageSpeed / Lighthouse "Heading elements are not in a sequentially-descending order"). Their
+ * look is all class-based (.widget-title), so it doesn't change.
+ */
+add_filter( 'dynamic_sidebar_params', 'ultralove_widget_title_h2' );
+function ultralove_widget_title_h2( $params ) {
+	if ( isset( $params[0]['before_title'], $params[0]['after_title'] ) ) {
+		$params[0]['before_title'] = preg_replace( '/^<h4\b/i', '<h2', $params[0]['before_title'] );
+		$params[0]['after_title']  = preg_replace( '/^<\/h4>/i', '</h2>', $params[0]['after_title'] );
+	}
+	return $params;
+}
+
+/**
  * Meta description on every page (no SEO plugin is installed; this steps aside if one is). Home: a written summary
  * (the 'ultralove_home_meta_description' filter changes it). Products: the description, else the short
  * description - whichever is real copy (60+ characters, not an all-caps note such as a tester's "A MINIMUM OF 3
