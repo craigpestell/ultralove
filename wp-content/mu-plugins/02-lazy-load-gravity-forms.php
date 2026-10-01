@@ -1,11 +1,13 @@
 <?php
 /**
- * Plugin Name: Lazy Load Gravity Forms + reCAPTCHA (Perf Fix)
- * Description: The footer contact form (Gravity Forms, with a reCAPTCHA field) is on every page, so
- *              Gravity Forms' scripts (~175 KB) and Google's recaptcha/api.js loaded on every page view
+ * Plugin Name: Lazy Load Gravity Forms + captcha (Perf Fix)
+ * Description: The footer contact form (Gravity Forms, with a captcha field) is on every page, so
+ *              Gravity Forms' scripts (~175 KB) and the captcha's (Cloudflare Turnstile add-on and its
+ *              api.js; Google's recaptcha/api.js for a reCAPTCHA field) loaded on every page view
  *              even though almost nobody uses the form on any given page. This holds all of them back
- *              until a form is near the viewport or the visitor interacts with one, then loads them in
- *              their original order (reCAPTCHA last). A form that's visible on load - Contact Us, Buy
+ *              until a form is near the viewport or the visitor interacts with one, then loads them:
+ *              Gravity Forms' files first (the Turnstile add-on's set-up waits on them), then Turnstile's,
+ *              then reCAPTCHA, each in page order. A form that's visible on load - Contact Us, Buy
  *              Wholesale - loads them straight away. Gravity Forms supports this: its form set-up code
  *              waits (gform.initializeOnLoaded) for the "scripts loaded" events its files fire. Without
  *              JavaScript the forms still submit as normal page posts.
@@ -16,7 +18,7 @@
  *              switched to real stylesheets just before the scripts load. Not on pages that show a form as
  *              part of their content (Contact Us, Become a Retailer) or on account / cart / checkout pages:
  *              there a form is on screen from the start and must be styled from the first paint.
- * Version: 2.1.0
+ * Version: 2.2.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -50,7 +52,9 @@ add_filter(
 add_filter(
 	'script_loader_tag',
 	function ( $tag, $handle, $src ) {
-		if ( 'gform_recaptcha' !== $handle && false === strpos( (string) $src, '/plugins/gravityforms/' ) ) {
+		$src = (string) $src;
+		if ( 'gform_recaptcha' !== $handle && false === strpos( $src, '/plugins/gravityforms/' )
+			&& false === strpos( $src, '/plugins/gravityformsturnstile/' ) && false === strpos( $src, 'challenges.cloudflare.com/turnstile/' ) ) {
 			return $tag;
 		}
 
@@ -98,11 +102,18 @@ add_action(
 				document.removeEventListener( 'focusin', onInteract );
 				document.removeEventListener( 'pointerdown', onInteract );
 
-				// Gravity Forms' files first, in page order, then reCAPTCHA (its render callback is in them).
-				var list = Array.prototype.slice.call( held ).sort( function ( a, b ) {
-					var ar = a.getAttribute( 'data-ul-lazy-id' ) === 'gform_recaptcha-js' ? 1 : 0;
-					var br = b.getAttribute( 'data-ul-lazy-id' ) === 'gform_recaptcha-js' ? 1 : 0;
-					return ar - br;
+				// Gravity Forms' files first, then the Turnstile add-on's (its set-up calls gform.utils.ready),
+				// then reCAPTCHA (its render callback is in Gravity Forms' files); page order within each.
+				var rank = function ( el ) {
+					var id = el.getAttribute( 'data-ul-lazy-id' );
+					return 'gform_recaptcha-js' === id ? 2 : 0 === id.indexOf( 'gform_turnstile' ) ? 1 : 0;
+				};
+				var list = Array.prototype.slice.call( held ).map( function ( el, i ) {
+					return { el: el, i: i };
+				} ).sort( function ( a, b ) {
+					return rank( a.el ) - rank( b.el ) || a.i - b.i;
+				} ).map( function ( x ) {
+					return x.el;
 				} );
 				list.forEach( function ( placeholder ) {
 					var script = document.createElement( 'script' );
