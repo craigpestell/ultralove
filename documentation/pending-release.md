@@ -7,7 +7,7 @@ in the order listed.
 
 ## Code
 
-Nothing pending: production runs `main` (`77a94cc`, deployed 2026-10-01).
+Nothing pending: production runs `main` (`18fd1c6`, deployed 2026-10-01).
 
 ## Production steps after the code deploy
 

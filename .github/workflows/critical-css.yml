@@ -4,6 +4,10 @@ name: Critical CSS
 # after every deploy of main to dev, weekly (for CSS that changes outside git: plugin updates, Customizer),
 # and by hand from the Actions tab. When the file changes it opens (or updates) a PR; merging it deploys the
 # new critical CSS to dev like any other change, and prod with the next prod deploy.
+#
+# Runs queue rather than cancel each other (a run takes ~25 minutes; GitHub keeps one waiting, the newest).
+# A run after a dev deploy is skipped when nothing under wp-content/ (the site's code) or ops/critical-css/
+# (the generator) changed since the last completed run - docs-only merges, for example.
 on:
   workflow_run:
     workflows: [Deploy to dev]
@@ -15,9 +19,10 @@ on:
 
 concurrency:
   group: critical-css
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
+  actions: read   # to find the last completed run
   contents: write
   pull-requests: write
 
@@ -32,14 +37,38 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: main
+          fetch-depth: 0   # history back to the last completed run, for the change check
+
+      # Against the last completed run, not just the merge that triggered this one: a queued run with code
+      # changes can be replaced by a newer docs-only one, and those changes still need regenerating.
+      # critical.css itself doesn't count (merging a regeneration PR would otherwise trigger another run).
+      - name: Did the site's code change since the last completed run?
+        id: changes
+        if: github.event_name == 'workflow_run'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          base=$(gh run list --workflow critical-css.yml --status success --limit 1 --json headSha --jq '.[0].headSha // empty')
+          if [ -z "$base" ] || ! git cat-file -e "$base^{commit}" 2>/dev/null; then
+            echo "No completed run to compare with - regenerating."
+            exit 0
+          fi
+          if git diff --quiet "$base" HEAD -- wp-content ops/critical-css ':!wp-content/themes/martfury-child/css/critical.css'; then
+            echo "Nothing under wp-content/ or ops/critical-css/ changed since $base - skipping."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            git diff --stat "$base" HEAD -- wp-content ops/critical-css ':!wp-content/themes/martfury-child/css/critical.css' | tail -n 15
+          fi
 
       - uses: actions/setup-node@v4
+        if: steps.changes.outputs.skip != 'true'
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: ops/critical-css/package-lock.json
 
       - name: Configure SSH to dev
+        if: steps.changes.outputs.skip != 'true'
         env:
           DEV_SSH_KEY: ${{ secrets.DEV_SSH_KEY }}
           DEV_SSH_KNOWN_HOSTS: ${{ secrets.DEV_SSH_KNOWN_HOSTS }}
@@ -52,6 +81,7 @@ jobs:
           ssh ultralove-dev-app true
 
       - name: Generate and verify
+        if: steps.changes.outputs.skip != 'true'
         working-directory: ops/critical-css
         env:
           CHROME: /usr/bin/google-chrome
@@ -60,7 +90,7 @@ jobs:
           node generate.mjs
 
       - name: Keep the renders
-        if: always()
+        if: always() && steps.changes.outputs.skip != 'true'
         uses: actions/upload-artifact@v4
         with:
           name: critical-css-work
@@ -68,6 +98,7 @@ jobs:
           if-no-files-found: ignore
 
       - name: Open or update the PR
+        if: steps.changes.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
