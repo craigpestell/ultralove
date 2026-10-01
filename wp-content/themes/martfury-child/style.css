@@ -299,6 +299,47 @@ Template: martfury
     overflow-y:scroll;
 }
 
+/* Product gallery on phones: the main image the full width, the thumbnails a row below it that scrolls
+   sideways. Martfury keeps its desktop layout at every width - a 70px column of thumbnails beside the image
+   (div.images' padding-left, its own phone reset loses to it) - which left the image 290px wide on a phone. */
+@media (max-width: 767px) {
+    .woocommerce div.product div.images.woocommerce-product-gallery {
+        padding-left: 0
+    }
+
+    .woocommerce div.product div.images .flex-control-thumbs {
+        position: static;
+        display: flex;
+        gap: 8px;
+        width: 100%;
+        height: auto;
+        margin: 12px 0 0;
+        padding: 0;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-snap-type: x proximity;
+        scrollbar-width: none
+    }
+
+    .woocommerce div.product div.images .flex-control-thumbs::-webkit-scrollbar {
+        display: none
+    }
+
+    .woocommerce div.product div.images .flex-control-thumbs li {
+        flex: 0 0 64px;
+        width: 64px;
+        margin: 0;
+        scroll-snap-align: start
+    }
+}
+
+/* "Roll over image to zoom in" means nothing on a touch screen. */
+@media (hover: none) {
+    .woocommerce div.product .product-image-ms.ms-image-zoom {
+        display: none
+    }
+}
+
 .mf-product-content,.mf-product-price-box,.woocommerce ul.products li.product {
     text-align: center
 }
@@ -818,6 +859,19 @@ h1,h2,h3,h4 {
 
 /* No root "Home" item: the trail starts at Shop. Hidden rather than removed so the BreadcrumbList
    microdata keeps its full path (Home at position 1). */
+/* Product pages on phones: the trail ends at the category - the product's name is the title right below,
+   and with it the trail ran to four lines - at a smaller size. */
+@media (max-width: 767px) {
+    .single-product .page-header .breadcrumbs {
+        font-size: 15px
+    }
+
+    .single-product .page-header .breadcrumbs > li:last-of-type,
+    .single-product .page-header .breadcrumbs > .sep:nth-last-child(2) {
+        display: none
+    }
+}
+
 .page-header .breadcrumbs > li:first-child,
 .page-header .breadcrumbs > li:first-child + .sep {
     display: none
@@ -2601,7 +2655,8 @@ section.up-sells .related-title,
    that drops deeper on hover as the circle lifts, vertically centred on the cards (the carousel's
    height less the 30px progress bar below them - the arrows only show when it does), straddling the
    carousel's edges, their outer edges on the content's (see below). Hidden when there's nothing to
-   scroll, and on phones (swipe instead). */
+   scroll, and on touch screens and phones, where a carousel is swiped (the progress bar still shows there's
+   more). */
 /* The arrows are the button system's primary icon buttons (ul-btn ul-btn--primary ul-btn--icon - colours,
    border, 46px circle, focus ring; see "Buttons" below); here only their placement and motion. */
 .ul-carousel__arrow {
@@ -2611,9 +2666,9 @@ section.up-sells .related-title,
     transform: translateY(-50%)
 }
 
-/* The arrows straddle the carousel's edges, and wherever they show (from 768px) the carousel is inset by
-   half an arrow (23px) each side - so each circle's outer edge lines up with the content above it (the
-   section heading, the page's content edges). */
+/* The arrows straddle the carousel's edges, and wherever they show (from 768px, with a mouse) the carousel is
+   inset by half an arrow (23px) each side - so each circle's outer edge lines up with the content above it
+   (the section heading, the page's content edges). */
 .ul-carousel__arrow--prev {
     left: -23px
 }
@@ -2626,7 +2681,7 @@ section.up-sells .related-title,
     right: -23px
 }
 
-@media (min-width: 768px) {
+@media (min-width: 768px) and (hover: hover) {
     .ul-carousel {
         margin-left: 23px;
         margin-right: 23px
@@ -2657,8 +2712,9 @@ section.up-sells .related-title,
     pointer-events: none
 }
 
-@media (max-width: 767px) {
-    .ul-carousel__arrow {
+/* Touch screens (any size) and phones: no arrows. At the button system's weight - it sets their display. */
+@media (hover: none), (max-width: 767px) {
+    :is(#page, #mf-quick-view-modal, .swal2-container) .ul-carousel__arrow {
         display: none
     }
 }
