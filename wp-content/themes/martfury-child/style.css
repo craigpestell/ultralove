@@ -168,7 +168,9 @@ Template: martfury
     clear: both
 }
 
-@media (max-width:1400px) {
+/* Desktop header: the logo + search area beside the header banner strip, 60/40 (below 992px the strip is
+   hidden and the logo row takes the full width - next rule). */
+@media (min-width:992px) {
     .header-main {
         max-width: 60%
     }
@@ -178,7 +180,7 @@ Template: martfury
     }
 }
 
-@media (max-width:992px) {
+@media (max-width:991px) {
     .sideslidertopmobile {
         display: block
     }
@@ -194,7 +196,7 @@ Template: martfury
     }
 }
 
-@media (min-width: 1024px) {
+@media (min-width:992px) {
     #mf-navigation-mobile,
     .mf-navigation-mobile,
     .mf-els-modal-mobile {
@@ -726,7 +728,7 @@ h1,h2,h3,h4 {
     margin-bottom: 32px
 }
 
-@media (max-width:678px) {
+@media (max-width:767px) {
     #topcta h1 {
         padding: 8px 18px;
         margin-left: 10px!important;
@@ -1288,18 +1290,12 @@ h1,h2,h3,h4 {
     max-width: 32%!important
 }
 
-@media (max-width:1200px) {
-    .nav li {
-        padding: 10px 16px
-    }
-}
-
-/* Three columns (from 1025px - where the footer box widens to 950px; see the #topcta / footer edges): the
+/* Three columns (from 992px - where the footer box widens to 950px; see the #topcta / footer edges): the
    columns' pills (.widget-title) form one row and their cards another - a
    two-row grid the columns and their widget pass through (subgrid) - so the pills line up along the row's
    bottom even when one wraps to two lines, and the cards all start on the same line below them. Same
    column widths and spacing as the parent theme's flex row (32% each, spread across the row). */
-@media (min-width: 1025px) {
+@media (min-width:992px) {
     .site-footer .footer-widgets {
         display: grid;
         grid-template-columns: repeat(3, 32%);
@@ -1333,8 +1329,8 @@ h1,h2,h3,h4 {
 
 /* Footer columns go straight from 3 across to 1 stacked - never 2 (the parent theme drops to
    width:50% columns in between, which left the Email Us form alone on a second row) - at the same
-   width the footer box narrows to 700px (1024px), so three columns never share that narrow box. */
-@media (max-width:1024px) {
+   width the footer box narrows to 700px (991px), so three columns never share that narrow box. */
+@media (max-width:991px) {
     .site-footer .footer-widgets .footer-sidebar {
         width: 100%;
         flex: 0 0 100%;
@@ -1342,7 +1338,7 @@ h1,h2,h3,h4 {
     }
 }
 
-@media (max-width:678px) {
+@media (max-width:767px) {
     #input_1_5 div {
         margin: auto
     }
@@ -1360,7 +1356,7 @@ h1,h2,h3,h4 {
     background: #271a38!important
 }
 
-@media (max-width:1200px) {
+@media (max-width:1199px) {
     .nav li {
         padding: 10px 11px!important
     }
@@ -1509,7 +1505,7 @@ h1,h2,h3,h4 {
     padding-bottom: 0!important
 }
 
-@media (max-width:678px) {
+@media (max-width:767px) {
     .site-footer .footer-widgets .widget-title {
         padding: 7px 16px
     }
@@ -1635,7 +1631,7 @@ h1,h2,h3,h4 {
     max-width: none!important;
 }
 
-@media (max-width:992px) {
+@media (max-width:991px) {
     .header-main-row {
         display: block;
     }
@@ -1697,7 +1693,7 @@ html body {
     padding-bottom: 44px
 }
 
-@media (max-width:678px) {
+@media (max-width:767px) {
     .site-footer .footer-widgets {
         padding-top: 56px!important;
         padding-bottom: 48px!important
@@ -1729,7 +1725,7 @@ html body {
 /*
  * The home page's call to action (#topcta) and the #bottomcta + footer box (#hero-footer-combo, on every
  * page) keep narrower edges of their own while their backdrops stay full width: 1150 / 950 / 700px wide at
- * >=1200 / >=1025 / >=768px, 25px in from each side on phones. The footer's Bootstrap .container normally
+ * >=1200 / >=992 / >=768px, 25px in from each side on phones. The footer's Bootstrap .container normally
  * has a fixed width (1170 / 970 / 750px), so it's switched to width:auto + max-width here.
  */
 #topcta > .martfury-container,
@@ -1754,7 +1750,7 @@ html body {
     }
 }
 
-@media (max-width:1024px) {
+@media (max-width:991px) {
     #topcta > .martfury-container,
     #bottomcta,
     #hero-footer-combo .site-footer .container {
@@ -1773,11 +1769,11 @@ html body {
 }
 
 /* Footer content edges: everything in the footer (cards, dividers, the links row) and #bottomcta's
-   pill/buttons sit within those edges at every width. At >=1025px the Bootstrap gutters already line up;
+   pill/buttons sit within those edges at every width. At >=992px the Bootstrap gutters already line up;
    below that the footer container's own 15px padding pushed content 15px inside them, and on phones the
    parent theme also drops the row's -15px margin, which left the cards at one inset and the
    dividers/links at another. */
-@media (max-width:1024px) {
+@media (max-width:991px) {
     #hero-footer-combo .site-footer .container {
         padding-left: 0;
         padding-right: 0
@@ -1815,7 +1811,7 @@ html body {
 
 /* #bottomcta's pill-to-buttons gap matches #topcta's text-to-buttons gap (#topcta p's 44px bottom
    margin, 34px on phones). */
-@media (max-width:678px) {
+@media (max-width:767px) {
     #bottomcta h2 {
         margin-bottom: 34px!important
     }
@@ -2960,7 +2956,7 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     padding-bottom: 60px
 }
 
-@media (max-width:678px) {
+@media (max-width:767px) {
     #topcta {
         padding-top: 40px;
         padding-bottom: 80px
