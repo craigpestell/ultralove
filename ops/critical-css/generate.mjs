@@ -366,13 +366,26 @@ async function verify(chrome, port, jobs, critical) {
 // ---------------------------------------------------------------- main
 
 // One page render can fail on its own (Chrome dropping the connection, a slow response); try it again.
+// Each try has an overall time limit: some Chrome calls (a screenshot, an evaluate) have no timeout of their
+// own and can hang for good, which froze a whole CI run with all workers waiting.
+const TRY_LIMIT = 5 * 60 * 1000;
 async function retry(fn, tries = 3) {
 	for (let i = 1; ; i++) {
+		let timer;
 		try {
-			return await fn();
+			return await Promise.race([
+				fn(),
+				new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(`no result after ${TRY_LIMIT / 60000} minutes`)), TRY_LIMIT); }),
+			]);
 		} catch (e) {
-			if (i >= tries) throw e;
+			if (i >= tries) {
+				log(`giving up after ${tries} tries: ${e.message}`);
+				throw e;
+			}
+			log(`retrying (${i}/${tries - 1}): ${e.message}`);
 			await new Promise((r) => setTimeout(r, 2000));
+		} finally {
+			clearTimeout(timer);
 		}
 	}
 }
