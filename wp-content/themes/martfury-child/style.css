@@ -1755,9 +1755,13 @@ h1,h2,h3,h4 {
 /* Tablets (768-991px, where "Log in / Register" shows): the menu button stays at the end of the row on the
    right content edge but is taken out of the row's flow, and the logo and the account item are inset by the
    space it takes (its 24px + the 16px gap) on both sides - so the logo's left margin and "Log in /
-   Register"'s right margin, to the screen's edges, are equal. The button is placed from the icons list (the
-   parent theme positions it), which now ends 40px before the content edge, hence right: -40px. */
+   Register"'s right margin, to the screen's edges, are equal. The row is the Bootstrap .row (15px past the
+   content edges), hence right: 15px. */
 @media (min-width: 768px) and (max-width: 991px) {
+    .header-main-row .header-row {
+        position: relative
+    }
+
     .header-main-row .header-row > .header-logo {
         padding-left: calc(15px + 40px)
     }
@@ -1769,7 +1773,7 @@ h1,h2,h3,h4 {
     .site-header .header-main-row .header-extras .extras-menu > .menu-item-toggle {
         position: absolute;
         top: 50%;
-        right: -40px;
+        right: 15px;
         transform: translateY(-50%)
     }
 }
