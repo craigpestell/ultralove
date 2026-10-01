@@ -397,7 +397,7 @@ Template: martfury
        and padding (20px under the coupon, 29px under the calculator's button, 17px above the checkout
        button) left the gaps at 20px and 46px. */
     .col-coupon .coupon {
-        margin-bottom: 0
+        margin-bottom: 0!important
     }
 
     .cart-collaterals {
@@ -416,7 +416,7 @@ Template: martfury
     }
 
     .cart-collaterals .woocommerce-shipping-calculator p:last-child {
-        margin-bottom: 0
+        margin-bottom: 0!important
     }
 
     .cart-collaterals .cart_totals > :first-child {
