@@ -337,6 +337,19 @@ function build(results) {
 
 const FREEZE = '<style>*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}</style>';
 
+// One screenshot at a time, of the page brought to the front: with several pages being captured at once in the
+// same headless Chrome, a capture of one that isn't in front could hang ("Page.captureScreenshot timed out" on
+// GitHub's runners, about every other check). A capture takes a fraction of a second, so the queue costs little.
+let screenshotQueue = Promise.resolve();
+function capture(page) {
+	const run = screenshotQueue.then(async () => {
+		await page.bringToFront();
+		return Buffer.from(await page.screenshot({ type: 'png' }));
+	});
+	screenshotQueue = run.catch(() => {});
+	return run;
+}
+
 async function shot(browser, port, job, critical, html) {
 	const transform = (url, type, body, headers) => {
 		const ct = String(headers['content-type'] || '');
@@ -373,7 +386,7 @@ async function shot(browser, port, job, critical, html) {
 		let prev = null;
 		for (let t = 0; t < 6; t++) {
 			await new Promise((r) => setTimeout(r, 400));
-			const cur = Buffer.from(await page.screenshot({ type: 'png' }));
+			const cur = await capture(page);
 			if (prev && cur.equals(prev)) break;
 			prev = cur;
 		}
