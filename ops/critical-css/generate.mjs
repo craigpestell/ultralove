@@ -404,8 +404,10 @@ async function shot(browser, port, job, critical, html) {
 
 const sha = (text) => crypto.createHash('sha256').update(text).digest('hex').slice(0, 16);
 
-// A check's result depends on the page, the screen size, the critical CSS and the page's full CSS; with all four
-// unchanged since an earlier run, that run's result is used instead of rendering the page twice again.
+// A check's result depends on the page, the screen size, the critical CSS, the page's full CSS and how the check
+// renders (FREEZE); with all five unchanged since an earlier run, that run's result is used instead of rendering
+// the page twice again. (Without FREEZE in the key, a change to it - turning off the footer backdrop's glows -
+// kept replaying the failure it fixed.)
 function loadCheckCache() {
 	try {
 		return JSON.parse(fs.readFileSync(CHECK_CACHE, 'utf8'));
@@ -422,8 +424,9 @@ async function verify(chrome, port, jobs, critical, pageCssHash) {
 	const rows = [];
 	const cache = loadCheckCache();
 	const criticalHash = sha(critical);
+	const freezeHash = sha(FREEZE);
 	await pool(jobs, async (job) => {
-		const key = [job.path, job.vp.name, criticalHash, pageCssHash.get(job.name) || ''].join('|');
+		const key = [job.path, job.vp.name, criticalHash, pageCssHash.get(job.name) || '', freezeHash].join('|');
 		if (cache[key] !== undefined && pageCssHash.has(job.name)) {
 			rows.push({ name: job.name, pct: cache[key] });
 			log(`check ${String(rows.length).padStart(3)}/${jobs.length}  ${cache[key].toFixed(2).padStart(6)}%  ${job.name} (unchanged since an earlier check)`);
