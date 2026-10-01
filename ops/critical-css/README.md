@@ -47,7 +47,10 @@ the full stylesheet (always loaded) arrives.
 cd ops/critical-css
 npm ci
 node generate.mjs                          # all pages
-node generate.mjs --pages=/,/shop/ --no-verify   # quick look while working on it
+node generate.mjs --pages=/,/shop/ --no-verify   # quick look while working on it (result in work/ only)
 ```
+
+The log has a line per page render and per page checked, with the time since the start. Only a full run
+writes the theme's file.
 
 Add a page type to `PAGES` in `generate.mjs` when the site gains one (a new template or landing page).

@@ -30,6 +30,7 @@ jobs:
   generate:
     if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-24.04
+    timeout-minutes: 90   # a full run takes ~45 min from GitHub's runners; a hung one mustn't block the queue for 6 hours
     environment: dev   # holds DEV_SSH_KEY, DEV_SSH_KNOWN_HOSTS, DEV_HOST
     env:
       BRANCH: auto/critical-css
