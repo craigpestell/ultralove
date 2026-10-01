@@ -4,6 +4,26 @@
 	font-size: 14px;
 }
 
+/* New since this admin's last visit: a "New" label on the tile and a count on its tab. */
+.ulbd-new,
+.ulbd-new-count {
+	display: inline-block;
+	padding: 1px 7px;
+	border-radius: 999px;
+	background: #b3094b;
+	color: #fff;
+	font-size: 10px;
+	font-weight: 600;
+	letter-spacing: .04em;
+	line-height: 1.6;
+	text-transform: uppercase;
+	vertical-align: 1px;
+}
+
+.ulbd-new {
+	margin-left: 4px;
+}
+
 .ulbd-picker {
 	margin: 24px 0;
 	padding: 20px 24px 8px;
