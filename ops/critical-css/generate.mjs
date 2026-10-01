@@ -69,27 +69,67 @@ function ssh(cmd) {
 	return execFileSync('ssh', [SSH_HOST, cmd], { encoding: 'utf8' }).trim();
 }
 
+// The tunnel keeps itself up for the whole run: keep-alives notice a dead connection within ~30 s, and when
+// ssh exits it's started again on the same local port (in-flight renders fail and are retried). A CI run once
+// lost its tunnel half-way and every request after that was refused.
 async function openTunnel() {
 	const port = await new Promise((res) => { const s = net.createServer().listen(0, () => { const p = s.address().port; s.close(() => res(p)); }); });
-	const proc = spawn('ssh', ['-N', '-o', 'ExitOnForwardFailure=yes', '-L', `${port}:127.0.0.1:80`, SSH_HOST], { stdio: 'ignore' });
+	let proc = null;
+	let closing = false;
+	const start = () => {
+		proc = spawn('ssh', ['-N', '-o', 'ExitOnForwardFailure=yes', '-o', 'ServerAliveInterval=10', '-o', 'ServerAliveCountMax=3', '-L', `${port}:127.0.0.1:80`, SSH_HOST], { stdio: 'ignore' });
+		proc.on('exit', (code) => {
+			if (closing) return;
+			log(`SSH tunnel to dev closed (exit ${code}); reconnecting`);
+			setTimeout(start, 2000);
+		});
+	};
+	start();
 	for (let i = 0; i < 50; i++) {
 		const ok = await new Promise((res) => { const c = net.connect(port, '127.0.0.1', () => { c.end(); res(true); }).on('error', () => res(false)); });
-		if (ok) return { port, close: () => proc.kill() };
+		if (ok) return { port, close: () => { closing = true; proc.kill(); } };
 		await new Promise((r) => setTimeout(r, 200));
 	}
+	closing = true;
 	proc.kill();
 	throw new Error('SSH tunnel to dev did not come up');
 }
 
 
+// Connections through the tunnel are kept open and reused (each new one is a round trip through SSH).
+const agent = new http.Agent({ keepAlive: true, maxSockets: 12 });
+
+// Static files (images - dev answers each with a redirect -, fonts, CSS, JS) are fetched through the tunnel
+// once per run and answered from memory after that: every render asks for the same few hundred, and from
+// GitHub's runners each fetch is a slow round trip (a run once spent 70 minutes on ~6,000 such requests, 939
+// distinct). Pages and AJAX are always fetched.
+const STATIC = /\.(?:css|js|mjs|woff2?|ttf|otf|eot|svg|png|jpe?g|gif|webp|avif|ico)$/i;
+const assetCache = new Map();
+const fetchStats = { tunnel: 0, cached: 0 };
+function devFetch(port, url, opts = {}) {
+	const { method = 'GET', cookie } = opts;
+	if (method === 'GET' && !cookie && STATIC.test(new URL(url).pathname)) {
+		if (assetCache.has(url)) {
+			fetchStats.cached++;
+			return assetCache.get(url);
+		}
+		const p = devFetchTunnel(port, url, opts);
+		assetCache.set(url, p);
+		p.catch(() => assetCache.delete(url)); // a failed fetch is tried again next time
+		return p;
+	}
+	return devFetchTunnel(port, url, opts);
+}
+
 // Fetches a dev URL through the tunnel as if it had come in over HTTPS through Cloudflare.
-function devFetch(port, url, { method = 'GET', headers = {}, body, cookie } = {}) {
+function devFetchTunnel(port, url, { method = 'GET', headers = {}, body, cookie } = {}) {
+	fetchStats.tunnel++;
 	const u = new URL(url);
 	const h = { ...headers, host: SITE, 'x-forwarded-proto': 'https' };
 	delete h['accept-encoding'];
 	if (cookie) h.cookie = [h.cookie, cookie].filter(Boolean).join('; ');
 	return new Promise((res, rej) => {
-		const req = http.request({ host: '127.0.0.1', port, method, path: u.pathname + u.search, headers: h }, (r) => {
+		const req = http.request({ host: '127.0.0.1', port, method, path: u.pathname + u.search, headers: h, agent }, (r) => {
 			const chunks = [];
 			r.on('data', (c) => chunks.push(c));
 			r.on('end', () => res({ status: r.statusCode, headers: r.headers, body: Buffer.concat(chunks) }));
@@ -366,13 +406,26 @@ async function verify(chrome, port, jobs, critical) {
 // ---------------------------------------------------------------- main
 
 // One page render can fail on its own (Chrome dropping the connection, a slow response); try it again.
+// Each try has an overall time limit: some Chrome calls (a screenshot, an evaluate) have no timeout of their
+// own and can hang for good, which froze a whole CI run with all workers waiting.
+const TRY_LIMIT = 5 * 60 * 1000;
 async function retry(fn, tries = 3) {
 	for (let i = 1; ; i++) {
+		let timer;
 		try {
-			return await fn();
+			return await Promise.race([
+				fn(),
+				new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(`no result after ${TRY_LIMIT / 60000} minutes`)), TRY_LIMIT); }),
+			]);
 		} catch (e) {
-			if (i >= tries) throw e;
+			if (i >= tries) {
+				log(`giving up after ${tries} tries: ${e.message}`);
+				throw e;
+			}
+			log(`retrying (${i}/${tries - 1}): ${e.message}`);
 			await new Promise((r) => setTimeout(r, 2000));
+		} finally {
+			clearTimeout(timer);
 		}
 	}
 }
@@ -414,6 +467,7 @@ async function main() {
 		});
 
 		const { css, stats } = build(results);
+		log(`requests: ${fetchStats.tunnel} through the tunnel, ${fetchStats.cached} static files answered from memory`);
 		log(`critical CSS: ${stats.rules} of ${stats.of} rules, ${stats.faces} @font-face, ${stats.keyframes} @keyframes, ${Math.round(css.length / 1024)} KB`);
 		fs.writeFileSync(path.join(WORK, 'critical.css'), css);
 		if (css.length > SIZE_LIMIT) throw new Error(`critical CSS is ${Math.round(css.length / 1024)} KB, over the ${SIZE_LIMIT / 1024} KB limit`);
