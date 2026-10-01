@@ -1696,6 +1696,50 @@ h1,h2,h3,h4 {
     }
 }
 
+/* Header below 992px: the logo on the left and the icons - wishlist, cart, account, then the menu button
+   (template-parts/headers/layout-1.php) - ending on the right content edge, 16px apart; the search has the
+   row below to itself, edge to edge. The icons used to sit at a fixed spot (past the edge on a 360px phone,
+   short of it on wider ones) and the menu button, 30px in, led the search row. */
+@media (max-width: 991px) {
+    .header-main-row .header-row > .header-extras {
+        flex: 1 1 auto;
+        justify-content: flex-end
+    }
+
+    .site-header .header-main-row .header-extras .extras-menu {
+        gap: 16px;
+        margin: 0 0 0 auto
+    }
+
+    .site-header .header-main-row .header-extras .extras-menu > li {
+        padding: 0!important
+    }
+
+    .site-header .extras-menu .menu-item-toggle .mf-toggle-menu {
+        display: block;
+        padding: 0
+    }
+
+    .site-header .extras-menu .menu-item-toggle .icon-menu {
+        display: block;
+        font-size: 24px;
+        line-height: 24px
+    }
+
+    .site-header .mobile-menu-row .product-extra-search {
+        flex: 1 1 auto
+    }
+}
+
+/* Phones: the logo gives way a little (to 45% of the window) so the four icons fit beside it on a 360px
+   screen. */
+@media (max-width: 767px) {
+    .header-main-row .header-logo .d-logo img,
+    .header-main-row .header-logo .d-logo svg.site-logo {
+        width: min(180px, 45vw)
+    }
+}
+
 /*
  * Elementor's "Stretch Section" setting (used on the header banner/topcta section and the
  * product-thumbnails section) computes its full-width margin/width in JavaScript at runtime -

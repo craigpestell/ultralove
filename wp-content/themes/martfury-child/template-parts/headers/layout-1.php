@@ -34,6 +34,12 @@ if ( ! shortcode_exists( 'ultralove_banner' ) ) {
 					martfury_extra_cart();
 					martfury_extra_account();
 					?>
+                    <?php // Below 992px the menu button ends the icons row (the search has the row below to itself). ?>
+                    <li class="extra-menu-item menu-item-toggle hidden-lg hidden-md">
+                        <a class="mf-toggle-menu" id="mf-toggle-menu" href="#" aria-label="<?php esc_attr_e( 'Menu', 'martfury' ); ?>">
+                            <i class="icon-menu" aria-hidden="true"></i>
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -52,9 +58,6 @@ ultralove_main_menu_row();
 <div class="mobile-menu hidden-lg hidden-md">
     <div class="container">
         <div class="mobile-menu-row">
-            <a class="mf-toggle-menu" id="mf-toggle-menu" href="#">
-                <i class="icon-menu"></i>
-            </a>
 			<?php martfury_extra_search( false ); ?>
         </div>
     </div>
