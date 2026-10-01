@@ -2515,8 +2515,11 @@ body:not(.shop-view-list) ul.products li.product form.cart button {
         display: none
     }
 
-    body:not(.shop-view-list) ul.products li.product form.cart.ul-out-of-stock button {
-        max-width: none
+    body:not(.shop-view-list) #page ul.products li.product form.cart.ul-out-of-stock button {
+        flex: 1 1 auto;
+        width: 100%!important;
+        max-width: none;
+        height: 40px!important
     }
 }
 
