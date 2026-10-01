@@ -1772,8 +1772,8 @@ h1,h2,h3,h4 {
 }
 
 /* Header icons at every width, so desktop, tablets and phones match: 24px icons (desktop had 30px), 20px
-   apart (desktop had 20px or 40px, from the items' padding, depending on the width), the cart last (desktop
-   had it between the wishlist and the account). */
+   apart (desktop had 20px or 40px, from the items' padding, depending on the width). The cart comes last in
+   the markup (template-parts/headers/layout-1.php). */
 .site-header .header-main-row .header-extras .extras-menu {
     display: flex;
     align-items: center;
@@ -1782,10 +1782,6 @@ h1,h2,h3,h4 {
 
 .site-header .header-main-row .header-extras .extras-menu > li {
     padding: 0!important
-}
-
-.site-header .header-main-row .header-extras .extras-menu > .menu-item-cart {
-    order: 1
 }
 
 .site-header .header-main-row .header-extras .extras-menu .extra-icon {
