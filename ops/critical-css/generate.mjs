@@ -178,11 +178,15 @@ function model(cssText) {
 
 // ---------------------------------------------------------------- per page
 
-// The CSS a page uses, in cascade order: its stylesheets and <style> blocks as served.
+// The CSS a page uses, in cascade order: its stylesheets and <style> blocks as served - except the Backdrops
+// plugin's (<style id="ulbd-backdrops">), which every page carries inline with the site's saved settings: a
+// copy of dev's settings here would go stale on production as soon as a backdrop setting changes there.
+const KEEP_INLINE = '#ulbd-backdrops';
+
 async function pageCss(page, port, cookie) {
-	const sheets = await page.evaluate(() => [...document.querySelectorAll('link[rel="stylesheet"], style')]
-		.filter((e) => !e.closest('noscript'))
-		.map((e) => (e.tagName === 'LINK' ? { href: e.href, media: e.media || 'all' } : { text: e.textContent, media: e.media || 'all' })));
+	const sheets = await page.evaluate((keep) => [...document.querySelectorAll('link[rel="stylesheet"], style')]
+		.filter((e) => !e.closest('noscript') && !e.matches(keep))
+		.map((e) => (e.tagName === 'LINK' ? { href: e.href, media: e.media || 'all' } : { text: e.textContent, media: e.media || 'all' })), KEEP_INLINE);
 	let css = '';
 	for (const s of sheets) {
 		let text = s.text;
@@ -371,8 +375,9 @@ async function shot(browser, port, job, critical, html) {
 	try {
 		await page.goto(`https://${SITE}${withParam(job.path, PLAIN)}`, { waitUntil: 'networkidle0', timeout: 180000 });
 		// Only the critical CSS (and the animation freeze) stays; <noscript> styles too, since they're what a
-		// no-JavaScript render needs in place of what scripts do (WooCommerce's shows the product gallery).
-		if (critical !== null) await page.evaluate(() => document.querySelectorAll('style:not(#ul-critical-check)').forEach((s) => { if (!s.textContent.includes('animation:none!important') && !s.closest('noscript')) s.remove(); }));
+		// no-JavaScript render needs in place of what scripts do (WooCommerce's shows the product gallery), and the
+		// Backdrops plugin's, which stays inline on every page.
+		if (critical !== null) await page.evaluate((keep) => document.querySelectorAll(`style:not(#ul-critical-check):not(${keep})`).forEach((s) => { if (!s.textContent.includes('animation:none!important') && !s.closest('noscript')) s.remove(); }), KEEP_INLINE);
 		// Both renders wait for every image in the first screen, so an image still loading in one of them
 		// doesn't count as a CSS difference. Polled from here: page timers don't run with JavaScript off.
 		for (let t = 0; t < 80; t++) {

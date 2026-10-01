@@ -9,7 +9,7 @@
  *              straight on it; the areas' content is the theme's. A pattern size slider scales the
  *              tiled SVG motifs (bats, hearts, leaves...) from half to three times their size. Also sets the site's display text weight
  *              (regular or bold).
- * Version: 1.5.1
+ * Version: 1.6.0
  *
  * @package UltraLove_Backdrops
  */
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ULBD_VERSION', '1.5.1' );
+define( 'ULBD_VERSION', '1.6.0' );
 define( 'ULBD_OPTION', 'ulbd_settings' );
 
 require_once __DIR__ . '/includes/styles.php';
@@ -216,8 +216,16 @@ function ulbd_boxes_css( $info, $dark, $percent ) {
 }
 
 /**
- * Front end: the chosen backgrounds, in the <head> after the theme's stylesheet. Nothing is printed for an
- * area left on the default (the theme's own aurora at normal intensity), so the theme stays the baseline.
+ * Front end: the chosen backgrounds, in the <head>. Nothing is printed for an area left on the default (the
+ * theme's own aurora at normal intensity), so the theme stays the baseline.
+ *
+ * The <style> stays in the page, out of Autoptimize (<!--noptimize-->): combined into its deferred stylesheet,
+ * the settings would only apply once that loaded, and the first paint would come from the critical CSS - a
+ * snapshot of dev's settings, stale on production as soon as a setting changes there. Inline, the first paint
+ * always has the saved settings, and the critical CSS generator leaves this block out (ops/critical-css).
+ * Autoptimize puts the critical CSS and the theme's stylesheet after it (just before </head>), so every rule
+ * here outranks the theme's by specificity rather than by order: area selectors start with body or an id, and
+ * the text weight is set on html:root (the theme sets it on :root).
  */
 add_action(
 	'wp_head',
@@ -228,7 +236,7 @@ add_action(
 		$active    = ulbd_active_settings();
 		$preview   = ! empty( $active['preview'] );
 		if ( 'regular' !== $active['text_weight'] ) {
-			$out[] = ':root { --ul-display-weight: ' . ulbd_text_weights()[ $active['text_weight'] ][1] . '; }';
+			$out[] = 'html:root { --ul-display-weight: ' . ulbd_text_weights()[ $active['text_weight'] ][1] . '; }';
 		}
 		foreach ( ulbd_areas() as $area => $info ) {
 			$s       = $active[ $area ];
@@ -266,7 +274,7 @@ add_action(
 			$out[] = '@media (prefers-reduced-motion: reduce) { ' . implode( ', ', $animated ) . ' { animation: none; } }'; // Same selectors, later: wins without !important.
 		}
 		if ( $out ) {
-			echo "<style id=\"ulbd-backdrops\">\n" . implode( "\n", array_merge( array_values( $keyframes ), $out ) ) . "\n</style>\n"; // phpcs:ignore WordPress.Security.EscapeOutput -- built from the style library.
+			echo "<!--noptimize--><style id=\"ulbd-backdrops\">\n" . implode( "\n", array_merge( array_values( $keyframes ), $out ) ) . "\n</style><!--/noptimize-->\n"; // phpcs:ignore WordPress.Security.EscapeOutput -- built from the style library.
 		}
 		if ( $preview ) {
 			echo '<style>#ulbd-preview-badge{position:fixed;left:16px;bottom:16px;z-index:99999;padding:8px 14px;border-radius:999px;background:#3b1d4a;color:#fff;font:500 13px/1.3 sans-serif;box-shadow:0 4px 14px rgba(59,29,74,.35)}#ulbd-preview-badge a{color:#fff;text-decoration:underline;margin-left:8px}</style>';
