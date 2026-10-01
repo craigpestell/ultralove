@@ -64,6 +64,13 @@ function martfury_child_enqueue_scripts() {
 		wp_enqueue_style( 'martfury-rtl', get_template_directory_uri() . '/rtl.css', array(), '20180105' );
 	}
 
+	// The logged-in account menu's desktop/mobile switch at the header's 992px, not Martfury's 1200px (at
+	// 992-1199px Log out opened the user panel). Only signed-in visitors have that menu.
+	if ( is_user_logged_in() ) {
+		$account_menu_path = get_stylesheet_directory() . '/js/account-menu-breakpoint.js';
+		wp_enqueue_script( 'ultralove-account-menu-breakpoint', get_stylesheet_directory_uri() . '/js/account-menu-breakpoint.js', array( 'jquery', 'martfury' ), (string) filemtime( $account_menu_path ), true );
+	}
+
     if ( class_exists( 'WooCommerce' ) ) {
         // Product carousel (related products, upsells, recently viewed - .ul-carousel in style.css).
         $carousel_path = get_stylesheet_directory() . '/js/product-carousel.js';
