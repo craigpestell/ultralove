@@ -1505,18 +1505,24 @@ h1,h2,h3,h4 {
     text-align: center;
 }
 
-/* Footer quick links (Ordering / About Us / Contact): plain underlined text links in brand pink, so they
-   read as links - not pills, which on this footer are the headings' treatment. Lavender dots between them,
-   like the breadcrumb separators. The underline thickens and the pink darkens on hover / keyboard focus. */
+/* Footer quick links (Ordering / About Us / Contact): underlined text links in brand pink, so they read as
+   links, all three in one pill container - the footer headings' white glass, lavender border and rounded
+   ends - so they stay readable on any backdrop (on a dark one the Backdrops plugin turns it to dark glass,
+   like the other pills). Lavender dots between them, like the breadcrumb separators. The underline thickens
+   and the pink darkens on hover / keyboard focus. */
 #footer-links .widget_nav_menu ul {
     display: flex;
-    width: 100%;
+    width: fit-content;
+    max-width: 100%;
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
     gap: 4px 0;
-    margin: 0;
-    padding: 0;
+    margin: 0 auto;
+    padding: 4px 22px;
+    background: rgba(255,255,255,.8);
+    border: 1px solid rgb(177,101,255);
+    border-radius: 999px;
 }
 
 #footer-links .widget_nav_menu ul li {
