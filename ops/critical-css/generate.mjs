@@ -336,7 +336,12 @@ function build(results) {
 
 // ---------------------------------------------------------------- verify
 
-const FREEZE = '<style>*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}</style>';
+// In both renders of a check: no animations, transitions or blinking carets, and no glows on the footer box's
+// backdrop (#hero-footer-combo, the ultralove-backdrops plugin) - just its base colour. The glows are placed in
+// percentages of the box, whose height is set by the footer below the first screen, which only the full CSS
+// styles; on a short page (/wishlist/ on a wide screen) the box starts in the first screen and its glows sat
+// elsewhere in the critical-only render (1.9% of the screen), though the CSS was right.
+const FREEZE = '<style>*,*::before,*::after{animation:none!important;transition:none!important;caret-color:transparent!important}#hero-footer-combo{background-image:none!important}</style>';
 
 // One screenshot at a time, of the page brought to the front: with several pages being captured at once in the
 // same headless Chrome, a capture of one that isn't in front could hang ("Page.captureScreenshot timed out" on
