@@ -441,6 +441,31 @@ Template: martfury
     margin: auto
 }
 
+/* Header menu: one centred row at every desktop width (it shows from 992px). The items were inline-blocks with
+   fixed side padding (11px below 1200px from the generic .nav li rule, more above), so at 992-1009px the five
+   24px items plus the gaps between inline-blocks didn't fit and the last ones wrapped. As a flex row they can't
+   wrap, and the space between items grows with the window: 24px at 992px, the 55px the wide layout has from
+   about 1300px (the menu spans the same ~1036px there as before). */
+.site-header .primary-nav > ul {
+    display: flex;
+    flex-wrap: nowrap;
+    justify-content: center;
+    column-gap: clamp(20px, calc(10vw - 75px), 55px)
+}
+
+.site-header .primary-nav > ul::before,
+.site-header .primary-nav > ul::after {
+    display: none
+}
+
+.site-header .primary-nav > ul > li {
+    flex: 0 0 auto;
+    padding-left: 0!important;
+    padding-right: 0!important;
+    margin-left: 0!important;
+    margin-right: 0!important
+}
+
 /* In a .martfury-container header (the site-wide page container - see functions.php) Martfury sizes the
    menu column to 83.4%, to sit beside its 300px department menu. There's no department menu here (the
    column is col-md-12), so it takes the full row and the centred menu is centred on the page. */
