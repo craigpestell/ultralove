@@ -22,6 +22,12 @@ so the new phone header, product cards and product page don't show on real phone
 2. Cloudflare > APO: turn off "Cache by device type" (one cached copy per page again).
 3. Purge Cloudflare (Purge Everything).
 
+**Footer "About Ultra Love" link label** (PageSpeed SEO "Links do not have descriptive text") - done on dev
+2026-10-01. The footer text widget `widget_text` #2 ends with a `footlink` button to `/about` reading "Learn
+More"; change it to "More About Ultra Love" (Appearance > Widgets, or a `wp eval-file` that backs up
+`widget_text` first and replaces `<a class="footlink" href="/about">Learn More</a>`). Rollback: change the label
+back. Then purge Cloudflare (the footer is on every page).
+
 ## Already on production (not part of a release)
 
 - Martfury's phone-version fixed Add to cart bar off (2026-10-01, dev and prod): theme mod
