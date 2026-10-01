@@ -250,11 +250,13 @@ add_action(
 					$html
 				);
 
-				// Preload each banner's first slide image (the ones marked fetchpriority=high - the header
-				// strip's, and on the home page the home banner's, which is the larger LCP image there) so
-				// the browser's preload scanner finds them right in <head>, ahead of where the banners
-				// actually sit in <body>. One preload per distinct image.
-				if ( preg_match_all( '/<img\b(?=[^>]*\bub-banner-img\b)(?=[^>]*\bfetchpriority="high")[^>]*>/', $html, $lcp_matches ) ) {
+				// Preload the slide images on screen from the start: each banner's first (marked
+				// fetchpriority=high - the header strip's, and on the home page the home banner's, which is
+				// the larger LCP image there), and the home banner's second on screens wide enough to show
+				// two (marked data-ub-preload-media, preloaded with that media query so phones skip it). The
+				// browser's preload scanner finds them right in <head>, ahead of where the banners actually
+				// sit in <body>. One preload per distinct image.
+				if ( preg_match_all( '/<img\b(?=[^>]*\bub-banner-img\b)(?=[^>]*\b(?:fetchpriority="high"|data-ub-preload-media=))[^>]*>/', $html, $lcp_matches ) ) {
 					$preloads = array();
 					foreach ( $lcp_matches[0] as $tag ) {
 						preg_match( '/\ssrc="([^"]*)"/', $tag, $src_match );
@@ -264,6 +266,9 @@ add_action(
 							continue;
 						}
 						$preload = '<link rel="preload" as="image" fetchpriority="high" href="' . esc_url( html_entity_decode( $src_match[1], ENT_QUOTES ) ) . '"';
+						if ( preg_match( '/\sdata-ub-preload-media="([^"]*)"/', $tag, $media_match ) ) {
+							$preload .= ' media="' . esc_attr( html_entity_decode( $media_match[1], ENT_QUOTES ) ) . '"';
+						}
 						if ( ! empty( $srcset_match[1] ) ) {
 							$preload .= ' imagesrcset="' . esc_attr( html_entity_decode( $srcset_match[1], ENT_QUOTES ) ) . '"';
 						}
@@ -340,6 +345,14 @@ function ub_groups() {
  */
 function ub_group_per_view( $group ) {
 	return 'home' === $group ? 2 : 1;
+}
+
+/**
+ * The media query at which a group shows ub_group_per_view() slides side by side (the @media in
+ * banner.css); narrower screens show one.
+ */
+function ub_group_per_view_media() {
+	return '(min-width: 768px)';
 }
 
 /**
@@ -748,7 +761,7 @@ add_shortcode(
 		// appended (one per slide shown at a time), so dragging past either end still shows full slides.
 		$clones = $is_looped ? min( ub_group_per_view( $atts['group'] ), count( $slides ) ) : 0;
 
-		$render_slide = function ( $slide, $eager, $is_clone, $is_lcp = false ) use ( $bg_style, $img_sizes, $atts ) {
+		$render_slide = function ( $slide, $eager, $is_clone, $is_lcp = false, $preload_media = '' ) use ( $bg_style, $img_sizes, $atts ) {
 			$link     = ub_slide_link( $slide->ID );
 			$thumb_id = get_post_thumbnail_id( $slide->ID );
 			$bg_url   = '';
@@ -779,6 +792,10 @@ add_shortcode(
 					// The very first (non-clone) slide is the largest-contentful-paint candidate; ask
 					// the browser to fetch it ahead of lower-priority page resources.
 					$img_atts['fetchpriority'] = 'high';
+				} elseif ( $preload_media ) {
+					// Also on screen from the start, but only where slides sit side by side: preloaded for
+					// those screens only (see the <head> preload pass).
+					$img_atts['data-ub-preload-media'] = $preload_media;
 				}
 				$full_meta = wp_get_attachment_metadata( $thumb_id );
 				if ( $crop ) {
@@ -818,7 +835,7 @@ add_shortcode(
 					<?php $render_slide( $slide, false, true ); ?>
 				<?php endforeach; ?>
 				<?php foreach ( $slides as $index => $slide ) : ?>
-					<?php $render_slide( $slide, $index < ub_group_per_view( $atts['group'] ), false, 0 === $index ); ?>
+					<?php $render_slide( $slide, $index < ub_group_per_view( $atts['group'] ), false, 0 === $index, $index > 0 && $index < ub_group_per_view( $atts['group'] ) ? ub_group_per_view_media() : '' ); ?>
 				<?php endforeach; ?>
 				<?php foreach ( array_slice( $slides, 0, $clones ) as $slide ) : ?>
 					<?php $render_slide( $slide, false, true ); ?>
