@@ -46,8 +46,8 @@ function ulbd_areas() {
 			'label'         => 'Footer box',
 			'description'   => '"Ordering wholesale products has never been easier." and the site footer below it (#hero-footer-combo), on every page.',
 			'selectors'     => array( 'body #hero-footer-combo' ),
-			// The quick links (Ordering · About Us · Contact) are underlined pink text on the backdrop itself.
-			'dark_css'      => 'body #bottomcta h2, body .site-footer .footer-widgets .widget-title { background: rgba(0, 0, 0, .52); color: #fff !important; }'
+			// The quick links (Ordering · About Us · Contact) are underlined pink text in a pill: dark glass, white links.
+			'dark_css'      => 'body #bottomcta h2, body .site-footer .footer-widgets .widget-title, #hero-footer-combo #footer-links .widget_nav_menu ul { background: rgba(0, 0, 0, .52); color: #fff !important; }'
 				. ' body .site-footer .footer-widgets .textwidget, body .site-footer .footer-widgets .gform_wrapper { background: rgba(0, 0, 0, .38); color: #fff !important; }'
 				. ' #hero-footer-combo #footer-links .widget_nav_menu ul li a { color: #fff !important; }'
 				. ' #hero-footer-combo #footer-links .widget_nav_menu ul li a:hover, #hero-footer-combo #footer-links .widget_nav_menu ul li a:focus-visible { color: #f4c3d9 !important; }'
