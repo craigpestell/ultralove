@@ -1294,10 +1294,31 @@ h1,h2,h3,h4 {
         position: static
     }
 
+    /* The icon is tied to the link's own left edge (its static position less the link's padding) and the
+       labels start the icon's width + 10px in, so the gap is 10px at every width. It used to sit 20px into
+       the item while the labels sat at the link's 42px padding, so the gap followed the item's padding:
+       12px on desktop, overlapping on tablets. */
+    .site-header .extras-menu .menu-item-account:not(.logined) {
+        --ul-account-icon: 30px
+    }
+
+    .site-header .extras-menu .menu-item-account:not(.logined) > a {
+        padding-left: calc(var(--ul-account-icon) + 10px)
+    }
+
     .site-header .extras-menu .menu-item-account:not(.logined) .extra-icon {
         top: 50%;
-        left: 20px;
+        left: auto;
+        margin-left: calc(-1 * (var(--ul-account-icon) + 10px));
+        font-size: var(--ul-account-icon);
         transform: translateY(-50%)
+    }
+}
+
+/* Tablets: the account icon at the other header icons' 24px. */
+@media (min-width: 768px) and (max-width: 991px) {
+    .site-header .extras-menu .menu-item-account:not(.logined) {
+        --ul-account-icon: 24px
     }
 }
 
