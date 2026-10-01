@@ -28,6 +28,10 @@ if ( ! shortcode_exists( 'ultralove_banner' ) ) {
                     </div>
 				<?php endif; ?>
             </div>
+            <?php // From 992px the header banner sits between the logo and the icons (below that it's the strip above). ?>
+            <div class="sideslidertop">
+                <?php echo do_shortcode('[ultralove_banner group="menu-bar"]'); ?>
+            </div>
             <div class="header-extras col-lg-9 col-md-9 col-sm-6 col-xs-6">
                 <ul class="extras-menu">
 					<?php
@@ -42,10 +46,6 @@ if ( ! shortcode_exists( 'ultralove_banner' ) ) {
             </div>
         </div>
     </div>
-</div>
-
-<div class="sideslidertop">
-    <?php echo do_shortcode('[ultralove_banner group="menu-bar"]'); ?>
 </div>
 </div>
 
