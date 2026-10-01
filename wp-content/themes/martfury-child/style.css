@@ -1686,16 +1686,17 @@ h1,h2,h3,h4 {
 /* The row is the page container (.martfury-container - see "Content edges"), so the logo starts and the
    header banner ends on the same edges as the menu, breadcrumbs, content and footer. The container nested
    inside .header-main adds no padding of its own, so the logo lands exactly on that edge. */
-/* The logo and the account icons get half the row and the header banner the other half, so the header is
-   balanced on the content edges at any width; the icons sit at the end of their half, 20px from the banner.
-   The logo group never gets narrower than its contents need (the flex item's automatic minimum): the 180px
-   logo and the icons at their natural width - "Log in / Register" for logged-out visitors is wider than the
-   icons alone. Where half the row is less than that, the banner shrinks instead. The banner keeps its 728x90
-   shape, so its height follows. The search has its own row below (.ul-search-row). */
+/* The header banner is a fixed 510x63 (its 728x90 shape) on the right content edge at every desktop width,
+   and the logo and the account icons take the rest of the row, the icons at its end, 20px from the banner -
+   so the logo row is the same height (the 73px logo + 24px above and below) at every width. 510px is the
+   widest banner that still fits beside the logo and "Log in / Register" at 992px; it used to take half the
+   row, so its height followed the window (56px at 992px, 84px at 1440px). The search has its own row
+   below (.ul-search-row). */
 .header-main-row .header-main {
     float: none;
     padding-left: 0;
-    flex: 0 0 max(50% - 10px, 0px);
+    flex: 1 1 0;
+    min-width: 0;
     max-width: none;
 }
 
@@ -1788,8 +1789,8 @@ h1,h2,h3,h4 {
     align-items: center;
     justify-content: flex-end;
     margin-left: auto;
-    flex: 1 1 0;
-    min-width: 0;
+    flex: 0 0 510px;
+    width: 510px;
     max-width: none!important;
 }
 
