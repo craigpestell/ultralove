@@ -12,6 +12,66 @@
 	border-radius: 8px;
 }
 
+/* Same backdrop for both areas, or a tab per area (Appearance > Backdrops' areas section). */
+.ulbd-link {
+	margin: 28px 0 12px;
+	font-size: 14px;
+}
+
+.ulbd-link input {
+	margin-right: 6px;
+}
+
+.ulbd-tabs {
+	display: flex;
+	gap: 4px;
+	margin: 0 0 -1px;
+	border-bottom: 1px solid #dcdcde;
+}
+
+.ulbd-tabs[hidden] {
+	display: none;
+}
+
+.ulbd-tab {
+	padding: 10px 18px;
+	border: 1px solid transparent;
+	border-bottom: 0;
+	border-radius: 8px 8px 0 0;
+	background: none;
+	color: #50575e;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.ulbd-tab:hover {
+	color: #3b1d4a;
+}
+
+.ulbd-tab[aria-selected="true"] {
+	border-color: #dcdcde;
+	background: #fff;
+	color: #3b1d4a;
+	box-shadow: inset 0 3px 0 #b165ff;
+}
+
+.ulbd-tab:focus-visible {
+	outline: 2px solid #b165ff;
+	outline-offset: 2px;
+}
+
+/* Under the tabs, the active area's card joins the tab bar. */
+.ulbd[data-linked="0"] .ulbd-area {
+	margin-top: 0;
+	border-top-left-radius: 0;
+}
+
+.ulbd[data-linked="1"] .ulbd-unlinked-only,
+.ulbd[data-linked="0"] .ulbd-linked-only {
+	display: none;
+}
+
 /* Every card's header is the same two columns - the title and description on the left, the controls on the
    right - so the controls sit in the same place on every card, however long the description is. */
 .ulbd-picker__header {

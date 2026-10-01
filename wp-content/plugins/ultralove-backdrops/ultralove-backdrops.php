@@ -9,7 +9,7 @@
  *              straight on it; the areas' content is the theme's. A pattern size slider scales the
  *              tiled SVG motifs (bats, hearts, leaves...) from half to three times their size. Also sets the site's display text weight
  *              (regular or bold).
- * Version: 1.3.1
+ * Version: 1.3.2
  *
  * @package UltraLove_Backdrops
  */
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ULBD_VERSION', '1.3.1' );
+define( 'ULBD_VERSION', '1.3.2' );
 define( 'ULBD_OPTION', 'ulbd_settings' );
 
 require_once __DIR__ . '/includes/styles.php';
@@ -97,6 +97,7 @@ function ulbd_text_weights() {
 function ulbd_settings() {
 	$saved    = get_option( ULBD_OPTION, array() );
 	$settings = array(
+		'linked'      => ! empty( $saved['linked'] ),
 		'text_weight' => isset( $saved['text_weight'] ) && isset( ulbd_text_weights()[ $saved['text_weight'] ] ) ? $saved['text_weight'] : 'regular',
 	);
 	foreach ( array_keys( ulbd_areas() ) as $area ) {
@@ -264,10 +265,14 @@ add_action(
 	}
 );
 
-/** Keep only known areas, styles, intensities, pattern sizes and text weights. */
+/**
+ * Keep only known areas, styles, intensities, pattern sizes and text weights. With 'linked' on, the first
+ * area's choices (the home page call to action) are saved for every area, so the front end needs nothing new.
+ */
 function ulbd_sanitize( $input ) {
 	$weight = isset( $input['text_weight'] ) ? sanitize_key( $input['text_weight'] ) : 'regular';
 	$clean  = array(
+		'linked'      => ! empty( $input['linked'] ),
 		'text_weight' => isset( ulbd_text_weights()[ $weight ] ) ? $weight : 'regular',
 	);
 	foreach ( array_keys( ulbd_areas() ) as $area ) {
@@ -279,6 +284,12 @@ function ulbd_sanitize( $input ) {
 			'intensity' => isset( ulbd_intensities()[ $intensity ] ) ? $intensity : 'normal',
 			'scale'     => isset( $input[ $area ]['scale'] ) ? ulbd_clean_scale( $input[ $area ]['scale'] ) : 100,
 		);
+	}
+	if ( $clean['linked'] ) {
+		$areas = array_keys( ulbd_areas() );
+		foreach ( array_slice( $areas, 1 ) as $area ) {
+			$clean[ $area ] = $clean[ $areas[0] ];
+		}
 	}
 
 	return $clean;
@@ -338,7 +349,7 @@ function ulbd_render_admin() {
 		}
 	}
 	?>
-	<div class="wrap ulbd">
+	<div class="wrap ulbd" data-linked="<?php echo $settings['linked'] ? '1' : '0'; ?>">
 		<h1>Backdrops</h1>
 		<p class="ulbd-intro">The background behind the home page's call to action and behind the footer box, and the weight of
 			the site's display text. Pick a style and an intensity for each area, use <strong>Preview on the site</strong> to see
@@ -381,12 +392,35 @@ function ulbd_render_admin() {
 				</p>
 			</section>
 
-			<?php foreach ( ulbd_areas() as $area => $info ) : ?>
-				<section class="ulbd-picker" data-area="<?php echo esc_attr( $area ); ?>" data-intensity="<?php echo esc_attr( $settings[ $area ]['intensity'] ); ?>" style="--ulbd-scale: <?php echo esc_attr( $settings[ $area ]['scale'] / 100 ); ?>">
+			<?php
+			// One backdrop for both areas (a single picker, the first area's), or a tab per area.
+			$areas      = ulbd_areas();
+			$first_area = array_key_first( $areas );
+			?>
+			<p class="ulbd-link">
+				<label>
+					<input type="checkbox" name="<?php echo esc_attr( ULBD_OPTION . '[linked]' ); ?>" value="1" <?php checked( $settings['linked'] ); ?>>
+					Use the same backdrop for the home page call to action and the footer box
+				</label>
+			</p>
+
+			<div class="ulbd-tabs" role="tablist" aria-label="Backdrop area" <?php echo $settings['linked'] ? 'hidden' : ''; ?>>
+				<?php foreach ( $areas as $area => $info ) : ?>
+					<button type="button" role="tab" class="ulbd-tab" id="ulbd-tab-<?php echo esc_attr( $area ); ?>" aria-controls="ulbd-panel-<?php echo esc_attr( $area ); ?>" aria-selected="<?php echo $area === $first_area ? 'true' : 'false'; ?>" tabindex="<?php echo $area === $first_area ? '0' : '-1'; ?>"><?php echo esc_html( $info['label'] ); ?></button>
+				<?php endforeach; ?>
+			</div>
+
+			<?php foreach ( $areas as $area => $info ) : ?>
+				<section class="ulbd-picker ulbd-area" id="ulbd-panel-<?php echo esc_attr( $area ); ?>" role="tabpanel" aria-labelledby="ulbd-tab-<?php echo esc_attr( $area ); ?>" data-area="<?php echo esc_attr( $area ); ?>" data-intensity="<?php echo esc_attr( $settings[ $area ]['intensity'] ); ?>" style="--ulbd-scale: <?php echo esc_attr( $settings[ $area ]['scale'] / 100 ); ?>" <?php echo $area !== $first_area ? 'hidden' : ''; ?>>
 					<header class="ulbd-picker__header">
 						<div>
-							<h2><?php echo esc_html( $info['label'] ); ?></h2>
-							<p><?php echo esc_html( $info['description'] ); ?></p>
+							<?php if ( $area === $first_area ) : ?>
+								<h2><span class="ulbd-unlinked-only"><?php echo esc_html( $info['label'] ); ?></span><span class="ulbd-linked-only">Home page call to action and footer box</span></h2>
+								<p><span class="ulbd-unlinked-only"><?php echo esc_html( $info['description'] ); ?></span><span class="ulbd-linked-only">One backdrop for both: the "Adult Wholesale Canada" block under the home banner, and the footer box on every page.</span></p>
+							<?php else : ?>
+								<h2><?php echo esc_html( $info['label'] ); ?></h2>
+								<p><?php echo esc_html( $info['description'] ); ?></p>
+							<?php endif; ?>
 						</div>
 						<div class="ulbd-controls">
 							<div class="ulbd-control">
