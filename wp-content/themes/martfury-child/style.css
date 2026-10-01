@@ -1360,7 +1360,7 @@ h1,h2,h3,h4 {
        the item while the labels sat at the link's 42px padding, so the gap followed the item's padding:
        12px on desktop, overlapping on tablets. */
     .site-header .extras-menu .menu-item-account:not(.logined) {
-        --ul-account-icon: 30px
+        --ul-account-icon: 24px
     }
 
     .site-header .extras-menu .menu-item-account:not(.logined) > a {
@@ -1373,13 +1373,6 @@ h1,h2,h3,h4 {
         margin-left: calc(-1 * (var(--ul-account-icon) + 10px));
         font-size: var(--ul-account-icon);
         transform: translateY(-50%)
-    }
-}
-
-/* Tablets: the account icon at the other header icons' 24px. */
-@media (min-width: 768px) and (max-width: 991px) {
-    .site-header .extras-menu .menu-item-account:not(.logined) {
-        --ul-account-icon: 24px
     }
 }
 
@@ -1778,6 +1771,27 @@ h1,h2,h3,h4 {
     }
 }
 
+/* Header icons at every width, so desktop, tablets and phones match: 24px icons (desktop had 30px), 20px
+   apart (desktop had 20px or 40px, from the items' padding, depending on the width), the cart last (desktop
+   had it between the wishlist and the account). */
+.site-header .header-main-row .header-extras .extras-menu {
+    display: flex;
+    align-items: center;
+    gap: 20px
+}
+
+.site-header .header-main-row .header-extras .extras-menu > li {
+    padding: 0!important
+}
+
+.site-header .header-main-row .header-extras .extras-menu > .menu-item-cart {
+    order: 1
+}
+
+.site-header .header-main-row .header-extras .extras-menu .extra-icon {
+    font-size: 24px
+}
+
 /* Header below 992px (template-parts/headers/layout-1.php): one row - the menu button then the logo on the
    left, the header icons on the right with the cart last - and the search on the row below, edge to edge.
    The menu button is a 44px tap target round its 24px icon, pulled 10px out so the icon itself sits on the
@@ -1811,16 +1825,7 @@ h1,h2,h3,h4 {
     }
 
     .site-header .header-main-row .header-extras .extras-menu {
-        gap: 20px;
         margin: 0 0 0 auto
-    }
-
-    .site-header .header-main-row .header-extras .extras-menu > li {
-        padding: 0!important
-    }
-
-    .site-header .header-main-row .header-extras .extras-menu > .menu-item-cart {
-        order: 1
     }
 
     .site-header .mobile-menu-row .product-extra-search {
