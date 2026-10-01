@@ -308,7 +308,7 @@
 	padding: 4px 16px;
 	border: 1px solid #b165ff;
 	border-radius: 999px;
-	background: rgba(255, 255, 255, .8);
+	background: rgba(255, 255, 255, calc(.8 * var(--ulbd-boxes, 1)));
 	color: #3b1d4a;
 	font-size: 15px;
 	font-weight: 300;

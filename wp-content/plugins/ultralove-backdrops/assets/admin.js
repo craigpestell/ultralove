@@ -80,6 +80,7 @@
 			params.push('ulbd_' + area + '=' + encodeURIComponent(checked(picker, 'style')));
 			params.push('ulbd_' + area + '_intensity=' + encodeURIComponent(checked(picker, 'intensity')));
 			params.push('ulbd_' + area + '_scale=' + encodeURIComponent(picker.querySelector('input[name$="[scale]"]').value));
+			params.push('ulbd_' + area + '_boxes=' + encodeURIComponent(picker.querySelector('input[name$="[boxes]"]').value));
 		});
 		document.querySelectorAll('.ulbd-preview-link').forEach(function (link) {
 			var area = link.closest('.ulbd-picker').getAttribute('data-area');
@@ -90,11 +91,15 @@
 	}
 
 	pickers.forEach(function (picker) {
-		// The slider resizes the tiles' patterns as it moves; the links catch up on change.
+		// The sliders resize the tiles' patterns and fade their pills as they move; the links catch up on change.
 		picker.addEventListener('input', function (event) {
 			if (event.target.name && /\[scale\]$/.test(event.target.name)) {
 				picker.style.setProperty('--ulbd-scale', event.target.value / 100);
 				picker.querySelector('.ulbd-scale output').textContent = event.target.value + '%';
+			}
+			if (event.target.name && /\[boxes\]$/.test(event.target.name)) {
+				picker.style.setProperty('--ulbd-boxes', event.target.value / 100);
+				picker.querySelector('.ulbd-boxes output').textContent = event.target.value + '%';
 			}
 		});
 		picker.addEventListener('change', function (event) {
