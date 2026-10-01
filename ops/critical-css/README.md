@@ -19,6 +19,10 @@ Nothing is installed or run on production.
 
 Before merging such a PR, run `ops/dev/parity.sh`: the CSS is only as right as dev's copy of the site.
 
+The Backdrops plugin's CSS (`<style id="ulbd-backdrops">`) is left out: it stays inline on every page, out of
+Autoptimize, with the site's own saved settings, so changing a backdrop setting in wp-admin needs no new critical
+CSS. The check keeps that block in its critical-only render, as visitors' pages have it.
+
 A stale file isn't broken, only less complete: an element whose rules it lacks shows briefly unstyled until
 the full stylesheet (always loaded) arrives.
 
