@@ -109,8 +109,10 @@ function ulbd_bat_path() {
  * silhouettes' opacity before the intensity factor.
  * The cheeky version swaps in a broom whose handle curves up into a wand tip (with a little buzz), a cauldron
  * in an X leather harness with an O-ring, a studded hat with a heart buckle, heart bubbles and fuzzy handcuffs.
+ * With $masks, two masquerade masks ('mask' coloured, trimmed in 'accent', ribbons in 'fuzz') fill the tile's
+ * empty right edge and bottom.
  */
-function ulbd_witchy_svg( $p, $cheeky, $k ) {
+function ulbd_witchy_svg( $p, $cheeky, $k, $masks = false ) {
 	$heart = 'M12 21s-7-4.4-9.5-8.9A5.4 5.4 0 0 1 12 6.1a5.4 5.4 0 0 1 9.5 6C19 16.6 12 21 12 21z';
 
 	// Witch's hat, 44 x 40: a crooked cone on an elliptical brim, with a band and a buckle.
@@ -155,6 +157,16 @@ function ulbd_witchy_svg( $p, $cheeky, $k ) {
 			. '<g fill="none" stroke="' . $p['star'] . '" stroke-width=".9"><ellipse cx="14.6" cy="8" rx="2.2" ry="1.2"/><ellipse cx="18" cy="8" rx="1.2" ry="2"/><ellipse cx="21.4" cy="8" rx="2.2" ry="1.2"/></g></g>'
 		: '<g transform="translate(112 118) rotate(12) scale(.8)">' . $hat . '</g>';
 
+	if ( $masks ) {
+		$mp     = array(
+			'fill'   => $p['mask'],
+			'trim'   => $p['accent'],
+			'ribbon' => $p['fuzz'],
+		);
+		$extra .= '<g transform="translate(238 92) rotate(12 30 10) scale(1.05)">' . ulbd_mask_svg( $mp, true ) . '</g>'
+			. '<g transform="translate(110 222) rotate(-10 30 10) scale(.85)">' . ulbd_mask_svg( $mp, false, false, true ) . '</g>';
+	}
+
 	$bat  = ulbd_bat_path();
 	$a    = min( 1, $p['a'] * $k );
 	$star = min( 1, .8 * $k );
@@ -196,6 +208,7 @@ function ulbd_witchy_palette( $orange ) {
 			'cut'    => 'rgb(240,128,34)',
 			'strap'  => 'rgb(150,62,18)',
 			'fuzz'   => 'rgb(24,10,14)',
+			'mask'   => 'rgb(24,10,14)',
 			'a'      => .8,
 		)
 		: array(
@@ -206,8 +219,225 @@ function ulbd_witchy_palette( $orange ) {
 			'cut'    => 'rgb(14,7,22)',
 			'strap'  => 'rgb(20,8,24)',
 			'fuzz'   => 'rgb(235,120,185)',
+			'mask'   => 'rgb(20,8,24)',
 			'a'      => .8,
 		);
+}
+
+/**
+ * A masquerade (voyeur) eye mask, 60 x 24 before ribbons: cat-eye tips, a dip over the nose, almond eye holes
+ * cut out (even-odd, so the backdrop shows through), a trim line with lace dots and a jewel. Colours from $p -
+ * 'fill', 'trim', 'ribbon' (ribbons and feather, also the jewel). Options: trailing ribbons, a feather plume
+ * at the right tip, or a stick to hold it up by.
+ */
+function ulbd_mask_svg( $p, $ribbons = false, $feather = false, $stick = false ) {
+	$out = '';
+	if ( $stick ) {
+		$out .= '<path d="M50 17 58 46" stroke="' . $p['trim'] . '" stroke-width="1.6" stroke-linecap="round"/>';
+	}
+	if ( $ribbons ) {
+		$out .= '<path d="M3 5C-4 9-2 18-9 24M57 5C64 9 62 18 69 24" fill="none" stroke="' . $p['ribbon'] . '" stroke-width="1.3" stroke-linecap="round"/>';
+	}
+	if ( $feather ) {
+		$out .= '<path d="M54-1C57-12 63-19 70-24 66-13 61-6 56 0z" fill="' . $p['ribbon'] . '"/>'
+			. '<path d="M55-.5C60-9 64-15 69-23" fill="none" stroke="' . $p['fill'] . '" stroke-width=".5"/>';
+	}
+	$out .= '<path fill-rule="evenodd" d="M30 6C36 2 46 0 58-2 56 6 54 14 46 18 40 21 34 18 30 14 26 18 20 21 14 18 6 14 4 6 2-2 14 0 24 2 30 6zM35 9C38 6 44 6 47 9 44 12 38 12 35 9zM25 9C22 6 16 6 13 9 16 12 22 12 25 9z" fill="' . $p['fill'] . '" stroke="' . $p['trim'] . '" stroke-width=".9"/>'
+		. '<g fill="' . $p['trim'] . '"><circle cx="10" cy="1.2" r=".7"/><circle cx="17" cy="2.4" r=".7"/><circle cx="23" cy="4.2" r=".7"/><circle cx="37" cy="4.2" r=".7"/><circle cx="43" cy="2.4" r=".7"/><circle cx="50" cy="1.2" r=".7"/></g>'
+		. '<circle cx="30" cy="9.4" r="1.7" fill="' . $p['ribbon'] . '" stroke="' . $p['trim'] . '" stroke-width=".5"/>';
+
+	return $out;
+}
+
+/** The mask palettes: black masks with gold trim and pink ribbons for dark backdrops, all black on orange. */
+function ulbd_mask_palette( $orange ) {
+	return $orange
+		? array(
+			'fill'   => 'rgb(24,10,14)',
+			'trim'   => 'rgb(255,222,170)',
+			'ribbon' => 'rgb(24,10,14)',
+			'light'  => 'rgb(255,236,200)',
+			'star'   => 'rgb(255,236,200)',
+			'a'      => .8,
+		)
+		: array(
+			'fill'   => 'rgb(18,6,20)',
+			'trim'   => 'rgb(232,196,110)',
+			'ribbon' => 'rgb(235,120,185)',
+			'light'  => 'rgb(255,200,120)',
+			'star'   => 'rgb(255,230,190)',
+			'a'      => .9,
+		);
+}
+
+/** The masquerade tile (300 x 260): a large mask with ribbons and a feather, one on a stick, a small one, bats and stars. */
+function ulbd_masquerade_svg( $p, $k ) {
+	return sprintf(
+		'<svg xmlns="http://www.w3.org/2000/svg" width="300" height="260" viewBox="0 0 300 260">
+			<g opacity="%1$s">
+				<g transform="translate(36 60) rotate(-8 30 10) scale(1.5)">%2$s</g>
+				<g transform="translate(170 150) rotate(10 30 10) scale(1.1)">%3$s</g>
+				<g transform="translate(206 26) rotate(14 30 10) scale(.7)">%4$s</g>
+				<path d="%5$s" transform="translate(48 192) rotate(-8 12 7) scale(1.2)" fill="%6$s"/>
+				<path d="%5$s" transform="translate(262 110) rotate(12 12 7) scale(.8)" fill="%6$s"/>
+			</g>
+			<g fill="%7$s" fill-opacity="%8$s">
+				<circle cx="150" cy="20" r="1.3"/><circle cx="20" cy="130" r="1"/><circle cx="140" cy="236" r="1.2"/><circle cx="286" cy="200" r=".9"/><circle cx="120" cy="130" r=".8"/>
+			</g>
+		</svg>',
+		min( 1, $p['a'] * $k ),
+		ulbd_mask_svg( $p, true, true ),
+		ulbd_mask_svg( $p, false, false, true ),
+		ulbd_mask_svg( $p ),
+		ulbd_bat_path(),
+		$p['fill'],
+		$p['star'],
+		min( 1, .8 * $k )
+	);
+}
+
+/**
+ * The voyeur tile (300 x 260): keyholes with warm light glowing through, pairs of eyes peeking out of the
+ * dark, a masquerade mask and bats.
+ */
+function ulbd_voyeur_svg( $p, $k ) {
+	$keyhole = 'M8 0a8 8 0 0 1 4.6 14.5L16 32H0l3.4-17.5A8 8 0 0 1 8 0z';
+	$eyes    = '<path d="M0 3C2 0 6 0 8 3 6 6 2 6 0 3zM12 3C14 0 18 0 20 3 18 6 14 6 12 3z" fill="' . $p['light'] . '"/><g fill="' . $p['fill'] . '"><circle cx="4.6" cy="3" r="1.3"/><circle cx="16.6" cy="3" r="1.3"/></g>';
+
+	return sprintf(
+		'<svg xmlns="http://www.w3.org/2000/svg" width="300" height="260" viewBox="0 0 300 260">
+			<defs><radialGradient id="g"><stop offset="0" stop-color="%2$s" stop-opacity=".55"/><stop offset="1" stop-color="%2$s" stop-opacity="0"/></radialGradient></defs>
+			<circle cx="53" cy="70" r="46" fill="url(#g)" opacity="%1$s"/>
+			<circle cx="247" cy="34" r="26" fill="url(#g)" opacity="%1$s"/>
+			<g opacity="%1$s">
+				<path d="%3$s" transform="translate(40 44) scale(1.6)" fill="%2$s"/>
+				<path d="%3$s" transform="translate(240 20) scale(.9)" fill="%2$s"/>
+				<g transform="translate(140 64) scale(1.6)">%4$s</g>
+				<g transform="translate(56 196) scale(1.1)">%4$s</g>
+				<g transform="translate(248 132)">%4$s</g>
+				<g transform="translate(166 164) rotate(-6 30 10) scale(1.2)">%5$s</g>
+				<path d="%6$s" transform="translate(110 128) rotate(10 12 7) scale(1.1)" fill="%7$s"/>
+			</g>
+			<g fill="%8$s" fill-opacity="%9$s">
+				<circle cx="150" cy="16" r="1.2"/><circle cx="20" cy="150" r="1"/><circle cx="280" cy="240" r="1.1"/><circle cx="130" cy="246" r=".9"/>
+			</g>
+		</svg>',
+		min( 1, $p['a'] * $k ),
+		$p['light'],
+		$keyhole,
+		$eyes,
+		ulbd_mask_svg( $p, true ),
+		ulbd_bat_path(),
+		'rgb(92,52,120)',
+		$p['star'],
+		min( 1, .8 * $k )
+	);
+}
+
+/**
+ * One large, intricate masquerade mask for the centre of the area (720 x 340): a spider web spun across it -
+ * spokes from the nose bridge and sagging rings, clipped to the mask so the eye holes stay open - trimmed eye
+ * rims, scalloped lace along the edges, filigree swirls at the tips, a jewel, feather plumes rising from both
+ * tips and a little spider hanging from a thread. Drawn in the small mask's units, scaled up 9x.
+ */
+function ulbd_web_mask_svg( $p, $k ) {
+	$shape = 'M30 6C36 2 46 0 58-2 56 6 54 14 46 18 40 21 34 18 30 14 26 18 20 21 14 18 6 14 4 6 2-2 14 0 24 2 30 6z';
+	$holes = 'M35 9C38 6 44 6 47 9 44 12 38 12 35 9zM25 9C22 6 16 6 13 9 16 12 22 12 25 9z';
+
+	// The web: 16 spokes from the bridge, and rings stretched sideways to reach the tips, each strand between
+	// two spokes sagging towards the centre.
+	$cx    = 30;
+	$cy    = 10;
+	$n     = 16;
+	$spoke = '';
+	$rings = '';
+	$pt    = function ( $r, $i ) use ( $cx, $cy, $n ) {
+		$a = 2 * M_PI * $i / $n;
+		return array( $cx + 1.6 * $r * cos( $a ), $cy + $r * sin( $a ) );
+	};
+	for ( $i = 0; $i < $n; $i++ ) {
+		list( $x, $y ) = $pt( 24, $i );
+		$spoke        .= sprintf( 'M%d %d %.2f %.2f', $cx, $cy, $x, $y );
+	}
+	foreach ( array( 2.4, 4.6, 7, 9.6, 12.4, 15.4, 18.6, 22 ) as $r ) {
+		list( $x0, $y0 ) = $pt( $r, 0 );
+		$rings          .= sprintf( 'M%.2f %.2f', $x0, $y0 );
+		for ( $i = 1; $i <= $n; $i++ ) {
+			list( $xa, $ya ) = $pt( $r, $i - 1 );
+			list( $xb, $yb ) = $pt( $r, $i );
+			$qx              = $cx + ( ( $xa + $xb ) / 2 - $cx ) * .86;
+			$qy              = $cy + ( ( $ya + $yb ) / 2 - $cy ) * .86;
+			$rings          .= sprintf( 'Q%.2f %.2f %.2f %.2f', $qx, $qy, $xb, $yb );
+		}
+	}
+
+	// Lace scallops along the lower edge, as small circles.
+	$lace = '';
+	foreach ( array( array( 8, 13 ), array( 11, 16 ), array( 15, 18.6 ), array( 20, 20 ), array( 25, 18 ), array( 35, 18 ), array( 40, 20 ), array( 45, 18.6 ), array( 49, 16 ), array( 52, 13 ) ) as $c ) {
+		$lace .= sprintf( '<circle cx="%s" cy="%s" r=".9"/>', $c[0], $c[1] + .6 );
+	}
+
+	$plume = 'M0 0C2-7 6-12 12-16 9-9 6-4 2 1z';
+	$spider_legs = 'M-1-.4-3.2-2.2M-1 .2-3.6-.4M-1 .6-3.4 1.8M-.8 1-2.4 3.2M1-.4 3.2-2.2M1 .2 3.6-.4M1 .6 3.4 1.8M.8 1 2.4 3.2';
+
+	return sprintf(
+		'<svg xmlns="http://www.w3.org/2000/svg" width="720" height="340" viewBox="0 0 720 340">
+			<defs>
+				<clipPath id="m"><path clip-rule="evenodd" d="%1$s%2$s"/></clipPath>
+				<radialGradient id="j"><stop offset="0" stop-color="%5$s" stop-opacity=".7"/><stop offset="1" stop-color="%5$s" stop-opacity="0"/></radialGradient>
+			</defs>
+			<g opacity="%9$s" transform="translate(90 100) scale(9)">
+				<g fill="%6$s">
+					<path d="%10$s" transform="translate(53 -1) scale(.6)"/>
+					<path d="%10$s" transform="translate(56 0) rotate(18) scale(.6)" opacity=".7"/>
+					<path d="%10$s" transform="translate(7 -1) scale(-.6 .6)"/>
+					<path d="%10$s" transform="translate(4 0) scale(-1 1) rotate(18) scale(.6)" opacity=".7"/>
+				</g>
+				<path fill-rule="evenodd" d="%1$s%2$s" fill="%3$s"/>
+				<g clip-path="url(#m)" fill="none" stroke="%4$s" stroke-width=".16" stroke-opacity=".85"><path d="%7$s"/><path d="%8$s"/></g>
+				<path d="%1$s" fill="none" stroke="%4$s" stroke-width=".55"/>
+				<path d="%2$s" fill="none" stroke="%4$s" stroke-width=".45"/>
+				<g fill="%4$s">%11$s</g>
+				<g fill="none" stroke="%4$s" stroke-width=".35" stroke-linecap="round">
+					<path d="M8 2.2c-2.4 0-3.2 2.6-1.4 3.4s2.8-1.4 1.2-2"/>
+					<path d="M52 2.2c2.4 0 3.2 2.6 1.4 3.4s-2.8-1.4-1.2-2"/>
+				</g>
+				<circle cx="30" cy="9" r="4" fill="url(#j)"/>
+				<path d="M30 6.4 31.8 9 30 11.6 28.2 9z" fill="%6$s" stroke="%4$s" stroke-width=".3"/>
+				<path d="M50 17.4V22" stroke="%4$s" stroke-width=".12"/>
+				<g transform="translate(50 23.4)" fill="%3$s" stroke="%4$s" stroke-width=".18">
+					<path d="%12$s" fill="none" stroke-linecap="round"/>
+					<ellipse cx="0" cy=".8" rx="1.1" ry="1.4"/><circle cx="0" cy="-.9" r=".7"/>
+				</g>
+			</g>
+		</svg>',
+		$shape,
+		$holes,
+		$p['fill'],
+		$p['trim'],
+		$p['light'],
+		$p['ribbon'],
+		$spoke,
+		$rings,
+		min( 1, $p['a'] * $k ),
+		$plume,
+		$lace,
+		$spider_legs
+	);
+}
+
+/** A sparse star field tile (160 x 160) for behind a single centred motif. */
+function ulbd_stars_svg( $rgb, $k ) {
+	return sprintf(
+		'<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160"><g fill="%s" fill-opacity="%s"><circle cx="20" cy="24" r="1.1"/><circle cx="110" cy="14" r=".8"/><circle cx="70" cy="80" r="1"/><circle cx="140" cy="100" r="1.2"/><circle cx="36" cy="136" r=".9"/></g></svg>',
+		$rgb,
+		min( 1, .7 * $k )
+	);
+}
+
+/** A fishnet tile (18 x 18): two diagonals through the corners, which join up into a diamond net. */
+function ulbd_fishnet_svg( $k ) {
+	return sprintf( '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18"><path d="M0 0 18 18M18 0 0 18" stroke="rgb(8,2,8)" stroke-opacity="%s" stroke-width="1.4"/></svg>', min( 1, .7 * $k ) );
 }
 
 /** The pumpkin-orange base: a warm light centre for the text, deepening to burnt orange at the edges. */
@@ -596,6 +826,156 @@ function ulbd_styles() {
 				return array(
 					'background' => implode( ', ', array_merge( array( ulbd_svg_url( ulbd_witchy_svg( ulbd_witchy_palette( true ), true, $k ) ) ), ulbd_orange_layers( $k ) ) ),
 					'size'       => '320px 280px, auto, auto, auto, auto',
+				);
+			},
+		),
+		'halloween-cheeky-masks'  => array(
+			'label'       => 'Halloween - cheeky masquerade',
+			'kind'        => 'seasonal',
+			'dark'        => true,
+			'fade'        => false,
+			'description' => 'The cheeky witchy tile with masquerade masks joining the wand-tipped brooms, harnessed cauldron and fuzzy cuffs, on deep plum.',
+			'css'         => function ( $k ) {
+				return array(
+					'background' => implode(
+						', ',
+						array(
+							ulbd_svg_url( ulbd_witchy_svg( ulbd_witchy_palette( false ), true, $k, true ) ),
+							'radial-gradient(ellipse 60% 50% at 50% 110%, ' . ulbd_rgba( 179, 9, 75, .45, $k ) . ' 0, transparent 100%)',
+							'radial-gradient(ellipse 40% 60% at 8% 30%, ' . ulbd_rgba( 120, 50, 170, .55, $k ) . ' 0, transparent 100%)',
+							'radial-gradient(ellipse 35% 45% at 88% 10%, ' . ulbd_rgba( 255, 120, 30, .3, $k ) . ' 0, transparent 100%)',
+							'#120614',
+						)
+					),
+					'size'       => '320px 280px, auto, auto, auto, auto',
+				);
+			},
+		),
+		'halloween-cheeky-masks-orange' => array(
+			'label'       => 'Halloween - cheeky masquerade orange',
+			'kind'        => 'seasonal',
+			'fade'        => false,
+			'description' => 'The cheeky masquerade tile in black on pumpkin orange.',
+			'css'         => function ( $k ) {
+				return array(
+					'background' => implode( ', ', array_merge( array( ulbd_svg_url( ulbd_witchy_svg( ulbd_witchy_palette( true ), true, $k, true ) ) ), ulbd_orange_layers( $k ) ) ),
+					'size'       => '320px 280px, auto, auto, auto, auto',
+				);
+			},
+		),
+		'halloween-masquerade'    => array(
+			'label'       => 'Halloween - masquerade',
+			'kind'        => 'seasonal',
+			'dark'        => true,
+			'fade'        => false,
+			'description' => 'Black lace masquerade masks trimmed in gold, with pink ribbons and feathers, bats and stars on deep plum.',
+			'css'         => function ( $k ) {
+				return array(
+					'background' => implode(
+						', ',
+						array(
+							ulbd_svg_url( ulbd_masquerade_svg( ulbd_mask_palette( false ), $k ) ),
+							'radial-gradient(ellipse 45% 60% at 10% 25%, ' . ulbd_rgba( 140, 60, 170, .55, $k ) . ' 0, transparent 100%)',
+							'radial-gradient(ellipse 40% 50% at 90% 80%, ' . ulbd_rgba( 179, 9, 75, .45, $k ) . ' 0, transparent 100%)',
+							'radial-gradient(ellipse 40% 40% at 70% 0%, ' . ulbd_rgba( 232, 196, 110, .22, $k ) . ' 0, transparent 100%)',
+							'#24102a',
+						)
+					),
+					'size'       => '300px 260px, auto, auto, auto, auto',
+				);
+			},
+		),
+		'halloween-masquerade-orange' => array(
+			'label'       => 'Halloween - masquerade orange',
+			'kind'        => 'seasonal',
+			'fade'        => false,
+			'description' => 'Black masquerade masks with ribbons and feathers, and bats, on pumpkin orange.',
+			'css'         => function ( $k ) {
+				return array(
+					'background' => implode( ', ', array_merge( array( ulbd_svg_url( ulbd_masquerade_svg( ulbd_mask_palette( true ), $k ) ) ), ulbd_orange_layers( $k ) ) ),
+					'size'       => '300px 260px, auto, auto, auto, auto',
+				);
+			},
+		),
+		'halloween-voyeur'        => array(
+			'label'       => 'Halloween - voyeur',
+			'kind'        => 'seasonal',
+			'dark'        => true,
+			'fade'        => false,
+			'description' => 'Keyholes with warm light glowing through, eyes peeking out of the dark, a masquerade mask and bats on near-black.',
+			'css'         => function ( $k ) {
+				return array(
+					'background' => implode(
+						', ',
+						array(
+							ulbd_svg_url( ulbd_voyeur_svg( ulbd_mask_palette( false ), $k ) ),
+							'radial-gradient(ellipse 40% 55% at 85% 20%, ' . ulbd_rgba( 120, 50, 170, .45, $k ) . ' 0, transparent 100%)',
+							'radial-gradient(ellipse 50% 45% at 20% 100%, ' . ulbd_rgba( 179, 9, 75, .35, $k ) . ' 0, transparent 100%)',
+							'#0a0610',
+						)
+					),
+					'size'       => '300px 260px, auto, auto, auto',
+				);
+			},
+		),
+		'halloween-fishnet'       => array(
+			'label'       => 'Halloween - fishnet masquerade',
+			'kind'        => 'seasonal',
+			'dark'        => true,
+			'fade'        => false,
+			'description' => 'Masquerade masks over a black fishnet on hot pink and plum glows.',
+			'css'         => function ( $k ) {
+				return array(
+					'background' => implode(
+						', ',
+						array(
+							ulbd_svg_url( ulbd_masquerade_svg( ulbd_mask_palette( false ), $k ) ),
+							ulbd_svg_url( ulbd_fishnet_svg( $k ) ),
+							'radial-gradient(ellipse 50% 60% at 15% 30%, ' . ulbd_rgba( 200, 20, 100, .75, $k ) . ' 0, transparent 100%)',
+							'radial-gradient(ellipse 50% 60% at 85% 75%, ' . ulbd_rgba( 179, 9, 75, .7, $k ) . ' 0, transparent 100%)',
+							'radial-gradient(ellipse 40% 40% at 60% 10%, ' . ulbd_rgba( 120, 40, 160, .5, $k ) . ' 0, transparent 100%)',
+							'#1a0612',
+						)
+					),
+					'size'       => '300px 260px, 18px 18px, auto, auto, auto, auto',
+				);
+			},
+		),
+		'halloween-web-mask'      => array(
+			'label'       => 'Halloween - spider web mask',
+			'kind'        => 'seasonal',
+			'dark'        => true,
+			'fade'        => false,
+			'description' => 'One large masquerade mask in the centre, spun with a gold spider web, with lace, filigree, feathers, a jewel and a dangling spider, over stars on deep plum.',
+			'css'         => function ( $k ) {
+				return array(
+					'background' => implode(
+						', ',
+						array(
+							ulbd_svg_url( ulbd_web_mask_svg( ulbd_mask_palette( false ), $k ) ),
+							ulbd_svg_url( ulbd_stars_svg( 'rgb(255,230,190)', $k ) ),
+							'radial-gradient(ellipse 45% 55% at 50% 50%, ' . ulbd_rgba( 140, 60, 170, .5, $k ) . ' 0, transparent 100%)',
+							'radial-gradient(ellipse 40% 50% at 95% 100%, ' . ulbd_rgba( 179, 9, 75, .4, $k ) . ' 0, transparent 100%)',
+							'#1a0a20',
+						)
+					),
+					'size'       => 'min(94%, 720px) auto, 160px 160px, auto, auto, auto',
+					'position'   => '50% 50%, 0 0, 0 0, 0 0, 0 0',
+					'repeat'     => 'no-repeat, repeat, no-repeat, no-repeat, no-repeat',
+				);
+			},
+		),
+		'halloween-web-mask-orange' => array(
+			'label'       => 'Halloween - spider web mask orange',
+			'kind'        => 'seasonal',
+			'fade'        => false,
+			'description' => 'The spider web mask in black and cream, centred on pumpkin orange.',
+			'css'         => function ( $k ) {
+				return array(
+					'background' => implode( ', ', array_merge( array( ulbd_svg_url( ulbd_web_mask_svg( ulbd_mask_palette( true ), $k ) ) ), ulbd_orange_layers( $k ) ) ),
+					'size'       => 'min(94%, 720px) auto, auto, auto, auto, auto',
+					'position'   => '50% 50%, 0 0, 0 0, 0 0, 0 0',
+					'repeat'     => 'no-repeat',
 				);
 			},
 		),
