@@ -1,12 +1,66 @@
 /**
- * Appearance > Backdrops: the intensity buttons switch the tiles' previews, and the "Preview on the site"
- * links follow the current (unsaved) choices - both areas' and the text weight - so any combination can be
- * tried on the home page.
+ * Appearance > Backdrops: the intensity buttons and pattern size sliders change the tiles' previews, and the
+ * "Preview on the site" links follow the current (unsaved) choices - both areas' and the text weight - so any
+ * combination can be tried on the home page. "Use the same backdrop" shows one picker (the first area's) for
+ * both areas; otherwise the areas are tabs. Within each area the styles are tabbed by kind, with a dot on the
+ * tab that holds the chosen style.
  */
 (function () {
 	'use strict';
 
+	var root = document.querySelector('.ulbd');
 	var pickers = document.querySelectorAll('.ulbd-picker');
+	var areaTablist = document.querySelector('.ulbd-tabs');
+	var linkBox = document.querySelector('.ulbd-link input');
+	var firstArea = document.querySelector('.ulbd-area');
+
+	function linked() {
+		return !!(linkBox && linkBox.checked);
+	}
+
+	function tabsOf(tablist) {
+		return Array.prototype.slice.call(tablist.querySelectorAll('[role="tab"]'));
+	}
+
+	// Any tab bar on the page: selecting a tab shows its panel and hides its siblings'.
+	function selectTab(tab, focus) {
+		tabsOf(tab.closest('[role="tablist"]')).forEach(function (t) {
+			var on = t === tab;
+			t.setAttribute('aria-selected', on ? 'true' : 'false');
+			t.tabIndex = on ? 0 : -1;
+			document.getElementById(t.getAttribute('aria-controls')).hidden = !on;
+		});
+		if (focus) {
+			tab.focus();
+		}
+	}
+
+	document.querySelectorAll('[role="tablist"]').forEach(function (tablist) {
+		var tabs = tabsOf(tablist);
+		tabs.forEach(function (tab, i) {
+			tab.addEventListener('click', function () {
+				selectTab(tab);
+			});
+			tab.addEventListener('keydown', function (event) {
+				var next = {ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1}[event.key];
+				if (next === undefined) {
+					return;
+				}
+				event.preventDefault();
+				selectTab(tabs[(next + tabs.length) % tabs.length], true);
+			});
+		});
+	});
+
+	// Linked: no area tabs, just the first area's picker, which then stands for both.
+	function applyLinked() {
+		root.setAttribute('data-linked', linked() ? '1' : '0');
+		if (areaTablist) {
+			areaTablist.hidden = linked();
+			selectTab(tabsOf(areaTablist)[0]);
+		}
+		updateLinks();
+	}
 
 	function checked(picker, field) {
 		var input = picker.querySelector('input[name$="[' + field + ']"]:checked');
@@ -15,14 +69,17 @@
 
 	function updateLinks() {
 		var params = [];
-		pickers.forEach(function (picker) {
-			var area = picker.getAttribute('data-area');
+		pickers.forEach(function (own) {
+			var area = own.getAttribute('data-area');
 			if (area === 'text') {
-				params.push('ulbd_text=' + encodeURIComponent(checked(picker, 'text_weight')));
+				params.push('ulbd_text=' + encodeURIComponent(checked(own, 'text_weight')));
 				return;
 			}
+			// Linked: every area previews the first area's choices.
+			var picker = linked() ? firstArea : own;
 			params.push('ulbd_' + area + '=' + encodeURIComponent(checked(picker, 'style')));
 			params.push('ulbd_' + area + '_intensity=' + encodeURIComponent(checked(picker, 'intensity')));
+			params.push('ulbd_' + area + '_scale=' + encodeURIComponent(picker.querySelector('input[name$="[scale]"]').value));
 		});
 		document.querySelectorAll('.ulbd-preview-link').forEach(function (link) {
 			var area = link.closest('.ulbd-picker').getAttribute('data-area');
@@ -33,13 +90,30 @@
 	}
 
 	pickers.forEach(function (picker) {
+		// The slider resizes the tiles' patterns as it moves; the links catch up on change.
+		picker.addEventListener('input', function (event) {
+			if (event.target.name && /\[scale\]$/.test(event.target.name)) {
+				picker.style.setProperty('--ulbd-scale', event.target.value / 100);
+				picker.querySelector('.ulbd-scale output').textContent = event.target.value + '%';
+			}
+		});
 		picker.addEventListener('change', function (event) {
 			if (event.target.name && /\[intensity\]$/.test(event.target.name)) {
 				picker.setAttribute('data-intensity', event.target.value);
 			}
+			if (event.target.name && /\[style\]$/.test(event.target.name)) {
+				var kind = event.target.closest('[role="tabpanel"]').getAttribute('data-kind');
+				picker.querySelectorAll('.ulbd-kind-tab').forEach(function (tab) {
+					tab.querySelector('.ulbd-kind-tab__dot').hidden = tab.getAttribute('data-kind') !== kind;
+				});
+			}
 			updateLinks();
 		});
 	});
+
+	if (linkBox) {
+		linkBox.addEventListener('change', applyLinked);
+	}
 
 	updateLinks();
 }());

@@ -6,9 +6,10 @@
  *              animated and dark backdrops, with live previews (Appearance > Backdrops) and an admin-only
  *              preview on the site before saving. Only the background layer changes - plus, on a dark
  *              backdrop, hard edges instead of the theme's white edge fades and light text for what sits
- *              straight on it; the areas' content is the theme's. Also sets the site's display text weight
+ *              straight on it; the areas' content is the theme's. A pattern size slider scales the
+ *              tiled SVG motifs (bats, hearts, leaves...) from half to three times their size. Also sets the site's display text weight
  *              (regular or bold).
- * Version: 1.2.0
+ * Version: 1.3.4
  *
  * @package UltraLove_Backdrops
  */
@@ -17,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ULBD_VERSION', '1.2.0' );
+define( 'ULBD_VERSION', '1.3.4' );
 define( 'ULBD_OPTION', 'ulbd_settings' );
 
 require_once __DIR__ . '/includes/styles.php';
@@ -65,6 +66,21 @@ function ulbd_intensities() {
 	);
 }
 
+/** The pattern size slider: min, max and step, in percent of the styles' own tile sizes. */
+function ulbd_scale_range() {
+	return array( 50, 300, 10 );
+}
+
+/** A pattern size in percent, clamped to the slider's range and snapped to its step (100 when not a number). */
+function ulbd_clean_scale( $value ) {
+	list( $min, $max, $step ) = ulbd_scale_range();
+	if ( ! is_numeric( $value ) ) {
+		return 100;
+	}
+
+	return (int) max( $min, min( $max, round( $value / $step ) * $step ) );
+}
+
 /**
  * Display text weights: key => array( label, CSS weight ). The theme's --ul-display-weight (header navigation
  * and Search, pill headings, the #topcta text box, section titles, footer text boxes and copyright) is set
@@ -81,12 +97,14 @@ function ulbd_text_weights() {
 function ulbd_settings() {
 	$saved    = get_option( ULBD_OPTION, array() );
 	$settings = array(
+		'linked'      => ! empty( $saved['linked'] ),
 		'text_weight' => isset( $saved['text_weight'] ) && isset( ulbd_text_weights()[ $saved['text_weight'] ] ) ? $saved['text_weight'] : 'regular',
 	);
 	foreach ( array_keys( ulbd_areas() ) as $area ) {
 		$settings[ $area ] = array(
 			'style'     => isset( $saved[ $area ]['style'] ) && isset( ulbd_styles()[ $saved[ $area ]['style'] ] ) ? $saved[ $area ]['style'] : 'aurora',
 			'intensity' => isset( $saved[ $area ]['intensity'] ) && isset( ulbd_intensities()[ $saved[ $area ]['intensity'] ] ) ? $saved[ $area ]['intensity'] : 'normal',
+			'scale'     => isset( $saved[ $area ]['scale'] ) ? ulbd_clean_scale( $saved[ $area ]['scale'] ) : 100,
 		);
 	}
 
@@ -95,7 +113,7 @@ function ulbd_settings() {
 
 /**
  * Settings in effect for this request: the saved ones, overridden by ?ulbd_<area>=<style>,
- * ?ulbd_<area>_intensity=<preset> and ?ulbd_text=<weight> for users who can manage options (the "Preview on
+ * ?ulbd_<area>_intensity=<preset>, ?ulbd_<area>_scale=<percent> and ?ulbd_text=<weight> for users who can manage options (the "Preview on
  * the site" links).
  */
 function ulbd_active_settings() {
@@ -117,11 +135,24 @@ function ulbd_active_settings() {
 				$settings[ $area ]['intensity'] = sanitize_key( $_GET[ 'ulbd_' . $area . '_intensity' ] );
 				$settings[ $area ]['preview']   = true;
 			}
+			if ( isset( $_GET[ 'ulbd_' . $area . '_scale' ] ) ) {
+				$settings[ $area ]['scale']   = ulbd_clean_scale( sanitize_text_field( wp_unslash( $_GET[ 'ulbd_' . $area . '_scale' ] ) ) );
+				$settings[ $area ]['preview'] = true;
+			}
 			// phpcs:enable
 		}
 	}
 
 	return $settings;
+}
+
+/**
+ * A style's pixel lengths made scalable: every Npx becomes calc(Npx * var(--ulbd-scale, 1)), so the pattern
+ * size setting (--ulbd-scale on the area, or on the admin picker) resizes the tiles - and, in an animation's
+ * keyframes, the distances they travel, so a loop that moves whole tiles stays seamless at any size.
+ */
+function ulbd_scalable( $css ) {
+	return preg_replace( '/(\d*\.?\d+)px\b/', 'calc($1px * var(--ulbd-scale, 1))', $css );
 }
 
 /** A style's CSS declarations (background, size, ...) at an intensity, plus its @keyframes. */
@@ -136,13 +167,13 @@ function ulbd_style_css( $style_id, $intensity ) {
 	$decl = 'background: ' . $css['background'] . ';';
 	foreach ( array( 'size', 'position', 'repeat' ) as $prop ) {
 		if ( ! empty( $css[ $prop ] ) ) {
-			$decl .= ' background-' . $prop . ': ' . $css[ $prop ] . ';';
+			$decl .= ' background-' . $prop . ': ' . ( 'size' === $prop ? ulbd_scalable( $css[ $prop ] ) : $css[ $prop ] ) . ';';
 		}
 	}
 	$keyframes = '';
 	if ( ! empty( $css['animation'] ) ) {
 		$decl     .= ' animation: ' . $css['animation'] . ';';
-		$keyframes = '@keyframes ulbd-' . $style_id . ' { ' . $css['keyframes'] . ' }';
+		$keyframes = '@keyframes ulbd-' . $style_id . ' { ' . ulbd_scalable( $css['keyframes'] ) . ' }';
 	}
 
 	return array( $decl, $keyframes );
@@ -170,6 +201,9 @@ add_action(
 				continue;
 			}
 			list( $decl, $kf ) = ulbd_style_css( $s['style'], $s['intensity'] );
+			if ( 100 !== $s['scale'] ) {
+				$decl = '--ulbd-scale: ' . ( $s['scale'] / 100 ) . '; ' . $decl;
+			}
 			$selectors         = implode( ', ', $info['selectors'] );
 			$out[]             = $selectors . ' { ' . $decl . ' }';
 			$style = ulbd_styles()[ $s['style'] ];
@@ -231,10 +265,14 @@ add_action(
 	}
 );
 
-/** Keep only known areas, styles, intensities and text weights. */
+/**
+ * Keep only known areas, styles, intensities, pattern sizes and text weights. With 'linked' on, the first
+ * area's choices (the home page call to action) are saved for every area, so the front end needs nothing new.
+ */
 function ulbd_sanitize( $input ) {
 	$weight = isset( $input['text_weight'] ) ? sanitize_key( $input['text_weight'] ) : 'regular';
 	$clean  = array(
+		'linked'      => ! empty( $input['linked'] ),
 		'text_weight' => isset( ulbd_text_weights()[ $weight ] ) ? $weight : 'regular',
 	);
 	foreach ( array_keys( ulbd_areas() ) as $area ) {
@@ -244,7 +282,14 @@ function ulbd_sanitize( $input ) {
 		$clean[ $area ] = array(
 			'style'     => isset( ulbd_styles()[ $style ] ) ? $style : 'aurora',
 			'intensity' => isset( ulbd_intensities()[ $intensity ] ) ? $intensity : 'normal',
+			'scale'     => isset( $input[ $area ]['scale'] ) ? ulbd_clean_scale( $input[ $area ]['scale'] ) : 100,
 		);
+	}
+	if ( $clean['linked'] ) {
+		$areas = array_keys( ulbd_areas() );
+		foreach ( array_slice( $areas, 1 ) as $area ) {
+			$clean[ $area ] = $clean[ $areas[0] ];
+		}
 	}
 
 	return $clean;
@@ -272,19 +317,23 @@ add_action(
 	}
 );
 
-/** The settings page: per area, a grid of live preview tiles to pick from, an intensity, and a preview link. */
+/** The settings page: per area, a grid of live preview tiles to pick from, an intensity, a pattern size and a preview link. */
 function ulbd_render_admin() {
 	if ( ! current_user_can( 'manage_options' ) ) {
 		return;
 	}
-	$settings = ulbd_settings();
-	$kinds    = array(
-		'css'      => 'CSS',
-		'svg'      => 'SVG',
-		'animated' => 'Animated',
-		'dark'     => 'Dark',
-		'seasonal' => 'Seasonal',
-		'plain'    => 'Plain',
+	$settings    = ulbd_settings();
+	$scale_range = ulbd_scale_range();
+	$kinds       = array(
+		'css'          => 'CSS',
+		'svg'          => 'SVG',
+		'animated'     => 'Animated',
+		'dark'         => 'Dark',
+		'halloween'    => 'Halloween',
+		'thanksgiving' => 'Thanksgiving',
+		'christmas'    => 'Christmas',
+		'new-year'     => 'New Year\'s',
+		'plain'        => 'Plain',
 	);
 
 	// Every style's tile at every intensity, as classes the intensity buttons switch between.
@@ -303,14 +352,15 @@ function ulbd_render_admin() {
 		}
 	}
 	?>
-	<div class="wrap ulbd">
+	<div class="wrap ulbd" data-linked="<?php echo $settings['linked'] ? '1' : '0'; ?>">
 		<h1>Backdrops</h1>
 		<p class="ulbd-intro">The background behind the home page's call to action and behind the footer box, and the weight of
 			the site's display text. Pick a style and an intensity for each area, use <strong>Preview on the site</strong> to see
 			the combination on the home page (only you see it, nothing is saved), then <strong>Save</strong>. The white fades at
 			the edges and everything in front of the backdrop stay as they are, except on a dark style: like the live site's
 			backdrop it has hard edges, the pills and text boxes turn to see-through dark glass with white text, and the
-			footer's quick links turn white. Animated styles stand still for visitors who ask their device for reduced motion.</p>
+			footer's quick links turn white. <strong>Pattern size</strong> scales the repeating motifs (bats, hats, hearts, leaves,
+			snow...) from half to three times their size; glows and full-width shapes stay as they are. Animated styles stand still for visitors who ask their device for reduced motion.</p>
 
 		<style><?php echo implode( "\n", array_merge( array_values( $keyframes ), $tile_css ) ); // phpcs:ignore WordPress.Security.EscapeOutput -- built from the style library. ?></style>
 
@@ -325,42 +375,89 @@ function ulbd_render_admin() {
 							text box under it; the product section titles (On Sale, Latest Adult Products, the carousels); and the
 							footer's headings, text boxes and copyright line. Other buttons are always bold.</p>
 					</div>
-					<fieldset class="ulbd-intensity">
-						<legend>Weight</legend>
-						<?php foreach ( ulbd_text_weights() as $key => $weight ) : ?>
-							<label>
-								<input type="radio" name="<?php echo esc_attr( ULBD_OPTION . '[text_weight]' ); ?>" value="<?php echo esc_attr( $key ); ?>" <?php checked( $settings['text_weight'], $key ); ?>>
-								<span style="font-weight: <?php echo (int) $weight[1]; ?>"><?php echo esc_html( $weight[0] ); ?></span>
-							</label>
-						<?php endforeach; ?>
-					</fieldset>
+					<div class="ulbd-controls">
+						<div class="ulbd-control">
+							<span class="ulbd-control__label" aria-hidden="true">Weight</span>
+							<fieldset class="ulbd-intensity">
+								<legend>Weight</legend>
+								<?php foreach ( ulbd_text_weights() as $key => $weight ) : ?>
+									<label>
+										<input type="radio" name="<?php echo esc_attr( ULBD_OPTION . '[text_weight]' ); ?>" value="<?php echo esc_attr( $key ); ?>" <?php checked( $settings['text_weight'], $key ); ?>>
+										<span style="font-weight: <?php echo (int) $weight[1]; ?>"><?php echo esc_html( $weight[0] ); ?></span>
+									</label>
+								<?php endforeach; ?>
+							</fieldset>
+						</div>
+					</div>
 				</header>
 				<p class="ulbd-actions">
 					<a class="button ulbd-preview-link" target="_blank" rel="noopener" href="<?php echo esc_url( home_url( '/' ) ); ?>">Preview on the site</a>
 				</p>
 			</section>
 
-			<?php foreach ( ulbd_areas() as $area => $info ) : ?>
-				<section class="ulbd-picker" data-area="<?php echo esc_attr( $area ); ?>" data-intensity="<?php echo esc_attr( $settings[ $area ]['intensity'] ); ?>">
+			<?php
+			// One backdrop for both areas (a single picker, the first area's), or a tab per area.
+			$areas      = ulbd_areas();
+			$first_area = array_key_first( $areas );
+			?>
+			<p class="ulbd-link">
+				<label>
+					<input type="checkbox" name="<?php echo esc_attr( ULBD_OPTION . '[linked]' ); ?>" value="1" <?php checked( $settings['linked'] ); ?>>
+					Use the same backdrop for the home page call to action and the footer box
+				</label>
+			</p>
+
+			<div class="ulbd-tabs" role="tablist" aria-label="Backdrop area" <?php echo $settings['linked'] ? 'hidden' : ''; ?>>
+				<?php foreach ( $areas as $area => $info ) : ?>
+					<button type="button" role="tab" class="ulbd-tab" id="ulbd-tab-<?php echo esc_attr( $area ); ?>" aria-controls="ulbd-panel-<?php echo esc_attr( $area ); ?>" aria-selected="<?php echo $area === $first_area ? 'true' : 'false'; ?>" tabindex="<?php echo $area === $first_area ? '0' : '-1'; ?>"><?php echo esc_html( $info['label'] ); ?></button>
+				<?php endforeach; ?>
+			</div>
+
+			<?php foreach ( $areas as $area => $info ) : ?>
+				<section class="ulbd-picker ulbd-area" id="ulbd-panel-<?php echo esc_attr( $area ); ?>" role="tabpanel" aria-labelledby="ulbd-tab-<?php echo esc_attr( $area ); ?>" data-area="<?php echo esc_attr( $area ); ?>" data-intensity="<?php echo esc_attr( $settings[ $area ]['intensity'] ); ?>" style="--ulbd-scale: <?php echo esc_attr( $settings[ $area ]['scale'] / 100 ); ?>" <?php echo $area !== $first_area ? 'hidden' : ''; ?>>
 					<header class="ulbd-picker__header">
 						<div>
-							<h2><?php echo esc_html( $info['label'] ); ?></h2>
-							<p><?php echo esc_html( $info['description'] ); ?></p>
+							<?php if ( $area === $first_area ) : ?>
+								<h2><span class="ulbd-unlinked-only"><?php echo esc_html( $info['label'] ); ?></span><span class="ulbd-linked-only">Home page call to action and footer box</span></h2>
+								<p><span class="ulbd-unlinked-only"><?php echo esc_html( $info['description'] ); ?></span><span class="ulbd-linked-only">One backdrop for both: the "Adult Wholesale Canada" block under the home banner, and the footer box on every page.</span></p>
+							<?php else : ?>
+								<h2><?php echo esc_html( $info['label'] ); ?></h2>
+								<p><?php echo esc_html( $info['description'] ); ?></p>
+							<?php endif; ?>
 						</div>
-						<fieldset class="ulbd-intensity">
-							<legend>Intensity</legend>
-							<?php foreach ( ulbd_intensities() as $key => $preset ) : ?>
-								<label>
-									<input type="radio" name="<?php echo esc_attr( ULBD_OPTION . '[' . $area . '][intensity]' ); ?>" value="<?php echo esc_attr( $key ); ?>" <?php checked( $settings[ $area ]['intensity'], $key ); ?>>
-									<span><?php echo esc_html( $preset[0] ); ?></span>
-								</label>
-							<?php endforeach; ?>
-						</fieldset>
+						<div class="ulbd-controls">
+							<div class="ulbd-control">
+								<span class="ulbd-control__label" aria-hidden="true">Intensity</span>
+								<fieldset class="ulbd-intensity">
+									<legend>Intensity</legend>
+									<?php foreach ( ulbd_intensities() as $key => $preset ) : ?>
+										<label>
+											<input type="radio" name="<?php echo esc_attr( ULBD_OPTION . '[' . $area . '][intensity]' ); ?>" value="<?php echo esc_attr( $key ); ?>" <?php checked( $settings[ $area ]['intensity'], $key ); ?>>
+											<span><?php echo esc_html( $preset[0] ); ?></span>
+										</label>
+									<?php endforeach; ?>
+								</fieldset>
+							</div>
+							<label class="ulbd-control ulbd-scale">
+								<span class="ulbd-control__label">Pattern size <output><?php echo (int) $settings[ $area ]['scale']; ?>%</output></span>
+								<input type="range" name="<?php echo esc_attr( ULBD_OPTION . '[' . $area . '][scale]' ); ?>" min="<?php echo (int) $scale_range[0]; ?>" max="<?php echo (int) $scale_range[1]; ?>" step="<?php echo (int) $scale_range[2]; ?>" value="<?php echo (int) $settings[ $area ]['scale']; ?>">
+							</label>
+						</div>
 					</header>
 
+					<?php
+					// The styles in a tab per kind, opening on the tab that holds the saved style. Radios in hidden
+					// tabs are still submitted, so the choice is kept whichever tab is showing.
+					$current_kind = ulbd_styles()[ $settings[ $area ]['style'] ]['kind'];
+					?>
+					<div class="ulbd-kind-tabs" role="tablist" aria-label="<?php echo esc_attr( $info['label'] . ' styles' ); ?>">
+						<?php foreach ( $kinds as $kind => $kind_label ) : ?>
+							<button type="button" role="tab" class="ulbd-kind-tab" id="ulbd-kind-tab-<?php echo esc_attr( $area . '-' . $kind ); ?>" aria-controls="ulbd-kind-<?php echo esc_attr( $area . '-' . $kind ); ?>" aria-selected="<?php echo $kind === $current_kind ? 'true' : 'false'; ?>" tabindex="<?php echo $kind === $current_kind ? '0' : '-1'; ?>" data-kind="<?php echo esc_attr( $kind ); ?>"><?php echo esc_html( $kind_label ); ?><span class="ulbd-kind-tab__dot" <?php echo $kind === $current_kind ? '' : 'hidden'; ?>><span class="screen-reader-text"> (selected style)</span></span></button>
+						<?php endforeach; ?>
+					</div>
+
 					<?php foreach ( $kinds as $kind => $kind_label ) : ?>
-						<h3 class="ulbd-kind"><?php echo esc_html( $kind_label ); ?></h3>
-						<div class="ulbd-grid">
+						<div class="ulbd-grid" role="tabpanel" id="ulbd-kind-<?php echo esc_attr( $area . '-' . $kind ); ?>" aria-labelledby="ulbd-kind-tab-<?php echo esc_attr( $area . '-' . $kind ); ?>" data-kind="<?php echo esc_attr( $kind ); ?>" <?php echo $kind === $current_kind ? '' : 'hidden'; ?>>
 							<?php
 							foreach ( ulbd_styles() as $id => $style ) :
 								if ( $style['kind'] !== $kind ) {
