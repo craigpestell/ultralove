@@ -12,12 +12,39 @@
 	border-radius: 8px;
 }
 
+/* Every card's header is the same two columns - the title and description on the left, the controls on the
+   right - so the controls sit in the same place on every card, however long the description is. */
 .ulbd-picker__header {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: start;
+	gap: 16px 40px;
+}
+
+.ulbd-controls {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: flex-start;
-	justify-content: space-between;
-	gap: 16px;
+	gap: 16px 24px;
+}
+
+/* A control: a small label above it (the radio groups keep their legend for screen readers). */
+.ulbd-control {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.ulbd-control__label {
+	font-size: 12px;
+	font-weight: 600;
+	color: #50575e;
+}
+
+@media (max-width: 782px) {
+	.ulbd-picker__header {
+		grid-template-columns: minmax(0, 1fr);
+	}
 }
 
 .ulbd-picker__header h2 {
@@ -32,6 +59,7 @@
 .ulbd-intensity {
 	display: flex;
 	gap: 4px;
+	margin: 0;
 	padding: 4px;
 	border: 1px solid #c3c4c7;
 	border-radius: 999px;
@@ -71,20 +99,20 @@
 }
 
 .ulbd-scale {
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-	min-width: 220px;
+	width: 220px;
 }
 
 .ulbd-scale output {
 	font-variant-numeric: tabular-nums;
-	color: #50575e;
+	font-weight: 400;
 }
 
+/* As tall as the pill buttons beside it, so the slider sits on their midline. */
 .ulbd-scale input {
 	accent-color: #3b1d4a;
 	width: 100%;
+	height: 37px;
+	margin: 0;
 }
 
 .ulbd-kind {

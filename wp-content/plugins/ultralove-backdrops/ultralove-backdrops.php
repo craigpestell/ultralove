@@ -9,7 +9,7 @@
  *              straight on it; the areas' content is the theme's. A pattern size slider scales the
  *              tiled SVG motifs (bats, hearts, leaves...) from half to three times their size. Also sets the site's display text weight
  *              (regular or bold).
- * Version: 1.3.0
+ * Version: 1.3.1
  *
  * @package UltraLove_Backdrops
  */
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ULBD_VERSION', '1.3.0' );
+define( 'ULBD_VERSION', '1.3.1' );
 define( 'ULBD_OPTION', 'ulbd_settings' );
 
 require_once __DIR__ . '/includes/styles.php';
@@ -361,15 +361,20 @@ function ulbd_render_admin() {
 							text box under it; the product section titles (On Sale, Latest Adult Products, the carousels); and the
 							footer's headings, text boxes and copyright line. Other buttons are always bold.</p>
 					</div>
-					<fieldset class="ulbd-intensity">
-						<legend>Weight</legend>
-						<?php foreach ( ulbd_text_weights() as $key => $weight ) : ?>
-							<label>
-								<input type="radio" name="<?php echo esc_attr( ULBD_OPTION . '[text_weight]' ); ?>" value="<?php echo esc_attr( $key ); ?>" <?php checked( $settings['text_weight'], $key ); ?>>
-								<span style="font-weight: <?php echo (int) $weight[1]; ?>"><?php echo esc_html( $weight[0] ); ?></span>
-							</label>
-						<?php endforeach; ?>
-					</fieldset>
+					<div class="ulbd-controls">
+						<div class="ulbd-control">
+							<span class="ulbd-control__label" aria-hidden="true">Weight</span>
+							<fieldset class="ulbd-intensity">
+								<legend>Weight</legend>
+								<?php foreach ( ulbd_text_weights() as $key => $weight ) : ?>
+									<label>
+										<input type="radio" name="<?php echo esc_attr( ULBD_OPTION . '[text_weight]' ); ?>" value="<?php echo esc_attr( $key ); ?>" <?php checked( $settings['text_weight'], $key ); ?>>
+										<span style="font-weight: <?php echo (int) $weight[1]; ?>"><?php echo esc_html( $weight[0] ); ?></span>
+									</label>
+								<?php endforeach; ?>
+							</fieldset>
+						</div>
+					</div>
 				</header>
 				<p class="ulbd-actions">
 					<a class="button ulbd-preview-link" target="_blank" rel="noopener" href="<?php echo esc_url( home_url( '/' ) ); ?>">Preview on the site</a>
@@ -383,19 +388,24 @@ function ulbd_render_admin() {
 							<h2><?php echo esc_html( $info['label'] ); ?></h2>
 							<p><?php echo esc_html( $info['description'] ); ?></p>
 						</div>
-						<fieldset class="ulbd-intensity">
-							<legend>Intensity</legend>
-							<?php foreach ( ulbd_intensities() as $key => $preset ) : ?>
-								<label>
-									<input type="radio" name="<?php echo esc_attr( ULBD_OPTION . '[' . $area . '][intensity]' ); ?>" value="<?php echo esc_attr( $key ); ?>" <?php checked( $settings[ $area ]['intensity'], $key ); ?>>
-									<span><?php echo esc_html( $preset[0] ); ?></span>
-								</label>
-							<?php endforeach; ?>
-						</fieldset>
-						<label class="ulbd-scale">
-							<span>Pattern size <output><?php echo (int) $settings[ $area ]['scale']; ?>%</output></span>
-							<input type="range" name="<?php echo esc_attr( ULBD_OPTION . '[' . $area . '][scale]' ); ?>" min="<?php echo (int) $scale_range[0]; ?>" max="<?php echo (int) $scale_range[1]; ?>" step="<?php echo (int) $scale_range[2]; ?>" value="<?php echo (int) $settings[ $area ]['scale']; ?>">
-						</label>
+						<div class="ulbd-controls">
+							<div class="ulbd-control">
+								<span class="ulbd-control__label" aria-hidden="true">Intensity</span>
+								<fieldset class="ulbd-intensity">
+									<legend>Intensity</legend>
+									<?php foreach ( ulbd_intensities() as $key => $preset ) : ?>
+										<label>
+											<input type="radio" name="<?php echo esc_attr( ULBD_OPTION . '[' . $area . '][intensity]' ); ?>" value="<?php echo esc_attr( $key ); ?>" <?php checked( $settings[ $area ]['intensity'], $key ); ?>>
+											<span><?php echo esc_html( $preset[0] ); ?></span>
+										</label>
+									<?php endforeach; ?>
+								</fieldset>
+							</div>
+							<label class="ulbd-control ulbd-scale">
+								<span class="ulbd-control__label">Pattern size <output><?php echo (int) $settings[ $area ]['scale']; ?>%</output></span>
+								<input type="range" name="<?php echo esc_attr( ULBD_OPTION . '[' . $area . '][scale]' ); ?>" min="<?php echo (int) $scale_range[0]; ?>" max="<?php echo (int) $scale_range[1]; ?>" step="<?php echo (int) $scale_range[2]; ?>" value="<?php echo (int) $settings[ $area ]['scale']; ?>">
+							</label>
+						</div>
 					</header>
 
 					<?php foreach ( $kinds as $kind => $kind_label ) : ?>
