@@ -297,44 +297,6 @@ function ulbd_masquerade_svg( $p, $k ) {
 }
 
 /**
- * The voyeur tile (300 x 260): keyholes with warm light glowing through, pairs of eyes peeking out of the
- * dark, a masquerade mask and bats.
- */
-function ulbd_voyeur_svg( $p, $k ) {
-	$keyhole = 'M8 0a8 8 0 0 1 4.6 14.5L16 32H0l3.4-17.5A8 8 0 0 1 8 0z';
-	$eyes    = '<path d="M0 3C2 0 6 0 8 3 6 6 2 6 0 3zM12 3C14 0 18 0 20 3 18 6 14 6 12 3z" fill="' . $p['light'] . '"/><g fill="' . $p['fill'] . '"><circle cx="4.6" cy="3" r="1.3"/><circle cx="16.6" cy="3" r="1.3"/></g>';
-
-	return sprintf(
-		'<svg xmlns="http://www.w3.org/2000/svg" width="300" height="260" viewBox="0 0 300 260">
-			<defs><radialGradient id="g"><stop offset="0" stop-color="%2$s" stop-opacity=".55"/><stop offset="1" stop-color="%2$s" stop-opacity="0"/></radialGradient></defs>
-			<circle cx="53" cy="70" r="46" fill="url(#g)" opacity="%1$s"/>
-			<circle cx="247" cy="34" r="26" fill="url(#g)" opacity="%1$s"/>
-			<g opacity="%1$s">
-				<path d="%3$s" transform="translate(40 44) scale(1.6)" fill="%2$s"/>
-				<path d="%3$s" transform="translate(240 20) scale(.9)" fill="%2$s"/>
-				<g transform="translate(140 64) scale(1.6)">%4$s</g>
-				<g transform="translate(56 196) scale(1.1)">%4$s</g>
-				<g transform="translate(248 132)">%4$s</g>
-				<g transform="translate(166 164) rotate(-6 30 10) scale(1.2)">%5$s</g>
-				<path d="%6$s" transform="translate(110 128) rotate(10 12 7) scale(1.1)" fill="%7$s"/>
-			</g>
-			<g fill="%8$s" fill-opacity="%9$s">
-				<circle cx="150" cy="16" r="1.2"/><circle cx="20" cy="150" r="1"/><circle cx="280" cy="240" r="1.1"/><circle cx="130" cy="246" r=".9"/>
-			</g>
-		</svg>',
-		min( 1, $p['a'] * $k ),
-		$p['light'],
-		$keyhole,
-		$eyes,
-		ulbd_mask_svg( $p, true ),
-		ulbd_bat_path(),
-		'rgb(92,52,120)',
-		$p['star'],
-		min( 1, .8 * $k )
-	);
-}
-
-/**
  * One large, intricate masquerade mask for the centre of the area (720 x 340): a spider web spun across it -
  * spokes from the nose bridge and sagging rings, clipped to the mask so the eye holes stay open - trimmed eye
  * rims, scalloped lace along the edges, filigree swirls at the tips, a jewel, feather plumes rising from both
@@ -894,27 +856,6 @@ function ulbd_styles() {
 				return array(
 					'background' => implode( ', ', array_merge( array( ulbd_svg_url( ulbd_masquerade_svg( ulbd_mask_palette( true ), $k ) ) ), ulbd_orange_layers( $k ) ) ),
 					'size'       => '300px 260px, auto, auto, auto, auto',
-				);
-			},
-		),
-		'halloween-voyeur'        => array(
-			'label'       => 'Halloween - voyeur',
-			'kind'        => 'seasonal',
-			'dark'        => true,
-			'fade'        => false,
-			'description' => 'Keyholes with warm light glowing through, eyes peeking out of the dark, a masquerade mask and bats on near-black.',
-			'css'         => function ( $k ) {
-				return array(
-					'background' => implode(
-						', ',
-						array(
-							ulbd_svg_url( ulbd_voyeur_svg( ulbd_mask_palette( false ), $k ) ),
-							'radial-gradient(ellipse 40% 55% at 85% 20%, ' . ulbd_rgba( 120, 50, 170, .45, $k ) . ' 0, transparent 100%)',
-							'radial-gradient(ellipse 50% 45% at 20% 100%, ' . ulbd_rgba( 179, 9, 75, .35, $k ) . ' 0, transparent 100%)',
-							'#0a0610',
-						)
-					),
-					'size'       => '300px 260px, auto, auto, auto',
 				);
 			},
 		),
