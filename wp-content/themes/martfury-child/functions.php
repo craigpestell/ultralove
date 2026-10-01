@@ -1259,3 +1259,82 @@ function ultralove_svg_site_logo( $logo ) {
 
 	return get_stylesheet_directory_uri() . '/images/ultra-love-logo.svg?ver=' . filemtime( $file );
 }
+
+/**
+ * Meta description on every page (no SEO plugin is installed; this steps aside if one is). Home: a written summary
+ * (the 'ultralove_home_meta_description' filter changes it). Products: the short description, else the
+ * description. Pages and posts: the excerpt, else the text (shortcodes dropped). Product categories, brands and
+ * tags: the term's description, else a line naming it. Shop: a catalogue line. Trimmed to ~155 characters at a word
+ * break; where there's no text of its own, a line naming the page. Search results get none.
+ */
+add_action( 'wp_head', 'ultralove_meta_description', 1 );
+function ultralove_meta_description() {
+	if ( defined( 'WPSEO_VERSION' ) || defined( 'RANK_MATH_VERSION' ) || defined( 'AIOSEO_VERSION' ) || defined( 'SEOPRESS_VERSION' ) ) {
+		return;
+	}
+	$text = ultralove_meta_description_text();
+	if ( '' !== $text ) {
+		echo '<meta name="description" content="' . esc_attr( $text ) . '">' . "\n";
+	}
+}
+
+function ultralove_meta_description_text() {
+	$brand = 'Ultra Love Products';
+
+	if ( is_front_page() ) {
+		return apply_filters(
+			'ultralove_home_meta_description',
+			"Ultra Love Products: one of Canada's largest wholesale distributors of adult products. Sex toys, lubricants and more from leading brands, for Canadian retailers."
+		);
+	}
+
+	if ( function_exists( 'is_shop' ) && is_shop() ) {
+		return "Shop the $brand wholesale catalogue: adult products from leading brands - sex toys, lubricants, accessories and more - for retailers across Canada.";
+	}
+
+	if ( is_singular() ) {
+		$post = get_queried_object();
+		$text = '';
+		if ( 'product' === $post->post_type && function_exists( 'wc_get_product' ) ) {
+			$product = wc_get_product( $post );
+			$text    = $product ? $product->get_short_description() : '';
+		} elseif ( has_excerpt( $post ) ) {
+			$text = $post->post_excerpt;
+		}
+		if ( '' === trim( wp_strip_all_tags( $text ) ) ) {
+			$text = $post->post_content;
+		}
+		$text = ultralove_meta_description_trim( $text );
+		if ( '' !== $text ) {
+			return $text;
+		}
+		// Product titles are SKU / name / promo note joined with <br>.
+		$title = trim( preg_replace( '/\s+/', ' ', wp_strip_all_tags( str_ireplace( array( '<br>', '<br/>', '<br />' ), ' ', get_the_title( $post ) ) ) ) );
+		return 'product' === $post->post_type
+			? "$title - wholesale from $brand, adult products for retailers across Canada."
+			: "$title - $brand, wholesale adult products for retailers across Canada.";
+	}
+
+	if ( is_tax() || is_category() || is_tag() ) {
+		$term = get_queried_object();
+		$text = ultralove_meta_description_trim( term_description( $term ) );
+		if ( '' !== $text ) {
+			return $text;
+		}
+		return 'product_brand' === $term->taxonomy
+			? "{$term->name} products, wholesale from $brand - adult products for retailers across Canada."
+			: "Shop {$term->name} wholesale at $brand - adult products from leading brands for retailers across Canada.";
+	}
+
+	return '';
+}
+
+function ultralove_meta_description_trim( $text, $max = 155 ) {
+	$text = trim( preg_replace( '/\s+/', ' ', html_entity_decode( wp_strip_all_tags( strip_shortcodes( (string) $text ) ), ENT_QUOTES, 'UTF-8' ) ) );
+	if ( mb_strlen( $text ) <= $max ) {
+		return $text;
+	}
+	$cut   = mb_substr( $text, 0, $max );
+	$space = mb_strrpos( $cut, ' ' );
+	return rtrim( $space ? mb_substr( $cut, 0, $space ) : $cut, ' ,.;:-' ) . '…';
+}
