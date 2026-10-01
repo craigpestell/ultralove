@@ -56,7 +56,8 @@ if ( ! shortcode_exists( 'ultralove_banner' ) ) {
 ultralove_main_menu_row();
 ?>
 <div class="mobile-menu hidden-lg hidden-md">
-    <div class="container">
+    <?php // The page container, so the search row ends on the same edges as the logo and icons above it. ?>
+    <div class="<?php echo martfury_header_container_classes(); ?>">
         <div class="mobile-menu-row">
 			<?php martfury_extra_search( false ); ?>
         </div>
