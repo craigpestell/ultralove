@@ -22,7 +22,9 @@ get() { # name ua loggedin path [extra curl args...]
 	local name=$1 ua=$2 li=$3 path=$4; shift 4
 	local ck=()
 	[ "$li" = 1 ] && ck=(-b "$COOKIE_NAME=$COOKIE_VAL" -b "$JAR" -c "$JAR")
-	curl -s --max-time 60 -H "Host: $H" -H "X-Forwarded-Proto: https" -A "$ua" "${ck[@]}" "$@" "http://127.0.0.1$path" -o "$OUT/$name.html"
+	# ao_noptimize: the pages' own stylesheet links (Autoptimize would combine them into one file).
+	local sep='?'; [[ $path == *\?* ]] && sep='&'
+	curl -s --max-time 60 -H "Host: $H" -H "X-Forwarded-Proto: https" -A "$ua" "${ck[@]}" "$@" "http://127.0.0.1$path${sep}ao_noptimize=1" -o "$OUT/$name.html"
 }
 
 i=0

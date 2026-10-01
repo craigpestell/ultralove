@@ -1,15 +1,25 @@
-# Trimmed Martfury stylesheet
+# Trimmed stylesheets
 
-The parent theme's `style.css` is 660 KB (74 KB gzipped) and render-blocking, and ~96% of it styles
-layouts, widgets and marketplace integrations this site doesn't use. The child theme serves a copy
-trimmed to what the site's pages and scripts use instead:
-`wp-content/themes/martfury-child/css/martfury-trimmed.css` (~240 KB, ~34 KB gzipped), swapped in
-under the same `martfury` handle in the child `functions.php` (Martfury's inline header styles stay
-attached to it).
+The site's biggest stylesheets are mostly styles it never uses, so the child theme serves copies trimmed to
+what the site's pages and scripts use, under the same handles (`ultralove_use_trimmed_styles()` in the child
+`functions.php`; inline styles attached to a handle, like Martfury's header styles, stay attached):
 
-**Never edit the trimmed file by hand.** Regenerate it after a Martfury update, or when the site gains a
-page type or feature the samples don't cover (a new template, plugin or widget), since a style used only
-there would otherwise be missing.
+| Handle | Original | Trimmed copy (`wp-content/themes/martfury-child/css/`) |
+|---|---|---|
+| `martfury` | parent theme `style.css`, 660 KB | `martfury-trimmed.css`, ~243 KB |
+| `ionicons` | parent theme `css/ionicons.min.css`, 50 KB | `ionicons-trimmed.css`, ~1 KB |
+| `eleganticons` | parent theme `css/eleganticons.min.css`, 21 KB | `eleganticons-trimmed.css`, ~1 KB |
+| `font-awesome` | parent theme `css/font-awesome.min.css`, 30 KB | `font-awesome-trimmed.css`, ~1 KB |
+| `woocommerce-general` | WooCommerce `assets/css/woocommerce.css`, 86 KB | `woocommerce-<version>-trimmed.css`, ~48 KB |
+
+The icon fonts' copies keep only the icons the site shows; their font files still come from the parent theme.
+WooCommerce isn't in git: its CSS is read from dev, and the copy's name carries the WooCommerce version it was
+made from. It's only used while that version is installed, so after a WooCommerce update the original is
+served until this is rerun (and the build replaces the old-version copy).
+
+**Never edit the trimmed files by hand.** Regenerate them after a Martfury or WooCommerce update, or when the
+site gains a page type or feature the samples don't cover (a new template, plugin or widget), since a style
+used only there would otherwise be missing.
 
 ## Regenerating
 
@@ -20,8 +30,8 @@ cd ops/css
 npm install
 ./prepare.sh          # pages from dev (logged out + in, desktop + mobile, AJAX fragments), their scripts,
                       # and each page's DOM after scripts run -> work/
-node build.mjs        # purge style.css against work/ -> the child theme's css/martfury-trimmed.css
-python3 compare.py    # render pages with the original vs trimmed CSS, diff the screenshots
+node build.mjs        # purge each stylesheet against work/ -> the child theme's css/*-trimmed.css
+python3 compare.py    # render pages with the original vs trimmed stylesheets, diff the screenshots
 ```
 
 `compare.py` prints the share of differing pixels per page and writes side-by-side crops of the
@@ -33,4 +43,5 @@ What keeps a selector: it matches a class, id or tag in the collected HTML, in a
 scripts run, or a word in any loaded script; or it matches the `safelist` in `build.mjs` (state classes
 scripts toggle, and script-driven widgets: Slick, FlexSlider, PhotoSwipe, prettyPhoto, jQuery UI,
 tooltips, Select2, Gravity Forms, YITH, blockUI, WooCommerce notices). All `@font-face`, `@keyframes` and
-custom properties are kept. `work/rejected.txt` lists every removed selector.
+custom properties are kept. `work/rejected-<handle>.txt` lists every removed selector. Pages are collected with `?ao_noptimize=1`, so they
+list their own stylesheets rather than Autoptimize's combined file.
