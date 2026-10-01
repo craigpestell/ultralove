@@ -175,12 +175,57 @@
 	margin: 0;
 }
 
-.ulbd-kind {
-	margin: 22px 0 10px;
+/* The styles, tabbed by kind: underlined text tabs (lighter than the area tabs above them), with a dot on
+   the tab holding the chosen style. */
+.ulbd-kind-tabs {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px 20px;
+	margin: 22px 0 16px;
+	border-bottom: 1px solid #dcdcde;
+}
+
+.ulbd-kind-tab {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: -1px;
+	padding: 8px 2px;
+	border: 0;
+	border-bottom: 3px solid transparent;
+	background: none;
+	color: #646970;
 	font-size: 12px;
+	font-weight: 600;
 	letter-spacing: .06em;
 	text-transform: uppercase;
-	color: #646970;
+	cursor: pointer;
+}
+
+.ulbd-kind-tab:hover {
+	color: #3b1d4a;
+}
+
+.ulbd-kind-tab[aria-selected="true"] {
+	border-bottom-color: #b165ff;
+	color: #3b1d4a;
+}
+
+.ulbd-kind-tab:focus-visible {
+	outline: 2px solid #b165ff;
+	outline-offset: 2px;
+}
+
+.ulbd-kind-tab__dot {
+	width: 7px;
+	height: 7px;
+	border-radius: 50%;
+	background: #b165ff;
+}
+
+.ulbd-kind-tab__dot[hidden],
+.ulbd-grid[hidden] {
+	display: none;
 }
 
 .ulbd-grid {

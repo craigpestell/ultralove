@@ -9,7 +9,7 @@
  *              straight on it; the areas' content is the theme's. A pattern size slider scales the
  *              tiled SVG motifs (bats, hearts, leaves...) from half to three times their size. Also sets the site's display text weight
  *              (regular or bold).
- * Version: 1.3.2
+ * Version: 1.3.3
  *
  * @package UltraLove_Backdrops
  */
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ULBD_VERSION', '1.3.2' );
+define( 'ULBD_VERSION', '1.3.3' );
 define( 'ULBD_OPTION', 'ulbd_settings' );
 
 require_once __DIR__ . '/includes/styles.php';
@@ -441,9 +441,19 @@ function ulbd_render_admin() {
 						</div>
 					</header>
 
+					<?php
+					// The styles in a tab per kind, opening on the tab that holds the saved style. Radios in hidden
+					// tabs are still submitted, so the choice is kept whichever tab is showing.
+					$current_kind = ulbd_styles()[ $settings[ $area ]['style'] ]['kind'];
+					?>
+					<div class="ulbd-kind-tabs" role="tablist" aria-label="<?php echo esc_attr( $info['label'] . ' styles' ); ?>">
+						<?php foreach ( $kinds as $kind => $kind_label ) : ?>
+							<button type="button" role="tab" class="ulbd-kind-tab" id="ulbd-kind-tab-<?php echo esc_attr( $area . '-' . $kind ); ?>" aria-controls="ulbd-kind-<?php echo esc_attr( $area . '-' . $kind ); ?>" aria-selected="<?php echo $kind === $current_kind ? 'true' : 'false'; ?>" tabindex="<?php echo $kind === $current_kind ? '0' : '-1'; ?>" data-kind="<?php echo esc_attr( $kind ); ?>"><?php echo esc_html( $kind_label ); ?><span class="ulbd-kind-tab__dot" <?php echo $kind === $current_kind ? '' : 'hidden'; ?>><span class="screen-reader-text"> (selected style)</span></span></button>
+						<?php endforeach; ?>
+					</div>
+
 					<?php foreach ( $kinds as $kind => $kind_label ) : ?>
-						<h3 class="ulbd-kind"><?php echo esc_html( $kind_label ); ?></h3>
-						<div class="ulbd-grid">
+						<div class="ulbd-grid" role="tabpanel" id="ulbd-kind-<?php echo esc_attr( $area . '-' . $kind ); ?>" aria-labelledby="ulbd-kind-tab-<?php echo esc_attr( $area . '-' . $kind ); ?>" data-kind="<?php echo esc_attr( $kind ); ?>" <?php echo $kind === $current_kind ? '' : 'hidden'; ?>>
 							<?php
 							foreach ( ulbd_styles() as $id => $style ) :
 								if ( $style['kind'] !== $kind ) {

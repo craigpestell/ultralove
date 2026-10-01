@@ -2,15 +2,15 @@
  * Appearance > Backdrops: the intensity buttons and pattern size sliders change the tiles' previews, and the
  * "Preview on the site" links follow the current (unsaved) choices - both areas' and the text weight - so any
  * combination can be tried on the home page. "Use the same backdrop" shows one picker (the first area's) for
- * both areas; otherwise the areas are tabs.
+ * both areas; otherwise the areas are tabs. Within each area the styles are tabbed by kind, with a dot on the
+ * tab that holds the chosen style.
  */
 (function () {
 	'use strict';
 
 	var root = document.querySelector('.ulbd');
 	var pickers = document.querySelectorAll('.ulbd-picker');
-	var tabs = Array.prototype.slice.call(document.querySelectorAll('.ulbd-tab'));
-	var tablist = document.querySelector('.ulbd-tabs');
+	var areaTablist = document.querySelector('.ulbd-tabs');
 	var linkBox = document.querySelector('.ulbd-link input');
 	var firstArea = document.querySelector('.ulbd-area');
 
@@ -18,8 +18,13 @@
 		return !!(linkBox && linkBox.checked);
 	}
 
+	function tabsOf(tablist) {
+		return Array.prototype.slice.call(tablist.querySelectorAll('[role="tab"]'));
+	}
+
+	// Any tab bar on the page: selecting a tab shows its panel and hides its siblings'.
 	function selectTab(tab, focus) {
-		tabs.forEach(function (t) {
+		tabsOf(tab.closest('[role="tablist"]')).forEach(function (t) {
 			var on = t === tab;
 			t.setAttribute('aria-selected', on ? 'true' : 'false');
 			t.tabIndex = on ? 0 : -1;
@@ -30,28 +35,29 @@
 		}
 	}
 
-	tabs.forEach(function (tab, i) {
-		tab.addEventListener('click', function () {
-			selectTab(tab);
-		});
-		tab.addEventListener('keydown', function (event) {
-			var next = {ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1}[event.key];
-			if (next === undefined) {
-				return;
-			}
-			event.preventDefault();
-			selectTab(tabs[(next + tabs.length) % tabs.length], true);
+	document.querySelectorAll('[role="tablist"]').forEach(function (tablist) {
+		var tabs = tabsOf(tablist);
+		tabs.forEach(function (tab, i) {
+			tab.addEventListener('click', function () {
+				selectTab(tab);
+			});
+			tab.addEventListener('keydown', function (event) {
+				var next = {ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1}[event.key];
+				if (next === undefined) {
+					return;
+				}
+				event.preventDefault();
+				selectTab(tabs[(next + tabs.length) % tabs.length], true);
+			});
 		});
 	});
 
-	// Linked: no tabs, just the first area's picker, which then stands for both.
+	// Linked: no area tabs, just the first area's picker, which then stands for both.
 	function applyLinked() {
 		root.setAttribute('data-linked', linked() ? '1' : '0');
-		if (tablist) {
-			tablist.hidden = linked();
-		}
-		if (tabs.length) {
-			selectTab(tabs[0]);
+		if (areaTablist) {
+			areaTablist.hidden = linked();
+			selectTab(tabsOf(areaTablist)[0]);
 		}
 		updateLinks();
 	}
@@ -94,6 +100,12 @@
 		picker.addEventListener('change', function (event) {
 			if (event.target.name && /\[intensity\]$/.test(event.target.name)) {
 				picker.setAttribute('data-intensity', event.target.value);
+			}
+			if (event.target.name && /\[style\]$/.test(event.target.name)) {
+				var kind = event.target.closest('[role="tabpanel"]').getAttribute('data-kind');
+				picker.querySelectorAll('.ulbd-kind-tab').forEach(function (tab) {
+					tab.querySelector('.ulbd-kind-tab__dot').hidden = tab.getAttribute('data-kind') !== kind;
+				});
 			}
 			updateLinks();
 		});
