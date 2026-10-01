@@ -1262,10 +1262,12 @@ function ultralove_svg_site_logo( $logo ) {
 
 /**
  * Meta description on every page (no SEO plugin is installed; this steps aside if one is). Home: a written summary
- * (the 'ultralove_home_meta_description' filter changes it). Products: the short description, else the
- * description. Pages and posts: the excerpt, else the text (shortcodes dropped). Product categories, brands and
- * tags: the term's description, else a line naming it. Shop: a catalogue line. Trimmed to ~155 characters at a word
- * break; where there's no text of its own, a line naming the page. Search results get none.
+ * (the 'ultralove_home_meta_description' filter changes it). Products: the description, else the short
+ * description - whichever is real copy (60+ characters, not an all-caps note such as a tester's "A MINIMUM OF 3
+ * UNITS..."), else a line with the product's name. Pages and posts: the excerpt, else the text (shortcodes
+ * dropped). Product categories, brands and tags: the term's description when it's 60+ characters (some brands'
+ * is just their name), else a line naming it. Shop: a catalogue line. Trimmed to ~155 characters at a word break;
+ * where there's no text of its own, a line naming the page. Search results get none.
  */
 add_action( 'wp_head', 'ultralove_meta_description', 1 );
 function ultralove_meta_description() {
@@ -1292,33 +1294,32 @@ function ultralove_meta_description_text() {
 		return "Shop the $brand wholesale catalogue: adult products from leading brands - sex toys, lubricants, accessories and more - for retailers across Canada.";
 	}
 
+	if ( is_singular( 'product' ) ) {
+		$post    = get_queried_object();
+		$product = function_exists( 'wc_get_product' ) ? wc_get_product( $post ) : null;
+		foreach ( array( $post->post_content, $product ? $product->get_short_description() : '' ) as $candidate ) {
+			$text = ultralove_meta_description_trim( $candidate );
+			if ( ultralove_meta_description_is_copy( $text ) ) {
+				return $text;
+			}
+		}
+		return ultralove_meta_description_trim( ultralove_product_name( $post ) . " - wholesale from $brand, adult products for retailers across Canada." );
+	}
+
 	if ( is_singular() ) {
 		$post = get_queried_object();
-		$text = '';
-		if ( 'product' === $post->post_type && function_exists( 'wc_get_product' ) ) {
-			$product = wc_get_product( $post );
-			$text    = $product ? $product->get_short_description() : '';
-		} elseif ( has_excerpt( $post ) ) {
-			$text = $post->post_excerpt;
-		}
-		if ( '' === trim( wp_strip_all_tags( $text ) ) ) {
-			$text = $post->post_content;
-		}
-		$text = ultralove_meta_description_trim( $text );
+		$text = ultralove_meta_description_trim( has_excerpt( $post ) ? $post->post_excerpt : $post->post_content );
 		if ( '' !== $text ) {
 			return $text;
 		}
-		// Product titles are SKU / name / promo note joined with <br>.
-		$title = trim( preg_replace( '/\s+/', ' ', wp_strip_all_tags( str_ireplace( array( '<br>', '<br/>', '<br />' ), ' ', get_the_title( $post ) ) ) ) );
-		return 'product' === $post->post_type
-			? "$title - wholesale from $brand, adult products for retailers across Canada."
-			: "$title - $brand, wholesale adult products for retailers across Canada.";
+		$title = wp_strip_all_tags( get_the_title( $post ) );
+		return "$title - $brand, wholesale adult products for retailers across Canada.";
 	}
 
 	if ( is_tax() || is_category() || is_tag() ) {
 		$term = get_queried_object();
 		$text = ultralove_meta_description_trim( term_description( $term ) );
-		if ( '' !== $text ) {
+		if ( ultralove_meta_description_is_copy( $text ) ) {
 			return $text;
 		}
 		return 'product_brand' === $term->taxonomy
@@ -1327,6 +1328,29 @@ function ultralove_meta_description_text() {
 	}
 
 	return '';
+}
+
+// Real copy: 60+ characters and not mostly capitals (the all-caps notes some products have as a short description).
+function ultralove_meta_description_is_copy( $text ) {
+	if ( mb_strlen( $text ) < 60 ) {
+		return false;
+	}
+	$letters = preg_replace( '/[^\p{L}]/u', '', $text );
+	$upper   = preg_replace( '/[^\p{Lu}]/u', '', $text );
+	return mb_strlen( $upper ) <= 0.6 * mb_strlen( $letters );
+}
+
+// A product's name from its title, which is SKU / name / promo note joined with <br>: the first line with a space
+// that isn't all capitals (else the whole title).
+function ultralove_product_name( $post ) {
+	$lines = array_filter( array_map( 'trim', preg_split( '/<br\s*\/?>/i', get_the_title( $post ) ) ) );
+	foreach ( $lines as $line ) {
+		$line = trim( wp_strip_all_tags( $line ) );
+		if ( false !== strpos( $line, ' ' ) && $line !== mb_strtoupper( $line ) ) {
+			return $line;
+		}
+	}
+	return trim( preg_replace( '/\s+/', ' ', wp_strip_all_tags( implode( ' ', $lines ) ) ) );
 }
 
 function ultralove_meta_description_trim( $text, $max = 155 ) {
