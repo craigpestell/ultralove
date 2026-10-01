@@ -9,7 +9,7 @@
  *              straight on it; the areas' content is the theme's. A pattern size slider scales the
  *              tiled SVG motifs (bats, hearts, leaves...) from half to three times their size. Also sets the site's display text weight
  *              (regular or bold).
- * Version: 1.5.0
+ * Version: 1.5.1
  *
  * @package UltraLove_Backdrops
  */
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ULBD_VERSION', '1.5.0' );
+define( 'ULBD_VERSION', '1.5.1' );
 define( 'ULBD_OPTION', 'ulbd_settings' );
 
 require_once __DIR__ . '/includes/styles.php';
@@ -29,7 +29,7 @@ require_once __DIR__ . '/includes/styles.php';
  * .52 / .38) with white text, their purple borders and shadows kept, and white text for anything drawn
  * straight on the backdrop - and 'fade_selector', the theme's white edge-fade overlay, hidden for a style
  * without fades. 'pills' and 'boxes' are the area's pills (headings, links) and text boxes, whose see-through
- * backgrounds the text box opacity setting scales.
+ * backgrounds the text box opacity setting sets.
  */
 function ulbd_areas() {
 	return array(
@@ -76,16 +76,12 @@ function ulbd_scale_range() {
 }
 
 /**
- * The text box opacity slider: min, max and step, in percent of the pills' and text boxes' standard opacity
- * (white glass at .8 / .7 on light backdrops, black glass at .52 / .38 on dark ones). 100 is the standard.
+ * The text box opacity slider: min, max and step of the pills' and text boxes' actual opacity, in percent (100 is
+ * solid). Left unset, an area keeps the standard glass - white at .8 (pills) / .7 (boxes) on light backdrops,
+ * black at .52 / .38 on dark ones - which the slider starts from at 80.
  */
 function ulbd_boxes_range() {
-	return array( 0, 200, 10 );
-}
-
-/** The pills' and text boxes' standard alphas: light pill, light box, dark pill, dark box. */
-function ulbd_box_alphas() {
-	return array( .8, .7, .52, .38 );
+	return array( 0, 100, 5 );
 }
 
 /** A slider value in percent, clamped to $range and snapped to its step (100 when not a number). */
@@ -103,9 +99,9 @@ function ulbd_clean_scale( $value ) {
 	return ulbd_clean_percent( $value, ulbd_scale_range() );
 }
 
-/** A text box opacity in percent, clamped to the slider's range and snapped to its step (100 when not a number). */
+/** A text box opacity in percent, clamped to the slider's range and snapped to its step - or null (standard) when not a number. */
 function ulbd_clean_boxes( $value ) {
-	return ulbd_clean_percent( $value, ulbd_boxes_range() );
+	return is_numeric( $value ) ? ulbd_clean_percent( $value, ulbd_boxes_range() ) : null;
 }
 
 /**
@@ -132,7 +128,7 @@ function ulbd_settings() {
 			'style'     => isset( $saved[ $area ]['style'] ) && isset( ulbd_styles()[ $saved[ $area ]['style'] ] ) ? $saved[ $area ]['style'] : 'aurora',
 			'intensity' => isset( $saved[ $area ]['intensity'] ) && isset( ulbd_intensities()[ $saved[ $area ]['intensity'] ] ) ? $saved[ $area ]['intensity'] : 'normal',
 			'scale'     => isset( $saved[ $area ]['scale'] ) ? ulbd_clean_scale( $saved[ $area ]['scale'] ) : 100,
-			'boxes'     => isset( $saved[ $area ]['boxes'] ) ? ulbd_clean_boxes( $saved[ $area ]['boxes'] ) : 100,
+			'boxes'     => isset( $saved[ $area ]['boxes'] ) ? ulbd_clean_boxes( $saved[ $area ]['boxes'] ) : null,
 		);
 	}
 
@@ -167,7 +163,7 @@ function ulbd_active_settings() {
 				$settings[ $area ]['scale']   = ulbd_clean_scale( sanitize_text_field( wp_unslash( $_GET[ 'ulbd_' . $area . '_scale' ] ) ) );
 				$settings[ $area ]['preview'] = true;
 			}
-			if ( isset( $_GET[ 'ulbd_' . $area . '_boxes' ] ) ) {
+			if ( isset( $_GET[ 'ulbd_' . $area . '_boxes' ] ) && '' !== $_GET[ 'ulbd_' . $area . '_boxes' ] ) {
 				$settings[ $area ]['boxes']   = ulbd_clean_boxes( sanitize_text_field( wp_unslash( $_GET[ 'ulbd_' . $area . '_boxes' ] ) ) );
 				$settings[ $area ]['preview'] = true;
 			}
@@ -212,17 +208,11 @@ function ulbd_style_css( $style_id, $intensity ) {
 }
 
 /**
- * An area's pills and text boxes at a text box opacity (percent of standard): their glass - white on a light
- * backdrop, black on a dark one - with its alpha scaled (and kept within 0-1).
+ * An area's pills and text boxes at a text box opacity (percent, 100 = solid): all of them in the same glass -
+ * white on a light backdrop, black on a dark one - at that opacity.
  */
 function ulbd_boxes_css( $info, $dark, $percent ) {
-	list( $light_pill, $light_box, $dark_pill, $dark_box ) = ulbd_box_alphas();
-	$rgb  = $dark ? '0, 0, 0' : '255, 255, 255';
-	$rule = function ( $selectors, $alpha ) use ( $rgb, $percent ) {
-		return implode( ', ', $selectors ) . sprintf( ' { background: rgba(%s, %s); }', $rgb, round( min( 1, $alpha * $percent / 100 ), 3 ) );
-	};
-
-	return $rule( $info['pills'], $dark ? $dark_pill : $light_pill ) . ' ' . $rule( $info['boxes'], $dark ? $dark_box : $light_box );
+	return implode( ', ', array_merge( $info['pills'], $info['boxes'] ) ) . sprintf( ' { background: rgba(%s, %s); }', $dark ? '0, 0, 0' : '255, 255, 255', $percent / 100 );
 }
 
 /**
@@ -245,7 +235,7 @@ add_action(
 			$preview = $preview || ! empty( $s['preview'] );
 			$style = ulbd_styles()[ $s['style'] ];
 			// Pills and text boxes at the chosen opacity: printed last, after the dark glass they adjust.
-			$boxes = 100 !== $s['boxes'] ? ulbd_boxes_css( $info, ! empty( $style['dark'] ), $s['boxes'] ) : '';
+			$boxes = null !== $s['boxes'] ? ulbd_boxes_css( $info, ! empty( $style['dark'] ), $s['boxes'] ) : '';
 			if ( 'aurora' === $s['style'] && 'normal' === $s['intensity'] ) {
 				if ( $boxes ) {
 					$out[] = $boxes;
@@ -402,7 +392,7 @@ function ulbd_sanitize( $input ) {
 			'style'     => isset( ulbd_styles()[ $style ] ) ? $style : 'aurora',
 			'intensity' => isset( ulbd_intensities()[ $intensity ] ) ? $intensity : 'normal',
 			'scale'     => isset( $input[ $area ]['scale'] ) ? ulbd_clean_scale( $input[ $area ]['scale'] ) : 100,
-			'boxes'     => isset( $input[ $area ]['boxes'] ) ? ulbd_clean_boxes( $input[ $area ]['boxes'] ) : 100,
+			'boxes'     => isset( $input[ $area ]['boxes'] ) ? ulbd_clean_boxes( $input[ $area ]['boxes'] ) : null,
 		);
 	}
 	if ( $clean['linked'] ) {
@@ -471,7 +461,7 @@ function ulbd_render_admin() {
 			$tile_css[] = '.ulbd-tile--' . $id . ' .ulbd-swatch__fade { display: none; }';
 		}
 		if ( ! empty( $style['dark'] ) ) {
-			$tile_css[] = '.ulbd-tile--' . $id . ' .ulbd-swatch__pill { background: rgba(0, 0, 0, calc(.52 * var(--ulbd-boxes, 1))); color: #fff; }';
+			$tile_css[] = '.ulbd-tile--' . $id . ' .ulbd-swatch__pill { background: rgba(0, 0, 0, var(--ulbd-box-alpha, .52)); color: #fff; }';
 		}
 		foreach ( array_keys( ulbd_intensities() ) as $intensity ) {
 			list( $decl, $kf ) = ulbd_style_css( $id, $intensity );
@@ -490,8 +480,8 @@ function ulbd_render_admin() {
 			the edges and everything in front of the backdrop stay as they are, except on a dark style: like the live site's
 			backdrop it has hard edges, the pills and text boxes turn to see-through dark glass with white text, and the
 			footer's quick links turn white. <strong>Pattern size</strong> scales the repeating motifs (bats, hats, hearts, leaves,
-			snow...) from half to three times their size; glows and full-width shapes stay as they are. <strong>Text box opacity</strong> makes the pills and text boxes
-			on the backdrop more see-through or more solid (100% is the standard). Animated styles stand still for visitors who ask their device for reduced motion.</p>
+			snow...) from half to three times their size; glows and full-width shapes stay as they are. <strong>Text box opacity</strong> sets how solid the pills and text boxes
+			on the backdrop are, from 0% (clear) to 100% (solid); <strong>Reset</strong> returns them to the standard glass. Animated styles stand still for visitors who ask their device for reduced motion.</p>
 
 		<style><?php echo implode( "\n", array_merge( array_values( $keyframes ), $tile_css ) ); // phpcs:ignore WordPress.Security.EscapeOutput -- built from the style library. ?></style>
 
@@ -545,7 +535,7 @@ function ulbd_render_admin() {
 			</div>
 
 			<?php foreach ( $areas as $area => $info ) : ?>
-				<section class="ulbd-picker ulbd-area" id="ulbd-panel-<?php echo esc_attr( $area ); ?>" role="tabpanel" aria-labelledby="ulbd-tab-<?php echo esc_attr( $area ); ?>" data-area="<?php echo esc_attr( $area ); ?>" data-intensity="<?php echo esc_attr( $settings[ $area ]['intensity'] ); ?>" style="--ulbd-scale: <?php echo esc_attr( $settings[ $area ]['scale'] / 100 ); ?>; --ulbd-boxes: <?php echo esc_attr( $settings[ $area ]['boxes'] / 100 ); ?>" <?php echo $area !== $first_area ? 'hidden' : ''; ?>>
+				<section class="ulbd-picker ulbd-area" id="ulbd-panel-<?php echo esc_attr( $area ); ?>" role="tabpanel" aria-labelledby="ulbd-tab-<?php echo esc_attr( $area ); ?>" data-area="<?php echo esc_attr( $area ); ?>" data-intensity="<?php echo esc_attr( $settings[ $area ]['intensity'] ); ?>" style="--ulbd-scale: <?php echo esc_attr( $settings[ $area ]['scale'] / 100 ); ?><?php echo null !== $settings[ $area ]['boxes'] ? esc_attr( '; --ulbd-box-alpha: ' . $settings[ $area ]['boxes'] / 100 ) : ''; ?>" <?php echo $area !== $first_area ? 'hidden' : ''; ?>>
 					<header class="ulbd-picker__header">
 						<div>
 							<?php if ( $area === $first_area ) : ?>
@@ -573,10 +563,20 @@ function ulbd_render_admin() {
 								<span class="ulbd-control__label">Pattern size <output><?php echo (int) $settings[ $area ]['scale']; ?>%</output></span>
 								<input type="range" name="<?php echo esc_attr( ULBD_OPTION . '[' . $area . '][scale]' ); ?>" min="<?php echo (int) $scale_range[0]; ?>" max="<?php echo (int) $scale_range[1]; ?>" step="<?php echo (int) $scale_range[2]; ?>" value="<?php echo (int) $settings[ $area ]['scale']; ?>">
 							</label>
-							<label class="ulbd-control ulbd-scale ulbd-boxes">
-								<span class="ulbd-control__label">Text box opacity <output><?php echo (int) $settings[ $area ]['boxes']; ?>%</output></span>
-								<input type="range" name="<?php echo esc_attr( ULBD_OPTION . '[' . $area . '][boxes]' ); ?>" min="<?php echo (int) $boxes_range[0]; ?>" max="<?php echo (int) $boxes_range[1]; ?>" step="<?php echo (int) $boxes_range[2]; ?>" value="<?php echo (int) $settings[ $area ]['boxes']; ?>">
-							</label>
+							<?php
+							// Opacity in percent (100 = solid), or Standard (the theme's mixed glass) until the slider moves:
+							// the hidden field holds the setting, empty for Standard.
+							$boxes = $settings[ $area ]['boxes'];
+							?>
+							<div class="ulbd-control ulbd-scale ulbd-boxes">
+								<span class="ulbd-control__label">
+									<label for="ulbd-boxes-<?php echo esc_attr( $area ); ?>">Text box opacity</label>
+									<output><?php echo null === $boxes ? 'Standard' : (int) $boxes . '%'; ?></output>
+									<button type="button" class="button-link ulbd-boxes__reset" <?php echo null === $boxes ? 'hidden' : ''; ?>>Reset</button>
+								</span>
+								<input type="range" id="ulbd-boxes-<?php echo esc_attr( $area ); ?>" min="<?php echo (int) $boxes_range[0]; ?>" max="<?php echo (int) $boxes_range[1]; ?>" step="<?php echo (int) $boxes_range[2]; ?>" value="<?php echo null === $boxes ? 80 : (int) $boxes; ?>">
+								<input type="hidden" name="<?php echo esc_attr( ULBD_OPTION . '[' . $area . '][boxes]' ); ?>" value="<?php echo null === $boxes ? '' : (int) $boxes; ?>">
+							</div>
 						</div>
 					</header>
 

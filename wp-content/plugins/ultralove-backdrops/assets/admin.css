@@ -182,6 +182,15 @@
 	width: 220px;
 }
 
+.ulbd-boxes__reset {
+	margin-left: 4px;
+	font-size: 12px;
+}
+
+.ulbd-boxes__reset[hidden] {
+	display: none;
+}
+
 .ulbd-scale output {
 	font-variant-numeric: tabular-nums;
 	font-weight: 400;
@@ -308,7 +317,7 @@
 	padding: 4px 16px;
 	border: 1px solid #b165ff;
 	border-radius: 999px;
-	background: rgba(255, 255, 255, calc(.8 * var(--ulbd-boxes, 1)));
+	background: rgba(255, 255, 255, var(--ulbd-box-alpha, .8));
 	color: #3b1d4a;
 	font-size: 15px;
 	font-weight: 300;

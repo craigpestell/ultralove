@@ -80,7 +80,10 @@
 			params.push('ulbd_' + area + '=' + encodeURIComponent(checked(picker, 'style')));
 			params.push('ulbd_' + area + '_intensity=' + encodeURIComponent(checked(picker, 'intensity')));
 			params.push('ulbd_' + area + '_scale=' + encodeURIComponent(picker.querySelector('input[name$="[scale]"]').value));
-			params.push('ulbd_' + area + '_boxes=' + encodeURIComponent(picker.querySelector('input[name$="[boxes]"]').value));
+			var boxes = picker.querySelector('input[name$="[boxes]"]').value;
+			if (boxes !== '') {
+				params.push('ulbd_' + area + '_boxes=' + encodeURIComponent(boxes));
+			}
 		});
 		document.querySelectorAll('.ulbd-preview-link').forEach(function (link) {
 			var area = link.closest('.ulbd-picker').getAttribute('data-area');
@@ -90,6 +93,27 @@
 		});
 	}
 
+	// Text box opacity: the slider sets the hidden field (empty = Standard, the theme's own glass); Reset clears it.
+	function setBoxes(picker, value) {
+		var control = picker.querySelector('.ulbd-boxes');
+		control.querySelector('input[type="hidden"]').value = value;
+		control.querySelector('output').textContent = value === '' ? 'Standard' : value + '%';
+		control.querySelector('.ulbd-boxes__reset').hidden = value === '';
+		if (value === '') {
+			picker.style.removeProperty('--ulbd-box-alpha');
+			control.querySelector('input[type="range"]').value = 80;
+		} else {
+			picker.style.setProperty('--ulbd-box-alpha', value / 100);
+		}
+	}
+
+	document.querySelectorAll('.ulbd-boxes__reset').forEach(function (button) {
+		button.addEventListener('click', function () {
+			setBoxes(button.closest('.ulbd-picker'), '');
+			updateLinks();
+		});
+	});
+
 	pickers.forEach(function (picker) {
 		// The sliders resize the tiles' patterns and fade their pills as they move; the links catch up on change.
 		picker.addEventListener('input', function (event) {
@@ -97,9 +121,8 @@
 				picker.style.setProperty('--ulbd-scale', event.target.value / 100);
 				picker.querySelector('.ulbd-scale output').textContent = event.target.value + '%';
 			}
-			if (event.target.name && /\[boxes\]$/.test(event.target.name)) {
-				picker.style.setProperty('--ulbd-boxes', event.target.value / 100);
-				picker.querySelector('.ulbd-boxes output').textContent = event.target.value + '%';
+			if (event.target.closest('.ulbd-boxes') && event.target.type === 'range') {
+				setBoxes(picker, event.target.value);
 			}
 		});
 		picker.addEventListener('change', function (event) {
