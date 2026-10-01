@@ -2430,11 +2430,11 @@ body:not(.shop-view-list) ul.products li.product form.cart button {
 }
 
 /* Touch screens and phones never see the hover glow, so each card keeps a light edge at rest - otherwise
-   it's hard to tell which product a cart row belongs to. */
+   it's hard to tell which product a cart row belongs to. (Martfury only gives the card a border on desktop.) */
 @media (hover: none), (max-width: 767px) {
     body:not(.shop-view-list) ul.products li.product .product-inner,
     body:not(.shop-view-list) ul.products li.product .product-inner:hover {
-        border-color: #e3e3e3
+        border: 1px solid #e3e3e3
     }
 }
 
