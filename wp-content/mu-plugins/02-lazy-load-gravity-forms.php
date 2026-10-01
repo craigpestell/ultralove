@@ -9,12 +9,43 @@
  *              Wholesale - loads them straight away. Gravity Forms supports this: its form set-up code
  *              waits (gform.initializeOnLoaded) for the "scripts loaded" events its files fire. Without
  *              JavaScript the forms still submit as normal page posts.
- * Version: 2.0.0
+ *
+ *              Gravity Forms' stylesheets (~90 KB) are held back the same way, as rel="ul-lazy-css"
+ *              links (which browsers and Autoptimize leave alone, so they stay out of the combined stylesheet -
+ *              Autoptimize takes any <link> with "stylesheet" anywhere in the tag, so the marker mustn't say it)
+ *              switched to real stylesheets just before the scripts load. Not on pages that show a form as
+ *              part of their content (Contact Us, Become a Retailer) or on account / cart / checkout pages:
+ *              there a form is on screen from the start and must be styled from the first paint.
+ * Version: 2.1.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
+
+/**
+ * Whether Gravity Forms' CSS must load with the page: a form is part of the page's own content, or it's an
+ * account / cart / checkout page. Elsewhere the only form is the footer's, far below the first screen.
+ */
+function ultralove_gform_css_needed_at_load() {
+	if ( function_exists( 'is_account_page' ) && ( is_account_page() || is_cart() || is_checkout() ) ) {
+		return true;
+	}
+	$post = is_singular() ? get_queried_object() : null;
+	return $post instanceof WP_Post && ( has_shortcode( $post->post_content, 'gravityform' ) || has_block( 'gravityforms/form', $post ) );
+}
+
+add_filter(
+	'style_loader_tag',
+	function ( $tag, $handle, $href ) {
+		if ( false === strpos( (string) $href, '/plugins/gravityforms/' ) || ultralove_gform_css_needed_at_load() ) {
+			return $tag;
+		}
+		return preg_replace( '#\brel=(["\'])stylesheet\1#', 'rel="ul-lazy-css"', $tag, 1 );
+	},
+	10,
+	3
+);
 
 add_filter(
 	'script_loader_tag',
@@ -52,6 +83,10 @@ add_action(
 				if ( started ) {
 					return;
 				}
+				// Stylesheets first, so the form is styled by the time its scripts set it up.
+				Array.prototype.forEach.call( document.querySelectorAll( 'link[rel="ul-lazy-css"]' ), function ( link ) {
+					link.rel = 'stylesheet';
+				} );
 				var held = document.querySelectorAll( 'script[data-ul-lazy-src]' );
 				if ( ! held.length ) {
 					return;
