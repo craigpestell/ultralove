@@ -9,7 +9,7 @@
  *              straight on it; the areas' content is the theme's. A pattern size slider scales the
  *              tiled SVG motifs (bats, hearts, leaves...) from half to three times their size. Also sets the site's display text weight
  *              (regular or bold).
- * Version: 1.3.3
+ * Version: 1.3.4
  *
  * @package UltraLove_Backdrops
  */
@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ULBD_VERSION', '1.3.3' );
+define( 'ULBD_VERSION', '1.3.4' );
 define( 'ULBD_OPTION', 'ulbd_settings' );
 
 require_once __DIR__ . '/includes/styles.php';
@@ -324,12 +324,15 @@ function ulbd_render_admin() {
 	$settings    = ulbd_settings();
 	$scale_range = ulbd_scale_range();
 	$kinds       = array(
-		'css'      => 'CSS',
-		'svg'      => 'SVG',
-		'animated' => 'Animated',
-		'dark'     => 'Dark',
-		'seasonal' => 'Seasonal',
-		'plain'    => 'Plain',
+		'css'          => 'CSS',
+		'svg'          => 'SVG',
+		'animated'     => 'Animated',
+		'dark'         => 'Dark',
+		'halloween'    => 'Halloween',
+		'thanksgiving' => 'Thanksgiving',
+		'christmas'    => 'Christmas',
+		'new-year'     => 'New Year\'s',
+		'plain'        => 'Plain',
 	);
 
 	// Every style's tile at every intensity, as classes the intensity buttons switch between.
