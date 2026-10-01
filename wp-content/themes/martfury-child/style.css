@@ -392,6 +392,37 @@ Template: martfury
     .cart-collaterals .row > .col-colla:first-child:not(:has(*)) {
         display: none
     }
+
+    /* Stacked, the coupon, the shipping calculator and the totals are 40px apart - their own outer margins
+       and padding (20px under the coupon, 29px under the calculator's button, 17px above the checkout
+       button) left the gaps at 20px and 46px. */
+    .col-coupon .coupon {
+        margin-bottom: 0
+    }
+
+    .cart-collaterals {
+        margin-top: 40px
+    }
+
+    .cart-collaterals .row {
+        display: flex;
+        flex-direction: column;
+        gap: 40px
+    }
+
+    .cart-collaterals .row::before,
+    .cart-collaterals .row::after {
+        content: none
+    }
+
+    .cart-collaterals .woocommerce-shipping-calculator p:last-child {
+        margin-bottom: 0
+    }
+
+    .cart-collaterals .cart_totals > :first-child {
+        margin-top: 0;
+        padding-top: 0
+    }
 }
 
 .cart_totals,.wc-proceed-to-checkout {
