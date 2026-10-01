@@ -1560,6 +1560,11 @@ h1,h2,h3,h4 {
 }
 
 @media (max-width:767px) {
+    /* Phones: the Send Message button centred, like the rest of the footer there. */
+    .site-footer .footer-widgets #gform_1 .gform_footer {
+        justify-content: center
+    }
+
     .site-footer .footer-widgets .widget-title {
         padding: 7px 16px
     }
