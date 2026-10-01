@@ -29,7 +29,7 @@ the full stylesheet (always loaded) arrives.
 1. Opens an SSH tunnel to dev's nginx and loads real dev pages in headless Chrome, answering every
    `dev.ultralove.ca` request through it (dev sits behind Cloudflare Access). Pages are requested with
    `?ul_critical_css=off`, i.e. as they render without critical CSS.
-2. Each page type in `PAGES`, logged out and logged in (as a customer), at desktop, wide, tablet and phone
+2. Each page type in `PAGES` as a logged-out visitor (signed-in visitors get the full stylesheet up front), at desktop, wide, tablet and phone
    sizes (phones and tablets with a mobile user agent: Martfury sends them different markup), with JavaScript
    off (the first paint) and on (classes scripts add): keeps every rule that matches an element drawn in the
    first screen, and the rule that hides a hidden element there (not rules for what's inside it). Rules whose
@@ -38,7 +38,7 @@ the full stylesheet (always loaded) arrives.
 3. Merges the kept rules in the stylesheet's own order (the cascade stays the same), keeping only the
    selectors that matched, adds the `@font-face` (except fonts embedded as `data:` URIs) and `@keyframes`
    they use, makes asset URLs root-relative, and minifies without reordering.
-4. Verifies: renders every page/size/login combination with only the critical CSS and with the full CSS
+4. Verifies: renders every page/size combination with only the critical CSS and with the full CSS
    (JavaScript off, animations frozen) and compares the first screen pixel by pixel. If any differs by more
    than `DIFF_LIMIT` percent (default 0.5) the theme file isn't written and the run fails; the renders and
    diff images are in `work/` (an artifact in the workflow).
