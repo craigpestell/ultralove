@@ -364,16 +364,34 @@ Template: martfury
     color: #b3092c
 }
 
-.col-coupon {
-    width: 20%!important
+/* Cart page, from 992px: the coupon in a 20% column (beside an empty 20% spacer that starts the collaterals
+   row), then the shipping calculator and the totals at 39% each. Below 992px each takes the full width, as the
+   template's col-sm-12 intends - the 20/39% widths at every size squeezed the calculator and totals to 125px
+   and the coupon field to 34px on a phone. */
+@media (min-width: 992px) {
+    .col-coupon {
+        width: 20%!important
+    }
+
+    .cart-collaterals .col-colla {
+        width: 39%!important
+    }
+
+    .cart-collaterals .row > div:first-of-type {
+        width: 20%!important
+    }
 }
 
-.cart-collaterals .col-colla {
-    width: 39%!important
-}
+@media (max-width: 991px) {
+    .col-coupon,
+    .cart-collaterals .col-colla {
+        width: 100%;
+        float: none
+    }
 
-.cart-collaterals .row > div:first-of-type {
-    width: 20%!important
+    .cart-collaterals .row > .col-colla:first-child:not(:has(*)) {
+        display: none
+    }
 }
 
 .cart_totals,.wc-proceed-to-checkout {
