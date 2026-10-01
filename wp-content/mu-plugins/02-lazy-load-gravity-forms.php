@@ -10,8 +10,9 @@
  *              waits (gform.initializeOnLoaded) for the "scripts loaded" events its files fire. Without
  *              JavaScript the forms still submit as normal page posts.
  *
- *              Gravity Forms' stylesheets (~90 KB) are held back the same way, as rel="ul-lazy-stylesheet"
- *              links (which browsers and Autoptimize leave alone, so they stay out of the combined stylesheet)
+ *              Gravity Forms' stylesheets (~90 KB) are held back the same way, as rel="ul-lazy-css"
+ *              links (which browsers and Autoptimize leave alone, so they stay out of the combined stylesheet -
+ *              Autoptimize takes any <link> with "stylesheet" anywhere in the tag, so the marker mustn't say it)
  *              switched to real stylesheets just before the scripts load. Not on pages that show a form as
  *              part of their content (Contact Us, Become a Retailer) or on account / cart / checkout pages:
  *              there a form is on screen from the start and must be styled from the first paint.
@@ -40,7 +41,7 @@ add_filter(
 		if ( false === strpos( (string) $href, '/plugins/gravityforms/' ) || ultralove_gform_css_needed_at_load() ) {
 			return $tag;
 		}
-		return preg_replace( '#\brel=(["\'])stylesheet\1#', 'rel="ul-lazy-stylesheet"', $tag, 1 );
+		return preg_replace( '#\brel=(["\'])stylesheet\1#', 'rel="ul-lazy-css"', $tag, 1 );
 	},
 	10,
 	3
@@ -83,7 +84,7 @@ add_action(
 					return;
 				}
 				// Stylesheets first, so the form is styled by the time its scripts set it up.
-				Array.prototype.forEach.call( document.querySelectorAll( 'link[rel="ul-lazy-stylesheet"]' ), function ( link ) {
+				Array.prototype.forEach.call( document.querySelectorAll( 'link[rel="ul-lazy-css"]' ), function ( link ) {
 					link.rel = 'stylesheet';
 				} );
 				var held = document.querySelectorAll( 'script[data-ul-lazy-src]' );
