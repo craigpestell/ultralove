@@ -121,15 +121,18 @@ function ultralove_use_trimmed_styles() {
 	}
 }
 
-// Preload the icon font so it downloads alongside the stylesheets instead of after them. The URL must
-// match the @font-face src in css/linearicons-subset.css exactly (including ?v=), and crossorigin is
-// required for fonts even on the same origin, or the browser fetches it twice.
-add_action( 'wp_head', 'ultralove_preload_icon_font', 1 );
-function ultralove_preload_icon_font() {
-	printf(
-		'<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin>' . "\n",
-		esc_url( get_stylesheet_directory_uri() . '/fonts/linearicons-subset.woff2?v=1' )
-	);
+// Preload the fonts every page draws with - the icon font and Work Sans' two Latin files (300 and 500; see
+// the @font-face rules at the top of style.css) - so they download alongside the HTML, ahead of the deferred
+// full stylesheet. Each URL must match its @font-face src exactly (including any ?v=), and crossorigin is
+// required for fonts even on the same origin, or the browser fetches them twice.
+add_action( 'wp_head', 'ultralove_preload_fonts', 1 );
+function ultralove_preload_fonts() {
+	foreach ( array( 'linearicons-subset.woff2?v=1', 'work-sans-300-latin.woff2', 'work-sans-500-latin.woff2' ) as $font ) {
+		printf(
+			'<link rel="preload" href="%s" as="font" type="font/woff2" crossorigin>' . "\n",
+			esc_url( get_stylesheet_directory_uri() . '/fonts/' . $font )
+		);
+	}
 }
 
 /*

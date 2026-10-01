@@ -51,3 +51,13 @@ add_filter(
 		return '' !== $css ? $css : $inline;
 	}
 );
+
+// Autoptimize puts its CSS (the critical CSS and the stylesheet link) just before <title>; at the end of <head>
+// instead, the preloads printed in wp_head - fonts (child functions.php) and the banner's first image - come
+// first, so they start downloading before any stylesheet.
+add_filter(
+	'autoptimize_filter_css_replacetag',
+	function () {
+		return array( '</head>', 'before' );
+	}
+);
