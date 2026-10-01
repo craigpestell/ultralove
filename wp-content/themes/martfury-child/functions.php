@@ -391,6 +391,22 @@ if (!function_exists('woocommerce_template_loop_add_to_cart')) {
 	}
 }
 
+/**
+ * Loop Add to cart buttons carry a cart icon beside their label: on phones the card shows only the icon
+ * (a round button beside the quantity, on one row) and the label stays for screen readers; wider cards
+ * show only the label (style.css, "Cart row on phones"). After the Quantity Field on Shop Page plugin,
+ * which rebuilds the button at priority 10.
+ */
+add_filter( 'woocommerce_loop_add_to_cart_link', 'ultralove_loop_add_to_cart_icon', 20 );
+function ultralove_loop_add_to_cart_icon( $html ) {
+	return preg_replace(
+		'#(<(button|a)\b[^>]*\badd_to_cart_button\b[^>]*>)(.*?)(</\2>)#s',
+		'$1<i class="icon-bag2 ul-cart-icon" aria-hidden="true"></i><span class="ul-cart-label">$3</span>$4',
+		$html,
+		1
+	);
+}
+
 add_filter( 'wc_order_statuses', 'wc_renaming_order_status' );
 function wc_renaming_order_status( $order_statuses ) {
     foreach ( $order_statuses as $key => $status ) {

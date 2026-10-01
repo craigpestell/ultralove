@@ -2424,6 +2424,65 @@ body:not(.shop-view-list) ul.products li.product form.cart button {
     }
 }
 
+/* Touch screens and phones never see the hover glow, so each card keeps a light edge at rest - otherwise
+   it's hard to tell which product a cart row belongs to. */
+@media (hover: none), (max-width: 767px) {
+    body:not(.shop-view-list) ul.products li.product .product-inner,
+    body:not(.shop-view-list) ul.products li.product .product-inner:hover {
+        border-color: #e3e3e3
+    }
+}
+
+/* Cart row on phones: the quantity and a round cart-icon button on one row - the "Add to cart" label
+   didn't fit beside the quantity on ~175px cards and wrapped onto a second row. The label stays in the
+   button for screen readers (ultralove_loop_add_to_cart_icon() in functions.php adds the icon). Out of
+   stock cards drop their disabled quantity, so "Out of stock" has the row to itself. At the button
+   system's id weight - it sets the buttons' shape. */
+.ul-cart-icon {
+    display: none
+}
+
+@media (max-width: 767px) {
+    body:not(.shop-view-list) ul.products li.product form.cart {
+        flex-wrap: nowrap;
+        justify-content: space-between
+    }
+
+    body:not(.shop-view-list) #page ul.products li.product form.cart button.add_to_cart_button {
+        flex: 0 0 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px!important;
+        max-width: none;
+        padding: 0!important;
+        border-radius: 50%
+    }
+
+    body:not(.shop-view-list) ul.products li.product .ul-cart-icon {
+        display: block;
+        font-size: 18px;
+        line-height: 1
+    }
+
+    body:not(.shop-view-list) ul.products li.product .ul-cart-label {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap
+    }
+
+    body:not(.shop-view-list) ul.products li.product form.cart.ul-out-of-stock .quantity {
+        display: none
+    }
+
+    body:not(.shop-view-list) ul.products li.product form.cart.ul-out-of-stock button {
+        max-width: none
+    }
+}
+
 /*
  * Product carousels (the home page "On Sale" deals carousel, and the related products / upsells
  * carousels on product pages): every slide stretches to the tallest one, the same as the grid
