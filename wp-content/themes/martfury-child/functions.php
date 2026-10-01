@@ -976,6 +976,27 @@ function ultralove_convert_url_to_cloudinary($url) {
 
 
 /**
+ * The side menu (Martfury's off-canvas menu, opened by the header's menu button) ends with a Wishlist link
+ * on phones, where the header shows only the account and cart icons (style.css, "Header below 992px"). No
+ * count: logged-out pages are cached at Cloudflare.
+ */
+add_filter( 'wp_nav_menu_items', 'ultralove_mobile_menu_wishlist', 10, 2 );
+function ultralove_mobile_menu_wishlist( $items, $args ) {
+	if ( ! ( $args->walker instanceof Martfury_Mobile_Walker ) || ! function_exists( 'YITH_WCWL' ) ) {
+		return $items;
+	}
+	$page_id = get_option( 'yith_wcwl_wishlist_page_id' );
+	if ( ! $page_id ) {
+		return $items;
+	}
+	return $items . sprintf(
+		'<li class="menu-item ul-menu-wishlist hidden-sm hidden-md hidden-lg"><a href="%s">%s</a></li>',
+		esc_url( get_permalink( $page_id ) ),
+		esc_html__( 'Wishlist', 'martfury' )
+	);
+}
+
+/**
  * The header's navigation row (Store / On Sale / ... ), printed by template-parts/headers/layout-1.php.
  */
 function ultralove_main_menu_row() {

@@ -1778,18 +1778,40 @@ h1,h2,h3,h4 {
     }
 }
 
-/* Header below 992px: the logo on the left and the icons - wishlist, cart, account, then the menu button
-   (template-parts/headers/layout-1.php) - ending on the right content edge, 16px apart; the search has the
-   row below to itself, edge to edge. The icons used to sit at a fixed spot (past the edge on a 360px phone,
-   short of it on wider ones) and the menu button, 30px in, led the search row. */
+/* Header below 992px (template-parts/headers/layout-1.php): one row - the menu button then the logo on the
+   left, the header icons on the right with the cart last - and the search on the row below, edge to edge.
+   The menu button is a 44px tap target round its 24px icon, pulled 10px out so the icon itself sits on the
+   content edge, like the search below it. (The icons used to sit at a fixed spot - past the right edge on a
+   360px phone, short of it on wider ones - and the menu button, 30px in, started the search row.) */
 @media (max-width: 991px) {
+    .header-main-row .header-row > .header-logo {
+        align-items: center;
+        gap: 6px
+    }
+
+    .site-header .ul-header-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+        width: 44px;
+        height: 44px;
+        margin-left: -10px;
+        padding: 0
+    }
+
+    .site-header .ul-header-toggle .icon-menu {
+        font-size: 24px;
+        line-height: 1
+    }
+
     .header-main-row .header-row > .header-extras {
         flex: 1 1 auto;
         justify-content: flex-end
     }
 
     .site-header .header-main-row .header-extras .extras-menu {
-        gap: 16px;
+        gap: 20px;
         margin: 0 0 0 auto
     }
 
@@ -1797,15 +1819,8 @@ h1,h2,h3,h4 {
         padding: 0!important
     }
 
-    .site-header .extras-menu .menu-item-toggle .mf-toggle-menu {
-        display: block;
-        padding: 0
-    }
-
-    .site-header .extras-menu .menu-item-toggle .icon-menu {
-        display: block;
-        font-size: 24px;
-        line-height: 24px
+    .site-header .header-main-row .header-extras .extras-menu > .menu-item-cart {
+        order: 1
     }
 
     .site-header .mobile-menu-row .product-extra-search {
@@ -1813,20 +1828,30 @@ h1,h2,h3,h4 {
     }
 }
 
-/* Tablets: "Log in / Register" shows beside the account icon, so the menu button gets twice the icons' gap
-   (32px) from that text. */
-@media (min-width: 768px) and (max-width: 991px) {
-    .site-header .header-main-row .header-extras .extras-menu > .menu-item-toggle {
-        margin-left: 16px
-    }
-}
-
-/* Phones: the logo gives way a little (to 45% of the window) so the four icons fit beside it on a 360px
-   screen. */
+/* Phones: the account and cart icons only (the wishlist is in the side menu - ultralove_mobile_menu_wishlist()
+   in functions.php), each a 44px tap target, the row pulled 10px out so the cart icon sits on the right
+   content edge; the logo at 140px. */
 @media (max-width: 767px) {
+    .site-header .header-main-row .header-extras .extras-menu > .menu-item-wishlist {
+        display: none
+    }
+
+    .site-header .header-main-row .header-extras .extras-menu {
+        gap: 0;
+        margin-right: -10px
+    }
+
+    .site-header .header-main-row .header-extras .extras-menu > li > a:first-child {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        height: 44px
+    }
+
     .header-main-row .header-logo .d-logo img,
     .header-main-row .header-logo .d-logo svg.site-logo {
-        width: min(180px, 45vw)
+        width: 140px
     }
 }
 
