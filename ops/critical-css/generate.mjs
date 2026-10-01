@@ -2,7 +2,7 @@
 //
 // 1. Opens an SSH tunnel to dev's nginx and loads real dev pages in headless Chrome, answering every
 //    dev.ultralove.ca request through the tunnel (dev sits behind Cloudflare Access).
-// 2. For each page type, logged out and in, at desktop / tablet / phone sizes, with JavaScript off (what the
+// 2. For each page type, as a logged-out visitor, at desktop / tablet / phone sizes, with JavaScript off (what the
 //    first paint looks like) and on (classes scripts add), keeps every CSS rule that matches an element in
 //    the first screen - rules whose @media doesn't apply at that size are skipped.
 // 3. Merges the kept rules in the stylesheet's own order, adds the @font-face and @keyframes they use, and
@@ -71,16 +71,6 @@ async function openTunnel() {
 	throw new Error('SSH tunnel to dev did not come up');
 }
 
-// A logged-in cookie for a customer (what signed-in shoppers see - no admin bar), made on the server and
-// valid for 2 hours, like ops/css/collect-html.sh does for an administrator.
-function loginCookie() {
-	const wp = 'cd /var/www/html && sudo -u www-data wp --skip-themes';
-	const id = ssh(`${wp} user list --role=customer --field=ID --number=1 2>/dev/null | head -1`);
-	const name = ssh(`${wp} eval 'echo LOGGED_IN_COOKIE;' 2>/dev/null | tail -1`);
-	const value = ssh(`${wp} eval "echo wp_generate_auth_cookie( ${id}, time() + 7200, 'logged_in' );" 2>/dev/null | tail -1`);
-	if (!name || !value) throw new Error('Could not make a login cookie on dev');
-	return `${name}=${value}`;
-}
 
 // Fetches a dev URL through the tunnel as if it had come in over HTTPS through Cloudflare.
 function devFetch(port, url, { method = 'GET', headers = {}, body, cookie } = {}) {
@@ -386,7 +376,6 @@ async function main() {
 	fs.rmSync(WORK, { recursive: true, force: true });
 	fs.mkdirSync(WORK, { recursive: true });
 	const tunnel = await openTunnel();
-	const cookie = loginCookie();
 	// Chrome is restarted if it goes away (it occasionally drops the connection mid-render).
 	let browser = null, launching = null;
 	const chrome = async () => {
@@ -398,7 +387,8 @@ async function main() {
 	};
 	try {
 		const jobs = [];
-		for (const p of PAGES) for (const vp of VIEWPORTS) for (const who of ['out', 'in']) jobs.push({ path: p, vp, cookie: who === 'in' ? cookie : null, name: `${who} ${vp.name} ${p}` });
+		// Logged out only: signed-in visitors get the full stylesheet up front (34-critical-css.php).
+		for (const p of PAGES) for (const vp of VIEWPORTS) jobs.push({ path: p, vp, cookie: null, name: `${vp.name} ${p}` });
 
 		const results = [];
 		let done = 0;

@@ -7,8 +7,8 @@
  *              The critical CSS is the child theme's css/critical.css, generated from dev by ops/critical-css
  *              (a GitHub Action regenerates it and opens a PR when it changes) - see ops/critical-css/README.md.
  *              No file (or an empty one) means pages load CSS exactly as before. `?ul_critical_css=off` shows a
- *              page without it (the generator uses this). Pages Autoptimize leaves alone (cart, checkout, my
- *              account) keep their normal stylesheets.
+ *              page without it (the generator uses this). Logged-in visitors, and pages Autoptimize leaves
+ *              alone (cart, checkout, my account), keep the normal render-blocking stylesheet.
  * Version: 1.0.0
  */
 
@@ -23,6 +23,11 @@ function ultralove_critical_css() {
 	}
 	$css = '';
 	if ( isset( $_GET['ul_critical_css'] ) && 'off' === $_GET['ul_critical_css'] ) { // phpcs:ignore WordPress.Security.NonceVerification
+		return $css;
+	}
+	// The critical CSS is made from what logged-out visitors see; signed-in visitors (prices, cart rows, the
+	// admin bar) get the full stylesheet up front instead of a first screen it doesn't fully cover.
+	if ( is_user_logged_in() ) {
 		return $css;
 	}
 	$file = get_stylesheet_directory() . '/css/critical.css';
