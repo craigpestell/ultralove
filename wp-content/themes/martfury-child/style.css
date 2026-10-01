@@ -1788,6 +1788,12 @@ h1,h2,h3,h4 {
     font-size: 24px
 }
 
+/* Count badges (wishlist, cart) end on their icon's right edge, so the cart's - last in the row - stays inside
+   the content edge (the parent theme put it 4px past the cart icon; the wishlist's was already flush). */
+.site-header .header-main-row .header-extras .extras-menu > li > a .mini-item-counter {
+    right: 0
+}
+
 /* The font's heart is a shorter glyph than the bag and the user (its top starts ~2px lower at 24px), so
    centred in the same box, with its count badge on its lower edge, it read as sitting low: lift the glyph
    2px so the icons' tops line up (the badges stay level). */
@@ -1867,6 +1873,11 @@ h1,h2,h3,h4 {
         justify-content: center;
         min-width: 44px;
         height: 44px
+    }
+
+    /* The icons sit 10px inside their 44px boxes, so their count badges do too. */
+    .site-header .header-main-row .header-extras .extras-menu > li > a .mini-item-counter {
+        right: 10px
     }
 
     .header-main-row .header-logo .d-logo img,
