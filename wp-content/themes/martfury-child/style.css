@@ -1788,10 +1788,15 @@ h1,h2,h3,h4 {
     font-size: 24px
 }
 
-/* Count badges (wishlist, cart) end on their icon's right edge, so the cart's - last in the row - stays inside
-   the content edge (the parent theme put it 4px past the cart icon; the wishlist's was already flush). */
+/* Count badges (wishlist, cart) overhang their icon's right edge by 4px (the parent theme's cart badge; the
+   wishlist's was flush - now the same), and the icons row ends 4px in, so the cart's badge - last in the
+   row - ends on the content edge. */
 .site-header .header-main-row .header-extras .extras-menu > li > a .mini-item-counter {
-    right: 0
+    right: -4px
+}
+
+.site-header .header-main-row .header-extras .extras-menu {
+    margin-right: 4px
 }
 
 /* The font's heart is a shorter glyph than the bag and the user (its top starts ~2px lower at 24px), so
@@ -1836,7 +1841,7 @@ h1,h2,h3,h4 {
     }
 
     .site-header .header-main-row .header-extras .extras-menu {
-        margin: 0 0 0 auto
+        margin: 0 4px 0 auto
     }
 
     .site-header .mobile-menu-row .product-extra-search {
@@ -1855,8 +1860,8 @@ h1,h2,h3,h4 {
 }
 
 /* Phones: the account and cart icons only (the wishlist is in the side menu - ultralove_mobile_menu_wishlist()
-   in functions.php), each a 44px tap target, the row pulled 10px out so the cart icon sits on the right
-   content edge; the logo at 140px. */
+   in functions.php), each a 44px tap target, the row pulled 6px out (the icons sit 10px inside their boxes)
+   so the cart's count badge ends on the right content edge; the logo at 140px. */
 @media (max-width: 767px) {
     .site-header .header-main-row .header-extras .extras-menu > .menu-item-wishlist {
         display: none
@@ -1864,7 +1869,7 @@ h1,h2,h3,h4 {
 
     .site-header .header-main-row .header-extras .extras-menu {
         gap: 0;
-        margin-right: -10px
+        margin-right: -6px
     }
 
     .site-header .header-main-row .header-extras .extras-menu > li > a:first-child {
@@ -1875,9 +1880,9 @@ h1,h2,h3,h4 {
         height: 44px
     }
 
-    /* The icons sit 10px inside their 44px boxes, so their count badges do too. */
+    /* The icons sit 10px inside their 44px boxes, so their count badges (4px past the icon) are 6px in. */
     .site-header .header-main-row .header-extras .extras-menu > li > a .mini-item-counter {
-        right: 10px
+        right: 6px
     }
 
     .header-main-row .header-logo .d-logo img,
