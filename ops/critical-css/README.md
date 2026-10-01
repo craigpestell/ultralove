@@ -39,7 +39,8 @@ the full stylesheet (always loaded) arrives.
    selectors that matched, adds the `@font-face` (except fonts embedded as `data:` URIs) and `@keyframes`
    they use, makes asset URLs root-relative, and minifies without reordering.
 4. Verifies: renders every page/size combination with only the critical CSS and with the full CSS
-   (JavaScript off, animations frozen) and compares the first screen pixel by pixel. If any differs by more
+   (JavaScript off, animations frozen, the footer backdrop's glows off - their positions follow the footer's
+   full height, which only the full CSS sets) and compares the first screen pixel by pixel. If any differs by more
    than `DIFF_LIMIT` percent (default 0.5) the theme file isn't written and the run fails; the renders and
    diff images are in `work/` (an artifact in the workflow).
 
