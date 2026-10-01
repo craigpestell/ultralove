@@ -97,6 +97,129 @@ function ulbd_night_layers( $k ) {
 	return $layers;
 }
 
+/** The bat silhouette (24 x 14) shared by the Halloween styles. */
+function ulbd_bat_path() {
+	return 'M0 7c3-4 6-3 8-1 1-2 2-3 4-3s3 1 4 3c2-2 5-3 8 1-3 0-4 2-5 4-2-2-4-1-5 1l-2-2-2 2c-1-2-3-3-5-1-1-2-2-4-5-4z';
+}
+
+/**
+ * The witchy Halloween tile (320 x 280): a witch's hat, a broom, a cauldron, bats and stars. Its colours come
+ * from $p - 'fill' (the silhouettes), 'accent' (hat band, broom binding), 'bubble' (the brew), 'star', 'cut'
+ * (lines cut into the silhouettes, the backdrop's own colour), 'strap' and 'fuzz' (cheeky only: the cuffs, heart buckle and buzz), and 'a', the
+ * silhouettes' opacity before the intensity factor.
+ * The cheeky version swaps in a broom whose handle curves up into a wand tip (with a little buzz), a cauldron
+ * in an X leather harness with an O-ring, a studded hat with a heart buckle, heart bubbles and fuzzy handcuffs.
+ */
+function ulbd_witchy_svg( $p, $cheeky, $k ) {
+	$heart = 'M12 21s-7-4.4-9.5-8.9A5.4 5.4 0 0 1 12 6.1a5.4 5.4 0 0 1 9.5 6C19 16.6 12 21 12 21z';
+
+	// Witch's hat, 44 x 40: a crooked cone on an elliptical brim, with a band and a buckle.
+	$hat = '<path d="M10 34 19 8C20 4 23 1 28 0 25 3 24 6 25 10L32 34z" fill="' . $p['fill'] . '"/>'
+		. '<ellipse cx="21" cy="35" rx="21" ry="4.5" fill="' . $p['fill'] . '"/>'
+		. '<path d="M11.4 29h19.2l1.2 4.2H10.2z" fill="' . $p['accent'] . '"/>';
+	$hat .= $cheeky
+		? '<g fill="' . $p['star'] . '"><circle cx="13.6" cy="31.1" r=".8"/><circle cx="16.4" cy="31.1" r=".8"/><circle cx="25.6" cy="31.1" r=".8"/><circle cx="28.4" cy="31.1" r=".8"/></g>'
+			. '<path d="' . $heart . '" transform="translate(16.7 26.3) scale(.36)" fill="' . $p['fuzz'] . '"/>'
+		: '<rect x="18.2" y="28.8" width="5.6" height="4.6" fill="none" stroke="' . $p['fill'] . '" stroke-width="1.2"/>';
+
+	// Broom, 70 long, flying left: handle, binding, bristles with a few lines cut in. The cheeky handle curves
+	// up at its front end into a rounded tip, with two buzz arcs in front of it.
+	$broom = $cheeky
+		? '<path d="M46 6H16C8 6 3 4 2.2-1" fill="none" stroke="' . $p['fill'] . '" stroke-width="2.6" stroke-linecap="round"/>'
+			. '<ellipse cx="2" cy="-1.6" rx="2.8" ry="3.6" transform="rotate(-18 2 -1.6)" fill="' . $p['fill'] . '"/>'
+			. '<path d="M-3.5-6.5q-2 3.5 0 7M-7-9q-3.5 6 0 12" fill="none" stroke="' . $p['fuzz'] . '" stroke-width="1" stroke-linecap="round"/>'
+		: '<path d="M2 6H46" stroke="' . $p['fill'] . '" stroke-width="2.4" stroke-linecap="round"/>';
+	$broom .= '<path d="M48 3C56 0 64-4 70-6 68 2 68 10 70 18 64 16 56 12 48 9z" fill="' . $p['fill'] . '"/>'
+		. '<path d="M51 5 68-1M51 6H69M51 7 68 13" stroke="' . $p['cut'] . '" stroke-width=".7" stroke-linecap="round"/>'
+		. '<rect x="44" y="2.4" width="4.4" height="7.2" rx="1" fill="' . $p['accent'] . '"/>';
+
+	// Cauldron, 40 x 38 (bubbles above): legs, pot, rim, a drip of brew. The cheeky one wears an X harness
+	// with a metal O-ring where the straps cross, and its bubbles are hearts.
+	$cauldron = '<rect x="9" y="31" width="4" height="6" rx="1" fill="' . $p['fill'] . '"/><rect x="27" y="31" width="4" height="6" rx="1" fill="' . $p['fill'] . '"/>'
+		. '<path d="M4 11H36C40 22 36 32 26 34H14C4 32 0 22 4 11z" fill="' . $p['fill'] . '"/>'
+		. '<rect x="1" y="7" width="38" height="5" rx="2.5" fill="' . $p['fill'] . '"/>'
+		. '<path d="M18.6 12v3.5a1.4 1.4 0 0 0 2.8 0V12z" fill="' . $p['bubble'] . '"/>';
+	if ( $cheeky ) {
+		$cauldron .= '<path d="M8 13 30 32M32 13 10 32" stroke="' . $p['strap'] . '" stroke-width="2.8"/>'
+			. '<circle cx="20" cy="23.4" r="3" fill="' . $p['strap'] . '" stroke="' . $p['star'] . '" stroke-width="1.3"/>'
+			. '<g fill="' . $p['star'] . '"><circle cx="11.6" cy="16.1" r=".6"/><circle cx="28.4" cy="16.1" r=".6"/><circle cx="13.8" cy="28.8" r=".6"/><circle cx="26.2" cy="28.8" r=".6"/></g>'
+			. '<g fill="' . $p['bubble'] . '"><path d="' . $heart . '" transform="translate(10 -2) scale(.3)"/><path d="' . $heart . '" transform="translate(19 -9) scale(.22)"/><path d="' . $heart . '" transform="translate(23.5 -1) scale(.36)"/></g>';
+	} else {
+		$cauldron .= '<g fill="' . $p['bubble'] . '"><circle cx="14" cy="3" r="2.2"/><circle cx="21" cy="-3" r="1.6"/><circle cx="27" cy="3.4" r="2.6"/></g>';
+	}
+
+	// The odd one out in the empty lower-left: a small tilted hat, or (cheeky) fuzzy handcuffs - two rings with
+	// a dashed, round-capped stroke for the fluff, joined by a short chain.
+	$extra = $cheeky
+		? '<g transform="translate(96 120) rotate(-14) scale(1.4)"><g fill="none" stroke="' . $p['fuzz'] . '" stroke-width="3.6" stroke-linecap="round" stroke-dasharray=".1 1.7"><circle cx="7" cy="8" r="5.4"/><circle cx="29" cy="8" r="5.4"/></g>'
+			. '<g fill="none" stroke="' . $p['star'] . '" stroke-width=".9"><ellipse cx="14.6" cy="8" rx="2.2" ry="1.2"/><ellipse cx="18" cy="8" rx="1.2" ry="2"/><ellipse cx="21.4" cy="8" rx="2.2" ry="1.2"/></g></g>'
+		: '<g transform="translate(112 118) rotate(12) scale(.8)">' . $hat . '</g>';
+
+	$bat  = ulbd_bat_path();
+	$a    = min( 1, $p['a'] * $k );
+	$star = min( 1, .8 * $k );
+
+	return sprintf(
+		'<svg xmlns="http://www.w3.org/2000/svg" width="320" height="280" viewBox="0 0 320 280">
+			<g opacity="%1$s">
+				<g transform="translate(24 30) rotate(-8 21 20) scale(1.2)">%2$s</g>
+				<g transform="translate(150 54) rotate(-14) scale(1.3)">%3$s</g>
+				<g transform="translate(200 172) scale(1.2)">%4$s</g>
+				%5$s
+				<path d="%6$s" transform="translate(52 196) rotate(10 12 7) scale(1.5)" fill="%7$s"/>
+				<path d="%6$s" transform="translate(268 22) rotate(-12 12 7)" fill="%7$s"/>
+			</g>
+			<g fill="%8$s" fill-opacity="%9$s">
+				<circle cx="130" cy="18" r="1.3"/><circle cx="292" cy="112" r="1"/><circle cx="20" cy="150" r="1.2"/><circle cx="160" cy="254" r=".9"/><circle cx="96" cy="84" r=".8"/>
+			</g>
+		</svg>',
+		$a,
+		$hat,
+		$broom,
+		$cauldron,
+		$extra,
+		$bat,
+		$p['fill'],
+		$p['star'],
+		$star
+	);
+}
+
+/** The witchy palettes: purple silhouettes on a dark night, or black ones on pumpkin orange. */
+function ulbd_witchy_palette( $orange ) {
+	return $orange
+		? array(
+			'fill'   => 'rgb(24,10,14)',
+			'accent' => 'rgb(255,196,110)',
+			'bubble' => 'rgb(24,10,14)',
+			'star'   => 'rgb(255,236,200)',
+			'cut'    => 'rgb(240,128,34)',
+			'strap'  => 'rgb(150,62,18)',
+			'fuzz'   => 'rgb(24,10,14)',
+			'a'      => .8,
+		)
+		: array(
+			'fill'   => 'rgb(92,52,120)',
+			'accent' => 'rgb(255,150,50)',
+			'bubble' => 'rgb(140,230,110)',
+			'star'   => 'rgb(255,230,190)',
+			'cut'    => 'rgb(14,7,22)',
+			'strap'  => 'rgb(20,8,24)',
+			'fuzz'   => 'rgb(235,120,185)',
+			'a'      => .8,
+		);
+}
+
+/** The pumpkin-orange base: a warm light centre for the text, deepening to burnt orange at the edges. */
+function ulbd_orange_layers( $k ) {
+	return array(
+		'radial-gradient(ellipse 55% 60% at 50% 45%, ' . ulbd_rgba( 255, 196, 120, .55, $k ) . ' 0, transparent 100%)',
+		'radial-gradient(ellipse 45% 55% at 0% 0%, ' . ulbd_rgba( 190, 70, 10, .5, $k ) . ' 0, transparent 100%)',
+		'radial-gradient(ellipse 45% 55% at 100% 100%, ' . ulbd_rgba( 190, 70, 10, .5, $k ) . ' 0, transparent 100%)',
+		'#f08022',
+	);
+}
+
 /**
  * All styles, keyed by id: array( label, kind, description, css callable, optional dark and fade flags -
  * dark off and fade on when left out).
@@ -351,7 +474,7 @@ function ulbd_styles() {
 			'fade'        => false,
 			'description' => 'A harvest moon, bats and stars over pumpkin-orange and purple glows on near-black.',
 			'css'         => function ( $k ) {
-				$bat = 'M0 7c3-4 6-3 8-1 1-2 2-3 4-3s3 1 4 3c2-2 5-3 8 1-3 0-4 2-5 4-2-2-4-1-5 1l-2-2-2 2c-1-2-3-3-5-1-1-2-2-4-5-4z';
+				$bat = ulbd_bat_path();
 				$svg = sprintf(
 					'<svg xmlns="http://www.w3.org/2000/svg" width="240" height="200" viewBox="0 0 240 200">
 						<path d="%1$s" transform="translate(28 40) rotate(-10 12 7) scale(2.2)" fill="rgb(92,52,120)" fill-opacity="%2$s"/>
@@ -379,6 +502,100 @@ function ulbd_styles() {
 						)
 					),
 					'size'       => '240px 200px, auto, auto, auto, auto, auto',
+				);
+			},
+		),
+		'halloween-orange'        => array(
+			'label'       => 'Halloween - orange & bats',
+			'kind'        => 'seasonal',
+			'fade'        => false,
+			'description' => 'Black bats of a few sizes swooping over pumpkin orange.',
+			'css'         => function ( $k ) {
+				$svg = sprintf(
+					'<svg xmlns="http://www.w3.org/2000/svg" width="280" height="220" viewBox="0 0 280 220">
+						<g fill="rgb(24,10,14)" fill-opacity="%2$s">
+							<path d="%1$s" transform="translate(24 30) rotate(-10 12 7) scale(2.4)"/>
+							<path d="%1$s" transform="translate(170 22) rotate(8 12 7) scale(1.2)"/>
+							<path d="%1$s" transform="translate(196 120) rotate(14 12 7) scale(1.8)"/>
+							<path d="%1$s" transform="translate(70 150) rotate(-6 12 7) scale(1)"/>
+							<path d="%1$s" transform="translate(120 92) rotate(-18 12 7) scale(.7)"/>
+						</g>
+					</svg>',
+					ulbd_bat_path(),
+					min( 1, .85 * $k )
+				);
+
+				return array(
+					'background' => implode( ', ', array_merge( array( ulbd_svg_url( $svg ) ), ulbd_orange_layers( $k ) ) ),
+					'size'       => '280px 220px, auto, auto, auto, auto',
+				);
+			},
+		),
+		'halloween-witchy'        => array(
+			'label'       => 'Halloween - witchy',
+			'kind'        => 'seasonal',
+			'dark'        => true,
+			'fade'        => false,
+			'description' => 'Witches\' hats, brooms, bubbling cauldrons and bats over a green cauldron glow on near-black.',
+			'css'         => function ( $k ) {
+				return array(
+					'background' => implode(
+						', ',
+						array(
+							ulbd_svg_url( ulbd_witchy_svg( ulbd_witchy_palette( false ), false, $k ) ),
+							'radial-gradient(ellipse 60% 50% at 50% 110%, ' . ulbd_rgba( 90, 200, 90, .35, $k ) . ' 0, transparent 100%)',
+							'radial-gradient(ellipse 40% 60% at 8% 30%, ' . ulbd_rgba( 120, 50, 170, .55, $k ) . ' 0, transparent 100%)',
+							'radial-gradient(ellipse 35% 45% at 88% 10%, ' . ulbd_rgba( 255, 120, 30, .3, $k ) . ' 0, transparent 100%)',
+							'#0e0716',
+						)
+					),
+					'size'       => '320px 280px, auto, auto, auto, auto',
+				);
+			},
+		),
+		'halloween-witchy-orange' => array(
+			'label'       => 'Halloween - witchy orange',
+			'kind'        => 'seasonal',
+			'fade'        => false,
+			'description' => 'Black witches\' hats, brooms, cauldrons and bats on pumpkin orange.',
+			'css'         => function ( $k ) {
+				return array(
+					'background' => implode( ', ', array_merge( array( ulbd_svg_url( ulbd_witchy_svg( ulbd_witchy_palette( true ), false, $k ) ) ), ulbd_orange_layers( $k ) ) ),
+					'size'       => '320px 280px, auto, auto, auto, auto',
+				);
+			},
+		),
+		'halloween-cheeky'        => array(
+			'label'       => 'Halloween - cheeky',
+			'kind'        => 'seasonal',
+			'dark'        => true,
+			'fade'        => false,
+			'description' => 'Witchy, with a wink: wand-tipped brooms, a cauldron in a leather harness, heart bubbles, a studded hat and fuzzy cuffs, on deep plum.',
+			'css'         => function ( $k ) {
+				return array(
+					'background' => implode(
+						', ',
+						array(
+							ulbd_svg_url( ulbd_witchy_svg( ulbd_witchy_palette( false ), true, $k ) ),
+							'radial-gradient(ellipse 60% 50% at 50% 110%, ' . ulbd_rgba( 179, 9, 75, .45, $k ) . ' 0, transparent 100%)',
+							'radial-gradient(ellipse 40% 60% at 8% 30%, ' . ulbd_rgba( 120, 50, 170, .55, $k ) . ' 0, transparent 100%)',
+							'radial-gradient(ellipse 35% 45% at 88% 10%, ' . ulbd_rgba( 255, 120, 30, .3, $k ) . ' 0, transparent 100%)',
+							'#120614',
+						)
+					),
+					'size'       => '320px 280px, auto, auto, auto, auto',
+				);
+			},
+		),
+		'halloween-cheeky-orange' => array(
+			'label'       => 'Halloween - cheeky orange',
+			'kind'        => 'seasonal',
+			'fade'        => false,
+			'description' => 'The cheeky witchy tile in black on pumpkin orange.',
+			'css'         => function ( $k ) {
+				return array(
+					'background' => implode( ', ', array_merge( array( ulbd_svg_url( ulbd_witchy_svg( ulbd_witchy_palette( true ), true, $k ) ) ), ulbd_orange_layers( $k ) ) ),
+					'size'       => '320px 280px, auto, auto, auto, auto',
 				);
 			},
 		),
