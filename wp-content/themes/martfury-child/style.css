@@ -1752,6 +1752,14 @@ h1,h2,h3,h4 {
     }
 }
 
+/* Tablets: "Log in / Register" shows beside the account icon, so the menu button gets twice the icons' gap
+   (32px) from that text. */
+@media (min-width: 768px) and (max-width: 991px) {
+    .site-header .header-main-row .header-extras .extras-menu > .menu-item-toggle {
+        margin-left: 16px
+    }
+}
+
 /* Phones: the logo gives way a little (to 45% of the window) so the four icons fit beside it on a 360px
    screen. */
 @media (max-width: 767px) {
