@@ -1792,6 +1792,13 @@ h1,h2,h3,h4 {
     font-size: 24px
 }
 
+/* The font's heart is a shorter glyph than the bag and the user (its top starts ~2px lower at 24px), so
+   centred in the same box, with its count badge on its lower edge, it read as sitting low: lift the glyph
+   2px so the icons' tops line up (the badges stay level). */
+.site-header .header-main-row .header-extras .extras-menu .menu-item-wishlist .extra-icon {
+    transform: translateY(-2px)
+}
+
 /* Header below 992px (template-parts/headers/layout-1.php): one row - the menu button then the logo on the
    left, the header icons on the right with the cart last - and the search on the row below, edge to edge.
    The menu button is a 44px tap target round its 24px icon, pulled 10px out so the icon itself sits on the
@@ -1811,7 +1818,9 @@ h1,h2,h3,h4 {
         width: 44px;
         height: 44px;
         margin-left: -10px;
-        padding: 0
+        padding: 0;
+        /* Black like the header icons - out of Martfury's menu row it took the site's link colour. */
+        color: #000
     }
 
     .site-header .ul-header-toggle .icon-menu {
