@@ -1686,18 +1686,20 @@ h1,h2,h3,h4 {
 /* The row is the page container (.martfury-container - see "Content edges"), so the logo starts and the
    header banner ends on the same edges as the menu, breadcrumbs, content and footer. The container nested
    inside .header-main adds no padding of its own, so the logo lands exactly on that edge. */
-/* The header banner is 590x73 (its 728x90 shape at the logo's 73px height) on the right content edge, and
-   the logo and the account icons take the rest of the row, the icons at its end, 20px from the banner - so
-   the logo row is the same height (73px + 24px above and below) at every desktop width. Below ~1072px the
-   logo, the icons and "Log in / Register" leave less than 590px, so the banner gives way (510x63 at 992px);
-   the logo group never shrinks. It used to take half the row, so its height followed the window (56px at
-   992px, 84px at 1440px). The search has its own row below (.ul-search-row). */
+/* Desktop logo row (template-parts/headers/layout-1.php): the logo on the left content edge, the account icons
+   on the right one (the cart last, as on phones and tablets), and the header banner centred in the space between,
+   at least 20px from each. The banner is 590x73 (its 728x90 shape at the logo's 73px height), so the row is the
+   same height (73px + 24px above and below) at every desktop width; below ~1072px the logo, the icons and
+   "Log in / Register" leave less than 590px, so the banner gives way (~500x62 at 992px) - the logo and the icons
+   never shrink. The search has its own row below (.ul-search-row). */
 .header-main-row .header-main {
     float: none;
     padding-left: 0;
-    flex: 1 0 auto;
+    flex: 1 1 auto;
+    min-width: 0;
     max-width: none;
 }
+
 
 .header-main-row .header-row > .header-logo {
     flex: 0 0 auto;
@@ -1729,6 +1731,24 @@ h1,h2,h3,h4 {
     justify-content: flex-end;
     width: auto;
     min-width: 0;
+}
+
+/* Desktop: logo, banner, icons - the icons at their own width, so the banner gets the space between (above).
+   Bootstrap's clearfix pseudo-elements on the .row would be flex items too, each adding a gap. */
+@media (min-width: 992px) {
+    .header-main-row .header-row {
+        align-items: center;
+        column-gap: 20px
+    }
+
+    .header-main-row .header-row::before,
+    .header-main-row .header-row::after {
+        content: none
+    }
+
+    .header-main-row .header-row > .header-extras {
+        flex: 0 0 auto
+    }
 }
 
 /* The search row (template-parts/headers/layout-1.php), below the logo row at every width: the search fills the
@@ -1787,7 +1807,7 @@ h1,h2,h3,h4 {
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    margin-left: auto;
+    margin: 0 auto;
     flex: 0 1 590px;
     width: 590px;
     min-width: 0;
