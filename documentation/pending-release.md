@@ -7,11 +7,20 @@ in the order listed.
 
 ## Code
 
-Nothing pending: production runs `main` (`18fd1c6`, deployed 2026-10-01).
+Nothing pending: production runs `main` (`45e8b69`, deployed 2026-10-01 20:12 UTC - phone product cards, the
+new header with the search on its own row, cart page layout below 992px, regenerated critical CSS). After a
+deploy that changes page HTML, purge Cloudflare (Caching > Purge Everything, or the changed URLs): APO serves
+cached HTML (`cf-cache-status: HIT`) until then.
 
 ## Production steps after the code deploy
 
-None pending.
+**Phones: one responsive design instead of Martfury's mobile version** - on dev since 2026-10-01, waiting for
+the go-ahead. Until then production still sends phones Martfury's separate mobile markup (user-agent detected),
+so the new phone header, product cards and product page don't show on real phones there.
+
+1. `wp theme mod set enable_mobile_version 0` (rollback: set it back to `1`).
+2. Cloudflare > APO: turn off "Cache by device type" (one cached copy per page again).
+3. Purge Cloudflare (Purge Everything).
 
 ## Already on production (not part of a release)
 
