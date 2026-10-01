@@ -1754,6 +1754,7 @@ h1,h2,h3,h4 {
 /* The search button is the magnifier icon at every width, square like the field - the parent theme's phone
    version (its desktop one was a 100px "Search" text button with rounded right corners). */
 .site-header .ul-search-row .search-submit {
+    flex: none;
     width: 60px;
     min-width: 0;
     padding: 0;
