@@ -95,7 +95,8 @@ function devFetch(port, url, { method = 'GET', headers = {}, body, cookie } = {}
 			r.on('end', () => res({ status: r.statusCode, headers: r.headers, body: Buffer.concat(chunks) }));
 		});
 		req.on('error', rej);
-		req.setTimeout(60000, () => req.destroy(new Error('timeout ' + url)));
+		// The shop page through the tunnel from GitHub's runners can take over a minute.
+		req.setTimeout(120000, () => req.destroy(new Error('timeout ' + url)));
 		if (body) req.write(body);
 		req.end();
 	});
@@ -215,7 +216,7 @@ const withParam = (p, q) => p + (p.includes('?') ? '&' : '?') + q;
 async function collect(browser, port, job) {
 	const page = await newPage(browser, port, job.vp, job);
 	try {
-		await page.goto(`https://${SITE}${withParam(job.path, PLAIN)}`, { waitUntil: 'networkidle2', timeout: 90000 });
+		await page.goto(`https://${SITE}${withParam(job.path, PLAIN)}`, { waitUntil: 'networkidle2', timeout: 180000 });
 		if (job.js) await new Promise((r) => setTimeout(r, 1500));
 		const css = await pageCss(page, port, job.cookie);
 		const m = model(css);
@@ -304,7 +305,7 @@ async function shot(browser, port, job, critical, html) {
 	};
 	const page = await newPage(browser, port, job.vp, { ...job, js: false, transform });
 	try {
-		await page.goto(`https://${SITE}${withParam(job.path, PLAIN)}`, { waitUntil: 'networkidle0', timeout: 90000 });
+		await page.goto(`https://${SITE}${withParam(job.path, PLAIN)}`, { waitUntil: 'networkidle0', timeout: 180000 });
 		// Only the critical CSS (and the animation freeze) stays; <noscript> styles too, since they're what a
 		// no-JavaScript render needs in place of what scripts do (WooCommerce's shows the product gallery).
 		if (critical !== null) await page.evaluate(() => document.querySelectorAll('style:not(#ul-critical-check)').forEach((s) => { if (!s.textContent.includes('animation:none!important') && !s.closest('noscript')) s.remove(); }));
@@ -342,8 +343,10 @@ async function verify(chrome, port, jobs, critical) {
 	await pool(jobs, async (job) => {
 		// Both renders get the same HTML: some listings (Sale Products) come back in a different order each time.
 		const url = `https://${SITE}${withParam(job.path, PLAIN)}`;
-		const html = (await devFetch(port, url, { headers: { 'user-agent': job.vp.ua }, cookie: job.cookie })).body.toString('utf8');
-		const [a, b] = await retry(async () => [await shot(await chrome(), port, job, null, html), await shot(await chrome(), port, job, critical, html)]);
+		const [a, b] = await retry(async () => {
+			const html = (await devFetch(port, url, { headers: { 'user-agent': job.vp.ua }, cookie: job.cookie })).body.toString('utf8');
+			return [await shot(await chrome(), port, job, null, html), await shot(await chrome(), port, job, critical, html)];
+		});
 		const { width, height } = a;
 		const diff = new PNG({ width, height });
 		const n = pixelmatch(a.data, b.data, diff.data, width, height, { threshold: 0.15 });
