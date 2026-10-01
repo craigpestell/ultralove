@@ -1370,6 +1370,22 @@ h1,h2,h3,h4 {
     padding: 16px 18px
 }
 
+/* Gravity Forms' textarea sizes, restated so a form's height doesn't depend on when Gravity Forms' own
+   stylesheet arrives: off form pages it loads only once a form comes near the screen
+   (mu-plugins/02-lazy-load-gravity-forms.php), and until then a textarea would show at its native
+   10 rows - the footer form 161px taller, then jumping shorter. Same values as Gravity Forms'. */
+.gform_wrapper .gfield textarea.small {
+    height: 96px
+}
+
+.gform_wrapper .gfield textarea.medium {
+    height: 192px
+}
+
+.gform_wrapper .gfield textarea.large {
+    height: 288px
+}
+
 /* Gravity Forms makes .gform_footer a flex container by default, so text-align doesn't move its
    child - justify-content is what actually left-aligns the Send Message button. The margin-top
    override (beating #gform_1 .gform_footer's own 19px!important above) matches the 16px gap
