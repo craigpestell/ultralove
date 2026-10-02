@@ -5,12 +5,13 @@
 #   ops/php/www.conf                       PHP-FPM pool, sized for s-4vcpu-8gb
 #   ops/nginx/10-ultralove-http.conf       http-level tuning (keepalive, upload size, gzip)
 #   ops/nginx/99-ultralove-rate-limit-zones.conf, ultralove.ca.conf, localhost-admin.conf
-# plus Redis (1 GB cap), the firewall (SSH + HTTP/S from Cloudflare only), Cloudflare client IPs for nginx and
-# the WordPress cron runner.
+# plus Redis (1 GB cap), the firewall (SSH + HTTP/S from Cloudflare only), Cloudflare client IPs for nginx, the
+# WordPress cron runner and the off-site backups to Spaces (ops/prod: monthly config archive, nightly uploads sync;
+# they need /root/.spaces_env, copied by hand - see README.md).
 #
 # Run ON the new droplet as root, from a copy of the repo's ops/ directory, after copying the Cloudflare Origin
 # CA certificate (see README.md):
-#   tar -czf - --exclude=.env ops/do-migration ops/php ops/nginx | ssh root@NEW_IP 'tar -xzf - -C /root'
+#   tar -czf - --exclude=.env ops/do-migration ops/php ops/nginx ops/prod | ssh root@NEW_IP 'tar -xzf - -C /root'
 #   ssh root@NEW_IP /root/ops/do-migration/bootstrap-app-server.sh
 set -euo pipefail
 
@@ -116,6 +117,16 @@ for ip in $(curl -fsS https://www.cloudflare.com/ips-v4); do
   ufw allow proto tcp from "$ip" to any port 80,443 comment Cloudflare
 done
 ufw --force enable
+
+# --- Off-site backups to Spaces (credentials: /root/.spaces_env, copied by hand): monthly config archive at 02:40 UTC
+# on the 1st, media library sync nightly at 03:30 UTC. The root crontab is replaced with exactly these two lines.
+install -m 700 "$OPS/prod/monthly_system_backup.sh" /root/monthly_system_backup.sh
+install -m 700 "$OPS/prod/uploads_spaces_sync.sh" /root/uploads_spaces_sync.sh
+crontab - <<'EOF'
+40 2 1 * * /root/monthly_system_backup.sh >> /var/log/monthly_system_backup.log 2>&1
+30 3 * * * /root/uploads_spaces_sync.sh >> /var/log/uploads_spaces_sync.log 2>&1
+EOF
+[[ -s /root/.spaces_env ]] || echo "Note: /root/.spaces_env is missing - the backups will skip their uploads until it's copied."
 
 # --- WordPress cron from the system cron (wp-config.php sets DISABLE_WP_CRON), as on the old droplet.
 cat >/etc/cron.d/ultralove-wp-cron <<'EOF'

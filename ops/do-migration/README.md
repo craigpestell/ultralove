@@ -31,13 +31,14 @@ cron runner. What isn't in the repo (secrets, server-only scripts) is copied fro
    `ssh NEW mkdir -p /etc/ssl/cloudflare`, then `scp` `/etc/ssl/cloudflare/ultralove.ca.pem` and
    `ultralove.ca.key` across (key: `chmod 600`).
 3. Copy only what the bootstrap uses (not all of `ops/`, which has ~220 MB of local tooling) and run it:
-   `tar -czf - --exclude=.env ops/do-migration ops/php ops/nginx | ssh root@NEW 'tar -xzf - -C /root'`, then
+   `tar -czf - --exclude=.env ops/do-migration ops/php ops/nginx ops/prod | ssh root@NEW 'tar -xzf - -C /root'`, then
    `ssh root@NEW /root/ops/do-migration/bootstrap-app-server.sh`.
 4. Copy the site: set `PROD_NEW_APP_IP` and the `SRC_APP_*` values (the current droplet) in `.env`, run
    `./sync-site-files.sh prod --from-prod-server` (WordPress files, uploads), and copy `/var/www/html/wp-config.php`
    from the current droplet (database credentials: the database is on its own host, unchanged).
-5. Copy the backups from `/root` on the current droplet: `updraft_spaces_sync.sh`, `.spaces_env` (credentials,
-   `chmod 600`) and `monthly_system_backup.sh`, plus their two root crontab lines (`crontab -l` there).
+5. Copy the Spaces credentials `/root/.spaces_env` from the current droplet (`chmod 600`). The bootstrap installs the
+   backup scripts from `../prod/` and their root crontab: the monthly config archive and the nightly media sync
+   (`wp-content/uploads`, which UpdraftPlus's backups leave out). UpdraftPlus uploads its own backups to Spaces.
 6. Check it before any DNS change: `./cutover-verify.sh ultralove.ca NEW_IP`, and `curl http://127.0.0.1/fpm-status`
    on the droplet.
 7. Cut over: point the Cloudflare DNS records for `ultralove.ca` / `www` at the new IP (proxied), point the SSH alias
