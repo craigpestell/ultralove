@@ -6,12 +6,15 @@ This folder contains scripts to perform a staged migration in this order:
 3. Production environment only after gate passes
 
 ## Target sizing
-- Production app: s-2vcpu-4gb
-- Development app: s-2vcpu-4gb
-- Development DB: s-1vcpu-2gb
+- Production app: **s-4vcpu-8gb**, Ubuntu 26.04 + PHP 8.5 - a new droplet that replaces today's
+  `PRODUCTION-WEB-ultralove.ca` (s-8vcpu-16gb, Ubuntu 24.04 + PHP 8.3; it uses ~4% CPU, peaking ~16%, and ~1.6 GB of
+  its 16 GB RAM). Same settings as today otherwise: sfo2, the same VPC, monitoring + droplet agent, private networking,
+  tags `Production,nginx,php,php-fpm,wordpress`, no IPv6. The database stays on its own host.
+- Development: one droplet built by `ops/dev` (s-4vcpu-8gb, Ubuntu 26.04 + PHP 8.5, MySQL on the same box); the
+  dev-app / dev-db steps below are from the original migration and no longer used.
 
 ## Region layout
-- Droplets (app + dev DB): sfo2
+- Droplets: sfo2
 - Spaces backups bucket: sfo3
 
 ## 1) Prepare environment
@@ -31,10 +34,10 @@ On the new dev app droplet:
 
 sudo ./bootstrap-app-server.sh dev.ultralove.ca /var/www/html
 
-Note: the app bootstrap script auto-detects an available PHP-FPM version from apt repos (8.4/8.3/8.2/8.1, then generic `php-fpm`) and skips `awscli` if not available.
-You can force a version explicitly if needed, for example:
+Note: the app bootstrap script installs PHP 8.5 with the extensions production uses (it stops if `php8.5-fpm` isn't
+in apt - i.e. not Ubuntu 26.04) and skips `awscli` if not available. To name the version explicitly:
 
-sudo ./bootstrap-app-server.sh dev.ultralove.ca /var/www/html 8.3
+sudo ./bootstrap-app-server.sh ultralove.ca /var/www/html 8.5
 
 If AWS CLI was installed manually (zip installer), bootstrap will detect the existing `aws` binary and will not attempt apt installation.
 

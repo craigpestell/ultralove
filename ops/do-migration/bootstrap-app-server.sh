@@ -33,31 +33,27 @@ if [[ -n "$PHP_VERSION_OVERRIDE" ]]; then
     exit 1
   fi
 else
-  for v in 8.4 8.3 8.2 8.1; do
-    if package_available "php${v}-fpm"; then
-      PHP_VERSION="$v"
-      break
-    fi
-  done
+  # PHP 8.5 (Ubuntu 26.04's own) - no fallback to an older PHP.
+  if package_available "php8.5-fpm"; then
+    PHP_VERSION="8.5"
+  else
+    echo "php8.5-fpm is not available in apt - use an Ubuntu 26.04 droplet (APP_IMAGE=ubuntu-26-04-x64)" >&2
+    exit 1
+  fi
 fi
 
-if [[ -n "$PHP_VERSION" ]]; then
-  PHP_PACKAGES=("php${PHP_VERSION}-fpm")
-  for ext in mysql curl xml mbstring zip gd intl; do
-    pkg="php${PHP_VERSION}-${ext}"
-    if package_available "$pkg"; then
-      PHP_PACKAGES+=("$pkg")
-    else
-      echo "Package not available, skipping: $pkg"
-    fi
-  done
-  PHP_FPM_SERVICE="php${PHP_VERSION}-fpm"
-  PHP_FPM_SOCKET="/run/php/php${PHP_VERSION}-fpm.sock"
-else
-  PHP_PACKAGES=(php-fpm php-mysql php-curl php-xml php-mbstring php-zip php-gd php-intl)
-  PHP_FPM_SERVICE="php-fpm"
-  PHP_FPM_SOCKET=""
-fi
+PHP_PACKAGES=("php${PHP_VERSION}-fpm")
+# The extensions production uses. opcache is skipped on 8.5, where it's part of PHP itself.
+for ext in cli mysql curl xml mbstring zip gd intl imagick bcmath soap redis igbinary readline opcache; do
+  pkg="php${PHP_VERSION}-${ext}"
+  if package_available "$pkg"; then
+    PHP_PACKAGES+=("$pkg")
+  else
+    echo "Package not available, skipping: $pkg"
+  fi
+done
+PHP_FPM_SERVICE="php${PHP_VERSION}-fpm"
+PHP_FPM_SOCKET="/run/php/php${PHP_VERSION}-fpm.sock"
 
 apt-get install -y nginx "${PHP_PACKAGES[@]}" unzip curl fail2ban certbot python3-certbot-nginx mariadb-client
 
