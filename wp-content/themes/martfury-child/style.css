@@ -2439,8 +2439,12 @@ body:not(.shop-view-list) :has(> ul.products:not(.slick-slider)) {
     container-type: inline-size
 }
 
+/* The grid owns the space between its rows (row-gap); the cards carry no outer margin of their own (the
+   parent theme spaced the rows with each card's 30px + 5px bottom margins, which also added 35px below
+   the last row). */
 body:not(.shop-view-list) ul.products:not(.slick-slider) {
-    --ul-cols: 2
+    --ul-cols: 2;
+    row-gap: 35px
 }
 
 @container (min-width: 645px) {
@@ -2464,7 +2468,8 @@ body:not(.shop-view-list) ul.products:not(.slick-slider) {
 }
 
 body:not(.shop-view-list) ul.products:not(.slick-slider) > li.product {
-    width: calc(100% / var(--ul-cols))
+    width: calc(100% / var(--ul-cols));
+    margin-bottom: 0
 }
 
 /* 10px corners (as on the shop sidebar and toolbar cards) so the card's edge follows the rounded
@@ -2476,6 +2481,7 @@ body:not(.shop-view-list) ul.products li.product .product-inner {
     display: flex;
     flex-direction: column;
     width: 100%;
+    margin-bottom: 0;
     padding: clamp(10px, 7%, 20px);
     border-radius: 10px;
     transition: box-shadow .2s ease
@@ -2840,9 +2846,9 @@ ul.products.slick-slider .slick-list {
     margin-bottom: -28px!important
 }
 
-/* Home page product sections (front-page.php): the spacing the Elementor layout had - 10px above "On Sale",
-   the "More On-Sale Products" button 40px below the carousel, "Latest Adult Products" further down, and
-   the two links under the grid. The space below the links is the page regions' gap (see "Page regions"). */
+/* Home page product sections (front-page.php): 10px above "On Sale", "Latest Adult Products" 65px below the
+   "More On-Sale Products" button, and each section's buttons (.ul-home-links) 40px below its products. The
+   space below the last buttons is the page regions' gap (see "Page regions"). */
 .ul-home-products {
     padding-top: 10px
 }
@@ -2864,11 +2870,6 @@ ul.products.slick-slider .slick-list {
     margin: 0
 }
 
-.ul-home-more {
-    margin-top: 40px;
-    text-align: center
-}
-
 .ul-home-latest {
     margin-top: 65px
 }
@@ -2878,7 +2879,7 @@ ul.products.slick-slider .slick-list {
     flex-wrap: wrap;
     justify-content: center;
     gap: 30px;
-    margin-top: 25px
+    margin-top: 40px
 }
 
 /* Out of stock loop items: the quantity + button row is shown disabled (see
@@ -3565,13 +3566,11 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     padding-top: 0
 }
 
-/* The blocks at the very end of a region (its last child, that one's last child, and so on) add no margin
-   below them - the closing paragraph, list, form, tabs or product row would otherwise add their own space
-   to the gap. "Last" ignores what never renders after it (hidden inputs, scripts - YITH's wishlist ends in
-   hidden inputs). Margins marked !important (the carousels' negative margins for the cards' hover shadow)
-   are left alone. :nth-last-child(1 of ...) rather than :has(): it costs nothing measurable on a full style
-   recalculation (:has() added ~20% on the shop page). */
-#page > :is(.site-content, section.up-sells, section.related, .footer-recently-viewed) :nth-last-child(1 of :not(input[type="hidden"], script, style, template)):not(#page > * :not(:nth-last-child(1 of :not(input[type="hidden"], script, style, template))) *) {
+/* Inside the regions a last child has no bottom margin: the space between blocks comes from the blocks
+   around it (or a container's gap), never from a margin trailing after the last one - so a page ends at its
+   content, whatever the content is. Margins marked !important (the carousels' negative margins for the
+   cards' hover shadow) are left alone. */
+#page > :is(.site-content, section.up-sells, section.related, .footer-recently-viewed) :last-child {
     margin-bottom: 0
 }
 

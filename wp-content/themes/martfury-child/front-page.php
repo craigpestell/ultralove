@@ -47,7 +47,7 @@ get_header();
             <div class="ul-carousel" data-ul-carousel>
 				<?php echo do_shortcode( '[products limit="12" columns="5" orderby="rand" on_sale="true"]' ); ?>
             </div>
-            <div class="ul-home-more">
+            <div class="ul-home-links">
                 <a class="ul-btn ul-btn--primary ul-btn--lg" href="<?php echo esc_url( home_url( '/product-category/sale-closeout-items/' ) ); ?>">More On-Sale Products</a>
             </div>
         </section>
