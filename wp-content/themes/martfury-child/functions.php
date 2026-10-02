@@ -30,9 +30,19 @@ function martfury_header_container_classes() {
 	return 'martfury-container';
 }
 
-add_filter( 'martfury_site_content_container_class', 'ultralove_site_content_container_class', 20 );
-function ultralove_site_content_container_class( $class ) {
-	return 'container' === $class ? 'martfury-container' : $class;
+/**
+ * The page structure every template shares: #content > .martfury-container > main#main.site-main, with the
+ * sidebar (catalog pages) beside <main> - see style.css, "Pages with a sidebar". These replace Martfury's
+ * (pluggable) open/close functions, which added Bootstrap's .row inside the container, and the child's
+ * templates (page.php, single.php, archive.php, index.php, search.php, template-parts/content-404.php,
+ * woocommerce/global/wrapper-start.php, front-page.php) drop the div#primary column around <main>.
+ */
+function martfury_open_site_content_container() {
+	echo '<div class="martfury-container">';
+}
+
+function martfury_close_site_content_container() {
+	echo '</div>';
 }
 
 add_filter( 'martfury_page_header_container_class', 'ultralove_wide_container_class' );

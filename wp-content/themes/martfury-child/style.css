@@ -3531,6 +3531,33 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
 }
 
 /*
+ * Pages with a sidebar (the catalog: shop, categories, brands - Martfury's "sidebar-content" layout). Every page
+ * is #content > .martfury-container > main#main (see martfury_open_site_content_container() in functions.php);
+ * here the sidebar sits beside <main>: from 992px a 256px column on the left, 32px from the content (Martfury
+ * used Bootstrap's float columns - 25% / 75%, 19% / 81% from 1200px). Below 992px the sidebar is the off-canvas
+ * filter panel (position: fixed), so <main> has the full width.
+ */
+@media (min-width: 992px) {
+    .sidebar-content .site-content > .martfury-container {
+        display: grid;
+        grid-template-columns: 256px minmax(0, 1fr);
+        column-gap: 32px;
+        align-items: start
+    }
+
+    .sidebar-content .site-content > .martfury-container > .primary-sidebar {
+        grid-column: 1;
+        grid-row: 1;
+        width: auto
+    }
+
+    .sidebar-content .site-content > .martfury-container > .site-main {
+        grid-column: 2;
+        grid-row: 1
+    }
+}
+
+/*
  * Log in / Register (My account, logged out): the site's card treatment instead of Martfury's grey
  * band. The Log in / Register tabs are a pill toggle (active = brand pink, like the buttons), each form
  * sits in a lavender-bordered card with the purple glow, and the inputs get the lavender focus ring.

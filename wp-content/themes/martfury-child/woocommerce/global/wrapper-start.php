@@ -2,8 +2,10 @@
 /**
  * Content wrappers
  *
- * Martfury's wrapper (shop, product categories and brands, search results, product pages) plus a <main> - the
- * page's main landmark for screen readers, as in Martfury's page.php. Without it these pages had none.
+ * The shop, product categories and brands, product search results and product pages: just <main> - the page's
+ * main landmark, in the structure every template shares (#content > .martfury-container > main#main.site-main,
+ * the sidebar beside it; see martfury_open_site_content_container() in the child's functions.php). Martfury's wrapper
+ * added a div#primary column around it.
  *
  * @author      WooThemes
  * @package     WooCommerce/Templates
@@ -15,5 +17,4 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 ?>
-<div id="primary" class="content-area <?php martfury_content_columns(); ?>">
-	<main id="main" class="site-main">
+<main id="main" class="site-main">

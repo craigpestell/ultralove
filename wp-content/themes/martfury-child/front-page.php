@@ -2,10 +2,8 @@
 /**
  * Home page, built in the theme rather than Elementor. The call to action's text is edited here.
  *
- * The same wrappers as every other page - the page container (.martfury-container, see
- * ultralove_site_content_container_class() in functions.php), #primary and <main id="main" class="site-main">,
- * as in Martfury's page.php and the child's WooCommerce wrapper (woocommerce/global/wrapper-start.php). Top to
- * bottom:
+ * The same structure as every other page: #content > .martfury-container > main#main.site-main (see
+ * martfury_open_site_content_container() in the child's functions.php). Top to bottom:
  *  - the rotating banner (UltraLove Banners, group "home"), 24px below the header's navigation row;
  *  - #topcta: heading, intro and the two main buttons on the aurora backdrop (which UltraLove Banners
  *    extends up behind the banner - #ub-hero-combo-bg). These two have backdrops, so they run full width
@@ -20,7 +18,6 @@
 
 get_header();
 ?>
-<div id="primary" class="content-area <?php martfury_content_columns(); ?>">
 <main id="main" class="site-main">
     <section class="ul-home-bleed ul-home-banner">
 		<?php echo do_shortcode( '[ultralove_banner group="home"]' ); ?>
@@ -65,6 +62,5 @@ get_header();
         </div>
     </div>
 </main><!-- #main -->
-</div><!-- #primary -->
 <?php
 get_footer();
