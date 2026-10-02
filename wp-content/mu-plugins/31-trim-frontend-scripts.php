@@ -50,26 +50,26 @@ add_action(
 		if ( ! $variable || ! $variable->count ) {
 			wp_dequeue_script( 'wc-add-to-cart-variation' );
 		}
+
+		// YITH registers its script on `init`, before the page is known, so its dependencies are trimmed here.
+		if ( ! function_exists( 'yith_wcwl_is_wishlist_page' ) || ! yith_wcwl_is_wishlist_page() ) {
+			foreach ( array( 'jquery-yith-wcwl', 'jquery-yith-wcwl-user' ) as $handle ) {
+				$script = wp_scripts()->query( $handle );
+				if ( $script ) {
+					// YITH names the prettyPhoto handle per WooCommerce version (wc-prettyPhoto or prettyPhoto).
+					$script->deps = array_values(
+						array_filter(
+							$script->deps,
+							function ( $dep ) {
+								return 'jquery-selectBox' !== $dep && false === stripos( $dep, 'prettyPhoto' );
+							}
+						)
+					);
+				}
+			}
+		}
 	},
 	100 // After Martfury (10) and CF7 have enqueued theirs.
-);
-
-add_filter(
-	'yith_wcwl_main_script_deps',
-	function ( $deps ) {
-		if ( function_exists( 'yith_wcwl_is_wishlist_page' ) && yith_wcwl_is_wishlist_page() ) {
-			return $deps;
-		}
-		// YITH names the prettyPhoto handle per WooCommerce version (wc-prettyPhoto or prettyPhoto).
-		return array_values(
-			array_filter(
-				$deps,
-				function ( $handle ) {
-					return 'jquery-selectBox' !== $handle && false === stripos( $handle, 'prettyPhoto' );
-				}
-			)
-		);
-	}
 );
 
 add_action(
