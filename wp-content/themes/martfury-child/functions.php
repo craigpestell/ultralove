@@ -64,6 +64,12 @@ function martfury_child_enqueue_scripts() {
 	wp_deregister_style( 'linearicons' );
 	wp_register_style( 'linearicons', get_stylesheet_directory_uri() . '/css/linearicons-subset.css', array(), filemtime( $icons_css ) );
 
+	// Tooltips: js/tooltips.js in place of jQuery UI's tooltip (~27 KB with the jQuery UI core it needs).
+	// Same handle, so the parent's script that depends on it still loads.
+	$tooltips_js = get_stylesheet_directory() . '/js/tooltips.js';
+	wp_deregister_script( 'jquery-ui-tooltip' );
+	wp_register_script( 'jquery-ui-tooltip', get_stylesheet_directory_uri() . '/js/tooltips.js', array( 'jquery' ), (string) filemtime( $tooltips_js ), true );
+
 	ultralove_use_trimmed_styles();
 
 	if ( is_rtl() ) {

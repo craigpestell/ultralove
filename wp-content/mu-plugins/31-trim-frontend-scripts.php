@@ -14,10 +14,13 @@
  *                options. Loaded only while the store has a published variable product.
  *              - YITH Wishlist's jquery.selectBox and prettyPhoto (~35 KB): only the wishlist page's templates
  *                use them (YITH's script checks for both before calling them). Loaded on the wishlist page only.
+ *              - Slick (~40 KB): Martfury's script needs it, but outside product pages only Quick View's
+ *                gallery uses it. Those pages get slick-on-demand.js in its place, which loads Slick the first
+ *                time something is made into a carousel.
  *              - YITH Wishlist's settings (`yith_wcwl_l10n`): YITH's legacy button renderer re-localizes its
  *                script for every wishlist button, so the page carried one ~1.6 KB copy per product card (43
  *                on the home page). Printed once.
- * Version: 1.2.0
+ * Version: 1.3.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -35,6 +38,14 @@ add_action(
 				wp_dequeue_style( $handle );
 			}
 			remove_action( 'wp_footer', 'martfury_product_images_lightbox' );
+
+			$slick = wp_scripts()->query( 'slick' );
+			if ( $slick ) {
+				wp_localize_script( 'slick', 'ulSlick', array( 'src' => add_query_arg( 'ver', $slick->ver, $slick->src ) ) );
+				$slick->src  = content_url( 'mu-plugins/slick-on-demand.js' );
+				$slick->ver  = (string) filemtime( __DIR__ . '/slick-on-demand.js' );
+				$slick->deps = array( 'jquery' );
+			}
 		}
 
 		$post = get_post();
