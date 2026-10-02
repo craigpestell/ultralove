@@ -7,10 +7,15 @@ in the order listed.
 
 ## Code
 
-Nothing pending: production runs `main` (`45e8b69`, deployed 2026-10-01 20:12 UTC - phone product cards, the
-new header with the search on its own row, cart page layout below 992px, regenerated critical CSS). After a
-deploy that changes page HTML, purge Cloudflare (Caching > Purge Everything, or the changed URLs): APO serves
-cached HTML (`cf-cache-status: HIT`) until then.
+Nothing pending: production runs `main` (`84ac3c8`, deployed 2026-10-02 04:58 UTC) on the new production droplet
+(Ubuntu 26.04, PHP 8.5 - see `documentation/ARCHITECTURE.md` 1.3). After a deploy that changes page HTML, purge
+Cloudflare (Caching > Purge Everything, or the changed URLs): APO serves cached HTML (`cf-cache-status: HIT`)
+until then.
+
+**`/root` backups from before 2026-10-02** (the Turnstile form backup below, the pre-release content backups) were on
+the previous production droplet and were not copied to the new one: they're only in the snapshot
+`RETIRED-2026-10-02-PRODUCTION-WEB-ultralove.ca-ubuntu24.04-php8.3` (restore it to a temporary 320 GB+ droplet to
+get a file back).
 
 ## Production steps after the code deploy
 
@@ -37,13 +42,13 @@ back. Then purge Cloudflare (the footer is on every page).
 - Cloudflare Turnstile instead of reCAPTCHA v2 on all three forms (footer form 1, Registration 2, Contact Us 3),
   2026-10-01: Gravity Forms Turnstile add-on 1.5.0 with a production widget for `ultralove.ca`, fields switched
   by `ops/gravityforms/switch-recaptcha-to-turnstile.php`. Backup of the forms before:
-  `/root/gf-forms-before-turnstile-20261001022554.json`. Rollback: restore each form from it with
+  `/root/gf-forms-before-turnstile-20261001022554.json` (in the retired droplet's snapshot, above). Rollback: restore each form from it with
   `GFAPI::update_form()` and deactivate the add-on (the reCAPTCHA v2 keys are still in Forms > Settings).
 
 Release of 2026-09-29 / 2026-09-30 (code: product cards and carousels, container-based product columns,
 account and Buy Wholesale styling, home page as `front-page.php`, `[ultralove_brand_grid]`, trimmed Martfury
-CSS, deferred jQuery, trimmed stylesheets, header search fix). Backups of the replaced content are in `/root`
-on the production server.
+CSS, deferred jQuery, trimmed stylesheets, header search fix). Backups of the replaced content were in `/root`
+on the previous production droplet (now in its snapshot, above).
 
 - Brands We Carry page (post 16575) content is `[ultralove_brand_grid]` (2026-09-29).
 - Contact Us page (post 70) has the Gravity Forms #3 shortcode after its text (2026-09-29).

@@ -1,6 +1,6 @@
 ---
 name: ultralove-infrastructure
-description: 'Operate and troubleshoot the UltraLove WordPress production or development infrastructure: PHP 8.3 FPM, Nginx, Redis, Cloudflare, DigitalOcean droplets, managed MySQL, backups, WordPress CLI, performance, 502/504 errors, and deployment validation. Use when changing or diagnosing server, PHP-FPM, Nginx, cache, cron, WordPress runtime, DigitalOcean, or backup behavior for this workspace.'
+description: 'Operate and troubleshoot the UltraLove WordPress production or development infrastructure: PHP 8.5 FPM, Nginx, Redis, Cloudflare, DigitalOcean droplets, managed MySQL, backups, WordPress CLI, performance, 502/504 errors, and deployment validation. Use when changing or diagnosing server, PHP-FPM, Nginx, cache, cron, WordPress runtime, DigitalOcean, or backup behavior for this workspace.'
 argument-hint: 'Describe the infrastructure change, symptom, or host to investigate'
 ---
 
@@ -11,9 +11,9 @@ Use this skill for targeted operations on this WordPress/WooCommerce environment
 ## Environment Map
 
 - Production app: `ultralove-prod-app` in DigitalOcean `sfo2`; WordPress root is `/var/www/html`.
-- Production services: `nginx`, `php8.3-fpm`, and `redis-server`.
+- Production services: `nginx`, `php8.5-fpm`, and `redis-server`.
 - Nginx vhost: `/etc/nginx/sites-available/ultralove.ca.conf`.
-- PHP-FPM pool: `/etc/php/8.3/fpm/pool.d/www.conf`.
+- PHP-FPM pool: `/etc/php/8.5/fpm/pool.d/www.conf`.
 - WordPress configuration: `/var/www/html/wp-config.php`.
 - Development and production are separate DigitalOcean droplets. Do not assume service or plugin parity.
 - The current database endpoint must be obtained from the active WordPress configuration or runtime. Do not rely on a historical private-IP record.
@@ -24,7 +24,7 @@ For fuller topology, service locations, backup design, and known verification ga
 
 1. Confirm the target environment before changing anything. Production app, production DB, development app, development DB, and mail each have separate responsibilities.
 2. Never print, commit, or copy credentials, API tokens, salts, private keys, or unredacted configuration files. Use filtered output and describe values by presence only.
-3. Validate configuration before reload: `nginx -t` before `systemctl reload nginx`; `php-fpm8.3 -t` before `systemctl reload php8.3-fpm` when PHP-FPM configuration changes.
+3. Validate configuration before reload: `nginx -t` before `systemctl reload nginx`; `php-fpm8.5 -t` before `systemctl reload php8.5-fpm` when PHP-FPM configuration changes.
 4. Prefer `reload` over `restart` for Nginx. Restart PHP-FPM only when required, and check service health immediately afterward.
 5. Do not change managed database, firewall, DNS, Cloudflare, DigitalOcean, or backup-retention settings based on this app host alone. Confirm the target resource and current state first.
 6. Keep WordPress changes in the child theme, a custom plugin, or an MU plugin. Do not edit WordPress core or vendor plugins unless the task explicitly requires it and the update-overwrite risk is documented.
@@ -35,9 +35,9 @@ For fuller topology, service locations, backup design, and known verification ga
 Start with read-only checks, then choose the owning layer. Do not change all services at once.
 
 ```bash
-systemctl is-active nginx php8.3-fpm redis-server
-systemctl --no-pager --full status nginx php8.3-fpm redis-server
-journalctl -u nginx -u php8.3-fpm --since '30 minutes ago' --no-pager
+systemctl is-active nginx php8.5-fpm redis-server
+systemctl --no-pager --full status nginx php8.5-fpm redis-server
+journalctl -u nginx -u php8.5-fpm --since '30 minutes ago' --no-pager
 tail -n 200 /var/log/nginx/error.log
 free -h
 df -h /
@@ -49,7 +49,7 @@ For a specific failing URL, compare a public request with an origin-local reques
 
 - Nginx has an upstream error, timeout, or connection refusal: inspect PHP-FPM status, pool configuration, saturation, and PHP errors.
 - PHP-FPM is healthy but the request is slow: isolate WordPress/plugin/database calls, object-cache behavior, and external HTTP/API calls.
-- Anonymous and authenticated output differ: inspect WordPress cacheability, Elementor generated CSS, Redis object cache, Cloudflare cache rules, and browser/CDN cache state.
+- Anonymous and authenticated output differ: inspect WordPress cacheability, the inlined critical CSS (logged-out pages only; `ops/critical-css/`), Redis object cache, Cloudflare cache rules (APO), and browser/CDN cache state.
 - Browser receives a Cloudflare error: retain the `cf-ray` and timestamp, then determine whether the origin returned an error before changing Cloudflare settings.
 
 ## Safe Change Procedure
@@ -67,9 +67,9 @@ For a specific failing URL, compare a public request with an origin-local reques
 
 ```bash
 nginx -t && systemctl reload nginx
-php-fpm8.3 -t && systemctl reload php8.3-fpm
-systemctl is-active nginx php8.3-fpm
-journalctl -u nginx -u php8.3-fpm --since '10 minutes ago' --no-pager
+php-fpm8.5 -t && systemctl reload php8.5-fpm
+systemctl is-active nginx php8.5-fpm
+journalctl -u nginx -u php8.5-fpm --since '10 minutes ago' --no-pager
 ```
 
 Check the Nginx vhost before changing FastCGI parameters, timeouts, redirects, or caching. There is no known explicit `fastcgi_cache` or `proxy_cache` configuration, so do not infer that page responses are origin-cached by Nginx.
@@ -92,8 +92,8 @@ php -l wp-content/themes/martfury-child/functions.php
 - The active theme is `martfury-child` with parent `martfury`.
 - `DISABLE_WP_CRON` is enabled, so investigate system cron before assuming WordPress scheduled tasks execute on web requests.
 - Redis is local and the Redis object-cache drop-in is present. Verify object-cache changes without flushing production cache broadly.
-- Elementor CSS is generated under `wp-content/uploads/elementor/css/`; stale CSS can affect guest rendering. Verify actual generated asset responses before clearing Elementor and CDN caches.
-- Slider Revolution contains an intentional Cloudinary optimization customization in vendor code. Treat plugin updates as a potential overwrite event and validate rendered image URLs after updates.
+- Elementor has been removed (2026-09-29). Logged-out pages inline `martfury-child/css/critical.css` and load the full stylesheet afterwards; a stale critical CSS shows old styles first. Regenerate it with the Critical CSS workflow (`ops/critical-css/README.md`) rather than editing it.
+- Slider Revolution is no longer active (the banners are the UltraLove Banners plugin); its old Cloudinary customization notes in `documentation/ARCHITECTURE.md` 4.5 are historical.
 
 ## DigitalOcean, Cloudflare, And Database Boundaries
 
