@@ -1,4 +1,16 @@
 #!/usr/bin/env bash
+# Build the replacement production app droplet (Ubuntu 26.04, PHP 8.5) with production's server configuration,
+# taken from this repo's ops/ directory (captured from the 24.04 / PHP 8.3 droplet, Oct 2026):
+#   ops/php/99-ultralove-production.ini   PHP settings and OPcache sizes
+#   ops/php/www.conf                       PHP-FPM pool, sized for s-4vcpu-8gb
+#   ops/nginx/10-ultralove-http.conf       http-level tuning (keepalive, upload size, gzip)
+#   ops/nginx/99-ultralove-rate-limit-zones.conf, ultralove.ca.conf, localhost-admin.conf
+# plus Redis (1 GB cap), the firewall (SSH + HTTP/S from Cloudflare only), Cloudflare client IPs for nginx and
+# the WordPress cron runner.
+#
+# Run ON the new droplet as root, from a copy of the repo's ops/ directory, after copying the Cloudflare Origin
+# CA certificate (see README.md):
+#   scp -r ops root@NEW_IP:/root/ops && ssh root@NEW_IP /root/ops/do-migration/bootstrap-app-server.sh
 set -euo pipefail
 
 if [[ $EUID -ne 0 ]]; then
@@ -6,14 +18,18 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-DOMAIN="${1:-}"
-WP_ROOT="${2:-/var/www/html}"
+OPS="$(cd "$(dirname "$0")/.." && pwd)"
+WP_ROOT=/var/www/html
+PHP_VERSION="8.5"
+CERT=/etc/ssl/cloudflare/ultralove.ca.pem
+CERT_KEY=/etc/ssl/cloudflare/ultralove.ca.key
 
-if [[ -z "$DOMAIN" ]]; then
-  echo "Usage: sudo $0 DOMAIN [WP_ROOT]" >&2
+if [[ ! -s "$CERT" || ! -s "$CERT_KEY" ]]; then
+  echo "Copy the Cloudflare Origin CA certificate first: $CERT and $CERT_KEY (see ops/do-migration/README.md)" >&2
   exit 1
 fi
 
+export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
 
 package_available() {
@@ -23,17 +39,13 @@ package_available() {
   [[ -n "$candidate" && "$candidate" != "(none)" ]]
 }
 
-# PHP 8.5 (Ubuntu 26.04's own) with the extensions production uses. No opcache package: OPcache is part of
-# PHP itself since 8.5.
-PHP_VERSION="8.5"
+# --- Packages: PHP 8.5 (Ubuntu 26.04's own) with the extensions production uses - no opcache package, OPcache
+# is part of PHP itself since 8.5 - and the rest of production's stack.
 PHP_PACKAGES=()
 for ext in fpm cli mysql curl xml mbstring zip gd intl imagick bcmath soap redis igbinary readline; do
   PHP_PACKAGES+=("php${PHP_VERSION}-${ext}")
 done
-PHP_FPM_SERVICE="php${PHP_VERSION}-fpm"
-PHP_FPM_SOCKET="/run/php/php${PHP_VERSION}-fpm.sock"
-
-apt-get install -y nginx "${PHP_PACKAGES[@]}" unzip curl fail2ban certbot python3-certbot-nginx mariadb-client
+apt-get install -y nginx "${PHP_PACKAGES[@]}" redis-server ufw fail2ban sysstat atop unzip curl mariadb-client
 
 if command -v aws >/dev/null 2>&1; then
   echo "aws CLI already installed: $(aws --version 2>&1 | head -n 1)"
@@ -43,50 +55,83 @@ else
   echo "awscli package not available in this repository; skipping awscli installation"
 fi
 
-systemctl enable nginx "$PHP_FPM_SERVICE" fail2ban
-systemctl start nginx "$PHP_FPM_SERVICE" fail2ban
-
-if [[ -z "$PHP_FPM_SOCKET" || ! -S "$PHP_FPM_SOCKET" ]]; then
-  PHP_FPM_SOCKET="$(find /run/php -maxdepth 1 -type s -name 'php*-fpm.sock' | head -n 1 || true)"
+if ! command -v wp >/dev/null 2>&1; then
+  curl -fsSL https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar -o /usr/local/bin/wp
+  chmod +x /usr/local/bin/wp
 fi
 
-if [[ -z "$PHP_FPM_SOCKET" ]]; then
-  echo "Could not determine PHP-FPM socket path under /run/php" >&2
-  exit 1
-fi
-
-mkdir -p "$WP_ROOT"
-chown -R www-data:www-data "$WP_ROOT"
-chmod -R 755 "$WP_ROOT"
-
-cat >/etc/nginx/sites-available/${DOMAIN}.conf <<EOF
-server {
-    listen 80;
-    server_name ${DOMAIN} www.${DOMAIN};
-    root ${WP_ROOT};
-    index index.php index.html;
-
-    location / {
-        try_files \$uri \$uri/ /index.php?\$args;
-    }
-
-    location ~ \\.php$ {
-        include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:${PHP_FPM_SOCKET};
-        fastcgi_read_timeout 300;
-    }
-
-    location ~ /\\. {
-        deny all;
-    }
+# --- PHP: production settings and pool; rotate the slow log (it grew unrotated to 50+ MB on the old droplet).
+install -m 644 "$OPS/php/99-ultralove-production.ini" "/etc/php/$PHP_VERSION/fpm/conf.d/99-ultralove-production.ini"
+install -m 644 "$OPS/php/www.conf" "/etc/php/$PHP_VERSION/fpm/pool.d/www.conf"
+cat >"/etc/logrotate.d/php$PHP_VERSION-fpm-slowlog" <<EOF
+/var/log/php$PHP_VERSION-fpm.www-slow.log {
+    weekly
+    rotate 4
+    compress
+    missingok
+    notifempty
+    copytruncate
 }
 EOF
 
-ln -sf /etc/nginx/sites-available/${DOMAIN}.conf /etc/nginx/sites-enabled/${DOMAIN}.conf
-rm -f /etc/nginx/sites-enabled/default
+# --- Redis (WordPress object cache): capped at 1 GB, least-frequently-used keys evicted first (the old droplet
+# had 3 GB on 16 GB RAM and used ~460 MB at peak). Later directives win, so the block is appended.
+if ! grep -q "ultralove: object cache limits" /etc/redis/redis.conf; then
+  printf '\n# ultralove: object cache limits\nmaxmemory 1gb\nmaxmemory-policy allkeys-lfu\n' >>/etc/redis/redis.conf
+fi
+
+# --- nginx: production's http tuning, rate-limit zones, site and local status page; Cloudflare's client IPs
+# (all web traffic comes through Cloudflare, so logs and the per-IP rate limits see the visitor, not the edge);
+# unknown hostnames get no response.
+install -m 644 "$OPS/nginx/10-ultralove-http.conf" /etc/nginx/conf.d/10-ultralove-http.conf
+install -m 644 "$OPS/nginx/99-ultralove-rate-limit-zones.conf" /etc/nginx/conf.d/99-ultralove-rate-limit-zones.conf
+{
+  echo "# Cloudflare's ranges (https://www.cloudflare.com/ips-v4, ips-v6), written by bootstrap-app-server.sh."
+  for ip in $(curl -fsS https://www.cloudflare.com/ips-v4) $(curl -fsS https://www.cloudflare.com/ips-v6); do
+    echo "set_real_ip_from $ip;"
+  done
+  echo "real_ip_header CF-Connecting-IP;"
+} >/etc/nginx/conf.d/20-cloudflare-real-ip.conf
+install -m 644 "$OPS/nginx/ultralove.ca.conf" /etc/nginx/sites-available/ultralove.ca.conf
+install -m 644 "$OPS/nginx/localhost-admin.conf" /etc/nginx/sites-available/localhost-admin.conf
+cat >/etc/nginx/sites-available/default <<'EOF'
+server {
+	listen 80 default_server;
+	listen [::]:80 default_server;
+	server_name _;
+	return 444;
+}
+EOF
+ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+ln -sf /etc/nginx/sites-available/ultralove.ca.conf /etc/nginx/sites-enabled/ultralove.ca.conf
+ln -sf /etc/nginx/sites-available/localhost-admin.conf /etc/nginx/sites-enabled/localhost-admin.conf
 nginx -t
+
+# --- Firewall: SSH from anywhere; HTTP/HTTPS only from Cloudflare, as on the old droplet.
+ufw default deny incoming
+ufw default allow outgoing
+ufw allow 22/tcp comment SSH
+for ip in $(curl -fsS https://www.cloudflare.com/ips-v4); do
+  ufw allow proto tcp from "$ip" to any port 80,443 comment Cloudflare
+done
+ufw --force enable
+
+# --- WordPress cron from the system cron (wp-config.php sets DISABLE_WP_CRON), as on the old droplet.
+cat >/etc/cron.d/ultralove-wp-cron <<'EOF'
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+*/5 * * * * www-data cd /var/www/html && /usr/local/bin/wp --path=/var/www/html cron event run --due-now >> /var/log/wp-cron-runner.log 2>&1
+EOF
+touch /var/log/wp-cron-runner.log
+chown www-data:www-data /var/log/wp-cron-runner.log
+
+mkdir -p "$WP_ROOT"
+chown -R www-data:www-data "$WP_ROOT"
+
+systemctl enable nginx "php$PHP_VERSION-fpm" redis-server fail2ban
+systemctl restart "php$PHP_VERSION-fpm" redis-server fail2ban
 systemctl reload nginx
 
-echo "App server baseline completed for ${DOMAIN}."
-echo "Using PHP-FPM socket: ${PHP_FPM_SOCKET}"
-echo "Next: rsync WordPress files and run certbot --nginx -d ${DOMAIN} -d www.${DOMAIN}"
+echo "Production app baseline complete (PHP $PHP_VERSION, $(nproc) vCPU, $(free -g | awk '/Mem:/ {print $2}') GB)."
+echo "Next: copy the WordPress files (sync-site-files.sh) and wp-config.php, then the backup scripts (README.md)."
