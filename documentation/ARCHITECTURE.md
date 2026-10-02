@@ -57,6 +57,35 @@ can't shrink a disk, so production was rebuilt on a new, smaller droplet with Ub
 (mail and cron blocked on it), then switched over by moving the reserved IP (~04:56 UTC). Cron and backups ran on
 exactly one droplet throughout. Steps: `ops/do-migration/README.md` ("Replacing the production droplet").
 
+### 1.4 Networks and Firewalls (2026-10-02)
+
+| VPC | Range | Members |
+|---|---|---|
+| default-sfo2 | 10.120.0.0/20 | prod web, mail, managed DB |
+| ultralove-dev-vpc | 10.140.0.0/20 | dev only - deliberately isolated from prod and mail |
+| default-sfo3 | 10.124.0.0/20 | nothing (unused default) |
+
+| Firewall | Applies to | Inbound |
+|---|---|---|
+| UFW on prod web | PRODUCTION-WEB-ultralove.ca | 22/tcp from anywhere; 80,443/tcp from Cloudflare's ranges only; default deny |
+| Managed DB trusted sources | db-mysql-sfo2-16643 | droplet 605458201 (prod web) only |
+| DO cloud firewall `ultralove-dev-fw` | ultralove-dev | 22/tcp from anywhere |
+| UFW on dev | ultralove-dev | SSH only (web arrives through the Cloudflare Tunnel) |
+
+No DigitalOcean cloud firewall is attached to prod web or mail; the mail droplet's own firewall hasn't been
+inspected.
+
+### 1.5 Monitoring Alerts (DigitalOcean)
+
+| Alert | Scope | Threshold | Notifies |
+|---|---|---|---|
+| Droplet CPU | tag `Production` (covers the new prod droplet) | > 70% for 5 min | email + Slack |
+| DB CPU | managed DB | > 90% for 5 min | email |
+| DB disk | managed DB | > 90% for 5 min | email |
+| DB memory | managed DB | > 90% for 5 min | email |
+
+A droplet built for production must carry the `Production` tag to be monitored (`provision-droplet.sh` sets it).
+
 ## 2) Prod App Droplet (PRODUCTION-WEB-ultralove.ca)
 
 ### 2.1 OS / Platform
@@ -131,6 +160,17 @@ droplet; 8 concurrent clients -> 3.5 req/s, p95 3.2 s, no errors, at most 9 work
 - 600 root:root /root/.spaces_env, /etc/ssl/cloudflare/ultralove.ca.key
 - 644 root:root /etc/ssl/cloudflare/ultralove.ca.pem
 
+### 2.6 Access and Deployment
+
+- Code reaches the servers only through `deploy/deploy.sh` (README "Deploying"; the `ultralove-deploy` skill):
+  PR -> CI (PHP 8.5 lint, shellcheck, no dumps/archives) -> merge -> the "Deploy to dev" Action deploys `main` to
+  dev -> `deploy/deploy.sh prod` from a trusted machine, which refuses commits not on `origin/main` and live on
+  dev. What the repo owns on the servers: `deploy/owned-paths.rules`.
+- CI secrets live only in the GitHub `dev` environment (`DEV_SSH_KEY`, `DEV_SSH_KNOWN_HOSTS`, `DEV_HOST`); no CI
+  job can reach prod.
+- Prod -> dev push (`ops/dev/refresh-db.sh`, `sync-code.sh`): prod's key `/root/.ssh/ultralove-dev-push`, accepted
+  on dev only from prod's public IP (`restrict`); dev has no access to prod.
+
 ## 3) WordPress Application Layer
 
 ### 3.1 Core
@@ -163,7 +203,7 @@ wp-all-import-pro, wp-useronline, wpae-woocommerce-add-on, yith-woocommerce-wish
 Drop-in: `object-cache.php` (Redis). No longer active since the April inventory: elementor (removed 2026-09-29; its
 `_elementor_data` post meta is still in the database, unused), revslider (banners are UltraLove Banners),
 admin-site-enhancements, woocommerce-services, product-import-export-for-woo and the wt-import-export-for-woo add-ons.
-The MU plugin `10-elementor-font-display-swap.php` only touches Elementor's Google Fonts and is now inert.
+The MU plugin `10-elementor-font-display-swap.php` (Elementor's Google Fonts) was removed with Elementor's other leftovers.
 
 ### 3.4 Custom / Site-Specific Code
 
@@ -173,7 +213,50 @@ The MU plugin `10-elementor-font-display-swap.php` only touches Elementor's Goog
   - Closes active PHP sessions on init/admin_init/rest_api_init and before outbound HTTP requests.
   - Likely intended to reduce blocking/lock contention during REST/loopback calls.
 
+### 3.5 Local Modifications to Vendor Plugins (lost on update)
+
+- Cloudinary plugin 3.3.2: cloud-name regex fix, an "Unsync all Cloudinary media" bulk action and
+  `wp cloudinary unsync` (see `ops/dev/README.md`). Re-apply or re-check after a Cloudinary update.
+- (Slider Revolution's Cloudinary URL rewriting, section 4.5, is gone with the plugin - it's no longer on disk.)
+
+### 3.6 Installed but Inactive Plugins (2026-10-02)
+
+admin-site-enhancements, nelio-ab-testing, woocommerce-services, product-import-export-for-woo and the WebToffee
+add-ons wt-import-export-for-woo, -product and -product_review. Candidates for deletion (section 8).
+
 ## 4) Caching and Performance Architecture
+
+Layers, outside in (current):
+
+1. **Cloudflare edge:** APO caches anonymous HTML; static assets cached with the origin's headers (Browser Cache TTL
+   is *Respect Existing Headers* since 2026-09-14 - it had been cutting the origin's 1-year header to 4 hours).
+2. **nginx:** gzip and long-lived static-asset headers; no page cache (section 2.4, `ops/nginx/`).
+3. **WordPress / PHP:** Redis object cache (4.1) and OPcache (4.2).
+4. **Front-end assets:**
+   - **Autoptimize:** CSS aggregated with inline CSS included (`autoptimize_css_aggregate`,
+     `autoptimize_css_include_inline` = `on`), placed at the end of `<head>` after the preloads. JS is minified per
+     file, **not aggregated** (aggregation was a measurable regression, 4.11). Cart, checkout and my-account aren't
+     optimized.
+   - **Critical CSS** (`34-critical-css.php` + `martfury-child/css/critical.css`, logged-out visitors only): the first
+     screen's CSS inlined, the full stylesheet loaded without blocking. Generated by `ops/critical-css/` (the
+     "Critical CSS" workflow), never hand-edited. The Backdrops plugin's CSS stays inline and out of it.
+   - **Trimmed stylesheets:** purged copies of Martfury's, the icon fonts' and WooCommerce's CSS under their
+     original handles (Martfury 660 KB -> ~240 KB), built by `ops/css/`; regenerate after a Martfury or WooCommerce
+     update.
+   - `31-trim-frontend-scripts.php` / `33-trim-frontend-styles.php` drop unused JS/CSS (PhotoSwipe only on product
+     pages, no Google Fonts, no block CSS); `32-defer-jquery.php` defers jQuery on optimized pages.
+   - Fonts: Work Sans (two Latin files) and the icon font are self-hosted and preloaded.
+   - Images: Cloudinary delivery where synced; `30-woocommerce-loop-image-sizes.php` gives grid images correct
+     `sizes`.
+
+Rollbacks:
+
+| Change | Undo |
+|---|---|
+| Autoptimize entirely | `wp plugin deactivate autoptimize`, then purge Cloudflare |
+| CSS aggregation | set `autoptimize_css_aggregate` and `autoptimize_css_include_inline` to `''`, `wp autoptimize clear` |
+| Critical CSS | empty `critical.css` and deploy (pages fall back to the normal stylesheet) |
+| Any MU plugin | revert in git and deploy (PHP-FPM restarts automatically) |
 
 ### 4.1 WordPress Object Cache
 
@@ -473,6 +556,19 @@ Root cause: `wp-content/themes/martfury/style.css` uses the broad `transition: a
 - This is separate from the dedicated production mail droplet `PRODUCTION-mail-2026-ubuntu-24-LTS` (568349152), which likely serves mailbox/MTA or other mail infrastructure responsibilities outside WordPress plugin-driven outbound mail.
 - Exact Mailgun mode and credentials are intentionally not recorded in plaintext here.
 
+### 6.5.3 Mail DNS (2026-10-02)
+
+| Path | How |
+|---|---|
+| Inbound mail, mailboxes | MX `mail.ultralove.ca` -> the mail droplet, 143.110.140.137 (Postfix + Dovecot; DNS only, not proxied by Cloudflare) |
+| WordPress outbound mail | Mailgun, sending domain `mg.ultralove.ca` (SPF `v=spf1 include:mailgun.org ~all`) |
+
+- **Root SPF is `v=spf1 ~all`** - it authorizes no servers - while **DMARC is `p=quarantine`**
+  (`adkim=r; aspf=r; rua=mailto:ultra@ultralove.ca`). Mail sent *as @ultralove.ca* from the mail droplet gets no SPF
+  pass, so it only avoids quarantine through an aligned DKIM signature. See section 8.
+- The mail droplet was built from a snapshot named `2vcpu-4gb-sfo2-mail-backup-to-be-updated-...`; its internals, SSH
+  access and backups are undocumented.
+
 ## 7) Backups and Retention Architecture
 
 All off-site backups go to the DigitalOcean Spaces bucket `ultralove-web-backups` (sfo3). The scripts are in the
@@ -509,7 +605,18 @@ repo (`ops/prod/`) and installed by the bootstrap; credentials are in `/root/.sp
   leaked key exposes its own backups; consider a separate restore-only key.
 - `mu-plugins/ultralove-wc-analytics-top-brands.php` logs "Array to string conversion" on every request (seen
   thousands of times a day on both PHP 8.3 and 8.5); harmless but noisy.
-- Prod mail droplet: not inspected (mail stack, DNS/mail routing, backups).
+- **Mail SPF:** add the mail droplet to the root SPF (`ip4:143.110.140.137` or `a:mail.ultralove.ca`) once confirmed
+  that it sends as @ultralove.ca, and check its DKIM - with DMARC at `p=quarantine`, mail that fails both is
+  quarantined (6.5.3).
+- Prod mail droplet: not inspected (SSH access, Postfix/Dovecot config, TLS, backups); no droplet backups.
+- **Managed DB is a single node:** no standby during maintenance or a failure.
+- After the 2026-09-18 dev compromise, confirm that keys which lived on the old dev (including any with prod access)
+  were rotated.
+- Unused DigitalOcean resources: the `ultralove.ca` DNS zone (DNS is on Cloudflare), the `default-sfo3` VPC, and the
+  `defaultdb` and `ultralove_rewrite` databases on the cluster (confirm before removing).
+- Delete the inactive plugins (3.6) and Elementor's leftover `_elementor_data` post meta if no longer wanted.
+- Front-end bug: an inline "CSV export" script on every page looks for `#exportMe` / `#export` and throws when they're
+  missing (still present on the home page, 2026-10-02).
 - Cloudflare account settings (SSL/TLS mode, WAF, cache rules) and Cloudinary account settings: not recorded here.
 
 ## 9) Recommended Next Data Collection Commands
