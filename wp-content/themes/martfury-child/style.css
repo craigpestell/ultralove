@@ -2451,7 +2451,76 @@ ul.products li.product .product-inner {
     pointer-events: none
 }
 
-/* Quick view / wishlist on the thumbnail: the parent theme's (and production's) white bar that slides up
+/* YITH Wishlist's own rules for its Add to wishlist button (the heart on product cards, product pages and
+   Quick View) and the button's added / loading states. YITH's stylesheet (~40 KB, plus prettyPhoto and
+   jquery.selectBox) loads on the wishlist page only (mu-plugins/33-trim-frontend-styles.php); everywhere
+   else these are the only rules of it that apply. */
+.yith-wcwl-add-to-wishlist {
+    margin-top: 10px
+}
+
+.yith-wcwl-add-to-wishlist .yith-wcwl-add-button,
+.yith-wcwl-wishlistaddedbrowse {
+    display: flex;
+    flex-direction: column;
+    align-items: center
+}
+
+a.add_to_wishlist {
+    cursor: pointer
+}
+
+.yith-wcwl-add-button a.add_to_wishlist {
+    margin: 0;
+    box-shadow: none;
+    text-shadow: none
+}
+
+.yith-wcwl-add-to-wishlist svg.yith-wcwl-icon-svg {
+    height: auto;
+    width: 25px;
+    color: var(--add-to-wishlist-icon-color, #000)
+}
+
+.yith-wcwl-add-to-wishlist.exists svg.yith-wcwl-icon-svg {
+    color: var(--added-to-wishlist-icon-color, #000)
+}
+
+.yith-wcwl-add-to-wishlist a.add_to_wishlist > .yith-wcwl-icon-svg {
+    vertical-align: bottom
+}
+
+.yith-wcwl-add-button .add_to_wishlist svg.yith-wcwl-icon-svg {
+    margin-right: 5px
+}
+
+.yith-wcwl-wishlistaddedbrowse .feedback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    text-wrap: balance
+}
+
+.yith-wcwl-add-to-wishlist .feedback .yith-wcwl-icon {
+    margin-right: 5px
+}
+
+.yith-wcwl-add-to-wishlist .ajax-loading {
+    margin-left: 5px;
+    vertical-align: middle;
+    visibility: hidden;
+    box-shadow: none!important;
+    display: inline!important;
+    width: 16px!important;
+    height: 16px!important
+}
+
+a.add_to_wishlist + a.view-wishlist {
+    margin-left: 15px
+}
+
+/* Quick view / wishlist on the thumbnail:the parent theme's (and production's) white bar that slides up
    over the bottom of the image on hover, icons inside. Only fixes on top of it:
    - the heart is centred in its hover circle: YITH Wishlist 4 draws it as an SVG with a 5px right margin
      and a 25px width, and the parent theme adds a 2px top margin, which pushed it off-centre;

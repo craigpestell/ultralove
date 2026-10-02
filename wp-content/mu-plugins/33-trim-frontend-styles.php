@@ -9,9 +9,13 @@
  *                global-styles / classic-theme inline CSS): the theme, widgets and shortcode pages have no
  *                blocks - only pages written in the block editor do (cart, checkout, my account, ...).
  *                Loaded only on a page whose content has blocks.
+ *              - YITH Wishlist's stylesheet (~40 KB) with its prettyPhoto (~9 KB) and jquery.selectBox (~3 KB)
+ *                dependencies and its inline colour settings: almost all of it styles the wishlist page. The
+ *                few rules for the Add to wishlist button are in the child theme's style.css. Loaded on the
+ *                wishlist page only.
  *              Everything that's left is combined into one file by Autoptimize (CSS aggregation, inline CSS
  *              included so the cascade order stays the same).
- * Version: 1.0.0
+ * Version: 1.1.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -46,3 +50,18 @@ function ultralove_dequeue_unused_block_styles() {
 }
 add_action( 'wp_enqueue_scripts', 'ultralove_dequeue_unused_block_styles', 100 ); // After WooCommerce and core.
 add_action( 'wp_footer', 'ultralove_dequeue_unused_block_styles', 2 );
+
+/**
+ * YITH enqueues its stylesheet again while rendering each Add to wishlist button, so like the block styles it is
+ * dequeued at wp_enqueue_scripts and again before the late styles print.
+ */
+function ultralove_dequeue_wishlist_styles() {
+	if ( function_exists( 'yith_wcwl_is_wishlist_page' ) && yith_wcwl_is_wishlist_page() ) {
+		return;
+	}
+	foreach ( array( 'yith-wcwl-main', 'yith-wcwl-user-main', 'yith-wcwl-theme' ) as $handle ) {
+		wp_dequeue_style( $handle );
+	}
+}
+add_action( 'wp_enqueue_scripts', 'ultralove_dequeue_wishlist_styles', 100 ); // After YITH.
+add_action( 'wp_footer', 'ultralove_dequeue_wishlist_styles', 2 );
