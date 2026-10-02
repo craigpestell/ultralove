@@ -9,7 +9,7 @@ network and had prod's keys; it was compromised on 2026-09-18 and destroyed.)
 
 | | |
 |---|---|
-| Droplet | `ultralove-dev` (s-4vcpu-8gb, sfo2): Ubuntu 26.04, nginx + PHP 8.5 + MySQL 8.4 + Redis on one box (prod is still 24.04 / PHP 8.3; this setup is the recipe for rebuilding it) |
+| Droplet | `ultralove-dev` (s-4vcpu-8gb, sfo2): Ubuntu 26.04, nginx + PHP 8.5 + MySQL 8.4 + Redis on one box (the same stack as production since 2026-10-02) |
 | Network | Own VPC `ultralove-dev-vpc` (10.140.0.0/20), no route to prod or mail |
 | Inbound | DO firewall + UFW: **SSH only** (key-only, fail2ban). nginx listens on 127.0.0.1 |
 | Web access | Cloudflare Tunnel (`cloudflared`, outbound only) → Cloudflare Access login (email PIN) for `DEV_ACCESS_EMAILS` |

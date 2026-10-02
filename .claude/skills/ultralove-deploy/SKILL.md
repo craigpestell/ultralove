@@ -16,7 +16,7 @@ Adding a new custom plugin means updating **both** `.gitignore` and `owned-paths
 
 ## Standard change → dev → prod
 
-1. Branch from `main`, make the change, commit, push, open a PR. CI lints PHP (8.3),
+1. Branch from `main`, make the change, commit, push, open a PR. CI lints PHP (8.5),
    shellchecks `deploy/`, and blocks SQL dumps/archives/backups/large files.
 2. Deploy the branch to dev and let the user verify it there:
    ```bash
@@ -68,7 +68,7 @@ So for any change to CSS (child `style.css`, trimmed copies, plugin stylesheets,
    changed PHP file; aborts before touching the webroot if any fail.
 5. Tars the current owned files to `/var/lib/ultralove-deploy/backups/<ts>-<prevsha>.tgz`
    (keeps 20), mirrors staging into `wp-content/`, `chown www-data`.
-6. **Restarts php8.3-fpm when any PHP file changed.** Opcache on these servers does not
+6. **Restarts PHP-FPM (`PHP_FPM_SERVICE` in `deploy/envs/<env>.env`, `php8.5-fpm`) when any PHP file changed.** Opcache on these servers does not
    revalidate timestamps, so without this the old code keeps running.
 7. Records the SHA plus a line in `deploy.log`, then runs `deploy/smoke-test.sh`
    (`/`, `/shop/`, `/my-account/`, `/wp-login.php` must return 200 with no PHP fatal text).

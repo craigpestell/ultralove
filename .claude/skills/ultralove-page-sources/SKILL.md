@@ -6,7 +6,7 @@ description: Map of where everything on an Ultralove (ultralove.ca / dev.ultralo
 # Where Ultralove page content comes from
 
 The site is WordPress + WooCommerce on the **Martfury** theme with a **martfury-child** child theme.
-**Elementor is deactivated** (dev now; production at the next release): the home page is the child
+**Elementor has been removed** (production since 2026-09-29): the home page is the child
 theme's `front-page.php`, other pages are plain page content (shortcodes / HTML). Code the repo owns (see `deploy/owned-paths.rules`): both themes,
 `wp-content/mu-plugins/`, `plugins/hide-price-until-login`, `plugins/ultralove-*`. Everything else -
 vendor plugins (martfury-addons, Elementor, YITH, ...), uploads and **all database content** - lives only

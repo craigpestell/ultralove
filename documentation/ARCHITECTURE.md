@@ -1,119 +1,135 @@
 # Infrastructure Architecture Runbook
 
-Last updated: 2026-09-14 (UTC)
-Source of truth for this document:
-- Live inspection on host: ubuntu-s-4vcpu-8gb-sfo2
-- WordPress runtime and DB option introspection
-- Existing backup and cron automation created in this workspace
+Last updated: 2026-10-02 (UTC) - production moved to a new droplet (Ubuntu 26.04, PHP 8.5, s-4vcpu-8gb).
+Source of truth for sections 1, 2, 4.1-4.3, 5.1, 7 and 8: live inspection on 2026-10-02 (`doctl`, the hosts
+themselves). Sections marked as dated (4.4 onwards, 10, 11) are historical notes from earlier work.
+
+Server configuration that used to exist only on the hosts is now in the repo: `ops/nginx/`, `ops/php/`
+(production nginx and PHP-FPM), `ops/prod/` (backup scripts) and `ops/do-migration/bootstrap-app-server.sh`,
+which builds a production app droplet from them; `ops/dev/` builds dev.
 
 ## 1) Topology Overview
 
-This environment is split across separate production and development droplets in DigitalOcean SFO2, with dedicated mail and database nodes in production.
+Production is one app droplet in DigitalOcean SFO2 behind Cloudflare, reached through a reserved IP, with a
+DigitalOcean managed MySQL database and a separate mail droplet. Development is one self-contained droplet
+(app + MySQL) behind a Cloudflare Tunnel.
 
-### 1.1 Known / Inferred Droplets
+```
+visitors -> Cloudflare (proxy, APO, WAF) -> reserved IP 167.99.26.122 -> PRODUCTION-WEB-ultralove.ca
+                                                                          (nginx, PHP 8.5, Redis, WordPress)
+                                                                              | private network (VPC)
+                                                                          managed MySQL db-mysql-sfo2-16643
+```
 
-| Role | Status | Identifier | Notes |
-|---|---|---|---|
-| Prod App | Confirmed | ultralove-prod-app | Droplet ID 565420744. This host. DO metadata hostname is ultralove-prod-app; system hostname is ubuntu-s-4vcpu-8gb-sfo2. Runs nginx + php-fpm + WordPress + Redis + backup scripts. |
-| Prod DB | Confirmed | PRODUCTION-DB-ultralove.ca | Droplet ID 533903042. Private IP 10.120.0.4 matches WordPress DB_HOST. |
-| Prod Mail | Confirmed | PRODUCTION-MAIL-mail.ultralove.ca | Droplet ID 242963159. Dedicated mail host. |
-| Dev App | Confirmed | ultralove-dev-app | Droplet ID 565178171. Separate application node in sfo2. |
-| Dev DB | Confirmed | ultralove-dev-db | Droplet ID 565178217. Separate database node in sfo2. |
+### 1.1 Hosts and Services
 
-### 1.2 DigitalOcean Droplet Inventory
+| Role | Name | ID | Size | OS | Notes |
+|---|---|---:|---|---|---|
+| Prod app | PRODUCTION-WEB-ultralove.ca | 605458201 | s-4vcpu-8gb | Ubuntu 26.04.1 LTS | nginx 1.28, PHP 8.5, Redis 8, WordPress. Since 2026-10-02. |
+| Prod DB | db-mysql-sfo2-16643 | ecfe4ad3-80b5-485d-a947-edda138a7a31 | db-s-2vcpu-4gb, 1 node | managed MySQL 8 | DigitalOcean managed database, private VPC endpoint; trusts only the prod app droplet. |
+| Prod mail | PRODUCTION-mail-2026-ubuntu-24-LTS | 568349152 | s-2vcpu-4gb | Ubuntu 24.04 | Mailbox/MTA host (not WordPress mail - that goes through Mailgun, see 6.5). |
+| Dev | ultralove-dev | 603274190 | s-4vcpu-8gb | Ubuntu 26.04.1 LTS | Built by `ops/dev`; nginx, PHP 8.5, MySQL 8.4 and Redis on one box; private, via Cloudflare Tunnel + Access. DO still labels its image "24.04" (upgraded in place with `do-release-upgrade`). |
 
-| Name | ID | Region | Image | Status | Public IPv4 | Private IPv4 |
-|---|---:|---|---|---|---|---|
-| PRODUCTION-MAIL-mail.ultralove.ca | 242963159 | sfo2 | Ubuntu 20.04 (LTS) x64 | active | 138.197.193.88 | 10.120.0.3 |
-| PRODUCTION-DB-ultralove.ca | 533903042 | sfo2 | Ubuntu MySQL on Ubuntu 24.04 | active | 142.93.94.167 | 10.120.0.4 |
-| ultralove-dev-app | 565178171 | sfo2 | Ubuntu 24.04 (LTS) x64 | active | 138.68.49.58 | 10.120.0.2 |
-| ultralove-dev-db | 565178217 | sfo2 | Ubuntu 24.04 (LTS) x64 | active | 206.189.160.105 | 10.120.0.5 |
-| ultralove-prod-app | 565420744 | sfo2 | Ubuntu 24.04 (LTS) x64 | active | 178.128.187.1 | 10.120.0.7 |
+### 1.2 DigitalOcean Inventory (2026-10-02)
 
-### 1.3 Cross-Host OS Baseline (hostnamectl)
+| Name | ID | Region | Status | Public IPv4 | Private IPv4 |
+|---|---:|---|---|---|---|
+| PRODUCTION-WEB-ultralove.ca | 605458201 | sfo2 | active | 165.22.169.132 (+ reserved IP 167.99.26.122) | 10.120.0.4 |
+| PRODUCTION-mail-2026-ubuntu-24-LTS | 568349152 | sfo2 | active | 143.110.140.137 | 10.120.0.2 |
+| ultralove-dev | 603274190 | sfo2 | active | 138.197.211.58 | 10.140.0.2 |
 
-Snapshot captured: 2026-04-18 UTC
+- **Reserved IP 167.99.26.122** is production's address for Cloudflare (the origin). Moving production to another
+  droplet = `doctl compute reserved-ip-action assign 167.99.26.122 <droplet-id>`; no DNS change.
+- **Managed DB trusted sources**: droplet 605458201 only. Add any new app droplet before it can connect.
+- **Cloud firewalls**: `ultralove-dev-fw` (dev: SSH only). Production uses UFW on the droplet (2.3).
+- **Snapshot** `RETIRED-2026-10-02-PRODUCTION-WEB-ultralove.ca-ubuntu24.04-php8.3` (31.64 GiB, minimum disk 320 GB):
+  the previous production droplet (ID 565420744, s-8vcpu-16gb, Ubuntu 24.04 / PHP 8.3, public 178.128.187.1),
+  deleted after the move. It also holds that droplet's `/root` (pre-change backups made by hand, e.g.
+  `gf-forms-before-turnstile-20261001022554.json`), which was not copied to the new droplet.
+- No longer exist: the self-hosted prod DB droplet (533903042), the old mail droplet (242963159), and the separate
+  dev app / dev DB droplets (565178171, 565178217).
 
-| Host | Static hostname | Operating system | Kernel | Architecture | Virtualization | Hardware vendor/model |
-|---|---|---|---|---|---|---|
-| Prod App (this host) | ubuntu-s-4vcpu-8gb-sfo2 | Ubuntu 24.04.4 LTS | Linux 6.8.0-110-generic | x86-64 | kvm | DigitalOcean Droplet |
-| Dev App | ultralove-dev-app | Ubuntu 24.04.4 LTS | Linux 6.8.0-110-generic | x86-64 | kvm | DigitalOcean Droplet |
-| Prod DB | PRODUCTION-DB-ultralove | Ubuntu 24.04.3 LTS | Linux 6.8.0-107-generic | x86-64 | kvm | DigitalOcean Droplet |
-| Dev DB | ultralove-dev-db | Ubuntu 24.04.3 LTS | Linux 6.8.0-110-generic | x86-64 | kvm | DigitalOcean Droplet |
+### 1.3 Production Move of 2026-10-02
 
-## 2) Prod App Droplet
+The previous droplet (s-8vcpu-16gb) averaged ~4% CPU (peak ~16%) and ~1.6 GB of 16 GB RAM, and a droplet resize
+can't shrink a disk, so production was rebuilt on a new, smaller droplet with Ubuntu 26.04 / PHP 8.5 from
+`ops/do-migration` (bootstrap + the repo's nginx/PHP config), evaluated as a dry run against the live database
+(mail and cron blocked on it), then switched over by moving the reserved IP (~04:56 UTC). Cron and backups ran on
+exactly one droplet throughout. Steps: `ops/do-migration/README.md` ("Replacing the production droplet").
+
+## 2) Prod App Droplet (PRODUCTION-WEB-ultralove.ca)
 
 ### 2.1 OS / Platform
 
-- Provider: DigitalOcean (KVM Droplet)
-- DigitalOcean droplet name: ultralove-prod-app
-- System hostname: ubuntu-s-4vcpu-8gb-sfo2
-- Region: sfo2
-- OS: Ubuntu 24.04.4 LTS (Noble)
-- Kernel: 6.8.0-110-generic
-- Architecture: x86_64
-- Public IPv4: 178.128.187.1
-- Private IPv4: 10.120.0.7
+- DigitalOcean droplet PRODUCTION-WEB-ultralove.ca (ID 605458201), s-4vcpu-8gb (4 vCPU, 8 GB RAM, 160 GB disk), sfo2
+- OS: Ubuntu 26.04.1 LTS, kernel 7.0.0-31-generic, x86_64
+- System hostname: `ultralove-prod-candidate` (its name during the dry run; the DO name is the one above)
+- Public IPv4 165.22.169.132 (also its outbound address); reserved IP 167.99.26.122; private IPv4 10.120.0.4
+- DO features: monitoring, droplet agent, private networking (VPC 13c4a945-3cb1-4b91-a483-ce0364f55dba); no IPv6
+- Tags: Production, nginx, php, php-fpm, wordpress
+- SSH: alias `ultralove-prod-app` (deploy tooling: `deploy/envs/prod.env`)
 
 ### 2.2 Core Services and Runtime
 
-- nginx: 1.24.0 (service enabled + active)
-- php-fpm: php8.3-fpm service enabled + active
-- PHP CLI: 8.3.6
-- Redis: 7.0.15 (enabled + active)
-- certbot: installed (python3-certbot-nginx present)
-- UFW: enabled + active
+- nginx 1.28.3
+- PHP 8.5.4: `php8.5-fpm` (OPcache is built into PHP since 8.5 - there is no separate package)
+- Redis 8.0.5 (local object cache)
+- fail2ban, sysstat, atop, AWS CLI v2 (for Spaces), WP-CLI
+- No certbot: TLS is a Cloudflare Origin CA certificate (2.4)
 
-Systemd unit-file snapshot (captured 2026-04-18 UTC via `systemctl list-unit-files | rg -i 'nginx|php|mysql|mariadb|redis'`):
+PHP-FPM pool (`ops/php/www.conf`), sized for 8 GB from measurements on the previous droplet (workers ~160-190 MB;
+at most 10 busy at once):
 
-| Unit file | State | Preset |
-|---|---|---|
-| nginx.service | enabled | enabled |
-| php8.3-fpm.service | enabled | enabled |
-| phpsessionclean.service | static | - |
-| redis-server.service | enabled | enabled |
-| redis-server@.service | disabled | enabled |
-| redis.service | alias | - |
-| phpsessionclean.timer | enabled | enabled |
+- pm dynamic, max_children 24, start 6, spares 4-10, process_idle_timeout 5s, max_requests 500
+- status page `/status` (served as http://127.0.0.1/fpm-status by `localhost-admin.conf`)
+- slow log `/var/log/php8.5-fpm.www-slow.log` at 5s (rotated weekly); request_terminate_timeout 45s
+
+PHP settings (`ops/php/99-ultralove-production.ini`): memory_limit 384M, max_execution_time / max_input_time 300,
+max_input_vars 3000, post/upload 100M, expose_php off; OPcache 512 MB, 64 MB interned strings, 100k files,
+`validate_timestamps=0` (deploys restart PHP-FPM).
+
+Measured on 2026-10-02 (requests on the droplet itself): uncached catalog pages 1.5-2 s each, as on the previous
+droplet; 8 concurrent clients -> 3.5 req/s, p95 3.2 s, no errors, at most 9 workers busy, ~1.3 GB RAM used.
 
 ### 2.3 Network Exposure and Firewall (UFW)
 
-Default policy:
-- Incoming: deny
-- Outgoing: allow
-- Routed: disabled
-
-Allowed inbound:
-- 22/tcp (SSH)
-- 80/tcp (HTTP)
-- 443/tcp (HTTPS)
-
-Observed listeners:
-- nginx on 0.0.0.0:80 and 0.0.0.0:443
-- sshd on 0.0.0.0:22
-- redis on 127.0.0.1:6379 and ::1:6379 (not public)
+- Default: deny incoming, allow outgoing
+- Allowed: 22/tcp from anywhere (SSH); 80,443/tcp **only from Cloudflare's IPv4 ranges** (15 rules, from
+  https://www.cloudflare.com/ips-v4 at bootstrap)
+- Listeners: nginx 0.0.0.0:80/443, sshd :22, Redis 127.0.0.1/::1:6379 (not public)
+- nginx takes the visitor's IP from `CF-Connecting-IP` for Cloudflare's ranges (`conf.d/20-cloudflare-real-ip.conf`),
+  so logs and the per-IP rate limits see visitors, not Cloudflare (the previous droplet logged Cloudflare's IPs).
 
 ### 2.4 Key Configuration Locations
 
-- nginx global: /etc/nginx/nginx.conf
-- nginx vhost: /etc/nginx/sites-available/ultralove.ca.conf
-- nginx symlink: /etc/nginx/sites-enabled/ultralove.ca.conf
-- php-fpm pool: /etc/php/8.3/fpm/pool.d/www.conf
-- redis: /etc/redis/redis.conf
-- wordpress config: /var/www/html/wp-config.php
-- root crontab: /var/spool/cron/crontabs/root
+| What | Path on the droplet | Source in the repo |
+|---|---|---|
+| nginx site | /etc/nginx/sites-available/ultralove.ca.conf | `ops/nginx/ultralove.ca.conf` |
+| nginx http tuning (keepalive, 100M uploads, gzip) | /etc/nginx/conf.d/10-ultralove-http.conf | `ops/nginx/10-ultralove-http.conf` |
+| Cloudflare client IPs | /etc/nginx/conf.d/20-cloudflare-real-ip.conf | generated by the bootstrap |
+| Rate-limit zones | /etc/nginx/conf.d/99-ultralove-rate-limit-zones.conf | `ops/nginx/99-ultralove-rate-limit-zones.conf` |
+| FPM status page (127.0.0.1 only) | /etc/nginx/sites-available/localhost-admin.conf | `ops/nginx/localhost-admin.conf` |
+| Unknown hostnames (444) | /etc/nginx/sites-available/default | written by the bootstrap |
+| TLS (Cloudflare Origin CA, expires 2041-09-21) | /etc/ssl/cloudflare/ultralove.ca.{pem,key} | not in the repo (secret); in the monthly backup |
+| PHP-FPM pool | /etc/php/8.5/fpm/pool.d/www.conf | `ops/php/www.conf` |
+| PHP settings | /etc/php/8.5/fpm/conf.d/99-ultralove-production.ini | `ops/php/99-ultralove-production.ini` |
+| Redis | /etc/redis/redis.conf (maxmemory 1gb, allkeys-lfu, appended) | written by the bootstrap |
+| WordPress config | /var/www/html/wp-config.php | not in the repo (secret); in the monthly backup |
+| WP cron runner | /etc/cron.d/ultralove-wp-cron | written by the bootstrap |
+| Backup scripts | /root/monthly_system_backup.sh, /root/uploads_spaces_sync.sh | `ops/prod/` |
+| Spaces credentials | /root/.spaces_env | not in the repo (secret) |
+| Deploy state | /var/lib/ultralove-deploy (deployed_sha, deploy.log, backups/) | written by `deploy/deploy.sh` |
 
-### 2.5 Important Permissions Snapshot
+### 2.5 Important Permissions Snapshot (2026-10-02)
 
-- 644 root:root /etc/nginx/nginx.conf
 - 644 root:root /etc/nginx/sites-available/ultralove.ca.conf
-- 644 root:root /etc/php/8.3/fpm/pool.d/www.conf
+- 644 root:root /etc/php/8.5/fpm/pool.d/www.conf, /etc/php/8.5/fpm/conf.d/99-ultralove-production.ini
 - 640 redis:redis /etc/redis/redis.conf
-- 644 www-data:www-data /var/www/html/wp-config.php
+- 600 www-data:www-data /var/www/html/wp-config.php
 - 600 root:crontab /var/spool/cron/crontabs/root
-- 700 root:root /root/updraft_spaces_sync.sh
-- 700 root:root /root/monthly_system_backup.sh
-- 600 root:root /root/.spaces_env
+- 700 root:root /root/monthly_system_backup.sh, /root/uploads_spaces_sync.sh
+- 600 root:root /root/.spaces_env, /etc/ssl/cloudflare/ultralove.ca.key
+- 644 root:root /etc/ssl/cloudflare/ultralove.ca.pem
 
 ## 3) WordPress Application Layer
 
@@ -127,56 +143,27 @@ Observed listeners:
 ### 3.2 Database Connectivity
 
 - DB_NAME: wordpress
-- DB_HOST: 10.120.0.4 (private network endpoint)
-- DISABLE_WP_CRON: true (system cron expected)
+- DB_HOST: the managed MySQL cluster's private VPC hostname (db-mysql-sfo2-16643; value in wp-config.php)
+- DISABLE_WP_CRON: true - WP-Cron runs from the system cron every 5 minutes (`/etc/cron.d/ultralove-wp-cron`)
 
-### 3.3 Active Plugins (from active_plugins option)
+### 3.3 Active Plugins (live on production, 2026-10-02)
 
-- admin-site-enhancements
-- advanced-custom-fields-pro
-- advanced-woo-labels
-- am-collect-media
-- back-in-stock-notifier-for-woocommerce
-- cloudinary-image-management-and-manipulation-in-the-cloud-cdn
-- contact-form-7
-- custom-shipping-methods-for-woocommerce
-- elementor
-- gravityforms
-- gravityformsuserregistration
-- hide-price-until-login
-- hide-updates
-- kirki
-- mailchimp-for-wp
-- mailgun
-- martfury-addons
-- meta-box
-- ni-woocommerce-custom-order-status
-- product-import-export-for-woo
-- quantity-field-on-shop-page-for-woocommerce
-- redirection
-- redis-cache
-- relevanssi
-- relevanssi-live-ajax-search
-- revslider
-- support-webp
-- updraftplus
-- user-role-editor
-- user-switching
-- widget-shortcode
-- woo-add-gtin
-- woo-update-manager
-- woocommerce
-- woocommerce-extra-product-sorting-options
-- woocommerce-services
-- woocommerce-xml-csv-product-import
-- wp-all-export-pro
-- wp-all-import-pro
-- wp-useronline
-- wpae-woocommerce-add-on
-- wt-import-export-for-woo
-- wt-import-export-for-woo-product
-- wt-import-export-for-woo-product_review
-- yith-woocommerce-wishlist
+Custom (in the repo): hide-price-until-login, ultralove-backdrops (1.6.0), ultralove-banners (2.1.3),
+ultralove-product-export-sync, ultralove-product-stock-export.
+
+Vendor: advanced-custom-fields-pro, advanced-woo-labels, am-collect-media, autoptimize, back-in-stock-notifier-for-woocommerce,
+cloudflare, cloudinary-image-management-and-manipulation-in-the-cloud-cdn, contact-form-7,
+custom-shipping-methods-for-woocommerce, gravityforms, gravityformsturnstile, gravityformsuserregistration, hide-updates,
+kirki, mailchimp-for-wp, mailgun, martfury-addons, meta-box, ni-woocommerce-custom-order-status,
+quantity-field-on-shop-page-for-woocommerce, redirection, redis-cache, relevanssi, relevanssi-live-ajax-search,
+support-webp, updraftplus, user-role-editor, user-switching, widget-shortcode, woo-add-gtin, woo-update-manager,
+woocommerce (10.7.0), woocommerce-extra-product-sorting-options, woocommerce-xml-csv-product-import, wp-all-export-pro,
+wp-all-import-pro, wp-useronline, wpae-woocommerce-add-on, yith-woocommerce-wishlist (4.14.0).
+
+Drop-in: `object-cache.php` (Redis). No longer active since the April inventory: elementor (removed 2026-09-29; its
+`_elementor_data` post meta is still in the database, unused), revslider (banners are UltraLove Banners),
+admin-site-enhancements, woocommerce-services, product-import-export-for-woo and the wt-import-export-for-woo add-ons.
+The MU plugin `10-elementor-font-display-swap.php` only touches Elementor's Google Fonts and is now inert.
 
 ### 3.4 Custom / Site-Specific Code
 
@@ -203,12 +190,16 @@ Observed listeners:
 
 ### 4.2 PHP Runtime Cache
 
-- opcache.enable=On
-- opcache.memory_consumption=128
-- opcache.validate_timestamps=On
-- opcache.revalidate_freq=2
+- OPcache (built into PHP 8.5): 512 MB, 64 MB interned strings, 100,000 files, `validate_timestamps=0` - code only
+  changes through `deploy/deploy.sh`, which restarts PHP-FPM. Set in `ops/php/99-ultralove-production.ini`.
+- The previous droplet also set `opcache.huge_code_pages` and `opcache.file_cache`; neither did anything there
+  (no huge pages reserved; the cache directory didn't exist), so they weren't carried over.
 
 ### 4.3 nginx Caching/Compression Notes
+
+Current configuration: section 2.4 (repo: `ops/nginx/`). The dated notes below record how it got there on the
+previous droplet; they still apply, except that nginx 1.28 uses `http2 on;` (the 1.24 `listen 443 ssl http2;` form
+is deprecated) and certbot is gone (Cloudflare Origin CA certificate).
 
 - gzip is enabled in /etc/nginx/nginx.conf.
 - As of 2026-09-14: `gzip_types` was previously commented out entirely in `/etc/nginx/nginx.conf`, so only nginx's default `text/html` was being compressed — CSS, JS, JSON, SVG, and font responses were served uncompressed. Fixed by setting an explicit `gzip_types` list (css, js, json, xml, svg, fonts, wasm), enabling `gzip_vary on` and `gzip_proxied any`, and raising `gzip_comp_level` from 3 to 5.
@@ -222,7 +213,7 @@ Observed listeners:
 - Found and fixed same day (2026-09-14): Cloudflare's zone-level Browser Cache TTL was overriding the origin's `Cache-Control: max-age=31536000` down to `max-age=14400` (4 hours) on cache-HIT responses for real, referenced static assets (confirmed via `curl` on `wp-includes/js/jquery/jquery.min.js` and `wp-content/themes/martfury/style.css` — both returned `cache-control: max-age=14400` with `cf-cache-status: HIT`). This was the single largest remaining performance opportunity by estimated savings (~1MB per PageSpeed Insights). Fixed via the Cloudflare dashboard (Caching → Configuration → Browser Cache TTL, set to **Respect Existing Headers**, available even on this zone's Free plan) rather than the API — credential access was intentionally avoided this session; the fix was applied directly through an already-authenticated browser session instead. Verified via Custom Purge on the two test URLs above, followed by a fresh `curl`: `cf-cache-status: MISS` on the re-fetch, then `cache-control: public, max-age=31536000, immutable` correctly reaching the client with no override.
 - Side effect found and fixed during that verification: the static-asset block had both an explicit `add_header Cache-Control ...` and an `expires 365d;` directive, which nginx emits as two separate `Cache-Control` response headers (harmless but redundant/non-standard). Removed the `expires` line, keeping only the explicit `add_header`, since it already specifies `public` and `immutable` which `expires` alone does not add. Verified live: single clean `Cache-Control` header, gzip still applies, cart/my-account still correctly `no-store`.
 
-### 4.4 Elementor Generated CSS Caveat
+### 4.4 Elementor Generated CSS Caveat (historical: Elementor was removed on 2026-09-29)
 
 - Elementor page-specific CSS is generated under `wp-content/uploads/elementor/css/`.
 - A stale or missing generated file can make frontend styling appear inconsistent between guest and logged-in sessions, especially when caches/CDN or version-stripped asset URLs produce different cache keys.
@@ -425,6 +416,9 @@ Root cause: `wp-content/themes/martfury/style.css` uses the broad `transition: a
   - server: cloudflare
   - cf-cache-status
   - cf-ray
+- Origin: proxied records point at the reserved IP 167.99.26.122 (production droplet, 1.2). The origin presents a
+  Cloudflare Origin CA certificate (valid to 2041-09-21), and its firewall only accepts HTTP/S from Cloudflare.
+- Anonymous HTML is cached at the edge by APO; after a deploy that changes page HTML, purge Cloudflare.
 
 ### 5.2 WAF Geo-Challenge Rule
 
@@ -476,78 +470,47 @@ Root cause: `wp-content/themes/martfury/style.css` uses the broad `transition: a
 ### 6.5.2 Architecture Interpretation
 
 - WordPress transactional/application mail is routed through Mailgun.
-- This is separate from the dedicated production mail droplet `PRODUCTION-MAIL-mail.ultralove.ca`, which likely serves mailbox/MTA or other mail infrastructure responsibilities outside WordPress plugin-driven outbound mail.
+- This is separate from the dedicated production mail droplet `PRODUCTION-mail-2026-ubuntu-24-LTS` (568349152), which likely serves mailbox/MTA or other mail infrastructure responsibilities outside WordPress plugin-driven outbound mail.
 - Exact Mailgun mode and credentials are intentionally not recorded in plaintext here.
 
 ## 7) Backups and Retention Architecture
 
-### 7.1 Updraft + Spaces Backup Flow
+All off-site backups go to the DigitalOcean Spaces bucket `ultralove-web-backups` (sfo3). The scripts are in the
+repo (`ops/prod/`) and installed by the bootstrap; credentials are in `/root/.spaces_env` (600; replaced
+2026-10-02 - the previous key had been revoked around May, so script uploads failed from then until that date).
 
-- Source directory: /var/www/html/wp-content/updraft
-- Sync script: /root/updraft_spaces_sync.sh
-- Credentials file: /root/.spaces_env (600)
-- Destination pattern: s3://ultralove-web-backups/updraft/YYYY-MM-DD/
-- Retention policy in script:
-  - Keep all sets for last 3 days
-  - Keep newest set per ISO week for days 4-33
-  - Delete older redundant remote files
+| What | How | When | Where in Spaces |
+|---|---|---|---|
+| Database, plugins, themes, "others" | UpdraftPlus (WordPress plugin), its own S3-compatible remote storage | daily | `updraft/` (about the last 4 days kept) |
+| Media library (`wp-content/uploads`, ~17 GB) | `/root/uploads_spaces_sync.sh`: `aws s3 sync`, new/changed files only, deletions not mirrored, lowest priority | 03:30 UTC nightly | `uploads/` |
+| Server config and secrets | `/root/monthly_system_backup.sh`: tar of nginx, PHP, Cloudflare Origin CA cert, Redis, UFW, cron, systemd, the deploy record, the backup scripts, `.spaces_env`, `wp-config.php` (+ checksum, inventory) | 02:40 UTC on the 1st | `system-config/YYYY-MM/` |
 
-### 7.2 Monthly System Configuration Backups
+- UpdraftPlus's backups leave uploads out, and only part of the media is on Cloudinary - hence the uploads sync
+  (added 2026-10-02; the first full sync ran that day).
+- The previous droplet's nightly `updraft_spaces_sync.sh` (copied UpdraftPlus archives to Spaces) is gone:
+  UpdraftPlus uploads to Spaces itself, and the script had failed every night since May.
+- Local copies: monthly archives in `/root/system_monthly_backups/`; deploy rollback tarballs in
+  `/var/lib/ultralove-deploy/backups/` (last 20).
+- Not enabled: DigitalOcean droplet backups (whole-disk restore points; extra cost).
+- The previous production droplet is kept as a snapshot (1.2).
 
-- Script: /root/monthly_system_backup.sh
-- Local output: /root/system_monthly_backups/YYYY-MM/
-  - system-config-YYYY-MM.tar.gz
-  - system-config-YYYY-MM.sha256
-  - inventory-YYYY-MM.txt
-- Spaces upload destination:
-  - s3://ultralove-web-backups/system-config/YYYY-MM/
-- Scope includes:
-  - nginx, php, letsencrypt, cron configs, systemd overrides
-  - root backup scripts and env file
-  - wp-config.php
+### 7.1 Cron Schedule (production)
 
-### 7.3 Cron Schedule (root)
+- root: `40 2 1 * * /root/monthly_system_backup.sh >> /var/log/monthly_system_backup.log 2>&1`
+- root: `30 3 * * * /root/uploads_spaces_sync.sh >> /var/log/uploads_spaces_sync.log 2>&1`
+- www-data (`/etc/cron.d/ultralove-wp-cron`): `*/5 * * * *` `wp cron event run --due-now` (log:
+  `/var/log/wp-cron-runner.log`)
 
-- Daily Updraft sync (currently DRY_RUN=1):
-  - 20 3 * * * bash -lc "source /root/.spaces_env; DRY_RUN=1 /root/updraft_spaces_sync.sh >> /var/log/updraft_spaces_sync.log 2>&1"
-- Monthly system backup:
-  - 40 2 1 * * /root/monthly_system_backup.sh >> /var/log/monthly_system_backup.log 2>&1
+## 8) Open Items
 
-## 8) Open Items To Complete “Entire Architecture”
-
-The following still cannot be fully verified from this host alone and should be completed from direct access or per-host inspection:
-
-- Dev App droplet
-  - partial verification (2026-04-18 UTC): hostnamectl + /etc/os-release confirm Ubuntu 24.04.4 LTS and kernel 6.8.0-110-generic
-  - partial verification (2026-04-18 UTC): ufw status is inactive
-  - partial verification (2026-04-18 UTC): `systemctl list-unit-files | rg -i 'nginx|php|mysql|mariadb|redis'` shows nginx.service and php8.3-fpm.service enabled; phpsessionclean.service static; phpsessionclean.timer enabled; no mysql/mariadb/redis unit file in this filtered list
-  - partial verification (2026-04-18 UTC): WordPress runtime check returns WP 6.9.4; active plugin set is near-parity with prod but `redis-cache/redis-cache.php` is present on prod-app and absent on dev-app
-  - nginx/php config paths
-  - theme and broader app parity vs prod (beyond plugin list)
-- Dev DB droplet
-  - partial verification (2026-04-18 UTC): hostnamectl + /etc/os-release confirm Ubuntu 24.04.3 LTS and kernel 6.8.0-110-generic
-  - partial verification (2026-04-18 UTC): ufw active; default deny incoming/allow outgoing; allows 22/tcp and 3306/tcp from 10.0.0.0/8
-  - partial verification (2026-04-18 UTC): `systemctl list-unit-files | rg -i 'nginx|php|mysql|mariadb|redis'` shows mariadb.service enabled; mariadb@.service disabled; mysql.service and mysqld.service aliases; mariadb socket units static
-  - bind/addressing
-  - backup and restore process
-- Prod DB droplet (PRODUCTION-DB-ultralove.ca / 10.120.0.4)
-  - partial verification (2026-04-18 UTC): hostnamectl + /etc/os-release confirm Ubuntu 24.04.3 LTS and kernel 6.8.0-107-generic
-  - partial verification (2026-04-18 UTC): systemctl list-unit-files filtered for nginx/php/mysql/mariadb/redis shows mysql.service enabled; phpsessionclean.service static; phpsessionclean.timer enabled
-  - partial verification gap (2026-04-18 UTC): ufw status check failed under non-root SSH user (`craig`), so firewall state remains unverified here
-  - engine process/service status
-  - backup cadence and retention
-  - replication or HA status (if any)
-- Prod Mail droplet (PRODUCTION-MAIL-mail.ultralove.ca / 10.120.0.3)
-  - data collection attempt (2026-04-18 UTC) failed: `root@138.197.193.88` returned `Permission denied (publickey,password)`
-  - establish valid SSH principal/key for this host
-  - mail stack (Postfix/Dovecot/etc.)
-  - DNS/mail routing responsibilities
-  - relationship to Mailgun for outbound application mail vs server mail
-  - backup and retention process
-- Cloudflare account settings
-  - SSL/TLS mode, WAF rules, cache rules, page rules/transform rules, bot settings
-- Cloudinary account settings
-  - cloud name/account id, transformation presets, delivery mode, quota/usage alerts
+- Prod app: the OS hostname is still `ultralove-prod-candidate` (cosmetic).
+- UpdraftPlus: confirm that leaving uploads out is intended now that `uploads/` is synced separately.
+- Spaces: the monthly script archives `.spaces_env` into the same bucket it can write to - fine for recovery, but a
+  leaked key exposes its own backups; consider a separate restore-only key.
+- `mu-plugins/ultralove-wc-analytics-top-brands.php` logs "Array to string conversion" on every request (seen
+  thousands of times a day on both PHP 8.3 and 8.5); harmless but noisy.
+- Prod mail droplet: not inspected (mail stack, DNS/mail routing, backups).
+- Cloudflare account settings (SSL/TLS mode, WAF, cache rules) and Cloudinary account settings: not recorded here.
 
 ## 9) Recommended Next Data Collection Commands
 
@@ -565,6 +528,9 @@ Run these from an operator workstation with appropriate access:
   - php -r 'chdir("/var/www/html"); require "wp-load.php"; print_r(get_option("active_plugins",[]));'
 
 ## 10) Appendix: 2026-04-18 Multi-Host Collection Snapshot
+
+Historical: of the hosts below only the mail role still exists, on a different droplet. The prod app, prod DB, dev
+app and dev DB droplets have all been replaced (section 1).
 
 Collection bundle:
 - /root/architecture-collection-20260418_040102/
