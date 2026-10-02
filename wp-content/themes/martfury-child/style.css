@@ -2491,6 +2491,10 @@ body:not(.shop-view-list) ul.products li.product .product-inner:focus-within .mf
         opacity: 1;
         transition: none
     }
+
+    #page ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist {
+        margin: 0
+    }
 }
 
 ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist a .yith-wcwl-icon,
