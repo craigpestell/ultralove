@@ -443,18 +443,6 @@ Template: martfury
     margin-top: 19px!important
 }
 
-.footer-row {
-    text-align: center!important;
-    display: block!important
-}
-
-.col-footer-copyright {
-    margin-left: auto!important;
-    margin-right: auto!important;
-    display: block;
-    float: none!important
-}
-
 /* Same nav bar height at every width - the parent theme halves this padding below 1200px. */
 .site-header .primary-nav>ul>li {
     padding-top: 20px!important;
@@ -598,22 +586,8 @@ h1,h2,h3,h4 {
     font-weight: 500
 }
 
-.footer-copyright {
-    text-align: center
-}
-
-#welcome,#welcome h2,#welcome p {
-    color: #fff!important
-}
-
 .footer-copyright,.site-footer .footer-layout,.site-footer .footer-layout .widget-title {
     color: #3b1d4a!important
-}
-
-#welcome,.site-footer .footer-layout {
-    background: url(https://ultralove.ca/wp-content/uploads/2021/07/bg.jpg);
-    background-size: 300%!important;
-    background-position: bottom left!important
 }
 
 .stock {
@@ -670,8 +644,8 @@ h1,h2,h3,h4 {
 
 /* Light aurora backdrop for the home CTA blocks: soft lavender/teal/pink glows on a pale lavender
    base, so these sections read as part of the white site around them rather than a dark band.
-   #bottomcta doesn't paint its own copy - it and the site footer share one #hero-footer-combo
-   wrapper (see footer.php), so the two read as one continuous backdrop. On the home page the
+   #bottomcta doesn't paint its own copy - it's inside the site footer, which paints one continuous
+   backdrop behind it and the footer widgets (see footer.php). On the home page the
    ultralove-banners plugin also paints this same gradient behind the banner row + #topcta
    (#ub-hero-combo-bg in its banner.css) - keep the two in sync. */
 :root {
@@ -695,7 +669,7 @@ h1,h2,h3,h4 {
     --ul-purple-shadow: 0 0 18px rgba(177,101,255,.5)
 }
 
-#topcta,#hero-footer-combo {
+#topcta,.site-footer {
     background: var(--ul-aurora)
 }
 
@@ -712,12 +686,6 @@ h1,h2,h3,h4 {
 .site-footer .footer-widgets .textwidget,
 .site-footer .footer-widgets .gform_wrapper {
     box-shadow: var(--ul-purple-shadow)
-}
-
-/* .footer-layout's own bg.jpg is no longer needed - #hero-footer-combo now supplies one
-   continuous background behind #bottomcta and the footer. */
-.site-footer .footer-layout {
-    background: none!important
 }
 
 .site-footer .footer-widgets:before {
@@ -1603,8 +1571,7 @@ h1,h2,h3,h4 {
     line-height: 1.2
 }
 
-/* Copyright line: plain centered text on the white #footer-copyright-row (no pill). block +
-   fit-content + auto margins keeps it centered regardless of its parent column's own text-align. */
+/* Copyright line: plain centered text on the copyright row's white (no pill). */
 .footer-copyright {
     display: block;
     width: fit-content;
@@ -1926,14 +1893,11 @@ html body {
     margin-bottom: 48px
 }
 
-/* Copyright row - rendered after #hero-footer-combo (see footer.php), on the plain white page. */
-#footer-copyright-row {
-    background: #fff
-}
-
-#footer-copyright-row .footer-bottom {
-    padding-top: 36px;
-    padding-bottom: 44px
+/* Copyright row - the bottom of the site footer, on white below the backdrop. */
+.site-footer .footer-bottom {
+    padding: 36px var(--ul-page-gutter) 44px;
+    background: #fff;
+    text-align: center
 }
 
 @media (max-width:767px) {
@@ -1978,14 +1942,14 @@ html body {
 }
 
 /*
- * The home page's call to action (#topcta) and the #bottomcta + footer box (#hero-footer-combo, on every
+ * The home page's call to action (#topcta) and the site footer's (#bottomcta, and the footer widgets, on every
  * page) keep narrower edges of their own while their backdrops stay full width: 1150 / 950 / 700px wide at
  * >=1200 / >=992 / >=768px, 25px in from each side on phones. The footer's Bootstrap .container normally
  * has a fixed width (1170 / 970 / 750px), so it's switched to width:auto + max-width here.
  */
 #topcta > .martfury-container,
 #bottomcta,
-#hero-footer-combo .site-footer .container {
+.site-footer .container {
     width: auto;
     max-width: 1150px;
     margin-left: auto;
@@ -2000,7 +1964,7 @@ html body {
 @media (max-width:1199px) {
     #topcta > .martfury-container,
     #bottomcta,
-    #hero-footer-combo .site-footer .container {
+    .site-footer .container {
         max-width: 950px
     }
 }
@@ -2008,7 +1972,7 @@ html body {
 @media (max-width:991px) {
     #topcta > .martfury-container,
     #bottomcta,
-    #hero-footer-combo .site-footer .container {
+    .site-footer .container {
         max-width: 700px
     }
 }
@@ -2016,7 +1980,7 @@ html body {
 @media (max-width:767px) {
     #topcta > .martfury-container,
     #bottomcta,
-    #hero-footer-combo .site-footer .container {
+    .site-footer .container {
         max-width: none;
         margin-left: 25px;
         margin-right: 25px
@@ -2029,7 +1993,7 @@ html body {
    parent theme also drops the row's -15px margin, which left the cards at one inset and the
    dividers/links at another. */
 @media (max-width:991px) {
-    #hero-footer-combo .site-footer .container {
+    .site-footer .container {
         padding-left: 0;
         padding-right: 0
     }
@@ -3334,8 +3298,8 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
 }
 
 /*
- * The backdrop's space above and below the content of #topcta and the #bottomcta + footer box
- * (#hero-footer-combo).
+ * The backdrop's space above and below the content of #topcta and of the site footer (above #bottomcta, below
+ * the footer widgets).
  */
 #topcta {
     padding-top: 64px;
@@ -3346,7 +3310,7 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     padding-top: 148px
 }
 
-#hero-footer-combo {
+.site-footer .footer-layout {
     padding-bottom: 60px
 }
 
@@ -3360,7 +3324,7 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
         padding-top: 88px
     }
 
-    #hero-footer-combo {
+    .site-footer .footer-layout {
         padding-bottom: 32px
     }
 }
@@ -3497,7 +3461,7 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
  * Page regions - one gap between them, on every page. #page stacks the header, the page's content
  * (.site-content), on product pages up-sells and related products (section.related - both have the class), on
  * catalog pages recently viewed (.footer-recently-viewed - hidden while the visitor has none), then the
- * footer box (#hero-footer-combo). Each region ends where its content ends and is followed by
+ * site footer (footer#colophon). Each region ends where its content ends and is followed by
  * --ul-region-gap, so the space above the footer (and between the regions) is this gap alone, whatever the
  * page ends with. A margin, not padding, so a region with its own background (the 404 page's grey block)
  * doesn't grow into the gap. Change the gap here to change it everywhere.

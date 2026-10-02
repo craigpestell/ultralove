@@ -90,6 +90,12 @@ function martfury_child_enqueue_scripts() {
         $card_cart_path = get_stylesheet_directory() . '/js/product-card-cart.js';
         wp_enqueue_script( 'ultralove-product-card-cart', get_stylesheet_directory_uri() . '/js/product-card-cart.js', array( 'jquery' ), (string) filemtime( $card_cart_path ), true );
 
+        // Checkout: the customer chooses the payment method (none chosen in advance).
+        if ( is_checkout() ) {
+            $payment_choice_path = get_stylesheet_directory() . '/js/checkout-payment-choice.js';
+            wp_enqueue_script( 'ultralove-checkout-payment-choice', get_stylesheet_directory_uri() . '/js/checkout-payment-choice.js', array( 'jquery', 'wc-checkout' ), (string) filemtime( $payment_choice_path ), true );
+        }
+
         // Product page: no vertical thumbnail slider at phone width (the thumbnails are a row there).
         if ( is_singular( 'product' ) ) {
             $thumbs_path = get_stylesheet_directory() . '/js/product-gallery-thumbs.js';

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UltraLove Backdrops
  * Description: Pick the background style of the home page's call to action (#topcta) and of the footer box
- *              (#hero-footer-combo - #bottomcta + the site footer, on every page) from a library of CSS, SVG,
+ *              (footer#colophon - #bottomcta + the footer widgets, on every page) from a library of CSS, SVG,
  *              animated and dark backdrops, with live previews (Appearance > Backdrops) and an admin-only
  *              preview on the site before saving. Only the background layer changes - plus, on a dark
  *              backdrop, light text for what sits straight on it; the areas' content is the theme's. A pattern size slider scales the
@@ -44,14 +44,14 @@ function ulbd_areas() {
 		),
 		'footer' => array(
 			'label'         => 'Footer box',
-			'description'   => '"Ordering wholesale products has never been easier." and the site footer below it (#hero-footer-combo), on every page.',
-			'selectors'     => array( 'body #hero-footer-combo' ),
+			'description'   => '"Ordering wholesale products has never been easier." and the footer widgets below it (the site footer, footer#colophon), on every page.',
+			'selectors'     => array( 'body #colophon' ),
 			// The quick links (Ordering · About Us · Contact) are underlined pink text in pills: dark glass, white links.
-			'dark_css'      => 'body #bottomcta h2, body .site-footer .footer-widgets .widget-title, #hero-footer-combo #footer-links .widget_nav_menu ul li a { background: rgba(0, 0, 0, .52); color: #fff !important; }'
+			'dark_css'      => 'body #bottomcta h2, body .site-footer .footer-widgets .widget-title, #colophon #footer-links .widget_nav_menu ul li a { background: rgba(0, 0, 0, .52); color: #fff !important; }'
 				. ' body .site-footer .footer-widgets .textwidget, body .site-footer .footer-widgets .gform_wrapper { background: rgba(0, 0, 0, .38); color: #fff !important; }'
-				. ' #hero-footer-combo #footer-links .widget_nav_menu ul li a { color: #fff !important; }'
-				. ' #hero-footer-combo #footer-links .widget_nav_menu ul li a:hover, #hero-footer-combo #footer-links .widget_nav_menu ul li a:focus-visible { color: #f4c3d9 !important; }',
-			'pills'         => array( 'body #bottomcta h2', 'body .site-footer .footer-widgets .widget-title', '#hero-footer-combo #footer-links .widget_nav_menu ul li a' ),
+				. ' #colophon #footer-links .widget_nav_menu ul li a { color: #fff !important; }'
+				. ' #colophon #footer-links .widget_nav_menu ul li a:hover, #colophon #footer-links .widget_nav_menu ul li a:focus-visible { color: #f4c3d9 !important; }',
+			'pills'         => array( 'body #bottomcta h2', 'body .site-footer .footer-widgets .widget-title', '#colophon #footer-links .widget_nav_menu ul li a' ),
 			'boxes'         => array( 'body .site-footer .footer-widgets .textwidget', 'body .site-footer .footer-widgets .gform_wrapper' ),
 		),
 	);
