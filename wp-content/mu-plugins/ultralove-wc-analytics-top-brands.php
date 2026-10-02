@@ -13,52 +13,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class UltraLove_WC_Analytics_Top_Brands_Leaderboard {
 	const TAXONOMY = 'product_brand';
 	const REPORT_SLUG = 'brands';
-	private static $wc_enqueue_js_deprecation_logged = false;
-	private static $last_deprecated_function = '';
 
 	public static function init() {
 		add_filter( 'woocommerce_leaderboards', array( __CLASS__, 'add_brands_leaderboard' ), 10, 5 );
 		add_filter( 'woocommerce_admin_reports', array( __CLASS__, 'register_brands_report' ) );
 		add_filter( 'woocommerce_analytics_report_menu_items', array( __CLASS__, 'register_brands_report_menu_item' ) );
-		add_action( 'deprecated_function_run', array( __CLASS__, 'note_deprecated_function' ), 10, 3 );
-		add_filter( 'deprecated_function_trigger_error', array( __CLASS__, 'filter_deprecated_function_trigger_error' ) );
 		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'enqueue_brands_report_script' ), 20 );
 		add_action( 'rest_api_init', array( __CLASS__, 'register_rest_routes' ) );
-	}
-
-	/**
-	 * Remember which deprecated function is running and log a single wc_enqueue_js caller trace.
-	 * Core fires this action (with the function name) right before the
-	 * deprecated_function_trigger_error filter, which only receives $trigger.
-	 *
-	 * @param string $function Function name.
-	 * @param string $replacement Suggested replacement.
-	 * @param string $version Deprecated version.
-	 */
-	public static function note_deprecated_function( $function, $replacement = '', $version = '' ) {
-		self::$last_deprecated_function = (string) $function;
-
-		if ( 'wc_enqueue_js' === $function && ! self::$wc_enqueue_js_deprecation_logged ) {
-			self::$wc_enqueue_js_deprecation_logged = true;
-			error_log(
-				sprintf(
-					'[ultralove] wc_enqueue_js deprecated call traced: replacement=%s version=%s backtrace=%s',
-					(string) $replacement,
-					(string) $version,
-					wp_debug_backtrace_summary( null, 0, false )
-				)
-			);
-		}
-	}
-
-	/**
-	 * Suppress noisy wc_enqueue_js deprecation spam (the trace is logged once above).
-	 *
-	 * @param bool $trigger Whether to trigger a PHP error for the deprecated call.
-	 * @return bool
-	 */
-	public static function filter_deprecated_function_trigger_error( $trigger ) {
-		return 'wc_enqueue_js' === self::$last_deprecated_function ? false : $trigger;
 	}
 
 	/**

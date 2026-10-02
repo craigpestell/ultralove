@@ -453,7 +453,49 @@ function ultralove_exportstock_shortcode() {
 	</div>
 	<button class="button" id="export">Export</button>';
 
+	add_action( 'wp_footer', 'ultralove_exportstock_footer_script', 100 );
+
 	return $a;
+}
+
+// The [exportstock] page's "Export" button: downloads the table as CSV. Printed only when the shortcode renders.
+function ultralove_exportstock_footer_script() {
+	?>
+	<script>
+	document.addEventListener('DOMContentLoaded', function () {
+		const table = document.getElementById('exportMe');
+		const exportBtn = document.getElementById('export');
+
+		const toCsv = function (table) {
+			return [].slice
+				.call(table.querySelectorAll('tr'))
+				.map(function (row) {
+					return [].slice
+						.call(row.querySelectorAll('th,td'))
+						.map(function (cell) {
+							return cell.textContent;
+						})
+						.join(',');
+				})
+				.join('\n');
+		};
+
+		const download = function (text, fileName) {
+			const link = document.createElement('a');
+			link.setAttribute('href', `data:text/csv;charset=utf-8,${encodeURIComponent(text)}`);
+			link.setAttribute('download', fileName);
+			link.style.display = 'none';
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+		};
+
+		exportBtn.addEventListener('click', function () {
+			download(toCsv(table), 'download.csv');
+		});
+	});
+	</script>
+	<?php
 }
 
 add_shortcode('exportstock', 'ultralove_exportstock_shortcode');
