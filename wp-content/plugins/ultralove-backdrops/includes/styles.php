@@ -3,8 +3,7 @@
  * The backdrop style library.
  *
  * Every style is a callable that takes an intensity factor ($k: 0.6 subtle, 1 normal, 1.45 bold) and returns
- * the CSS for the background layer only - the areas' white edge fades and their content are the theme's and
- * stay as they are. A style returns:
+ * the CSS for the background layer only - the areas' content is the theme's and stays as it is. A style returns:
  *  - 'background' (required): the CSS background shorthand, layers comma-separated;
  *  - optional 'size', 'position', 'repeat': background-size / -position / -repeat for those layers;
  *  - optional 'animation' + 'keyframes' (@keyframes body, named ulbd-<id>): slow ambient motion,
@@ -12,8 +11,7 @@
  * Colours are the site's: lavender rgb(177,101,255), plum #3b1d4a, brand pink #b3094b, plus the aurora's
  * soft teal / periwinkle / rose, on the pale lavender base #f6f1fa. The 'dark' kind sits on near-black
  * #06060f instead; a style with 'dark' => true also switches the text drawn straight on the backdrop to
- * light colours (the area's 'dark_css' in ulbd_areas()), and one with 'fade' => false drops the theme's
- * white fades at the area's edges (its 'fade_selector'), with hard edges like the live site's backdrop.
+ * light colours (the area's 'dark_css' in ulbd_areas()).
  *
  * To add a style: add an entry to ulbd_styles() - it shows up in the admin picker with a live preview.
  *
@@ -413,8 +411,8 @@ function ulbd_orange_layers( $k ) {
 }
 
 /**
- * All styles, keyed by id: array( label, kind, description, css callable, optional dark and fade flags -
- * dark off and fade on when left out).
+ * All styles, keyed by id: array( label, kind, description, css callable, optional dark flag (off when
+ * left out).
  * Kinds group the picker: 'css' (gradients / patterns), 'svg' (SVG images), 'animated', 'plain', 'dark',
  * and one per holiday - 'halloween', 'thanksgiving', 'christmas', 'new-year' (dark or light).
  */
@@ -617,7 +615,6 @@ function ulbd_styles() {
 			'label'       => 'Night aurora (live site)',
 			'kind'        => 'dark',
 			'dark'        => true,
-			'fade'        => false,
 			'description' => 'Purple and teal glows on near-black - the backdrop on the live site today.',
 			'css'         => function ( $k ) use ( $night ) {
 				return array( 'background' => implode( ', ', array_merge( ulbd_night_layers( $k ), array( $night ) ) ) );
@@ -627,7 +624,6 @@ function ulbd_styles() {
 			'label'       => 'Drifting night aurora',
 			'kind'        => 'dark',
 			'dark'        => true,
-			'fade'        => false,
 			'description' => 'The night aurora, oversized and slowly drifting (a 40s loop).',
 			'css'         => function ( $k ) use ( $night ) {
 				return array(
@@ -642,7 +638,6 @@ function ulbd_styles() {
 			'label'       => 'Night mesh',
 			'kind'        => 'dark',
 			'dark'        => true,
-			'fade'        => false,
 			'description' => 'Purple, teal and violet colour fields from the corners, on near-black.',
 			'css'         => function ( $k ) use ( $night ) {
 				return array(
@@ -663,7 +658,6 @@ function ulbd_styles() {
 			'label'       => 'Halloween',
 			'kind'        => 'halloween',
 			'dark'        => true,
-			'fade'        => false,
 			'description' => 'A harvest moon, bats and stars over pumpkin-orange and purple glows on near-black.',
 			'css'         => function ( $k ) {
 				$bat = ulbd_bat_path();
@@ -700,7 +694,6 @@ function ulbd_styles() {
 		'halloween-orange'        => array(
 			'label'       => 'Halloween - orange & bats',
 			'kind'        => 'halloween',
-			'fade'        => false,
 			'description' => 'Black bats of a few sizes swooping over pumpkin orange.',
 			'css'         => function ( $k ) {
 				$svg = sprintf(
@@ -727,7 +720,6 @@ function ulbd_styles() {
 			'label'       => 'Halloween - witchy',
 			'kind'        => 'halloween',
 			'dark'        => true,
-			'fade'        => false,
 			'description' => 'Witches\' hats, brooms, bubbling cauldrons and bats over a green cauldron glow on near-black.',
 			'css'         => function ( $k ) {
 				return array(
@@ -748,7 +740,6 @@ function ulbd_styles() {
 		'halloween-witchy-orange' => array(
 			'label'       => 'Halloween - witchy orange',
 			'kind'        => 'halloween',
-			'fade'        => false,
 			'description' => 'Black witches\' hats, brooms, cauldrons and bats on pumpkin orange.',
 			'css'         => function ( $k ) {
 				return array(
@@ -761,7 +752,6 @@ function ulbd_styles() {
 			'label'       => 'Halloween - cheeky',
 			'kind'        => 'halloween',
 			'dark'        => true,
-			'fade'        => false,
 			'description' => 'Witchy, with a wink: wand-tipped brooms, a cauldron in a leather harness, heart bubbles, a studded hat and fuzzy cuffs, on deep plum.',
 			'css'         => function ( $k ) {
 				return array(
@@ -782,7 +772,6 @@ function ulbd_styles() {
 		'halloween-cheeky-orange' => array(
 			'label'       => 'Halloween - cheeky orange',
 			'kind'        => 'halloween',
-			'fade'        => false,
 			'description' => 'The cheeky witchy tile in black on pumpkin orange.',
 			'css'         => function ( $k ) {
 				return array(
@@ -795,7 +784,6 @@ function ulbd_styles() {
 			'label'       => 'Halloween - cheeky masquerade',
 			'kind'        => 'halloween',
 			'dark'        => true,
-			'fade'        => false,
 			'description' => 'The cheeky witchy tile with masquerade masks joining the wand-tipped brooms, harnessed cauldron and fuzzy cuffs, on deep plum.',
 			'css'         => function ( $k ) {
 				return array(
@@ -816,7 +804,6 @@ function ulbd_styles() {
 		'halloween-cheeky-masks-orange' => array(
 			'label'       => 'Halloween - cheeky masquerade orange',
 			'kind'        => 'halloween',
-			'fade'        => false,
 			'description' => 'The cheeky masquerade tile in black on pumpkin orange.',
 			'css'         => function ( $k ) {
 				return array(
@@ -829,7 +816,6 @@ function ulbd_styles() {
 			'label'       => 'Halloween - masquerade',
 			'kind'        => 'halloween',
 			'dark'        => true,
-			'fade'        => false,
 			'description' => 'Black lace masquerade masks trimmed in gold, with pink ribbons and feathers, bats and stars on deep plum.',
 			'css'         => function ( $k ) {
 				return array(
@@ -850,7 +836,6 @@ function ulbd_styles() {
 		'halloween-masquerade-orange' => array(
 			'label'       => 'Halloween - masquerade orange',
 			'kind'        => 'halloween',
-			'fade'        => false,
 			'description' => 'Black masquerade masks with ribbons and feathers, and bats, on pumpkin orange.',
 			'css'         => function ( $k ) {
 				return array(
@@ -863,7 +848,6 @@ function ulbd_styles() {
 			'label'       => 'Halloween - fishnet masquerade',
 			'kind'        => 'halloween',
 			'dark'        => true,
-			'fade'        => false,
 			'description' => 'Masquerade masks over a black fishnet on hot pink and plum glows.',
 			'css'         => function ( $k ) {
 				return array(
@@ -886,7 +870,6 @@ function ulbd_styles() {
 			'label'       => 'Halloween - spider web mask',
 			'kind'        => 'halloween',
 			'dark'        => true,
-			'fade'        => false,
 			'description' => 'One large masquerade mask in the centre, spun with a gold spider web, with lace, filigree, feathers, a jewel and a dangling spider, over stars on deep plum.',
 			'css'         => function ( $k ) {
 				return array(
@@ -909,7 +892,6 @@ function ulbd_styles() {
 		'halloween-web-mask-orange' => array(
 			'label'       => 'Halloween - spider web mask orange',
 			'kind'        => 'halloween',
-			'fade'        => false,
 			'description' => 'The spider web mask in black and cream, centred on pumpkin orange.',
 			'css'         => function ( $k ) {
 				return array(
@@ -964,7 +946,6 @@ function ulbd_styles() {
 			'label'       => 'Christmas',
 			'kind'        => 'christmas',
 			'dark'        => true,
-			'fade'        => false,
 			'description' => 'Slowly falling snow over red and gold glows on deep pine green (a 60s loop).',
 			'css'         => function ( $k ) {
 				// Two snow tiles falling at different speeds, for depth. Each moves a whole number of tiles per
@@ -1015,7 +996,6 @@ function ulbd_styles() {
 			'label'       => 'New Year\'s',
 			'kind'        => 'new-year',
 			'dark'        => true,
-			'fade'        => false,
 			'description' => 'Gold, lavender and pink confetti with sparkles over gold and violet glows on midnight blue.',
 			'css'         => function ( $k ) {
 				$spark = 'M12 0l2 10 10 2-10 2-2 10-2-10-10-2 10-2z';

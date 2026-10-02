@@ -714,32 +714,6 @@ h1,h2,h3,h4 {
     box-shadow: var(--ul-purple-shadow)
 }
 
-/* Same white fade-out at the edges as #topcta (see #topcta:before), on the shared #bottomcta +
-   footer backdrop - including the same fixed 85px top/bottom fade depth, so the pattern starts at
-   the same distance from the top of both sections. */
-#hero-footer-combo {
-    position: relative
-}
-
-#hero-footer-combo:before {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    pointer-events: none;
-    z-index: 0;
-    background:
-        linear-gradient(to bottom, #fff 0, rgba(255,255,255,.75) 34px, rgba(255,255,255,0) 85px, rgba(255,255,255,0) calc(100% - 85px), rgba(255,255,255,.75) calc(100% - 34px), #fff 100%),
-        linear-gradient(to right, #fff 0, rgba(255,255,255,.75) 4%, rgba(255,255,255,0) 12%, rgba(255,255,255,0) 88%, rgba(255,255,255,.75) 96%, #fff 100%)
-}
-
-#hero-footer-combo > #bottomcta,#hero-footer-combo > .site-footer {
-    position: relative;
-    z-index: 1
-}
-
 /* .footer-layout's own bg.jpg is no longer needed - #hero-footer-combo now supplies one
    continuous background behind #bottomcta and the footer. */
 .site-footer .footer-layout {
@@ -771,36 +745,6 @@ h1,h2,h3,h4 {
     padding: 10px 28px;
     margin: 0 15px 30px!important;
     line-height: 1.2
-}
-
-/* Fade #topcta's backdrop out to white at the bottom and sides, so the pattern never runs into the page
-   edges or the section below: the bottom over a fixed 85px (same as #hero-footer-combo), the top left
-   unfaded so the pattern starts right under the banner/navigation,
-   left and right over 12% of its width. Done as one overlay rather than extra background layers so it also covers the
-   ultralove-banners plugin's shared #ub-hero-combo-bg (which sits behind a transparent #topcta in
-   its aurora mode). The content container is lifted above it so the pills and buttons aren't
-   washed out. */
-#topcta {
-    position: relative
-}
-
-#topcta:before {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    pointer-events: none;
-    z-index: 0;
-    background:
-        linear-gradient(to bottom, rgba(255,255,255,0) 0, rgba(255,255,255,0) calc(100% - 85px), rgba(255,255,255,.75) calc(100% - 34px), #fff 100%),
-        linear-gradient(to right, #fff 0, rgba(255,255,255,.75) 4%, rgba(255,255,255,0) 12%, rgba(255,255,255,0) 88%, rgba(255,255,255,.75) 96%, #fff 100%)
-}
-
-#topcta > .martfury-container {
-    position: relative;
-    z-index: 1
 }
 
 /* The space the Elementor column and widget wrappers used to add around the call to action's content
@@ -3395,10 +3339,8 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
 }
 
 /*
- * More of the aurora backdrop above and below the content of #topcta and the #bottomcta + footer box
- * (#hero-footer-combo): 60px more at each outer edge (32px on phones). The 85px white fades at the
- * top and bottom edges stay as they are, so the extra space shows pattern rather than white before
- * it fades out.
+ * The backdrop's space above and below the content of #topcta and the #bottomcta + footer box
+ * (#hero-footer-combo).
  */
 #topcta {
     padding-top: 64px;
