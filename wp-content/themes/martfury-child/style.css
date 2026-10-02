@@ -281,12 +281,12 @@ Template: martfury
     position: relative
 }
 
-#carousel ul.products li.product .price {
+.ul-home-products ul.products li.product .price {
     margin: auto!important;
     display: inline-block
 }
 
-#carousel .product {
+.ul-home-products .product {
     text-align: center!important
 }
 
@@ -2842,7 +2842,7 @@ ul.products.slick-slider .slick-list {
 
 /* Home page product sections (front-page.php): the spacing the Elementor layout had - 10px above "On Sale",
    the "More On-Sale Products" button 40px below the carousel, "Latest Adult Products" further down, and
-   the two links under the grid. */
+   the two links under the grid. The space below the links is the page regions' gap (see "Page regions"). */
 .ul-home-products {
     padding-top: 10px
 }
@@ -2878,8 +2878,7 @@ ul.products.slick-slider .slick-list {
     flex-wrap: wrap;
     justify-content: center;
     gap: 30px;
-    margin-top: 25px;
-    padding-bottom: 15px
+    margin-top: 25px
 }
 
 /* Out of stock loop items: the quantity + button row is shown disabled (see
@@ -3542,12 +3541,36 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     margin: 0!important
 }
 
-/* No bottom padding on the main content wrapper - the page content runs straight into the footer
-   area (#hero-footer-combo, which has its own top spacing and fade). Except My account (log in /
-   register, and the logged-in account pages): its form cards end in a hard edge, so they keep their
-   own 60px gap above the footer (.woocommerce-account ... .site-content below). */
-body:not(.woocommerce-account) .site-content {
-    padding-bottom: 0!important
+/*
+ * Page regions - one gap between them, on every page. #page stacks the header, the page's content
+ * (.site-content), on product pages up-sells and related products (section.up-sells, section.related), on
+ * catalog pages recently viewed (.footer-recently-viewed - hidden while the visitor has none), then the
+ * footer box (#hero-footer-combo). Each region ends where its content ends and is followed by
+ * --ul-region-gap, so the space above the footer (and between the regions) is this gap alone, whatever the
+ * page ends with. A margin, not padding, so a region with its own background (the 404 page's grey block)
+ * doesn't grow into the gap. Change the gap here to change it everywhere.
+ */
+:root {
+    --ul-region-gap: 48px
+}
+
+#page > :is(.site-content, section.up-sells, section.related, .footer-recently-viewed) {
+    margin-top: 0;
+    margin-bottom: var(--ul-region-gap);
+    padding-bottom: 0
+}
+
+/* The regions below the content start at their own content - the gap above them is the region's above. */
+#page > :is(section.up-sells, section.related, .footer-recently-viewed) {
+    padding-top: 0
+}
+
+/* The blocks at the very end of a region (its last child, that one's last child, and so on) add no margin
+   below them - the closing paragraph, list, form, tabs or product row would otherwise add their own space
+   to the gap. Margins marked !important (the carousels' negative margins for the cards' hover shadow) are
+   left alone. */
+#page > :is(.site-content, section.up-sells, section.related, .footer-recently-viewed) :last-child:not(#page > * :not(:last-child) *) {
+    margin-bottom: 0
 }
 
 /*
@@ -3557,8 +3580,7 @@ body:not(.woocommerce-account) .site-content {
  */
 .woocommerce-account:not(.logged-in) .site-content {
     background-color: transparent;
-    padding-top: 50px;
-    padding-bottom: 60px
+    padding-top: 50px
 }
 
 .woocommerce .customer-login .tabs-nav {
@@ -3665,7 +3687,7 @@ body:not(.woocommerce-account) .site-content {
 .entry-content:has(> .gform_wrapper) {
     max-width: 760px;
     margin: 0 auto;
-    padding: 20px 0 50px
+    padding: 20px 0 0
 }
 
 .entry-content:has(> .gform_wrapper) > p {

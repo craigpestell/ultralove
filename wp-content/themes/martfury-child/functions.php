@@ -22,9 +22,9 @@ function ultralove_clear_wc_template_cache_on_change() {
  * One page container for every page type: Martfury's wide .martfury-container (1650px, or full width
  * with 30px padding below 1680px, 15px on phones), which the catalog pages already use, instead of
  * Bootstrap's .container (1170px) on product pages, regular pages, the breadcrumbs and the header rows.
- * So the header, breadcrumbs and content share their left/right edges on every page. The home page's
- * content keeps its own layout (its Elementor sections and the footer are built around it). The related
- * products / upsells templates and the recently viewed block use the same class directly.
+ * So the header, breadcrumbs and content share their left/right edges on every page, the home page
+ * included (front-page.php). The related products / upsells templates and the recently viewed block use
+ * the same class directly.
  */
 function martfury_header_container_classes() {
 	return 'martfury-container';
@@ -32,7 +32,7 @@ function martfury_header_container_classes() {
 
 add_filter( 'martfury_site_content_container_class', 'ultralove_site_content_container_class', 20 );
 function ultralove_site_content_container_class( $class ) {
-	return ( 'container' === $class && ! is_front_page() ) ? 'martfury-container' : $class;
+	return 'container' === $class ? 'martfury-container' : $class;
 }
 
 add_filter( 'martfury_page_header_container_class', 'ultralove_wide_container_class' );
