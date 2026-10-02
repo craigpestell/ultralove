@@ -1944,25 +1944,37 @@ html body {
 }
 
 /*
- * Content width: the page container (.martfury-container - the header rows, the page content, the home
- * page's product sections) is the window less 30px of padding each side (15px on phones), at most 1440px
- * of content: larger screens get growing side margins rather than ever-wider pages, and product cards
- * (as many 215px+ cards as fit, up to 6 - see "Product grids and carousels") stay at most ~240px wide
- * there (about 215-285px across desktop and tablet widths).
+ * Page width: content is the window less --ul-page-gutter each side (30px, 15px on phones), at most
+ * --ul-page-width less the gutters (1440px of content): larger screens get growing side margins rather than
+ * ever-wider pages, and product cards (as many 215px+ cards as fit, up to 5 - see "Product grids and
+ * carousels") stay a readable size.
+ *
+ * Two ways to get it, the same width either way:
+ *  - the page regions (#content, related products / up-sells, recently viewed) are full width - their
+ *    backgrounds run edge to edge - and inset their own content with padding;
+ *  - .martfury-container is a centred box of that width, for what sits inside other markup (the header rows,
+ *    the full-width home sections' content).
  */
-.martfury-container {
-    max-width: 1500px;
-    margin-left: auto;
-    margin-right: auto
+:root {
+    --ul-page-width: 1500px;
+    --ul-page-gutter: 30px
 }
 
-/* Martfury only pads the container up to 1680px (a fixed 1650px with no padding above that) - keep the
-   30px so the content is 1440px there too. */
-@media (min-width: 1681px) {
-    .martfury-container {
-        padding-left: 30px;
-        padding-right: 30px
+@media (max-width: 767px) {
+    :root {
+        --ul-page-gutter: 15px
     }
+}
+
+#page > :is(.site-content, section.related, .footer-recently-viewed) {
+    padding-inline: max(var(--ul-page-gutter), (100% - var(--ul-page-width)) / 2 + var(--ul-page-gutter))
+}
+
+.martfury-container {
+    width: 100%;
+    max-width: var(--ul-page-width);
+    margin-inline: auto;
+    padding-inline: var(--ul-page-gutter)
 }
 
 /*
@@ -2865,23 +2877,9 @@ ul.products li.product form.cart label.label {
     display: none!important
 }
 
-/*
- * Page container: every page type now uses the wide .martfury-container (see functions.php). Pages built
- * in Elementor put their content in boxed sections, which Martfury caps at Bootstrap's 1170 / 970 / 750px
- * and centres; on those pages (not the home page, whose sections, #topcta/#bottomcta and footer are laid
- * out around that width) the boxes fill the page container instead, so their content lines up with the
- * header and breadcrumbs like every other page's.
- */
-body:not(.home) #content .elementor-section.elementor-section-boxed > .elementor-container {
-    width: auto;
-    max-width: none
-}
-
-/* Classic (non-Elementor) pages - e.g. Buy Wholesale, About, Ordering Info, My Account, Checkout - inset
-   their content 20px on both sides, the same inset the Elementor pages' text has (their section and inner
-   section each pad their columns by 10px) and the breadcrumbs have, so every page's text starts at the
-   same place. */
-body.page:not(.elementor-page):not(.home) #content .entry-content {
+/* Pages (Buy Wholesale, Ordering Info, My Account, Checkout...) inset their content 20px on both sides, the
+   breadcrumbs' inset, so the text starts where the breadcrumbs do. */
+body.page:not(.home) #content .entry-content {
     padding-left: 20px;
     padding-right: 20px
 }
@@ -2893,7 +2891,6 @@ body.page:not(.elementor-page):not(.home) #content .entry-content {
  * rule, instead of the parent theme's centered text on a grey bar.
  */
 section.related .related-title,
-section.up-sells .related-title,
 #footer-recently-viewed .recently-header,
 #footer-bot-recently-viewed .recently-header {
     background: none!important;
@@ -2906,7 +2903,6 @@ section.up-sells .related-title,
 }
 
 section.related .related-title,
-section.up-sells .related-title,
 #footer-recently-viewed .recently-header .title,
 #footer-bot-recently-viewed .recently-header .title {
     font-size: var(--ul-section-title-size)!important;
@@ -3499,7 +3495,7 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
 
 /*
  * Page regions - one gap between them, on every page. #page stacks the header, the page's content
- * (.site-content), on product pages up-sells and related products (section.up-sells, section.related), on
+ * (.site-content), on product pages up-sells and related products (section.related - both have the class), on
  * catalog pages recently viewed (.footer-recently-viewed - hidden while the visitor has none), then the
  * footer box (#hero-footer-combo). Each region ends where its content ends and is followed by
  * --ul-region-gap, so the space above the footer (and between the regions) is this gap alone, whatever the
@@ -3510,14 +3506,14 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     --ul-region-gap: 48px
 }
 
-#page > :is(.site-content, section.up-sells, section.related, .footer-recently-viewed) {
+#page > :is(.site-content, section.related, .footer-recently-viewed) {
     margin-top: 0;
     margin-bottom: var(--ul-region-gap);
     padding-bottom: 0
 }
 
 /* The regions below the content start at their own content - the gap above them is the region's above. */
-#page > :is(section.up-sells, section.related, .footer-recently-viewed) {
+#page > :is(section.related, .footer-recently-viewed) {
     padding-top: 0
 }
 
@@ -3525,31 +3521,31 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
    around it (or a container's gap), never from a margin trailing after the last one - so a page ends at its
    content, whatever the content is. Margins marked !important (the carousels' negative margins for the
    cards' hover shadow) are left alone. */
-#page > :is(.site-content, section.up-sells, section.related, .footer-recently-viewed) :last-child {
+#page > :is(.site-content, section.related, .footer-recently-viewed) :last-child {
     margin-bottom: 0
 }
 
 /*
  * Pages with a sidebar (the catalog: shop, categories, brands - Martfury's "sidebar-content" layout). Every page
- * is #content > .martfury-container > main#main (see martfury_open_site_content_container() in functions.php);
- * here the sidebar sits beside <main>: from 992px a 256px column on the left, 32px from the content. Below
+ * is #content > main#main (see ultralove_no_site_content_container() in functions.php); here the sidebar sits
+ * beside <main>: from 992px a 256px column on the left, 32px from the content. Below
  * 992px the sidebar is the off-canvas filter panel (position: fixed), so <main> has the full width.
  */
 @media (min-width: 992px) {
-    .sidebar-content .site-content > .martfury-container {
+    .sidebar-content .site-content {
         display: grid;
         grid-template-columns: 256px minmax(0, 1fr);
         column-gap: 32px;
         align-items: start
     }
 
-    .sidebar-content .site-content > .martfury-container > .primary-sidebar {
+    .sidebar-content .site-content > .primary-sidebar {
         grid-column: 1;
         grid-row: 1;
         width: auto
     }
 
-    .sidebar-content .site-content > .martfury-container > .site-main {
+    .sidebar-content .site-content > .site-main {
         grid-column: 2;
         grid-row: 1
     }

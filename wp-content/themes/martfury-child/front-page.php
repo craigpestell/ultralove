@@ -2,13 +2,13 @@
 /**
  * Home page. The call to action's text is edited here.
  *
- * The same structure as every other page: #content > .martfury-container > main#main.site-main (see
- * martfury_open_site_content_container() in functions.php). Top to bottom:
+ * The same structure as every other page: #content > main#main.site-main (see
+ * ultralove_no_site_content_container() in functions.php). Top to bottom:
  *  - the rotating banner (UltraLove Banners, group "home"), 24px below the header's navigation row;
  *  - #topcta: heading, intro and the two main buttons on the aurora backdrop (which UltraLove Banners
  *    extends up behind the banner - #ub-hero-combo-bg). These two have backdrops, so they run full width
- *    (.ul-home-bleed) with their content back in the page container;
- *  - the products (.ul-home-products), in the page container like any page's content: "On Sale" (12 random
+ *    (.ul-home-bleed) with their content in a .martfury-container;
+ *  - the products (.ul-home-products), at the page width like any page's content: "On Sale" (12 random
  *    on-sale products in the product carousel, js/product-carousel.js) and its "More On-Sale Products"
  *    button, "Latest Adult Products" (the 30 newest), then the two links. Both lists are WooCommerce
  *    [products] shortcodes, so their cards are the shop's.

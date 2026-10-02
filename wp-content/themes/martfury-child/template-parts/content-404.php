@@ -1,7 +1,7 @@
 <?php
 /**
- * The 404 page's content - the child's copy of Martfury's template part, with <main> straight in the page
- * container like every page (see martfury_open_site_content_container() in functions.php).
+ * The 404 page's content - the child's copy of Martfury's template part, with <main> straight in #content like
+ * every page (see ultralove_no_site_content_container() in functions.php).
  *
  * @package Martfury
  */

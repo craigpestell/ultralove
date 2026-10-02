@@ -17,36 +17,29 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-$upsell_title    = martfury_get_option( 'product_upsells_title' );
-$container_class = 'martfury-container'; // the site-wide page container (see functions.php)
+$upsell_title = martfury_get_option( 'product_upsells_title' );
 
 if ( $upsells ) : ?>
 
 	<section class="related upsells ul-product-section">
-		<div class="<?php echo esc_attr( $container_class ); ?>">
-			<div class="up-sells-content">
+		<h2 class="related-title" id="ul-upsells-title"><?php echo esc_html( $upsell_title ); ?></h2>
 
-				<h2 class="related-title" id="ul-upsells-title"><?php echo esc_html( $upsell_title ); ?></h2>
+		<div class="ul-carousel" data-ul-carousel aria-labelledby="ul-upsells-title">
+			<?php woocommerce_product_loop_start(); ?>
 
-				<div class="ul-carousel" data-ul-carousel aria-labelledby="ul-upsells-title">
-					<?php woocommerce_product_loop_start(); ?>
+			<?php foreach ( $upsells as $upsell ) : ?>
 
-					<?php foreach ( $upsells as $upsell ) : ?>
+				<?php
+				$post_object = get_post( $upsell->get_id() );
 
-						<?php
-						$post_object = get_post( $upsell->get_id() );
+				setup_postdata( $GLOBALS['post'] =& $post_object );
 
-						setup_postdata( $GLOBALS['post'] =& $post_object );
+				wc_get_template_part( 'content', 'product' ); ?>
 
-						wc_get_template_part( 'content', 'product' ); ?>
+			<?php endforeach; ?>
 
-					<?php endforeach; ?>
-
-					<?php woocommerce_product_loop_end(); ?>
-				</div>
-			</div>
+			<?php woocommerce_product_loop_end(); ?>
 		</div>
-
 	</section>
 
 <?php endif;

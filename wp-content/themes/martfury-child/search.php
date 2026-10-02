@@ -3,8 +3,8 @@
  * Post search results - the child's copy of Martfury's search.php. (The header search is for products, which
  * WooCommerce's archive shows.)
  *
- * In the page structure every template shares: #content > .martfury-container > main#main.site-main, the
- * sidebar (where the layout has one) beside <main> - see martfury_open_site_content_container() in functions.php.
+ * In the page structure every template shares: #content > main#main.site-main, the
+ * sidebar (where the layout has one) beside <main> - see ultralove_no_site_content_container() in functions.php.
  *
  * @package Martfury
  */

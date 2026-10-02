@@ -29,18 +29,16 @@ function martfury_header_container_classes() {
 }
 
 /**
- * The page structure every template shares: #content > .martfury-container > main#main.site-main, with the
- * sidebar (catalog pages) beside <main> - see style.css, "Pages with a sidebar". Martfury's open/close
- * functions are pluggable; these print just the container, and the child's templates (page.php, single.php,
- * archive.php, index.php, search.php, template-parts/content-404.php, woocommerce/global/wrapper-start.php,
- * front-page.php) print <main> straight inside it.
+ * The page structure every template shares: #content > main#main.site-main, with the sidebar (catalog pages)
+ * beside <main>. #content is full width and insets its content to the page width itself (style.css, "Page
+ * width"), so Martfury's container wrapper inside it isn't printed; the child's templates (page.php,
+ * single.php, archive.php, index.php, search.php, template-parts/content-404.php,
+ * woocommerce/global/wrapper-start.php, front-page.php) print <main> straight into #content.
  */
-function martfury_open_site_content_container() {
-	echo '<div class="martfury-container">';
-}
-
-function martfury_close_site_content_container() {
-	echo '</div>';
+add_action( 'after_setup_theme', 'ultralove_no_site_content_container' );
+function ultralove_no_site_content_container() {
+	remove_action( 'martfury_after_site_content_open', 'martfury_open_site_content_container' );
+	remove_action( 'martfury_before_site_content_close', 'martfury_close_site_content_container' );
 }
 
 add_filter( 'martfury_page_header_container_class', 'ultralove_wide_container_class' );
@@ -281,8 +279,6 @@ function ultralove_render_recently_viewed_cards( $atts ) {
 
     ob_start();
 
-    // Same wrapper as Martfury's renderer, so the block keeps its container width (see style.css).
-    echo '<div class="martfury-container rv-container">';
     echo '<div class="recently-header">';
     if ( ! empty( $atts['title'] ) ) {
         printf( '<h4 class="title">%s</h4>', esc_html( $atts['title'] ) );
@@ -300,7 +296,6 @@ function ultralove_render_recently_viewed_cards( $atts ) {
             esc_url( get_permalink( get_option( 'woocommerce_shop_page_id' ) ) ),
             esc_html__( 'Shop Now', 'martfury' )
         );
-        echo '</div>';
 
         return ob_get_clean();
     }
@@ -318,7 +313,6 @@ function ultralove_render_recently_viewed_cards( $atts ) {
     echo '</div>';
     wp_reset_postdata();
     wc_reset_loop();
-    echo '</div>';
 
     return ob_get_clean();
 }
