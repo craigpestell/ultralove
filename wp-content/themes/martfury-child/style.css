@@ -2473,6 +2473,26 @@ body:not(.shop-view-list) ul.products li.product .product-inner:focus-within .mf
     opacity: 1
 }
 
+/* Below 992px (phones and tablets - mostly touch screens, which can't hover) the bar isn't used: Quick View
+   is dropped (on a phone its popup was nearly full screen and showed little the product page doesn't), and
+   the bar shrinks to a round button holding the wishlist heart, always showing in the image's bottom right
+   corner. At #page weight to beat the bar's hover and focus states. */
+@media (max-width: 991px) {
+    #page ul.products li.product .mf-product-quick-view {
+        display: none
+    }
+
+    #page ul.products li.product .mf-product-thumbnail .footer-button {
+        left: auto;
+        right: 8px;
+        bottom: 8px;
+        padding: 0;
+        border-radius: 50%;
+        opacity: 1;
+        transition: none
+    }
+}
+
 ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist a .yith-wcwl-icon,
 ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist a .yith-wcwl-icon-svg {
     width: 18px;
@@ -3151,8 +3171,9 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
  *   window allows; the header over the summary (price, quantity, Add to cart, wishlist) on the right.
  *   The popup is 960px wide, as tall as its content, centred (top: 50% + translate(-50%, -50%) in the
  *   parent theme), capped at the window height minus 40px top and bottom, and scrolls as a whole beyond that.
- * - Below 992px, the parent theme's side sheet (85% wide, max 600px) holds one column - header, image
- *   (centred, up to 400px tall), summary - and scrolls as a whole.
+ * - Below 992px the product cards don't offer Quick View (see the thumbnail bar above). A popup opened in a
+ *   wider window that is then narrowed falls back to the parent theme's side sheet (85% wide, max 600px)
+ *   with one column - header, image (centred, up to 400px tall), summary - scrolling as a whole.
  */
 #mf-quick-view-modal div.product .mf-product-detail {
     display: flex;
