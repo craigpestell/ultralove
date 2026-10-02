@@ -1847,27 +1847,6 @@ h1,h2,h3,h4 {
     }
 }
 
-/*
- * Elementor's "Stretch Section" setting (used on the header banner/topcta section and the
- * product-thumbnails section) computes its full-width margin/width in JavaScript at runtime -
- * there's no static CSS for it at all, so on first paint those sections sit at their default,
- * theme-container-constrained width (visible left/right margins) until Elementor's frontend JS
- * loads and injects an inline style. That flash also delays the reported LCP for anything inside
- * one of these sections, since the element's later JS-driven resize registers as a new, much
- * later paint candidate. This replaces the JS computation with the standard CSS-only full-bleed
- * technique so the correct width is there on the very first paint - no JS dependency, no flash.
- * !important wins even if Elementor's JS still runs afterwards and sets its own inline style.
- */
-html, body {
-    overflow-x: hidden;
-}
-
-.elementor-section-stretched,
-.ul-home-bleed {
-    width: 100vw !important;
-    margin-left: calc(50% - 50vw) !important;
-    left: 0 !important;
-}
 
 /*
  * Text on the brand pink (--mf-background-primary-color, #b3094b) must be white.
@@ -1913,11 +1892,12 @@ html body {
  * ever-wider pages, and product cards (as many 215px+ cards as fit, up to 5 - see "Product grids and
  * carousels") stay a readable size.
  *
- * Two ways to get it, the same width either way:
- *  - the page regions (#content, related products / up-sells, recently viewed) are full width - their
- *    backgrounds run edge to edge - and inset their own content with padding;
- *  - .martfury-container is a centred box of that width, for what sits inside other markup (the header rows,
- *    the full-width home sections' content).
+ * The page regions (#content, related products / up-sells, recently viewed) are full-width grids - their
+ * backgrounds run edge to edge - with three columns: gutter, content, gutter ("full" spans all three,
+ * "content" is the middle one). Their children sit in the content column. <main> spans all three and passes
+ * the columns on (subgrid), so a full-width section in it (.ul-home-bleed - the home banner and call to
+ * action) takes "full". .martfury-container is the same width as a centred box, for what sits inside other
+ * markup (the header rows, the home sections' content).
  */
 :root {
     --ul-page-width: 1500px;
@@ -1931,7 +1911,27 @@ html body {
 }
 
 #page > :is(.site-content, section.related, .footer-recently-viewed) {
-    padding-inline: max(var(--ul-page-gutter), (100% - var(--ul-page-width)) / 2 + var(--ul-page-gutter))
+    display: grid;
+    grid-template-columns:
+        [full-start] minmax(var(--ul-page-gutter), 1fr)
+        [content-start] minmax(0, calc(var(--ul-page-width) - 2 * var(--ul-page-gutter)))
+        [content-end] minmax(var(--ul-page-gutter), 1fr) [full-end]
+}
+
+:where(#page > :is(.site-content, section.related, .footer-recently-viewed)) > *,
+.site-main > * {
+    grid-column: content;
+    min-width: 0
+}
+
+#page > .site-content > .site-main {
+    grid-column: full;
+    display: grid;
+    grid-template-columns: subgrid
+}
+
+.site-main > .ul-home-bleed {
+    grid-column: full
 }
 
 .martfury-container {
@@ -3490,28 +3490,31 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
 }
 
 /*
- * Pages with a sidebar (the catalog: shop, categories, brands - Martfury's "sidebar-content" layout). Every page
- * is #content > main#main (see ultralove_no_site_content_container() in functions.php); here the sidebar sits
- * beside <main>: from 992px a 256px column on the left, 32px from the content. Below
- * 992px the sidebar is the off-canvas filter panel (position: fixed), so <main> has the full width.
+ * Pages with a sidebar (the catalog: shop, categories, brands - Martfury's "sidebar-content" layout): from
+ * 992px the content column of #content's grid (see "Page width") splits into the sidebar - 256px on the left
+ * - and <main>, 32px apart. Below 992px the sidebar is the off-canvas filter panel (position: fixed), so
+ * <main> spans the page like everywhere else.
  */
 @media (min-width: 992px) {
-    .sidebar-content .site-content {
-        display: grid;
-        grid-template-columns: 256px minmax(0, 1fr);
-        column-gap: 32px;
+    .sidebar-content #page > .site-content {
+        grid-template-columns:
+            [full-start] minmax(var(--ul-page-gutter), 1fr)
+            [content-start sidebar-start] 256px [sidebar-end] 32px
+            [main-start] minmax(0, calc(var(--ul-page-width) - 2 * var(--ul-page-gutter) - 288px))
+            [main-end content-end] minmax(var(--ul-page-gutter), 1fr) [full-end];
         align-items: start
     }
 
-    .sidebar-content .site-content > .primary-sidebar {
-        grid-column: 1;
+    .sidebar-content #page > .site-content > .primary-sidebar {
+        grid-column: sidebar;
         grid-row: 1;
         width: auto
     }
 
-    .sidebar-content .site-content > .site-main {
-        grid-column: 2;
-        grid-row: 1
+    .sidebar-content #page > .site-content > .site-main {
+        grid-column: main;
+        grid-row: 1;
+        display: block
     }
 }
 
