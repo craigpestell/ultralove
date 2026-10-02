@@ -1,9 +1,9 @@
 <?php
 /**
- * Home page, built in the theme rather than Elementor. The call to action's text is edited here.
+ * Home page. The call to action's text is edited here.
  *
  * The same structure as every other page: #content > .martfury-container > main#main.site-main (see
- * martfury_open_site_content_container() in the child's functions.php). Top to bottom:
+ * martfury_open_site_content_container() in functions.php). Top to bottom:
  *  - the rotating banner (UltraLove Banners, group "home"), 24px below the header's navigation row;
  *  - #topcta: heading, intro and the two main buttons on the aurora backdrop (which UltraLove Banners
  *    extends up behind the banner - #ub-hero-combo-bg). These two have backdrops, so they run full width

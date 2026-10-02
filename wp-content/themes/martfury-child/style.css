@@ -2383,9 +2383,8 @@ body:not(.shop-view-list) :has(> ul.products:not(.slick-slider)) {
     container-type: inline-size
 }
 
-/* The grid owns the space between its rows (row-gap); the cards carry no outer margin of their own (the
-   parent theme spaced the rows with each card's 30px + 5px bottom margins, which also added 35px below
-   the last row). */
+/* The grid owns the space between its rows (row-gap); the cards carry no outer margin (the margin-bottom: 0
+   below cancels the parent theme's). */
 body:not(.shop-view-list) ul.products:not(.slick-slider) {
     --ul-cols: 2;
     row-gap: 35px
@@ -2416,8 +2415,8 @@ body:not(.shop-view-list) ul.products:not(.slick-slider) > li.product {
     margin-bottom: 0
 }
 
-/* Pagination under the grids: the same way round - the list's gap spaces the page numbers (the parent theme
-   gave each one 5px side padding and a 10px bottom margin, which also trailed below the last row). */
+/* Pagination under the grids: the list's gap spaces the page numbers; the items carry no margin or padding
+   (cancelling the parent theme's). */
 .woocommerce nav.woocommerce-pagination ul {
     display: flex;
     flex-wrap: wrap;
@@ -3533,9 +3532,8 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
 /*
  * Pages with a sidebar (the catalog: shop, categories, brands - Martfury's "sidebar-content" layout). Every page
  * is #content > .martfury-container > main#main (see martfury_open_site_content_container() in functions.php);
- * here the sidebar sits beside <main>: from 992px a 256px column on the left, 32px from the content (Martfury
- * used Bootstrap's float columns - 25% / 75%, 19% / 81% from 1200px). Below 992px the sidebar is the off-canvas
- * filter panel (position: fixed), so <main> has the full width.
+ * here the sidebar sits beside <main>: from 992px a 256px column on the left, 32px from the content. Below
+ * 992px the sidebar is the off-canvas filter panel (position: fixed), so <main> has the full width.
  */
 @media (min-width: 992px) {
     .sidebar-content .site-content > .martfury-container {

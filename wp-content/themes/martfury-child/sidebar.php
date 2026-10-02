@@ -1,7 +1,7 @@
 <?php
 /**
- * The Sidebar containing the main widget areas (Martfury's sidebar.php without the Bootstrap column classes -
- * where it sits beside <main> is set in style.css, "Pages with a sidebar").
+ * The sidebar - the child's copy of Martfury's sidebar.php. Where it sits beside <main> is set in style.css
+ * ("Pages with a sidebar").
  *
  * @package Martfury
  */

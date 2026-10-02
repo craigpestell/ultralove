@@ -1,7 +1,7 @@
 <?php
 /**
- * The template part for displaying 404 pages (Not Found) - Martfury's, in the shared structure (no #primary
- * wrapper or Bootstrap column classes; see martfury_open_site_content_container() in the child's functions.php).
+ * The 404 page's content - the child's copy of Martfury's template part, with <main> straight in the page
+ * container like every page (see martfury_open_site_content_container() in functions.php).
  *
  * @package Martfury
  */

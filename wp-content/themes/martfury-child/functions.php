@@ -20,10 +20,8 @@ function ultralove_clear_wc_template_cache_on_change() {
 
 /**
  * One page container for every page type: Martfury's wide .martfury-container (1650px, or full width
- * with 30px padding below 1680px, 15px on phones), which the catalog pages already use, instead of
- * Bootstrap's .container (1170px) on product pages, regular pages, the breadcrumbs and the header rows.
- * So the header, breadcrumbs and content share their left/right edges on every page, the home page
- * included (front-page.php). The related products / upsells templates and the recently viewed block use
+ * with 30px padding below 1680px, 15px on phones) for the header rows, the breadcrumbs and the content, so
+ * they share their left/right edges on every page. The related products / upsells templates and the recently viewed block use
  * the same class directly.
  */
 function martfury_header_container_classes() {
@@ -32,10 +30,10 @@ function martfury_header_container_classes() {
 
 /**
  * The page structure every template shares: #content > .martfury-container > main#main.site-main, with the
- * sidebar (catalog pages) beside <main> - see style.css, "Pages with a sidebar". These replace Martfury's
- * (pluggable) open/close functions, which added Bootstrap's .row inside the container, and the child's
- * templates (page.php, single.php, archive.php, index.php, search.php, template-parts/content-404.php,
- * woocommerce/global/wrapper-start.php, front-page.php) drop the div#primary column around <main>.
+ * sidebar (catalog pages) beside <main> - see style.css, "Pages with a sidebar". Martfury's open/close
+ * functions are pluggable; these print just the container, and the child's templates (page.php, single.php,
+ * archive.php, index.php, search.php, template-parts/content-404.php, woocommerce/global/wrapper-start.php,
+ * front-page.php) print <main> straight inside it.
  */
 function martfury_open_site_content_container() {
 	echo '<div class="martfury-container">';

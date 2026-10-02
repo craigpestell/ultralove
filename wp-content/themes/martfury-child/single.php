@@ -1,10 +1,9 @@
 <?php
 /**
- * Single posts (Martfury's single.php, in the shared structure).
+ * Single posts - the child's copy of Martfury's single.php.
  *
- * The page structure every template shares (see martfury_open_site_content_container() in the child's functions.php):
- * #content > .martfury-container > main#main.site-main, with the sidebar (where the layout has one) beside
- * <main> - no Bootstrap .row / #primary column wrappers. Martfury's copy wrapped <main> in div#primary.
+ * In the page structure every template shares: #content > .martfury-container > main#main.site-main, the
+ * sidebar (where the layout has one) beside <main> - see martfury_open_site_content_container() in functions.php.
  *
  * @package Martfury
  */

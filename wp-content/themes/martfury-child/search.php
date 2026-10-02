@@ -1,10 +1,10 @@
 <?php
 /**
- * Search results (the header search covers products, which WooCommerce's archive shows - this is the posts search) (Martfury's search.php, in the shared structure).
+ * Post search results - the child's copy of Martfury's search.php. (The header search is for products, which
+ * WooCommerce's archive shows.)
  *
- * The page structure every template shares (see martfury_open_site_content_container() in the child's functions.php):
- * #content > .martfury-container > main#main.site-main, with the sidebar (where the layout has one) beside
- * <main> - no Bootstrap .row / #primary column wrappers. Martfury's copy wrapped <main> in div#primary.
+ * In the page structure every template shares: #content > .martfury-container > main#main.site-main, the
+ * sidebar (where the layout has one) beside <main> - see martfury_open_site_content_container() in functions.php.
  *
  * @package Martfury
  */
