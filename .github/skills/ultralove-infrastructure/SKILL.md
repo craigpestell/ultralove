@@ -10,7 +10,7 @@ Use this skill for targeted operations on this WordPress/WooCommerce environment
 
 ## Environment Map
 
-- Production app: `ultralove-prod-app` in DigitalOcean `sfo2`; WordPress root is `/var/www/html`.
+- Production app: droplet `PRODUCTION-WEB-ultralove.ca` in DigitalOcean `sfo2` (hostname `ultralove-prod-web`, SSH alias `ultralove-prod-app`); WordPress root is `/var/www/html`.
 - Production services: `nginx`, `php8.5-fpm`, and `redis-server`.
 - Nginx vhost: `/etc/nginx/sites-available/ultralove.ca.conf`.
 - PHP-FPM pool: `/etc/php/8.5/fpm/pool.d/www.conf`.

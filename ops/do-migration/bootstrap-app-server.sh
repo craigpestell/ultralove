@@ -31,8 +31,9 @@ if [[ ! -s "$CERT" || ! -s "$CERT_KEY" ]]; then
   exit 1
 fi
 
-# --- Hostname (matches the SSH alias). cloud-init would otherwise reset it and /etc/hosts at boot.
-HOST_NAME="${HOST_NAME:-ultralove-prod-app}"
+# --- Hostname: what the droplet does (the SSH alias stays ultralove-prod-app). cloud-init would otherwise reset it
+# and /etc/hosts at boot.
+HOST_NAME="${HOST_NAME:-ultralove-prod-web}"
 hostnamectl set-hostname "$HOST_NAME"
 sed -i "s/^127\.0\.1\.1 .*/127.0.1.1 $HOST_NAME $HOST_NAME/" /etc/hosts
 printf 'preserve_hostname: true\nmanage_etc_hosts: false\n' > /etc/cloud/cloud.cfg.d/99-ultralove-hostname.cfg

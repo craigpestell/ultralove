@@ -75,6 +75,9 @@ exactly one droplet throughout. Steps: `ops/do-migration/README.md` ("Replacing 
 
 No DigitalOcean cloud firewall is attached to prod web or mail.
 
+The mail droplet's SSH was meant to be reachable from the private network only, but on 2026-10-02 UFW allowed
+22/tcp from anywhere and logins from the public internet succeeded (section 8).
+
 SSH (2026-10-02): prod web and dev accept only current keys (the maintainer's laptop; on dev also the GitHub Actions
 deploy key and prod's push key, the latter only from prod's IP). The mail droplet's root `authorized_keys` still
 lists 11 entries, some stale (section 8).
@@ -96,7 +99,7 @@ A droplet built for production must carry the `Production` tag to be monitored (
 
 - DigitalOcean droplet PRODUCTION-WEB-ultralove.ca (ID 605458201), s-4vcpu-8gb (4 vCPU, 8 GB RAM, 160 GB disk), sfo2
 - OS: Ubuntu 26.04.1 LTS, kernel 7.0.0-31-generic, x86_64
-- System hostname: `ultralove-prod-app` (set 2026-10-02; `/etc/cloud/cloud.cfg.d/99-ultralove-hostname.cfg` stops
+- System hostname: `ultralove-prod-web` (set 2026-10-02; the SSH alias is still `ultralove-prod-app`; `/etc/cloud/cloud.cfg.d/99-ultralove-hostname.cfg` stops
   cloud-init resetting it)
 - Public IPv4 165.22.169.132 (also its outbound address); reserved IP 167.99.26.122; private IPv4 10.120.0.4
 - DO features: monitoring, droplet agent, private networking (VPC 13c4a945-3cb1-4b91-a483-ce0364f55dba); no IPv6
@@ -516,7 +519,7 @@ Root cause: `wp-content/themes/martfury/style.css` uses the broad `transition: a
 
 | Area | Setting |
 |---|---|
-| SSL/TLS | Full (strict); always HTTPS; automatic HTTPS rewrites; min TLS **1.0**; TLS 1.3 with 0-RTT; HSTS **off** |
+| SSL/TLS | Full (strict); always HTTPS; automatic HTTPS rewrites; min TLS 1.2; TLS 1.3 with 0-RTT; HSTS on, max-age 6 months, no includeSubDomains (`mail.`, `mg.` and Mailgun's tracking host aren't all HTTPS), no preload, no nosniff (min TLS and HSTS set 2026-10-02) |
 | Caching | APO on (`ultralove.ca`, `www`), **cache by device type on**, via the WordPress plugin; cache level aggressive; Browser Cache TTL "Respect Existing Headers"; edge cache TTL 2 h; no cache rules; no page rules |
 | Speed | Brotli, HTTP/2, HTTP/3, Early Hints on; Rocket Loader, Polish, Mirage, minify, WebP off |
 | Security | security level medium; browser integrity check on; Bot Fight Mode off; email obfuscation on; max upload 100 MB |
@@ -622,11 +625,12 @@ repo (`ops/prod/`) and installed by the bootstrap; credentials are in `/root/.sp
   (`root@ultralove-prod-app`, `1edSPOaA...`, twice), a key from an old server (`craig@wordpressonubuntu2204-...`),
   `rsa-key-20220121`, and personal keys (Lance, Paul Chiu, several of Craig's). Remove the ones no longer needed; the
   DigitalOcean account's SSH keys (added to new droplets) deserve the same review.
-- **DB password:** after the 2026-09-18 dev compromise, confirm the WordPress DB user's password was rotated (not
-  checked; rotating means `doctl databases user reset` + `wp-config.php` on prod at the same moment).
+- **Mail droplet SSH is open to the internet** (UFW `22/tcp ALLOW Anywhere`), though it was meant to be private-network
+  only. Restricting it to 10.120.0.0/20 means reaching it through prod web, which has no key for it yet (the retired
+  prod's key was the hop).
 - **Cloudinary f_auto/q_auto** are off (6.1): turning them on would shrink most images; test on dev first.
-- **Cloudflare:** raise min TLS to 1.2; consider HSTS. After the Martfury mobile version is switched off (one responsive
-  design), turn off APO's "cache by device type" so desktop and phone share one cached copy.
+- **Cloudflare APO:** after the Martfury mobile version is switched off (one responsive design), turn off "cache by
+  device type" so desktop and phone share one cached copy.
 - UpdraftPlus: confirm that leaving uploads out is intended now that `uploads/` is synced separately.
 - Spaces: the monthly script archives `.spaces_env` into the same bucket it can write to - fine for recovery, but a
   leaked key exposes its own backups; consider a separate restore-only key.
