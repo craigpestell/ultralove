@@ -30,7 +30,9 @@ cron runner. What isn't in the repo (secrets, server-only scripts) is copied fro
 2. Copy the Cloudflare Origin CA certificate (valid to 2041) from the current droplet - never into the repo:
    `ssh NEW mkdir -p /etc/ssl/cloudflare`, then `scp` `/etc/ssl/cloudflare/ultralove.ca.pem` and
    `ultralove.ca.key` across (key: `chmod 600`).
-3. `scp -r ops root@NEW:/root/ops` and run `ssh root@NEW /root/ops/do-migration/bootstrap-app-server.sh`.
+3. Copy only what the bootstrap uses (not all of `ops/`, which has ~220 MB of local tooling) and run it:
+   `tar -czf - --exclude=.env ops/do-migration ops/php ops/nginx | ssh root@NEW 'tar -xzf - -C /root'`, then
+   `ssh root@NEW /root/ops/do-migration/bootstrap-app-server.sh`.
 4. Copy the site: set `PROD_NEW_APP_IP` and the `SRC_APP_*` values (the current droplet) in `.env`, run
    `./sync-site-files.sh prod --from-prod-server` (WordPress files, uploads), and copy `/var/www/html/wp-config.php`
    from the current droplet (database credentials: the database is on its own host, unchanged).

@@ -10,7 +10,8 @@
 #
 # Run ON the new droplet as root, from a copy of the repo's ops/ directory, after copying the Cloudflare Origin
 # CA certificate (see README.md):
-#   scp -r ops root@NEW_IP:/root/ops && ssh root@NEW_IP /root/ops/do-migration/bootstrap-app-server.sh
+#   tar -czf - --exclude=.env ops/do-migration ops/php ops/nginx | ssh root@NEW_IP 'tar -xzf - -C /root'
+#   ssh root@NEW_IP /root/ops/do-migration/bootstrap-app-server.sh
 set -euo pipefail
 
 if [[ $EUID -ne 0 ]]; then
