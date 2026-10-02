@@ -673,6 +673,11 @@ h1,h2,h3,h4 {
     background: var(--ul-aurora)
 }
 
+/* The footer's backdrop shows through the widgets block too (the parent theme paints it white). */
+.site-footer .footer-layout {
+    background: none
+}
+
 /* Even purple glow (no offset, so it shows on all four sides) in the pills'/cards'
    rgb(177,101,255) border colour, shared by the #topcta and #bottomcta pills, the #topcta text
    box, and the footer widget heading pills and cards. Those are Elementor/widget markup, so
