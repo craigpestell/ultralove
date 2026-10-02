@@ -71,9 +71,13 @@ exactly one droplet throughout. Steps: `ops/do-migration/README.md` ("Replacing 
 | Managed DB trusted sources | db-mysql-sfo2-16643 | droplet 605458201 (prod web) only |
 | DO cloud firewall `ultralove-dev-fw` | ultralove-dev | 22/tcp from anywhere |
 | UFW on dev | ultralove-dev | SSH only (web arrives through the Cloudflare Tunnel) |
+| UFW on mail | PRODUCTION-mail-2026-ubuntu-24-LTS | 22, 25, 110, 143, 465, 587, 993, 995 from anywhere; 80 denied |
 
-No DigitalOcean cloud firewall is attached to prod web or mail; the mail droplet's own firewall hasn't been
-inspected.
+No DigitalOcean cloud firewall is attached to prod web or mail.
+
+SSH (2026-10-02): prod web and dev accept only current keys (the maintainer's laptop; on dev also the GitHub Actions
+deploy key and prod's push key, the latter only from prod's IP). The mail droplet's root `authorized_keys` still
+lists 11 entries, some stale (section 8).
 
 ### 1.5 Monitoring Alerts (DigitalOcean)
 
@@ -92,7 +96,8 @@ A droplet built for production must carry the `Production` tag to be monitored (
 
 - DigitalOcean droplet PRODUCTION-WEB-ultralove.ca (ID 605458201), s-4vcpu-8gb (4 vCPU, 8 GB RAM, 160 GB disk), sfo2
 - OS: Ubuntu 26.04.1 LTS, kernel 7.0.0-31-generic, x86_64
-- System hostname: `ultralove-prod-candidate` (its name during the dry run; the DO name is the one above)
+- System hostname: `ultralove-prod-app` (set 2026-10-02; `/etc/cloud/cloud.cfg.d/99-ultralove-hostname.cfg` stops
+  cloud-init resetting it)
 - Public IPv4 165.22.169.132 (also its outbound address); reserved IP 167.99.26.122; private IPv4 10.120.0.4
 - DO features: monitoring, droplet agent, private networking (VPC 13c4a945-3cb1-4b91-a483-ce0364f55dba); no IPv6
 - Tags: Production, nginx, php, php-fpm, wordpress
@@ -219,10 +224,14 @@ The MU plugin `10-elementor-font-display-swap.php` (Elementor's Google Fonts) wa
   `wp cloudinary unsync` (see `ops/dev/README.md`). Re-apply or re-check after a Cloudinary update.
 - (Slider Revolution's Cloudinary URL rewriting, section 4.5, is gone with the plugin - it's no longer on disk.)
 
-### 3.6 Installed but Inactive Plugins (2026-10-02)
+### 3.6 Removed Plugins and Leftovers (2026-10-02)
 
-admin-site-enhancements, nelio-ab-testing, woocommerce-services, product-import-export-for-woo and the WebToffee
-add-ons wt-import-export-for-woo, -product and -product_review. Candidates for deletion (section 8).
+Deleted from production: admin-site-enhancements, nelio-ab-testing, woocommerce-services, product-import-export-for-woo
+and the WebToffee add-ons wt-import-export-for-woo, -product and -product_review (all inactive), plus their leftover
+options and tables (`wp_wt_iew_*`), and Elementor's leftovers: 44 `elementor_library` templates, all `_elementor*` post
+meta, `elementor*` options, the `wp_e_events` table and `uploads/elementor/`. Backups taken first, on production in
+`/root/backups/`: `db-before-cleanup-20261002.sql.gz` (full database) and `inactive-plugins-20261002.tgz`.
+Dev still has them until its next refresh from prod (`ops/dev/refresh-db.sh`, `sync-code.sh`).
 
 ## 4) Caching and Performance Architecture
 
@@ -503,40 +512,46 @@ Root cause: `wp-content/themes/martfury/style.css` uses the broad `transition: a
   Cloudflare Origin CA certificate (valid to 2041-09-21), and its firewall only accepts HTTP/S from Cloudflare.
 - Anonymous HTML is cached at the edge by APO; after a deploy that changes page HTML, purge Cloudflare.
 
-### 5.2 WAF Geo-Challenge Rule
+### 5.2 Zone Settings (Free plan, read 2026-10-02)
 
-- Custom rule `Challenge outsiders` applies a Managed Challenge to non-Canadian traffic while excluding Cloudflare-verified bots:
-  - `(ip.src.country ne "CA" and not cf.client.bot)`
-- The verified-bot exclusion is required for Googlebot and other legitimate crawlers to fetch the public WordPress sitemap and indexed pages without weakening the challenge for unverified traffic.
+| Area | Setting |
+|---|---|
+| SSL/TLS | Full (strict); always HTTPS; automatic HTTPS rewrites; min TLS **1.0**; TLS 1.3 with 0-RTT; HSTS **off** |
+| Caching | APO on (`ultralove.ca`, `www`), **cache by device type on**, via the WordPress plugin; cache level aggressive; Browser Cache TTL "Respect Existing Headers"; edge cache TTL 2 h; no cache rules; no page rules |
+| Speed | Brotli, HTTP/2, HTTP/3, Early Hints on; Rocket Loader, Polish, Mirage, minify, WebP off |
+| Security | security level medium; browser integrity check on; Bot Fight Mode off; email obfuscation on; max upload 100 MB |
 
-### 5.3 Application-Level Cloudflare Integration
+### 5.3 WAF Custom Rules (in order)
 
-- No dedicated Cloudflare plugin confirmed as active.
-- Cloudflare Turnstile integration present via plugin code in back-in-stock-notifier-for-woocommerce.
-- WordPress option key indicating Cloudflare page cache plugin traces exists:
-  - wp_cloudflare_page_cache_install
-  - wp-cloudflare-page-cache_version
+| Rule | Match | Action |
+|---|---|---|
+| IP whitelist (skip managed rules) | `ip.src in $customers_ip` (account list, 22 IPs) | skip managed rules and Super Bot Fight Mode |
+| Allow Shopify product_image fetches | GET/HEAD of image files under `/wp-content/uploads/` | skip managed rules and SBFM |
+| WP logged in (**disabled**) | `wordpress_logged_in_*` cookie | skip the remaining custom rules |
+| Skip challenge for public uploads (Shopify imports) | path contains `/wp-content/uploads/` | skip the remaining custom rules, managed rules, SBFM, rate limiting |
+| Challenge outsiders | `(ip.src.country ne "CA" and not cf.client.bot)` or a `product_brand=` query listing several brands | Managed Challenge |
+
+The verified-bot exclusion lets Googlebot and other legitimate crawlers through; the multi-brand filter clause stops
+crawlers walking every brand combination.
+
+### 5.4 Application-Level Cloudflare Integration
+
+- The Cloudflare WordPress plugin is active; it runs APO (purges on content changes).
+- Cloudflare Turnstile protects Gravity Forms (Turnstile add-on) and back-in-stock-notifier-for-woocommerce.
 
 ## 6) Cloudinary Setup
 
-### 6.1 Plugin and Runtime Footprint
+### 6.1 Settings (read 2026-10-02)
 
-- Cloudinary plugin active:
-  - cloudinary-image-management-and-manipulation-in-the-cloud-cdn
-- Cloudinary-related option keys exist in WP DB, including:
-  - cloudinary_connect
-  - cloudinary_cloud_name
-  - cloudinary_setup
-  - cloudinary_sync_media
-  - cloudinary_urls
-  - cloudinary_status
-- Custom option detected:
-  - ultralove_enable_cloudinary_overrides
-
-### 6.2 Interpretation
-
-- Cloudinary integration is not just installed; it appears configured and used (based on option footprint).
-- Secret values are intentionally not documented in plaintext here.
+- Plugin `cloudinary-image-management-and-manipulation-in-the-cloud-cdn` 3.3.2 (local changes, 3.5); status ok.
+- Media sync: auto sync on, folder `ultralove/catalog`, storage `dual_full` (Cloudinary *and* local copies kept -
+  local uploads are still the source of truth, and are backed up to Spaces, section 7).
+- Image delivery and optimization on, but **format and quality are both "none"** - no `f_auto`/`q_auto`, so
+  images aren't converted to WebP/AVIF or recompressed (section 8). Crop size 300x300 uses `c_auto,g_auto`.
+- Off: Cloudinary lazy loading, responsive breakpoints (see 4.12 - grid images get their `sizes` from
+  `30-woocommerce-loop-image-sizes.php`), video delivery, SVG.
+- Only part of the media library has synced so far (sync is ongoing).
+- Credentials live in the `cloudinary_connect` option and are not recorded here.
 
 ## 6.5 Mail Transport
 
@@ -556,18 +571,22 @@ Root cause: `wp-content/themes/martfury/style.css` uses the broad `transition: a
 - This is separate from the dedicated production mail droplet `PRODUCTION-mail-2026-ubuntu-24-LTS` (568349152), which likely serves mailbox/MTA or other mail infrastructure responsibilities outside WordPress plugin-driven outbound mail.
 - Exact Mailgun mode and credentials are intentionally not recorded in plaintext here.
 
-### 6.5.3 Mail DNS (2026-10-02)
+### 6.5.3 Mail Server and DNS (2026-10-02)
 
 | Path | How |
 |---|---|
-| Inbound mail, mailboxes | MX `mail.ultralove.ca` -> the mail droplet, 143.110.140.137 (Postfix + Dovecot; DNS only, not proxied by Cloudflare) |
-| WordPress outbound mail | Mailgun, sending domain `mg.ultralove.ca` (SPF `v=spf1 include:mailgun.org ~all`) |
+| Inbound mail, mailboxes | MX `mail.ultralove.ca` -> the mail droplet, 143.110.140.137 (Ubuntu 24.04; Postfix + Dovecot + rspamd; Let's Encrypt certificate; DNS only, not proxied by Cloudflare) |
+| Mail sent by the mail server | relayed through Mailgun (`relayhost = [smtp.mailgun.org]:587`, SASL credentials in `/etc/postfix/sasl_passwd`) - it doesn't deliver to the internet itself |
+| WordPress outbound mail | Mailgun plugin, sending domain `mg.ultralove.ca` (SPF `include:mailgun.org`, DKIM selector `mx._domainkey.mg`) |
 
-- **Root SPF is `v=spf1 ~all`** - it authorizes no servers - while **DMARC is `p=quarantine`**
-  (`adkim=r; aspf=r; rua=mailto:ultra@ultralove.ca`). Mail sent *as @ultralove.ca* from the mail droplet gets no SPF
-  pass, so it only avoids quarantine through an aligned DKIM signature. See section 8.
-- The mail droplet was built from a snapshot named `2vcpu-4gb-sfo2-mail-backup-to-be-updated-...`; its internals, SSH
-  access and backups are undocumented.
+- Root SPF is `v=spf1 ~all` and DMARC is `p=quarantine` (`adkim=r; aspf=r`; aggregate reports to
+  `ultra@ultralove.ca`, which receives them on the mail droplet). That's fine because everything sent as
+  @ultralove.ca goes out through Mailgun: the DMARC reports for the 30 days to 2026-10-02 show ~2,750 messages from
+  Mailgun with SPF and DKIM aligned and passing, and nothing quarantined. Copies re-sent by recipients' forwarders fail
+  SPF but pass on the surviving DKIM signature. (4 messages from `vps.industrialuv.com` failed both.)
+- If anything ever sends as @ultralove.ca *without* Mailgun, add it to the root SPF first.
+- Mail logs: `/var/log/mail.log` (all recent deliveries are inbound, to Dovecot LMTP).
+- Backups: DigitalOcean weekly droplet backups, enabled 2026-10-02.
 
 ## 7) Backups and Retention Architecture
 
@@ -599,25 +618,21 @@ repo (`ops/prod/`) and installed by the bootstrap; credentials are in `/root/.sp
 
 ## 8) Open Items
 
-- Prod app: the OS hostname is still `ultralove-prod-candidate` (cosmetic).
+- **Mail droplet SSH:** root's `authorized_keys` lists 11 entries, including the retired prod's key
+  (`root@ultralove-prod-app`, `1edSPOaA...`, twice), a key from an old server (`craig@wordpressonubuntu2204-...`),
+  `rsa-key-20220121`, and personal keys (Lance, Paul Chiu, several of Craig's). Remove the ones no longer needed; the
+  DigitalOcean account's SSH keys (added to new droplets) deserve the same review.
+- **DB password:** after the 2026-09-18 dev compromise, confirm the WordPress DB user's password was rotated (not
+  checked; rotating means `doctl databases user reset` + `wp-config.php` on prod at the same moment).
+- **Cloudinary f_auto/q_auto** are off (6.1): turning them on would shrink most images; test on dev first.
+- **Cloudflare:** raise min TLS to 1.2; consider HSTS. After the Martfury mobile version is switched off (one responsive
+  design), turn off APO's "cache by device type" so desktop and phone share one cached copy.
 - UpdraftPlus: confirm that leaving uploads out is intended now that `uploads/` is synced separately.
 - Spaces: the monthly script archives `.spaces_env` into the same bucket it can write to - fine for recovery, but a
   leaked key exposes its own backups; consider a separate restore-only key.
-- `mu-plugins/ultralove-wc-analytics-top-brands.php` logs "Array to string conversion" on every request (seen
-  thousands of times a day on both PHP 8.3 and 8.5); harmless but noisy.
-- **Mail SPF:** add the mail droplet to the root SPF (`ip4:143.110.140.137` or `a:mail.ultralove.ca`) once confirmed
-  that it sends as @ultralove.ca, and check its DKIM - with DMARC at `p=quarantine`, mail that fails both is
-  quarantined (6.5.3).
-- Prod mail droplet: not inspected (SSH access, Postfix/Dovecot config, TLS, backups); no droplet backups.
 - **Managed DB is a single node:** no standby during maintenance or a failure.
-- After the 2026-09-18 dev compromise, confirm that keys which lived on the old dev (including any with prod access)
-  were rotated.
 - Unused DigitalOcean resources: the `ultralove.ca` DNS zone (DNS is on Cloudflare), the `default-sfo3` VPC, and the
   `defaultdb` and `ultralove_rewrite` databases on the cluster (confirm before removing).
-- Delete the inactive plugins (3.6) and Elementor's leftover `_elementor_data` post meta if no longer wanted.
-- Front-end bug: an inline "CSV export" script on every page looks for `#exportMe` / `#export` and throws when they're
-  missing (still present on the home page, 2026-10-02).
-- Cloudflare account settings (SSL/TLS mode, WAF, cache rules) and Cloudinary account settings: not recorded here.
 
 ## 9) Recommended Next Data Collection Commands
 
