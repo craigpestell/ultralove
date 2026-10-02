@@ -25,7 +25,7 @@
 	<?php do_action( 'martfury_footer' ); ?>
 
 	<div class="footer-bottom">
-		<?php martfury_footer_copyright(); ?>
+		<div class="footer-copyright">Copyright &copy; <?php echo esc_html( wp_date( 'Y' ) ); ?> <?php echo esc_html( get_bloginfo( 'name' ) ); ?></div>
 		<?php martfury_footer_payments(); ?>
 	</div>
 </footer><!-- #colophon -->
