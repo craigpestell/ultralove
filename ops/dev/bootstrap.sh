@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Configure a fresh Ubuntu 24.04 droplet as the Ultralove dev server.
+# Configure a fresh Ubuntu 26.04 droplet as the Ultralove dev server (Ubuntu's own PHP 8.5).
 # Runs ON the droplet as root; invoked by ops/dev/rebuild.sh, which passes
 # config.env values as environment variables. Idempotent.
 #
@@ -22,7 +22,8 @@ apt-get update -qq
 apt-get upgrade -y -qq
 apt-get install -y -qq nginx mysql-server redis-server fail2ban unattended-upgrades ufw rsync unzip curl \
   "$PHP-fpm" "$PHP-cli" "$PHP-mysql" "$PHP-curl" "$PHP-xml" "$PHP-mbstring" "$PHP-zip" "$PHP-gd" \
-  "$PHP-intl" "$PHP-imagick" "$PHP-bcmath" "$PHP-soap" "$PHP-redis" "$PHP-opcache" >/dev/null
+  "$PHP-intl" "$PHP-imagick" "$PHP-bcmath" "$PHP-soap" "$PHP-redis" "$PHP-igbinary" "$PHP-readline" >/dev/null
+# No "$PHP-opcache": OPcache is part of PHP itself since 8.5 (the package no longer exists).
 
 if ! command -v cloudflared >/dev/null; then
   log "Installing cloudflared"
