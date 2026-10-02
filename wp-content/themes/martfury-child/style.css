@@ -2472,6 +2472,20 @@ body:not(.shop-view-list) ul.products:not(.slick-slider) > li.product {
     margin-bottom: 0
 }
 
+/* Pagination under the grids: the same way round - the list's gap spaces the page numbers (the parent theme
+   gave each one 5px side padding and a 10px bottom margin, which also trailed below the last row). */
+.woocommerce nav.woocommerce-pagination ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px
+}
+
+.woocommerce nav.woocommerce-pagination ul li {
+    margin: 0;
+    padding: 0
+}
+
 /* 10px corners (as on the shop sidebar and toolbar cards) so the card's edge follows the rounded
    corners of its hover glow - a blurred shadow always rounds off square corners. The same inner padding
    on every card, in every grid and carousel at every width - so the hover glow never sits against the
