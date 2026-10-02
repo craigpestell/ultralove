@@ -34,10 +34,8 @@ On the new dev app droplet:
 
 sudo ./bootstrap-app-server.sh dev.ultralove.ca /var/www/html
 
-Note: the app bootstrap script installs PHP 8.5 with the extensions production uses (it stops if `php8.5-fpm` isn't
-in apt - i.e. not Ubuntu 26.04) and skips `awscli` if not available. To name the version explicitly:
-
-sudo ./bootstrap-app-server.sh ultralove.ca /var/www/html 8.5
+Note: the app bootstrap script installs PHP 8.5 (Ubuntu 26.04's own) with the extensions production uses, and skips
+`awscli` if not available.
 
 If AWS CLI was installed manually (zip installer), bootstrap will detect the existing `aws` binary and will not attempt apt installation.
 

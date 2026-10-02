@@ -8,10 +8,9 @@ fi
 
 DOMAIN="${1:-}"
 WP_ROOT="${2:-/var/www/html}"
-PHP_VERSION_OVERRIDE="${3:-}"
 
 if [[ -z "$DOMAIN" ]]; then
-  echo "Usage: sudo $0 DOMAIN [WP_ROOT] [PHP_VERSION]" >&2
+  echo "Usage: sudo $0 DOMAIN [WP_ROOT]" >&2
   exit 1
 fi
 
@@ -24,33 +23,12 @@ package_available() {
   [[ -n "$candidate" && "$candidate" != "(none)" ]]
 }
 
-PHP_VERSION=""
-if [[ -n "$PHP_VERSION_OVERRIDE" ]]; then
-  if package_available "php${PHP_VERSION_OVERRIDE}-fpm"; then
-    PHP_VERSION="$PHP_VERSION_OVERRIDE"
-  else
-    echo "Requested PHP_VERSION '${PHP_VERSION_OVERRIDE}' is not available in apt repositories" >&2
-    exit 1
-  fi
-else
-  # PHP 8.5 (Ubuntu 26.04's own) - no fallback to an older PHP.
-  if package_available "php8.5-fpm"; then
-    PHP_VERSION="8.5"
-  else
-    echo "php8.5-fpm is not available in apt - use an Ubuntu 26.04 droplet (APP_IMAGE=ubuntu-26-04-x64)" >&2
-    exit 1
-  fi
-fi
-
-PHP_PACKAGES=("php${PHP_VERSION}-fpm")
-# The extensions production uses. opcache is skipped on 8.5, where it's part of PHP itself.
-for ext in cli mysql curl xml mbstring zip gd intl imagick bcmath soap redis igbinary readline opcache; do
-  pkg="php${PHP_VERSION}-${ext}"
-  if package_available "$pkg"; then
-    PHP_PACKAGES+=("$pkg")
-  else
-    echo "Package not available, skipping: $pkg"
-  fi
+# PHP 8.5 (Ubuntu 26.04's own) with the extensions production uses. No opcache package: OPcache is part of
+# PHP itself since 8.5.
+PHP_VERSION="8.5"
+PHP_PACKAGES=()
+for ext in fpm cli mysql curl xml mbstring zip gd intl imagick bcmath soap redis igbinary readline; do
+  PHP_PACKAGES+=("php${PHP_VERSION}-${ext}")
 done
 PHP_FPM_SERVICE="php${PHP_VERSION}-fpm"
 PHP_FPM_SOCKET="/run/php/php${PHP_VERSION}-fpm.sock"
