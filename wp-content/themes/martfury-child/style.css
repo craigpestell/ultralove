@@ -281,12 +281,12 @@ Template: martfury
     position: relative
 }
 
-#carousel ul.products li.product .price {
+.ul-home-products ul.products li.product .price {
     margin: auto!important;
     display: inline-block
 }
 
-#carousel .product {
+.ul-home-products .product {
     text-align: center!important
 }
 
@@ -443,18 +443,6 @@ Template: martfury
     margin-top: 19px!important
 }
 
-.footer-row {
-    text-align: center!important;
-    display: block!important
-}
-
-.col-footer-copyright {
-    margin-left: auto!important;
-    margin-right: auto!important;
-    display: block;
-    float: none!important
-}
-
 /* Same nav bar height at every width - the parent theme halves this padding below 1200px. */
 .site-header .primary-nav>ul>li {
     padding-top: 20px!important;
@@ -598,22 +586,8 @@ h1,h2,h3,h4 {
     font-weight: 500
 }
 
-.footer-copyright {
-    text-align: center
-}
-
-#welcome,#welcome h2,#welcome p {
-    color: #fff!important
-}
-
 .footer-copyright,.site-footer .footer-layout,.site-footer .footer-layout .widget-title {
     color: #3b1d4a!important
-}
-
-#welcome,.site-footer .footer-layout {
-    background: url(https://ultralove.ca/wp-content/uploads/2021/07/bg.jpg);
-    background-size: 300%!important;
-    background-position: bottom left!important
 }
 
 .stock {
@@ -670,8 +644,8 @@ h1,h2,h3,h4 {
 
 /* Light aurora backdrop for the home CTA blocks: soft lavender/teal/pink glows on a pale lavender
    base, so these sections read as part of the white site around them rather than a dark band.
-   #bottomcta doesn't paint its own copy - it and the site footer share one #hero-footer-combo
-   wrapper (see footer.php), so the two read as one continuous backdrop. On the home page the
+   #bottomcta doesn't paint its own copy - it's inside the site footer, which paints one continuous
+   backdrop behind it and the footer widgets (see footer.php). On the home page the
    ultralove-banners plugin also paints this same gradient behind the banner row + #topcta
    (#ub-hero-combo-bg in its banner.css) - keep the two in sync. */
 :root {
@@ -695,7 +669,7 @@ h1,h2,h3,h4 {
     --ul-purple-shadow: 0 0 18px rgba(177,101,255,.5)
 }
 
-#topcta,#hero-footer-combo {
+#topcta,.site-footer {
     background: var(--ul-aurora)
 }
 
@@ -712,38 +686,6 @@ h1,h2,h3,h4 {
 .site-footer .footer-widgets .textwidget,
 .site-footer .footer-widgets .gform_wrapper {
     box-shadow: var(--ul-purple-shadow)
-}
-
-/* Same white fade-out at the edges as #topcta (see #topcta:before), on the shared #bottomcta +
-   footer backdrop - including the same fixed 85px top/bottom fade depth, so the pattern starts at
-   the same distance from the top of both sections. */
-#hero-footer-combo {
-    position: relative
-}
-
-#hero-footer-combo:before {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    pointer-events: none;
-    z-index: 0;
-    background:
-        linear-gradient(to bottom, #fff 0, rgba(255,255,255,.75) 34px, rgba(255,255,255,0) 85px, rgba(255,255,255,0) calc(100% - 85px), rgba(255,255,255,.75) calc(100% - 34px), #fff 100%),
-        linear-gradient(to right, #fff 0, rgba(255,255,255,.75) 4%, rgba(255,255,255,0) 12%, rgba(255,255,255,0) 88%, rgba(255,255,255,.75) 96%, #fff 100%)
-}
-
-#hero-footer-combo > #bottomcta,#hero-footer-combo > .site-footer {
-    position: relative;
-    z-index: 1
-}
-
-/* .footer-layout's own bg.jpg is no longer needed - #hero-footer-combo now supplies one
-   continuous background behind #bottomcta and the footer. */
-.site-footer .footer-layout {
-    background: none!important
 }
 
 .site-footer .footer-widgets:before {
@@ -771,36 +713,6 @@ h1,h2,h3,h4 {
     padding: 10px 28px;
     margin: 0 15px 30px!important;
     line-height: 1.2
-}
-
-/* Fade #topcta's backdrop out to white at the bottom and sides, so the pattern never runs into the page
-   edges or the section below: the bottom over a fixed 85px (same as #hero-footer-combo), the top left
-   unfaded so the pattern starts right under the banner/navigation,
-   left and right over 12% of its width. Done as one overlay rather than extra background layers so it also covers the
-   ultralove-banners plugin's shared #ub-hero-combo-bg (which sits behind a transparent #topcta in
-   its aurora mode). The content container is lifted above it so the pills and buttons aren't
-   washed out. */
-#topcta {
-    position: relative
-}
-
-#topcta:before {
-    content: "";
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    pointer-events: none;
-    z-index: 0;
-    background:
-        linear-gradient(to bottom, rgba(255,255,255,0) 0, rgba(255,255,255,0) calc(100% - 85px), rgba(255,255,255,.75) calc(100% - 34px), #fff 100%),
-        linear-gradient(to right, #fff 0, rgba(255,255,255,.75) 4%, rgba(255,255,255,0) 12%, rgba(255,255,255,0) 88%, rgba(255,255,255,.75) 96%, #fff 100%)
-}
-
-#topcta > .martfury-container {
-    position: relative;
-    z-index: 1
 }
 
 /* The space the Elementor column and widget wrappers used to add around the call to action's content
@@ -1659,8 +1571,7 @@ h1,h2,h3,h4 {
     line-height: 1.2
 }
 
-/* Copyright line: plain centered text on the white #footer-copyright-row (no pill). block +
-   fit-content + auto margins keeps it centered regardless of its parent column's own text-align. */
+/* Copyright line: plain centered text on the copyright row's white (no pill). */
 .footer-copyright {
     display: block;
     width: fit-content;
@@ -1936,27 +1847,6 @@ h1,h2,h3,h4 {
     }
 }
 
-/*
- * Elementor's "Stretch Section" setting (used on the header banner/topcta section and the
- * product-thumbnails section) computes its full-width margin/width in JavaScript at runtime -
- * there's no static CSS for it at all, so on first paint those sections sit at their default,
- * theme-container-constrained width (visible left/right margins) until Elementor's frontend JS
- * loads and injects an inline style. That flash also delays the reported LCP for anything inside
- * one of these sections, since the element's later JS-driven resize registers as a new, much
- * later paint candidate. This replaces the JS computation with the standard CSS-only full-bleed
- * technique so the correct width is there on the very first paint - no JS dependency, no flash.
- * !important wins even if Elementor's JS still runs afterwards and sets its own inline style.
- */
-html, body {
-    overflow-x: hidden;
-}
-
-.elementor-section-stretched,
-.ul-home-bleed {
-    width: 100vw !important;
-    margin-left: calc(50% - 50vw) !important;
-    left: 0 !important;
-}
 
 /*
  * Text on the brand pink (--mf-background-primary-color, #b3094b) must be white.
@@ -1982,14 +1872,11 @@ html body {
     margin-bottom: 48px
 }
 
-/* Copyright row - rendered after #hero-footer-combo (see footer.php), on the plain white page. */
-#footer-copyright-row {
-    background: #fff
-}
-
-#footer-copyright-row .footer-bottom {
-    padding-top: 36px;
-    padding-bottom: 44px
+/* Copyright row - the bottom of the site footer, on white below the backdrop. */
+.site-footer .footer-bottom {
+    padding: 36px var(--ul-page-gutter) 44px;
+    background: #fff;
+    text-align: center
 }
 
 @media (max-width:767px) {
@@ -2000,36 +1887,69 @@ html body {
 }
 
 /*
- * Content width: the page container (.martfury-container - the header rows, the page content, the home
- * page's product sections) is the window less 30px of padding each side (15px on phones), at most 1440px
- * of content: larger screens get growing side margins rather than ever-wider pages, and product cards
- * (as many 215px+ cards as fit, up to 6 - see "Product grids and carousels") stay at most ~240px wide
- * there (about 215-285px across desktop and tablet widths).
+ * Page width: content is the window less --ul-page-gutter each side (30px, 15px on phones), at most
+ * --ul-page-width less the gutters (1440px of content): larger screens get growing side margins rather than
+ * ever-wider pages, and product cards (as many 215px+ cards as fit, up to 5 - see "Product grids and
+ * carousels") stay a readable size.
+ *
+ * The page regions (#content, related products / up-sells, recently viewed) are full-width grids - their
+ * backgrounds run edge to edge - with three columns: gutter, content, gutter ("full" spans all three,
+ * "content" is the middle one). Their children sit in the content column. <main> spans all three and passes
+ * the columns on (subgrid), so a full-width section in it (.ul-home-bleed - the home banner and call to
+ * action) takes "full". .martfury-container is the same width as a centred box, for what sits inside other
+ * markup (the header rows, the home sections' content).
  */
-.martfury-container {
-    max-width: 1500px;
-    margin-left: auto;
-    margin-right: auto
+:root {
+    --ul-page-width: 1500px;
+    --ul-page-gutter: 30px
 }
 
-/* Martfury only pads the container up to 1680px (a fixed 1650px with no padding above that) - keep the
-   30px so the content is 1440px there too. */
-@media (min-width: 1681px) {
-    .martfury-container {
-        padding-left: 30px;
-        padding-right: 30px
+@media (max-width: 767px) {
+    :root {
+        --ul-page-gutter: 15px
     }
 }
 
+#page > :is(.site-content, section.related, .footer-recently-viewed) {
+    display: grid;
+    grid-template-columns:
+        [full-start] minmax(var(--ul-page-gutter), 1fr)
+        [content-start] minmax(0, calc(var(--ul-page-width) - 2 * var(--ul-page-gutter)))
+        [content-end] minmax(var(--ul-page-gutter), 1fr) [full-end]
+}
+
+:where(#page > :is(.site-content, section.related, .footer-recently-viewed)) > *,
+.site-main > * {
+    grid-column: content;
+    min-width: 0
+}
+
+#page > .site-content > .site-main {
+    grid-column: full;
+    display: grid;
+    grid-template-columns: subgrid
+}
+
+.site-main > .ul-home-bleed {
+    grid-column: full
+}
+
+.martfury-container {
+    width: 100%;
+    max-width: var(--ul-page-width);
+    margin-inline: auto;
+    padding-inline: var(--ul-page-gutter)
+}
+
 /*
- * The home page's call to action (#topcta) and the #bottomcta + footer box (#hero-footer-combo, on every
+ * The home page's call to action (#topcta) and the site footer's (#bottomcta, and the footer widgets, on every
  * page) keep narrower edges of their own while their backdrops stay full width: 1150 / 950 / 700px wide at
  * >=1200 / >=992 / >=768px, 25px in from each side on phones. The footer's Bootstrap .container normally
  * has a fixed width (1170 / 970 / 750px), so it's switched to width:auto + max-width here.
  */
 #topcta > .martfury-container,
 #bottomcta,
-#hero-footer-combo .site-footer .container {
+.site-footer .container {
     width: auto;
     max-width: 1150px;
     margin-left: auto;
@@ -2044,7 +1964,7 @@ html body {
 @media (max-width:1199px) {
     #topcta > .martfury-container,
     #bottomcta,
-    #hero-footer-combo .site-footer .container {
+    .site-footer .container {
         max-width: 950px
     }
 }
@@ -2052,7 +1972,7 @@ html body {
 @media (max-width:991px) {
     #topcta > .martfury-container,
     #bottomcta,
-    #hero-footer-combo .site-footer .container {
+    .site-footer .container {
         max-width: 700px
     }
 }
@@ -2060,7 +1980,7 @@ html body {
 @media (max-width:767px) {
     #topcta > .martfury-container,
     #bottomcta,
-    #hero-footer-combo .site-footer .container {
+    .site-footer .container {
         max-width: none;
         margin-left: 25px;
         margin-right: 25px
@@ -2073,7 +1993,7 @@ html body {
    parent theme also drops the row's -15px margin, which left the cards at one inset and the
    dividers/links at another. */
 @media (max-width:991px) {
-    #hero-footer-combo .site-footer .container {
+    .site-footer .container {
         padding-left: 0;
         padding-right: 0
     }
@@ -2439,8 +2359,11 @@ body:not(.shop-view-list) :has(> ul.products:not(.slick-slider)) {
     container-type: inline-size
 }
 
+/* The grid owns the space between its rows (row-gap); the cards carry no outer margin (the margin-bottom: 0
+   below cancels the parent theme's). */
 body:not(.shop-view-list) ul.products:not(.slick-slider) {
-    --ul-cols: 2
+    --ul-cols: 2;
+    row-gap: 35px
 }
 
 @container (min-width: 645px) {
@@ -2464,7 +2387,22 @@ body:not(.shop-view-list) ul.products:not(.slick-slider) {
 }
 
 body:not(.shop-view-list) ul.products:not(.slick-slider) > li.product {
-    width: calc(100% / var(--ul-cols))
+    width: calc(100% / var(--ul-cols));
+    margin-bottom: 0
+}
+
+/* Pagination under the grids: the list's gap spaces the page numbers; the items carry no margin or padding
+   (cancelling the parent theme's). */
+.woocommerce nav.woocommerce-pagination ul {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px
+}
+
+.woocommerce nav.woocommerce-pagination ul li {
+    margin: 0;
+    padding: 0
 }
 
 /* 10px corners (as on the shop sidebar and toolbar cards) so the card's edge follows the rounded
@@ -2476,6 +2414,7 @@ body:not(.shop-view-list) ul.products li.product .product-inner {
     display: flex;
     flex-direction: column;
     width: 100%;
+    margin-bottom: 0;
     padding: clamp(10px, 7%, 20px);
     border-radius: 10px;
     transition: box-shadow .2s ease
@@ -2840,9 +2779,9 @@ ul.products.slick-slider .slick-list {
     margin-bottom: -28px!important
 }
 
-/* Home page product sections (front-page.php): the spacing the Elementor layout had - 10px above "On Sale",
-   the "More On-Sale Products" button 40px below the carousel, "Latest Adult Products" further down, and
-   the two links under the grid. */
+/* Home page product sections (front-page.php): 10px above "On Sale", "Latest Adult Products" 65px below the
+   "More On-Sale Products" button, and each section's buttons (.ul-home-links) 40px below its products. The
+   space below the last buttons is the page regions' gap (see "Page regions"). */
 .ul-home-products {
     padding-top: 10px
 }
@@ -2864,11 +2803,6 @@ ul.products.slick-slider .slick-list {
     margin: 0
 }
 
-.ul-home-more {
-    margin-top: 40px;
-    text-align: center
-}
-
 .ul-home-latest {
     margin-top: 65px
 }
@@ -2878,8 +2812,7 @@ ul.products.slick-slider .slick-list {
     flex-wrap: wrap;
     justify-content: center;
     gap: 30px;
-    margin-top: 25px;
-    padding-bottom: 15px
+    margin-top: 40px
 }
 
 /* Out of stock loop items: the quantity + button row is shown disabled (see
@@ -2908,23 +2841,9 @@ ul.products li.product form.cart label.label {
     display: none!important
 }
 
-/*
- * Page container: every page type now uses the wide .martfury-container (see functions.php). Pages built
- * in Elementor put their content in boxed sections, which Martfury caps at Bootstrap's 1170 / 970 / 750px
- * and centres; on those pages (not the home page, whose sections, #topcta/#bottomcta and footer are laid
- * out around that width) the boxes fill the page container instead, so their content lines up with the
- * header and breadcrumbs like every other page's.
- */
-body:not(.home) #content .elementor-section.elementor-section-boxed > .elementor-container {
-    width: auto;
-    max-width: none
-}
-
-/* Classic (non-Elementor) pages - e.g. Buy Wholesale, About, Ordering Info, My Account, Checkout - inset
-   their content 20px on both sides, the same inset the Elementor pages' text has (their section and inner
-   section each pad their columns by 10px) and the breadcrumbs have, so every page's text starts at the
-   same place. */
-body.page:not(.elementor-page):not(.home) #content .entry-content {
+/* Pages (Buy Wholesale, Ordering Info, My Account, Checkout...) inset their content 20px on both sides, the
+   breadcrumbs' inset, so the text starts where the breadcrumbs do. */
+body.page:not(.home) #content .entry-content {
     padding-left: 20px;
     padding-right: 20px
 }
@@ -2936,7 +2855,6 @@ body.page:not(.elementor-page):not(.home) #content .entry-content {
  * rule, instead of the parent theme's centered text on a grey bar.
  */
 section.related .related-title,
-section.up-sells .related-title,
 #footer-recently-viewed .recently-header,
 #footer-bot-recently-viewed .recently-header {
     background: none!important;
@@ -2949,7 +2867,6 @@ section.up-sells .related-title,
 }
 
 section.related .related-title,
-section.up-sells .related-title,
 #footer-recently-viewed .recently-header .title,
 #footer-bot-recently-viewed .recently-header .title {
     font-size: var(--ul-section-title-size)!important;
@@ -3381,10 +3298,8 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
 }
 
 /*
- * More of the aurora backdrop above and below the content of #topcta and the #bottomcta + footer box
- * (#hero-footer-combo): 60px more at each outer edge (32px on phones). The 85px white fades at the
- * top and bottom edges stay as they are, so the extra space shows pattern rather than white before
- * it fades out.
+ * The backdrop's space above and below the content of #topcta and of the site footer (above #bottomcta, below
+ * the footer widgets).
  */
 #topcta {
     padding-top: 64px;
@@ -3395,7 +3310,7 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     padding-top: 148px
 }
 
-#hero-footer-combo {
+.site-footer .footer-layout {
     padding-bottom: 60px
 }
 
@@ -3409,7 +3324,7 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
         padding-top: 88px
     }
 
-    #hero-footer-combo {
+    .site-footer .footer-layout {
         padding-bottom: 32px
     }
 }
@@ -3542,12 +3457,65 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     margin: 0!important
 }
 
-/* No bottom padding on the main content wrapper - the page content runs straight into the footer
-   area (#hero-footer-combo, which has its own top spacing and fade). Except My account (log in /
-   register, and the logged-in account pages): its form cards end in a hard edge, so they keep their
-   own 60px gap above the footer (.woocommerce-account ... .site-content below). */
-body:not(.woocommerce-account) .site-content {
-    padding-bottom: 0!important
+/*
+ * Page regions - one gap between them, on every page. #page stacks the header, the page's content
+ * (.site-content), on product pages up-sells and related products (section.related - both have the class), on
+ * catalog pages recently viewed (.footer-recently-viewed - hidden while the visitor has none), then the
+ * site footer (footer#colophon). Each region ends where its content ends and is followed by
+ * --ul-region-gap, so the space above the footer (and between the regions) is this gap alone, whatever the
+ * page ends with. A margin, not padding, so a region with its own background (the 404 page's grey block)
+ * doesn't grow into the gap. Change the gap here to change it everywhere.
+ */
+:root {
+    --ul-region-gap: 48px
+}
+
+#page > :is(.site-content, section.related, .footer-recently-viewed) {
+    margin-top: 0;
+    margin-bottom: var(--ul-region-gap);
+    padding-bottom: 0
+}
+
+/* The regions below the content start at their own content - the gap above them is the region's above. */
+#page > :is(section.related, .footer-recently-viewed) {
+    padding-top: 0
+}
+
+/* Inside the regions a last child has no bottom margin: the space between blocks comes from the blocks
+   around it (or a container's gap), never from a margin trailing after the last one - so a page ends at its
+   content, whatever the content is. Margins marked !important (the carousels' negative margins for the
+   cards' hover shadow) are left alone. */
+#page > :is(.site-content, section.related, .footer-recently-viewed) :last-child {
+    margin-bottom: 0
+}
+
+/*
+ * Pages with a sidebar (the catalog: shop, categories, brands - Martfury's "sidebar-content" layout): from
+ * 992px the content column of #content's grid (see "Page width") splits into the sidebar - 256px on the left
+ * - and <main>, 32px apart. Below 992px the sidebar is the off-canvas filter panel (position: fixed), so
+ * <main> spans the page like everywhere else.
+ */
+@media (min-width: 992px) {
+    .sidebar-content #page > .site-content {
+        grid-template-columns:
+            [full-start] minmax(var(--ul-page-gutter), 1fr)
+            [content-start sidebar-start] 256px [sidebar-end] 32px
+            [main-start] minmax(0, calc(var(--ul-page-width) - 2 * var(--ul-page-gutter) - 288px))
+            [main-end content-end] minmax(var(--ul-page-gutter), 1fr) [full-end];
+        align-items: start
+    }
+
+    .sidebar-content #page > .site-content > .primary-sidebar {
+        grid-column: sidebar;
+        grid-row: 1;
+        width: auto
+    }
+
+    .sidebar-content #page > .site-content > .site-main {
+        grid-column: main;
+        grid-row: 1;
+        display: block
+    }
 }
 
 /*
@@ -3557,8 +3525,7 @@ body:not(.woocommerce-account) .site-content {
  */
 .woocommerce-account:not(.logged-in) .site-content {
     background-color: transparent;
-    padding-top: 50px;
-    padding-bottom: 60px
+    padding-top: 50px
 }
 
 .woocommerce .customer-login .tabs-nav {
@@ -3665,7 +3632,7 @@ body:not(.woocommerce-account) .site-content {
 .entry-content:has(> .gform_wrapper) {
     max-width: 760px;
     margin: 0 auto;
-    padding: 20px 0 50px
+    padding: 20px 0 0
 }
 
 .entry-content:has(> .gform_wrapper) > p {

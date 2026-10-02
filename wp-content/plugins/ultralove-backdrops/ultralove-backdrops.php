@@ -2,14 +2,13 @@
 /**
  * Plugin Name: UltraLove Backdrops
  * Description: Pick the background style of the home page's call to action (#topcta) and of the footer box
- *              (#hero-footer-combo - #bottomcta + the site footer, on every page) from a library of CSS, SVG,
+ *              (footer#colophon - #bottomcta + the footer widgets, on every page) from a library of CSS, SVG,
  *              animated and dark backdrops, with live previews (Appearance > Backdrops) and an admin-only
  *              preview on the site before saving. Only the background layer changes - plus, on a dark
- *              backdrop, hard edges instead of the theme's white edge fades and light text for what sits
- *              straight on it; the areas' content is the theme's. A pattern size slider scales the
+ *              backdrop, light text for what sits straight on it; the areas' content is the theme's. A pattern size slider scales the
  *              tiled SVG motifs (bats, hearts, leaves...) from half to three times their size. Also sets the site's display text weight
  *              (regular or bold).
- * Version: 1.6.0
+ * Version: 1.7.0
  *
  * @package UltraLove_Backdrops
  */
@@ -18,7 +17,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-define( 'ULBD_VERSION', '1.6.0' );
+define( 'ULBD_VERSION', '1.7.0' );
 define( 'ULBD_OPTION', 'ulbd_settings' );
 
 require_once __DIR__ . '/includes/styles.php';
@@ -27,9 +26,8 @@ require_once __DIR__ . '/includes/styles.php';
  * The two areas: key => label, the elements each one's background goes on, 'dark_css' - printed when the
  * area's style is a dark one: its pills and text boxes as the live site's see-through dark glass (black at
  * .52 / .38) with white text, their purple borders and shadows kept, and white text for anything drawn
- * straight on the backdrop - and 'fade_selector', the theme's white edge-fade overlay, hidden for a style
- * without fades. 'pills' and 'boxes' are the area's pills (headings, links) and text boxes, whose see-through
- * backgrounds the text box opacity setting sets.
+ * straight on the backdrop. 'pills' and 'boxes' are the area's pills (headings, links) and text boxes, whose
+ * see-through backgrounds the text box opacity setting sets.
  */
 function ulbd_areas() {
 	return array(
@@ -41,21 +39,19 @@ function ulbd_areas() {
 			'selectors'     => array( 'body:not(.ub-hero-combo) #topcta', 'body #ub-hero-combo-bg' ),
 			'dark_css'      => 'body #topcta h1 { background: rgba(0, 0, 0, .52); color: #fff !important; }'
 				. ' body #topcta p { background: rgba(0, 0, 0, .38); color: #fff !important; }',
-			'fade_selector' => '#topcta:before',
 			'pills'         => array( 'body #topcta h1' ),
 			'boxes'         => array( 'body #topcta p' ),
 		),
 		'footer' => array(
 			'label'         => 'Footer box',
-			'description'   => '"Ordering wholesale products has never been easier." and the site footer below it (#hero-footer-combo), on every page.',
-			'selectors'     => array( 'body #hero-footer-combo' ),
+			'description'   => '"Ordering wholesale products has never been easier." and the footer widgets below it (the site footer, footer#colophon), on every page.',
+			'selectors'     => array( 'body #colophon' ),
 			// The quick links (Ordering · About Us · Contact) are underlined pink text in pills: dark glass, white links.
-			'dark_css'      => 'body #bottomcta h2, body .site-footer .footer-widgets .widget-title, #hero-footer-combo #footer-links .widget_nav_menu ul li a { background: rgba(0, 0, 0, .52); color: #fff !important; }'
+			'dark_css'      => 'body #bottomcta h2, body .site-footer .footer-widgets .widget-title, #colophon #footer-links .widget_nav_menu ul li a { background: rgba(0, 0, 0, .52); color: #fff !important; }'
 				. ' body .site-footer .footer-widgets .textwidget, body .site-footer .footer-widgets .gform_wrapper { background: rgba(0, 0, 0, .38); color: #fff !important; }'
-				. ' #hero-footer-combo #footer-links .widget_nav_menu ul li a { color: #fff !important; }'
-				. ' #hero-footer-combo #footer-links .widget_nav_menu ul li a:hover, #hero-footer-combo #footer-links .widget_nav_menu ul li a:focus-visible { color: #f4c3d9 !important; }',
-			'fade_selector' => '#hero-footer-combo:before',
-			'pills'         => array( 'body #bottomcta h2', 'body .site-footer .footer-widgets .widget-title', '#hero-footer-combo #footer-links .widget_nav_menu ul li a' ),
+				. ' #colophon #footer-links .widget_nav_menu ul li a { color: #fff !important; }'
+				. ' #colophon #footer-links .widget_nav_menu ul li a:hover, #colophon #footer-links .widget_nav_menu ul li a:focus-visible { color: #f4c3d9 !important; }',
+			'pills'         => array( 'body #bottomcta h2', 'body .site-footer .footer-widgets .widget-title', '#colophon #footer-links .widget_nav_menu ul li a' ),
 			'boxes'         => array( 'body .site-footer .footer-widgets .textwidget', 'body .site-footer .footer-widgets .gform_wrapper' ),
 		),
 	);
@@ -258,9 +254,6 @@ add_action(
 			$out[]             = $selectors . ' { ' . $decl . ' }';
 			if ( ! empty( $style['dark'] ) && $info['dark_css'] ) {
 				$out[] = $info['dark_css'];
-			}
-			if ( isset( $style['fade'] ) && ! $style['fade'] ) {
-				$out[] = $info['fade_selector'] . ' { display: none; }';
 			}
 			if ( $boxes ) {
 				$out[] = $boxes;
@@ -465,9 +458,6 @@ function ulbd_render_admin() {
 	$tile_css  = array();
 	$keyframes = array();
 	foreach ( ulbd_styles() as $id => $style ) {
-		if ( isset( $style['fade'] ) && ! $style['fade'] ) {
-			$tile_css[] = '.ulbd-tile--' . $id . ' .ulbd-swatch__fade { display: none; }';
-		}
 		if ( ! empty( $style['dark'] ) ) {
 			$tile_css[] = '.ulbd-tile--' . $id . ' .ulbd-swatch__pill { background: rgba(0, 0, 0, var(--ulbd-box-alpha, .52)); color: #fff; }';
 		}
@@ -484,10 +474,9 @@ function ulbd_render_admin() {
 		<h1>Backdrops</h1>
 		<p class="ulbd-intro">The background behind the home page's call to action and behind the footer box, and the weight of
 			the site's display text. Pick a style and an intensity for each area, use <strong>Preview on the site</strong> to see
-			the combination on the home page (only you see it, nothing is saved), then <strong>Save</strong>. The white fades at
-			the edges and everything in front of the backdrop stay as they are, except on a dark style: like the live site's
-			backdrop it has hard edges, the pills and text boxes turn to see-through dark glass with white text, and the
-			footer's quick links turn white. <strong>Pattern size</strong> scales the repeating motifs (bats, hats, hearts, leaves,
+			the combination on the home page (only you see it, nothing is saved), then <strong>Save</strong>. Everything in front of
+			the backdrop stays as it is, except on a dark style: the pills and text boxes turn to see-through dark glass with
+			white text, and the footer's quick links turn white. <strong>Pattern size</strong> scales the repeating motifs (bats, hats, hearts, leaves,
 			snow...) from half to three times their size; glows and full-width shapes stay as they are. <strong>Text box opacity</strong> sets how solid the pills and text boxes
 			on the backdrop are, from 0% (clear) to 100% (solid); <strong>Reset</strong> returns them to the standard glass. Animated styles stand still for visitors who ask their device for reduced motion.</p>
 
@@ -609,7 +598,7 @@ function ulbd_render_admin() {
 								?>
 								<label class="ulbd-tile ulbd-tile--<?php echo esc_attr( $id ); ?>">
 									<input type="radio" name="<?php echo esc_attr( ULBD_OPTION . '[' . $area . '][style]' ); ?>" value="<?php echo esc_attr( $id ); ?>" <?php checked( $settings[ $area ]['style'], $id ); ?>>
-									<span class="ulbd-swatch"><span class="ulbd-swatch__fade"></span><span class="ulbd-swatch__pill">Aa</span></span>
+									<span class="ulbd-swatch"><span class="ulbd-swatch__pill">Aa</span></span>
 									<span class="ulbd-tile__label"><?php echo esc_html( $style['label'] ); ?><?php echo in_array( $id, $new_styles, true ) ? ' <span class="ulbd-new">New</span>' : ''; ?></span>
 									<span class="ulbd-tile__desc"><?php echo esc_html( $style['description'] ); ?></span>
 								</label>

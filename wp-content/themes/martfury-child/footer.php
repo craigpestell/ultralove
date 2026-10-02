@@ -1,8 +1,9 @@
 <?php
 /**
- * The template for displaying the footer.
- *
- * Contains the closing of the #content div and all content after
+ * The end of every page: closes #content, then the regions below it (related products, recently viewed - hooked
+ * to martfury_before_footer) and the site footer: the call to action (#bottomcta), the footer widgets
+ * (martfury_footer - template-parts/footers/layout-1.php) and the copyright row. The footer carries the backdrop
+ * (UltraLove Backdrops, area "footer"); the copyright row sits on white below it.
  *
  * @package Martfury
  */
@@ -10,62 +11,26 @@
 
 <?php do_action( 'martfury_before_site_content_close' ); ?>
 </div><!-- #content -->
-<?php do_action( 'martfury_before_footer' ) ?>
+<?php do_action( 'martfury_before_footer' ); ?>
 
-<div id="hero-footer-combo">
-<div id="bottomcta">
-<h2>
-		Ordering wholesale products has never been easier.</h2>
-<div class="ul-cta-buttons"><a href="/shop/"> View Products </a> <a href="/become-a-retailer/">Wholesale Signup </a></div>
+<footer id="colophon" class="site-footer">
+	<div id="bottomcta">
+		<h2>Ordering wholesale products has never been easier.</h2>
+		<div class="ul-cta-buttons">
+			<a href="<?php echo esc_url( home_url( '/shop/' ) ); ?>">View Products</a>
+			<a href="<?php echo esc_url( home_url( '/become-a-retailer/' ) ); ?>">Wholesale Signup</a>
+		</div>
+	</div>
 
-</div>
-<?php if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_location( 'footer' ) ) {
-	?>
-    <footer id="colophon" class="site-footer">
-		<?php do_action( 'martfury_footer' ) ?>
-    </footer><!-- #colophon -->
-	<?php do_action( 'martfury_after_footer' ) ?>
-<?php } ?>
-</div><!-- #hero-footer-combo -->
-<?php // #hero-footer-combo wraps #bottomcta and the site footer in one shared box so the
-      // aurora gradient below (see style.css) paints behind both with no seam between them -
-      // the same technique used for the home banner + #topcta, but here as a real DOM wrapper
-      // (both pieces are plain theme template output, so no JS-measured backdrop is needed). ?>
-<?php if ( ! function_exists( 'elementor_theme_do_location' ) || ! elementor_theme_do_location( 'footer' ) ) {
-	// The copyright/payments row, moved out of the site footer (see the child
-	// template-parts/footers/layout-1.php) so it sits on plain white below the backdrop. Keeps the
-	// parent's .footer-layout-1/.footer-bottom classes so its layout styles still apply.
-	?>
-    <div id="footer-copyright-row" class="footer-layout footer-layout-1">
-        <div class="<?php echo martfury_footer_container_classes(); ?>">
-            <div class="footer-bottom">
-                <div class="row footer-row">
-                    <div class="col-footer-copyright col-lg-6 col-md-12 col-sm-12 col-xs-12">
-						<?php martfury_footer_copyright(); ?>
-                    </div>
-                    <div class="col-footer-payments col-lg-6 col-md-12 col-sm-12 col-xs-12">
-						<?php martfury_footer_payments(); ?>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-<?php } ?>
+	<?php do_action( 'martfury_footer' ); ?>
+
+	<div class="footer-bottom">
+		<div class="footer-copyright">Copyright &copy; <?php echo esc_html( wp_date( 'Y' ) ); ?> <?php echo esc_html( get_bloginfo( 'name' ) ); ?></div>
+		<?php martfury_footer_payments(); ?>
+	</div>
+</footer><!-- #colophon -->
+<?php do_action( 'martfury_after_footer' ); ?>
 </div><!-- #page -->
-<?php if( is_checkout() ) :?>
-	<script>
-		jQuery(function() {
-			var firstload = false;
-
-			jQuery( document ).ajaxComplete(function() {
-				if(firstload) return;
-				jQuery('.payment_box').hide();
-				jQuery('.wc_payment_method > input').prop('checked', false);
-				firstload = true;
-			});	
-		});
-	</script>
-<?php endif; ?> 
 <?php wp_footer(); ?>
 
 </body>

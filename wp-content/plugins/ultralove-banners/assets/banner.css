@@ -84,7 +84,7 @@
 	filter: blur(22px) brightness(0.92);
 }
 
-/* Aurora "combined" filler (the light lavender aurora - kept in sync with #topcta/#hero-footer-combo in
+/* Aurora "combined" filler (the light lavender aurora - kept in sync with #topcta/the site footer in
    the martfury-child theme's style.css): the home banner and the #topcta block below it share ONE gradient
    backdrop instead of each painting its own copy - there's no seam where the banner's pattern
    meets topcta's, because it's literally the same element's background behind both.

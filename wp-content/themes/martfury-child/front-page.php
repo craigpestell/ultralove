@@ -1,25 +1,24 @@
 <?php
 /**
- * Home page, built in the theme rather than Elementor. The call to action's text is edited here.
+ * Home page. The call to action's text is edited here.
  *
- * Sections, top to bottom - all full width (they break out of the page's Bootstrap .container), their
- * content in the page container (.martfury-container), like every other section of the site:
+ * The same structure as every other page: #content > main#main.site-main (see
+ * ultralove_no_site_content_container() in functions.php). Top to bottom:
  *  - the rotating banner (UltraLove Banners, group "home"), 24px below the header's navigation row;
  *  - #topcta: heading, intro and the two main buttons on the aurora backdrop (which UltraLove Banners
- *    extends up behind the banner - #ub-hero-combo-bg);
- *  - #carousel: "On Sale" (12 random on-sale products in the product carousel, js/product-carousel.js),
- *    its "More On-Sale Products" button, and "Latest Adult Products" (the 30 newest), with the two links
- *    below. Both lists are WooCommerce [products] shortcodes, so their cards are the shop's.
- *
- * The sections sit in <main> - the page's main landmark for screen readers, like Martfury's page.php and the
- * child's WooCommerce wrapper (woocommerce/global/wrapper-start.php) give every other page.
+ *    extends up behind the banner - #ub-hero-combo-bg). These two have backdrops, so they run full width
+ *    (.ul-home-bleed) with their content in a .martfury-container;
+ *  - the products (.ul-home-products), at the page width like any page's content: "On Sale" (12 random
+ *    on-sale products in the product carousel, js/product-carousel.js) and its "More On-Sale Products"
+ *    button, "Latest Adult Products" (the 30 newest), then the two links. Both lists are WooCommerce
+ *    [products] shortcodes, so their cards are the shop's.
  *
  * @package Martfury
  */
 
 get_header();
 ?>
-<main id="ul-home" class="ul-home">
+<main id="main" class="site-main">
     <section class="ul-home-bleed ul-home-banner">
 		<?php echo do_shortcode( '[ultralove_banner group="home"]' ); ?>
     </section>
@@ -37,33 +36,31 @@ get_header();
         </div>
     </section>
 
-    <section id="carousel" class="ul-home-bleed ul-home-products">
-        <div class="martfury-container">
-            <div class="ul-home-section ul-home-sale">
-                <div class="cat-header">
-                    <h2 class="cat-title">On Sale</h2>
-                </div>
-                <div class="ul-carousel" data-ul-carousel>
-					<?php echo do_shortcode( '[products limit="12" columns="5" orderby="rand" on_sale="true"]' ); ?>
-                </div>
-                <div class="ul-home-more">
-                    <a class="ul-btn ul-btn--primary ul-btn--lg" href="<?php echo esc_url( home_url( '/product-category/sale-closeout-items/' ) ); ?>">More On-Sale Products</a>
-                </div>
+    <div class="ul-home-products">
+        <section class="ul-home-section ul-home-sale" aria-labelledby="ul-home-sale-title">
+            <div class="cat-header">
+                <h2 class="cat-title" id="ul-home-sale-title">On Sale</h2>
             </div>
-
-            <div class="ul-home-section ul-home-latest">
-                <div class="cat-header">
-                    <h2 class="cat-title">Latest Adult Products</h2>
-                </div>
-				<?php echo do_shortcode( '[products limit="30" columns="5" orderby="date" order="DESC"]' ); ?>
+            <div class="ul-carousel" data-ul-carousel>
+				<?php echo do_shortcode( '[products limit="12" columns="5" orderby="rand" on_sale="true"]' ); ?>
             </div>
-
             <div class="ul-home-links">
-                <a class="ul-btn ul-btn--primary ul-btn--lg" href="<?php echo esc_url( home_url( '/shop/' ) ); ?>">View More New Products</a>
-                <a class="ul-btn ul-btn--primary ul-btn--lg" href="<?php echo esc_url( home_url( '/brands/' ) ); ?>">Browse Products by Brand</a>
+                <a class="ul-btn ul-btn--primary ul-btn--lg" href="<?php echo esc_url( home_url( '/product-category/sale-closeout-items/' ) ); ?>">More On-Sale Products</a>
             </div>
+        </section>
+
+        <section class="ul-home-section ul-home-latest" aria-labelledby="ul-home-latest-title">
+            <div class="cat-header">
+                <h2 class="cat-title" id="ul-home-latest-title">Latest Adult Products</h2>
+            </div>
+			<?php echo do_shortcode( '[products limit="30" columns="5" orderby="date" order="DESC"]' ); ?>
+        </section>
+
+        <div class="ul-home-links">
+            <a class="ul-btn ul-btn--primary ul-btn--lg" href="<?php echo esc_url( home_url( '/shop/' ) ); ?>">View More New Products</a>
+            <a class="ul-btn ul-btn--primary ul-btn--lg" href="<?php echo esc_url( home_url( '/brands/' ) ); ?>">Browse Products by Brand</a>
         </div>
-    </section>
-</main>
+    </div>
+</main><!-- #main -->
 <?php
 get_footer();

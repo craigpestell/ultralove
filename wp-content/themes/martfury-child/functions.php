@@ -20,19 +20,25 @@ function ultralove_clear_wc_template_cache_on_change() {
 
 /**
  * One page container for every page type: Martfury's wide .martfury-container (1650px, or full width
- * with 30px padding below 1680px, 15px on phones), which the catalog pages already use, instead of
- * Bootstrap's .container (1170px) on product pages, regular pages, the breadcrumbs and the header rows.
- * So the header, breadcrumbs and content share their left/right edges on every page. The home page's
- * content keeps its own layout (its Elementor sections and the footer are built around it). The related
- * products / upsells templates and the recently viewed block use the same class directly.
+ * with 30px padding below 1680px, 15px on phones) for the header rows, the breadcrumbs and the content, so
+ * they share their left/right edges on every page. The related products / upsells templates and the recently viewed block use
+ * the same class directly.
  */
 function martfury_header_container_classes() {
 	return 'martfury-container';
 }
 
-add_filter( 'martfury_site_content_container_class', 'ultralove_site_content_container_class', 20 );
-function ultralove_site_content_container_class( $class ) {
-	return ( 'container' === $class && ! is_front_page() ) ? 'martfury-container' : $class;
+/**
+ * The page structure every template shares: #content > main#main.site-main, with the sidebar (catalog pages)
+ * beside <main>. #content is full width and insets its content to the page width itself (style.css, "Page
+ * width"), so Martfury's container wrapper inside it isn't printed; the child's templates (page.php,
+ * single.php, archive.php, index.php, search.php, template-parts/content-404.php,
+ * woocommerce/global/wrapper-start.php, front-page.php) print <main> straight into #content.
+ */
+add_action( 'after_setup_theme', 'ultralove_no_site_content_container' );
+function ultralove_no_site_content_container() {
+	remove_action( 'martfury_after_site_content_open', 'martfury_open_site_content_container' );
+	remove_action( 'martfury_before_site_content_close', 'martfury_close_site_content_container' );
 }
 
 add_filter( 'martfury_page_header_container_class', 'ultralove_wide_container_class' );
@@ -83,6 +89,12 @@ function martfury_child_enqueue_scripts() {
         // Product cards: the checkmark on an Add to cart button after adding goes back to the cart after a moment.
         $card_cart_path = get_stylesheet_directory() . '/js/product-card-cart.js';
         wp_enqueue_script( 'ultralove-product-card-cart', get_stylesheet_directory_uri() . '/js/product-card-cart.js', array( 'jquery' ), (string) filemtime( $card_cart_path ), true );
+
+        // Checkout: the customer chooses the payment method (none chosen in advance).
+        if ( is_checkout() ) {
+            $payment_choice_path = get_stylesheet_directory() . '/js/checkout-payment-choice.js';
+            wp_enqueue_script( 'ultralove-checkout-payment-choice', get_stylesheet_directory_uri() . '/js/checkout-payment-choice.js', array( 'jquery', 'wc-checkout' ), (string) filemtime( $payment_choice_path ), true );
+        }
 
         // Product page: no vertical thumbnail slider at phone width (the thumbnails are a row there).
         if ( is_singular( 'product' ) ) {
@@ -273,8 +285,6 @@ function ultralove_render_recently_viewed_cards( $atts ) {
 
     ob_start();
 
-    // Same wrapper as Martfury's renderer, so the block keeps its container width (see style.css).
-    echo '<div class="martfury-container rv-container">';
     echo '<div class="recently-header">';
     if ( ! empty( $atts['title'] ) ) {
         printf( '<h4 class="title">%s</h4>', esc_html( $atts['title'] ) );
@@ -292,7 +302,6 @@ function ultralove_render_recently_viewed_cards( $atts ) {
             esc_url( get_permalink( get_option( 'woocommerce_shop_page_id' ) ) ),
             esc_html__( 'Shop Now', 'martfury' )
         );
-        echo '</div>';
 
         return ob_get_clean();
     }
@@ -310,7 +319,6 @@ function ultralove_render_recently_viewed_cards( $atts ) {
     echo '</div>';
     wp_reset_postdata();
     wc_reset_loop();
-    echo '</div>';
 
     return ob_get_clean();
 }
