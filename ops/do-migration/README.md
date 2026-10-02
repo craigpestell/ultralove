@@ -6,13 +6,48 @@ This folder contains scripts to perform a staged migration in this order:
 3. Production environment only after gate passes
 
 ## Target sizing
-- Production app: s-2vcpu-4gb
-- Development app: s-2vcpu-4gb
-- Development DB: s-1vcpu-2gb
+- Production app: **s-4vcpu-8gb**, Ubuntu 26.04 + PHP 8.5 - a new droplet that replaces today's
+  `PRODUCTION-WEB-ultralove.ca` (s-8vcpu-16gb, Ubuntu 24.04 + PHP 8.3; it uses ~4% CPU, peaking ~16%, and ~1.6 GB of
+  its 16 GB RAM). Same settings as today otherwise: sfo2, the same VPC, monitoring + droplet agent, private networking,
+  tags `Production,nginx,php,php-fpm,wordpress`, no IPv6. The database stays on its own host.
+- Development: one droplet built by `ops/dev` (s-4vcpu-8gb, Ubuntu 26.04 + PHP 8.5, MySQL on the same box); the
+  dev-app / dev-db steps below are from the original migration and no longer used.
 
 ## Region layout
-- Droplets (app + dev DB): sfo2
+- Droplets: sfo2
 - Spaces backups bucket: sfo3
+
+## Replacing the production droplet (Ubuntu 26.04, PHP 8.5, s-4vcpu-8gb)
+
+The production server config lives in this repo, captured from the 24.04 / PHP 8.3 droplet (Oct 2026), and
+`bootstrap-app-server.sh` installs it: PHP settings and OPcache (`../php/99-ultralove-production.ini`), the PHP-FPM
+pool sized for 8 GB (`../php/www.conf`), nginx tuning, rate-limit zones, site and status page (`../nginx/`), Redis
+capped at 1 GB, the firewall (SSH + HTTP/S from Cloudflare only), Cloudflare client IPs for nginx, and the WordPress
+cron runner. What isn't in the repo (secrets, server-only scripts) is copied from the current droplet below.
+
+1. `cp .env.example .env`, fill it in, then `./provision-droplet.sh prod-app` (size, image, VPC, tags, monitoring and
+   droplet agent as in `.env.example`). Note the new droplet's IP.
+2. Copy the Cloudflare Origin CA certificate (valid to 2041) from the current droplet - never into the repo:
+   `ssh NEW mkdir -p /etc/ssl/cloudflare`, then `scp` `/etc/ssl/cloudflare/ultralove.ca.pem` and
+   `ultralove.ca.key` across (key: `chmod 600`).
+3. Copy only what the bootstrap uses (not all of `ops/`, which has ~220 MB of local tooling) and run it:
+   `tar -czf - --exclude=.env ops/do-migration ops/php ops/nginx | ssh root@NEW 'tar -xzf - -C /root'`, then
+   `ssh root@NEW /root/ops/do-migration/bootstrap-app-server.sh`.
+4. Copy the site: set `PROD_NEW_APP_IP` and the `SRC_APP_*` values (the current droplet) in `.env`, run
+   `./sync-site-files.sh prod --from-prod-server` (WordPress files, uploads), and copy `/var/www/html/wp-config.php`
+   from the current droplet (database credentials: the database is on its own host, unchanged).
+5. Copy the backups from `/root` on the current droplet: `updraft_spaces_sync.sh`, `.spaces_env` (credentials,
+   `chmod 600`) and `monthly_system_backup.sh`, plus their two root crontab lines (`crontab -l` there).
+6. Check it before any DNS change: `./cutover-verify.sh ultralove.ca NEW_IP`, and `curl http://127.0.0.1/fpm-status`
+   on the droplet.
+7. Cut over: point the Cloudflare DNS records for `ultralove.ca` / `www` at the new IP (proxied), point the SSH alias
+   `ultralove-prod-app` (used by `deploy/envs/prod.env`) at it, record the deployed commit with
+   `deploy/deploy.sh prod --adopt`, then purge Cloudflare.
+8. Keep the old droplet for a few days, then destroy it.
+
+Nothing is deployed to the old droplet in the meantime.
+
+## Original migration (2026; dev-app / dev-db steps no longer used)
 
 ## 1) Prepare environment
 1. Install doctl locally.
@@ -31,10 +66,8 @@ On the new dev app droplet:
 
 sudo ./bootstrap-app-server.sh dev.ultralove.ca /var/www/html
 
-Note: the app bootstrap script auto-detects an available PHP-FPM version from apt repos (8.4/8.3/8.2/8.1, then generic `php-fpm`) and skips `awscli` if not available.
-You can force a version explicitly if needed, for example:
-
-sudo ./bootstrap-app-server.sh dev.ultralove.ca /var/www/html 8.3
+Note: the app bootstrap script installs PHP 8.5 (Ubuntu 26.04's own) with the extensions production uses, and skips
+`awscli` if not available.
 
 If AWS CLI was installed manually (zip installer), bootstrap will detect the existing `aws` binary and will not attempt apt installation.
 

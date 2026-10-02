@@ -53,7 +53,7 @@ case "$ROLE" in
     NAME="$PROD_APP_NAME"
     SIZE="$APP_DROPLET_SIZE"
     IMAGE="$APP_IMAGE"
-    TAGS="ultralove,wordpress,production,app"
+    TAGS="Production,nginx,php,php-fpm,wordpress"  # as on today's production droplet
     ;;
   dev-app)
     NAME="$DEV_APP_NAME"
@@ -100,6 +100,7 @@ CMD=(
   --region "$DO_REGION"
   --ssh-keys "$DO_SSH_KEY_ID"
   --enable-monitoring
+  --droplet-agent=true
   --tag-names "$TAGS"
   --format ID,Name,PublicIPv4,Memory,VCPUs,Disk
   --no-header
