@@ -3569,8 +3569,9 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
    below them - the closing paragraph, list, form, tabs or product row would otherwise add their own space
    to the gap. "Last" ignores what never renders after it (hidden inputs, scripts - YITH's wishlist ends in
    hidden inputs). Margins marked !important (the carousels' negative margins for the cards' hover shadow)
-   are left alone. */
-#page > :is(.site-content, section.up-sells, section.related, .footer-recently-viewed) :not(:has(~ :not(input[type="hidden"], script, style, template))):not(#page > * :has(~ :not(input[type="hidden"], script, style, template)) *) {
+   are left alone. :nth-last-child(1 of ...) rather than :has(): it costs nothing measurable on a full style
+   recalculation (:has() added ~20% on the shop page). */
+#page > :is(.site-content, section.up-sells, section.related, .footer-recently-viewed) :nth-last-child(1 of :not(input[type="hidden"], script, style, template)):not(#page > * :not(:nth-last-child(1 of :not(input[type="hidden"], script, style, template))) *) {
     margin-bottom: 0
 }
 
