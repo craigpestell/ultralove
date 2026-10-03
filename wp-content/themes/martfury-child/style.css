@@ -1438,6 +1438,13 @@ h1,h2,h3,h4 {
     padding: 0;
 }
 
+/* One link per row from the same 991px the footer's columns stack at, instead of wrapping in a row. */
+@media (max-width: 991px) {
+    #footer-links .widget_nav_menu ul {
+        flex-direction: column
+    }
+}
+
 #footer-links .widget_nav_menu ul li {
     display: flex;
     align-items: center;
