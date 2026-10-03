@@ -721,7 +721,7 @@ h1,h2,h3,h4 {
 }
 
 /* The space the Elementor column and widget wrappers used to add around the call to action's content
-   (.ul-home-cta-content inside is the wrapping flex row the button spacing rule further down sets up). */
+   (.ul-home-cta-content inside is the column the link row sits in, see further down). */
 #ctatop {
     padding: 10px 0 8px
 }
@@ -1447,6 +1447,57 @@ h1,h2,h3,h4 {
 #page :where(.ul-link, .entry-content:has(> .gform_wrapper) > p a):focus-visible {
     outline: 2px solid var(--ul-btn-focus);
     outline-offset: 3px
+}
+
+/* Large link (.ul-link--lg): the standard link at heading size, for the calls to action that used to be buttons
+   ("View Products" / "Wholesale Signup", "View More New Products" / "Browse Products by Brand"). */
+#page :where(.ul-link--lg) {
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 1.3
+}
+
+/* Link row (.ul-link-row): a pair of related links in one shared container, the same see-through white glass,
+   lavender border and purple glow as the pills and text boxes around it, so the links stay readable over any
+   backdrop (the Backdrops plugin's dark styles turn the container dark and the links white). The links sit side
+   by side with a #dedede divider between them, and stack - the divider turning horizontal - on narrow screens.
+   The container is as wide as its links. */
+.ul-link-row {
+    display: flex;
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 auto;
+    background: rgba(255,255,255,.8);
+    border: 1px solid rgb(177,101,255);
+    border-radius: 10px;
+    box-shadow: var(--ul-purple-shadow)
+}
+
+#bottomcta .ul-link-row {
+    margin: 5px auto
+}
+
+#page .ul-link-row > a {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 32px;
+    text-align: center
+}
+
+#page .ul-link-row > a + a {
+    border-left: 1px solid #dedede
+}
+
+@media (max-width: 640px) {
+    .ul-link-row {
+        flex-direction: column
+    }
+
+    #page .ul-link-row > a + a {
+        border-left: 0;
+        border-top: 1px solid #dedede
+    }
 }
 
 /* Footer quick links (Ordering / About Us / Contact): the mobile nav's link style (parent theme's
@@ -2212,7 +2263,7 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
 /* Base - every button in the system (all the tiers' members). */
 :is(#page, #mf-quick-view-modal, .swal2-container) :where(
     .ul-btn,
-    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
+    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, .elementor-button,
     .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
     .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button,
     ul.products li.product form.cart button, .am-collect-media button, .cwgstock_button,
@@ -2245,7 +2296,7 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
 
 :is(#page, #mf-quick-view-modal, .swal2-container) :where(
     .ul-btn,
-    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
+    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, .elementor-button,
     .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
     .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button,
     ul.products li.product form.cart button,
@@ -2258,7 +2309,7 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
 
 /* Primary. */
 :is(#page, #mf-quick-view-modal, .swal2-container) :where(
-    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
+    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, .elementor-button,
     .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
     .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button,
     ul.products li.product form.cart button, .am-collect-media button, .cwgstock_button
@@ -2269,7 +2320,7 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
 }
 
 :is(#page, #mf-quick-view-modal, .swal2-container) :where(
-    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
+    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, .elementor-button,
     .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
     .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button,
     ul.products li.product form.cart button, .am-collect-media button, .cwgstock_button
@@ -2320,7 +2371,7 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
     padding: 6px 16px
 }
 
-:is(#page, #mf-quick-view-modal, .swal2-container) :where(.ul-btn--lg, #topcta a, #bottomcta a, .elementor-button) {
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(.ul-btn--lg, .elementor-button) {
     min-height: 54px;
     padding: 12px 32px;
     font-size: 20px
@@ -3590,25 +3641,16 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     text-decoration-thickness: 2px
 }
 
-/* View Products / Wholesale Signup in #topcta and #bottomcta: 30px apart - the same gap as the home page's
-   "View More New Products" / "Browse Products by Brand" buttons - and 30px apart vertically when they wrap
-   on narrow screens (they were 10px apart from their 5px margins, and nearly touching when wrapped). The
-   buttons' container becomes a centred, wrapping flex row; its 5px top/bottom padding stands in for the
-   buttons' old vertical margins so the spacing around the row is unchanged. */
-#topcta *:has(> a.elementor-button, > a[href]:not(.elementor-button)):not(p):not(h1):not(h2),
-#bottomcta *:has(> a[href]):not(p):not(h1):not(h2) {
+/* The home call to action's content (heading pill, text box, link row): a centred column with the 30px gap
+   between them that the links' old wrapping row set up (the 5px top/bottom padding stood in for the buttons'
+   old margins), so the pill's and text box's own margins add up as before. */
+.ul-home-cta-content {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
     gap: 30px;
     padding-top: 5px;
     padding-bottom: 5px
-}
-
-#topcta a,
-#bottomcta a {
-    margin: 0!important
 }
 
 /*

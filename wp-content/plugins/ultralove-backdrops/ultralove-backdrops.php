@@ -38,9 +38,11 @@ function ulbd_areas() {
 			// the banner and #topcta (#ub-hero-combo-bg) carries the backdrop instead - style that one then.
 			'selectors'     => array( 'body:not(.ub-hero-combo) #topcta', 'body #ub-hero-combo-bg' ),
 			'dark_css'      => 'body #topcta h1 { background: rgba(0, 0, 0, .52); color: #fff !important; }'
-				. ' body #topcta p { background: rgba(0, 0, 0, .38); color: #fff !important; }',
+				. ' body #topcta p { background: rgba(0, 0, 0, .38); color: #fff !important; }'
+				. ' body #topcta .ul-link-row { background: rgba(0, 0, 0, .38); }'
+				. ' body #topcta .ul-link-row a { color: #fff !important; }',
 			'pills'         => array( 'body #topcta h1' ),
-			'boxes'         => array( 'body #topcta p' ),
+			'boxes'         => array( 'body #topcta p', 'body #topcta .ul-link-row' ),
 		),
 		'footer' => array(
 			'label'         => 'Footer box',
@@ -49,10 +51,11 @@ function ulbd_areas() {
 			// The quick links (Ordering · About Us · Contact) are underlined pink text in one text box: dark glass, white links.
 			'dark_css'      => 'body #bottomcta h2, body .site-footer .footer-widgets .widget-title { background: rgba(0, 0, 0, .52); color: #fff !important; }'
 				. ' body .site-footer .footer-widgets .textwidget, body .site-footer .footer-widgets .gform_wrapper, #colophon #footer-links .widget_nav_menu ul { background: rgba(0, 0, 0, .38); color: #fff !important; }'
-				. ' #colophon #footer-links .widget_nav_menu ul li a { color: #fff !important; }'
-				. ' #colophon #footer-links .widget_nav_menu ul li a:hover, #colophon #footer-links .widget_nav_menu ul li a:focus-visible { color: #f4c3d9 !important; }',
+				. ' body #bottomcta .ul-link-row { background: rgba(0, 0, 0, .38); }'
+				. ' #colophon #footer-links .widget_nav_menu ul li a, body #bottomcta .ul-link-row a { color: #fff !important; }'
+				. ' #colophon #footer-links .widget_nav_menu ul li a:hover, #colophon #footer-links .widget_nav_menu ul li a:focus-visible, body #bottomcta .ul-link-row a:is(:hover, :focus-visible) { color: #f4c3d9 !important; }',
 			'pills'         => array( 'body #bottomcta h2', 'body .site-footer .footer-widgets .widget-title' ),
-			'boxes'         => array( 'body .site-footer .footer-widgets .textwidget', 'body .site-footer .footer-widgets .gform_wrapper', '#colophon #footer-links .widget_nav_menu ul' ),
+			'boxes'         => array( 'body #bottomcta .ul-link-row', 'body .site-footer .footer-widgets .textwidget', 'body .site-footer .footer-widgets .gform_wrapper', '#colophon #footer-links .widget_nav_menu ul' ),
 		),
 	);
 }
