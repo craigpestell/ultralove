@@ -12,9 +12,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Product card widths (see "Product grids and carousels - one sizing rule" in the child theme's
  * style.css): every grid and carousel shows as many cards as fit its container at 215px or more, never
- * fewer than 2 or more than 5, in a page container of at most 1440px - so cards are half the width below
- * 576px and at most ~320px wide elsewhere (2-up tablets; ~215-290px on desktops, up to ~288px on large
- * screens).
+ * fewer than 2 or more than 5, in a page container of at most 1440px. The card has 20px of padding each
+ * side, so the IMAGE is the card less ~42px. Measured on the live shop and home page: 129-138px on a 375px
+ * phone (2-up: half the window less the gutters and padding, ~50px), 173-191px at 768px, 212-222px at
+ * 1100px and at most ~246px at 1600px. The rule below is that, rounded up: the browser picks the srcset
+ * candidate from it, so it has to be close to the rendered width, not the card's.
  */
 add_filter(
 	'wp_calculate_image_sizes',
@@ -33,7 +35,7 @@ add_filter(
 			return $sizes;
 		}
 
-		return '(max-width: 575px) 50vw, (max-width: 1023px) 320px, 290px';
+		return '(max-width: 575px) calc(50vw - 50px), 250px';
 	},
 	10,
 	2
