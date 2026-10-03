@@ -1422,7 +1422,33 @@ h1,h2,h3,h4 {
     text-align: center;
 }
 
-/* Footer quick links (Ordering / About Us / Contact): underlined text links in brand pink, all together in one
+/*
+ * Standard text link - .ul-link, for any link in running text or a list of links (the button system's
+ * counterpart for links that aren't buttons): brand pink, underlined 1px with a 4px offset, darker pink and a
+ * 2px underline on hover / keyboard focus, and the focus ring colour on keyboard focus. Markup we don't
+ * control joins the standard through the selector list below (the footer's quick links, the intro text above a
+ * form page's form), as the button system does. Under #page, so it outweighs the parent theme's and plugins'
+ * link colours without !important; the Backdrops plugin's dark footer keeps its own white links.
+ */
+#page :where(.ul-link, #footer-links .widget_nav_menu ul li a, .entry-content:has(> .gform_wrapper) > p a) {
+    color: var(--ul-btn-pink);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    transition: color .15s ease, text-decoration-thickness .15s ease
+}
+
+#page :where(.ul-link, #footer-links .widget_nav_menu ul li a, .entry-content:has(> .gform_wrapper) > p a):is(:hover, :focus-visible) {
+    color: var(--ul-btn-pink-dark);
+    text-decoration-thickness: 2px
+}
+
+#page :where(.ul-link, #footer-links .widget_nav_menu ul li a, .entry-content:has(> .gform_wrapper) > p a):focus-visible {
+    outline: 2px solid var(--ul-btn-focus);
+    outline-offset: 3px
+}
+
+/* Footer quick links (Ordering / About Us / Contact): standard links (.ul-link, above), all together in one
    text container - the same white glass, lavender border and rounded corners as the footer widget cards below -
    so they stay readable on any backdrop (on a dark one the Backdrops plugin turns the container to dark glass,
    like the other text boxes). The container spans the footer and its links sit in 3 equal columns, then stack
@@ -1464,28 +1490,13 @@ h1,h2,h3,h4 {
     align-items: center;
     min-height: 32px;
     font-size: 18px;
-    font-weight: 500;
-    color: var(--ul-btn-pink)!important;
-    text-decoration: underline!important;
-    text-decoration-thickness: 1px!important;
-    text-underline-offset: 4px;
-    transition: color .15s ease, text-decoration-thickness .15s ease;
+    font-weight: 500
 }
 
-#footer-links .widget_nav_menu ul li a:before {
-    display: none!important;
-    content: none!important;
-}
-
-#footer-links .widget_nav_menu ul li a:hover,
-#footer-links .widget_nav_menu ul li a:focus-visible {
-    color: var(--ul-btn-pink-dark)!important;
-    text-decoration-thickness: 2px!important;
-}
-
-#footer-links .widget_nav_menu ul li a:focus-visible {
-    outline: 2px solid var(--ul-btn-focus);
-    outline-offset: 3px;
+/* The parent theme's bullet before each footer link (specificity beaten by the #page id). */
+#page #footer-links .widget_nav_menu ul li a:before {
+    display: none;
+    content: none
 }
 
 /* Footer widget cards (About Ultra Love / Become A Wholesale Buyer / Email Us): the same pill
@@ -3752,12 +3763,6 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     font-size: 17px;
     line-height: 1.6;
     color: #4a3558
-}
-
-.entry-content:has(> .gform_wrapper) > p a {
-    color: var(--ul-btn-pink);
-    text-decoration: underline;
-    text-underline-offset: 3px
 }
 
 @media (min-width: 1200px) {
