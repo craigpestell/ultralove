@@ -1545,12 +1545,19 @@ h1,h2,h3,h4 {
     padding-bottom: 0!important
 }
 
-@media (max-width:767px) {
-    /* Phones: the Send Message button centred, like the rest of the footer there. */
+@media (max-width:991px) {
+    /* Once the footer is one stacked column (991px and below) the Send Message button and the
+       Learn More/Register buttons are centred, not left-aligned under a centred heading. */
     .site-footer .footer-widgets #gform_1 .gform_footer {
         justify-content: center
     }
 
+    .site-footer .footer-widgets .textwidget {
+        text-align: center
+    }
+}
+
+@media (max-width:767px) {
     .site-footer .footer-widgets .widget-title {
         padding: 7px 16px
     }
