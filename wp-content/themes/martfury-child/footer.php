@@ -16,9 +16,9 @@
 <footer id="colophon" class="site-footer">
 	<div id="bottomcta">
 		<h2>Ordering wholesale products has never been easier.</h2>
-		<div class="ul-cta-buttons">
-			<a class="ul-link ul-link--lg ul-link--boxed" href="<?php echo esc_url( home_url( '/shop/' ) ); ?>">View Products</a>
-			<a class="ul-link ul-link--lg ul-link--boxed" href="<?php echo esc_url( home_url( '/become-a-retailer/' ) ); ?>">Wholesale Signup</a>
+		<div class="ul-link-row">
+			<a class="ul-link ul-link--lg" href="<?php echo esc_url( home_url( '/shop/' ) ); ?>">View Products</a>
+			<a class="ul-link ul-link--lg" href="<?php echo esc_url( home_url( '/become-a-retailer/' ) ); ?>">Wholesale Signup</a>
 		</div>
 	</div>
 
