@@ -637,7 +637,7 @@ add_action(
 /**
  * Combined aurora backdrop (see banner.css / hero-combo.js): a body class to scope the CSS that
  * makes #topcta transparent, and the empty div hero-combo.js sizes to span banner-top to
- * topcta-bottom. Appended at the end of <body>, not inside the Elementor content, since the
+ * topcta-bottom. Appended at the end of <body>, not inside the page content, since the
  * banner and topcta are separate top-level sections with no shared wrapper to attach it to -
  * position:absolute plus JS-measured coordinates place it correctly regardless of where in the
  * DOM it actually lives.

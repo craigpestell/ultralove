@@ -89,7 +89,7 @@
    backdrop instead of each painting its own copy - there's no seam where the banner's pattern
    meets topcta's, because it's literally the same element's background behind both.
 
-   The two are separate siblings in the page markup (Elementor top-level sections) with nothing
+   The two are separate siblings in the page markup (the banner section and #topcta in front-page.php) with nothing
    wrapping just the pair of them, so a single CSS background can't span both on its own. Instead
    hero-combo.js measures the banner's top and topcta's bottom at runtime and sizes/positions
    #ub-hero-combo-bg (appended to the end of <body>, see PHP) to cover exactly that range, full
@@ -102,12 +102,6 @@
 }
 
 body.ub-hero-combo #topcta {
-	background: transparent !important;
-}
-
-/* The Elementor section holding the home banner has its own background colour set in the editor
-   (#0A0A0A on the Home page), which would otherwise hide the backdrop behind the banner row. */
-body.ub-hero-combo .elementor-section:has(> .elementor-container .ub-banner-home) {
 	background: transparent !important;
 }
 
