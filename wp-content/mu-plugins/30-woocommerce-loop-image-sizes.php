@@ -42,6 +42,34 @@ add_filter(
 );
 
 /**
+ * Cloudinary's responsive breakpoints setting rewrites every image's `sizes` to
+ * "(max-width: <width>px) 100vw, <width>px" (the width attribute, 1000 for these cards), which makes the
+ * browser pick the largest candidate. Put the rule above back on product card images in grid contexts,
+ * after the plugin has built the tag; the breakpoints' srcset stays.
+ */
+add_filter(
+	'cloudinary_pre_image_tag',
+	static function ( $tag_element ) {
+		if ( ! is_shop() && ! is_product_taxonomy() && ! is_search() && ! is_front_page() && ! is_home() ) {
+			return $tag_element;
+		}
+		$atts = $tag_element['atts'] ?? array();
+		// By the time Cloudinary builds the tag, the card image has lost its size class; what identifies
+		// it is the square 1000px image (banners and logos aren't square).
+		$width = (int) ( $atts['width'] ?? 0 );
+		if ( empty( $atts['srcset'] ) || $width < 700 || $width !== (int) ( $atts['height'] ?? 0 ) ) {
+			return $tag_element;
+		}
+		$sizes = '(max-width: 575px) calc(50vw - 50px), 250px';
+		if ( isset( $atts['loading'] ) && 'lazy' === $atts['loading'] ) {
+			$sizes = 'auto, ' . $sizes;
+		}
+		$tag_element['atts']['sizes'] = $sizes;
+		return $tag_element;
+	}
+);
+
+/**
  * Home page: lazy-load the product card images. The home page renders 42 product cards (the "On Sale"
  * carousel and "Latest Adult Products"), all below the banner and the call to action on a phone, and
  * WordPress adds no loading="lazy" to images outside post content here - so all 42 (~1 MB) were fetched
