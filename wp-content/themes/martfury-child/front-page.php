@@ -29,8 +29,8 @@ get_header();
                 <div class="ul-home-cta-content">
                     <h1>Adult Wholesale Canada</h1>
                     <p>Ultra Love supplies Canadian retailers with adult toys and intimate wellness products, competitive wholesale pricing, and dedicated account support.</p>
-                    <a href="<?php echo esc_url( home_url( '/shop/' ) ); ?>">View Products</a>
-                    <a href="<?php echo esc_url( home_url( '/become-a-retailer/' ) ); ?>">Wholesale Signup</a>
+                    <a class="ul-link ul-link--lg ul-link--boxed" href="<?php echo esc_url( home_url( '/shop/' ) ); ?>">View Products</a>
+                    <a class="ul-link ul-link--lg ul-link--boxed" href="<?php echo esc_url( home_url( '/become-a-retailer/' ) ); ?>">Wholesale Signup</a>
                 </div>
             </div>
         </div>
@@ -57,8 +57,8 @@ get_header();
         </section>
 
         <div class="ul-home-links">
-            <a class="ul-btn ul-btn--primary ul-btn--lg" href="<?php echo esc_url( home_url( '/shop/' ) ); ?>">View More New Products</a>
-            <a class="ul-btn ul-btn--primary ul-btn--lg" href="<?php echo esc_url( home_url( '/brands/' ) ); ?>">Browse Products by Brand</a>
+            <a class="ul-link ul-link--lg ul-link--boxed" href="<?php echo esc_url( home_url( '/shop/' ) ); ?>">View More New Products</a>
+            <a class="ul-link ul-link--lg ul-link--boxed" href="<?php echo esc_url( home_url( '/brands/' ) ); ?>">Browse Products by Brand</a>
         </div>
     </div>
 </main><!-- #main -->

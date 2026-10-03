@@ -1449,6 +1449,26 @@ h1,h2,h3,h4 {
     outline-offset: 3px
 }
 
+/* Large link (.ul-link--lg): the standard link at heading size, for the calls to action that used to be buttons
+   ("View Products" / "Wholesale Signup", "View More New Products" / "Browse Products by Brand"). Boxed
+   (.ul-link--boxed): on the see-through white glass, lavender border and purple glow of the pills and text
+   boxes around it, so the link stays readable over any backdrop (the Backdrops plugin's dark styles turn the box
+   dark and the link white). */
+#page :where(.ul-link--lg) {
+    font-size: 24px;
+    font-weight: 500;
+    line-height: 1.3
+}
+
+#page :where(.ul-link--boxed) {
+    display: inline-block;
+    padding: 12px 28px;
+    background: rgba(255,255,255,.8);
+    border: 1px solid rgb(177,101,255);
+    border-radius: 10px;
+    box-shadow: var(--ul-purple-shadow)
+}
+
 /* Footer quick links (Ordering / About Us / Contact): the mobile nav's link style (parent theme's
    .primary-mobile-nav) - plain dark text, no underline, rows set off by 1px #dedede dividers with 14px 15px
    padding - all together in one text container, the same white glass, lavender border and rounded corners as the
@@ -2212,7 +2232,7 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
 /* Base - every button in the system (all the tiers' members). */
 :is(#page, #mf-quick-view-modal, .swal2-container) :where(
     .ul-btn,
-    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
+    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, .elementor-button,
     .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
     .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button,
     ul.products li.product form.cart button, .am-collect-media button, .cwgstock_button,
@@ -2245,7 +2265,7 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
 
 :is(#page, #mf-quick-view-modal, .swal2-container) :where(
     .ul-btn,
-    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
+    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, .elementor-button,
     .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
     .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button,
     ul.products li.product form.cart button,
@@ -2258,7 +2278,7 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
 
 /* Primary. */
 :is(#page, #mf-quick-view-modal, .swal2-container) :where(
-    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
+    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, .elementor-button,
     .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
     .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button,
     ul.products li.product form.cart button, .am-collect-media button, .cwgstock_button
@@ -2269,7 +2289,7 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
 }
 
 :is(#page, #mf-quick-view-modal, .swal2-container) :where(
-    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, #topcta a, #bottomcta a, .elementor-button,
+    .ul-btn--primary, .gform_wrapper .gform_button, .footlink, .elementor-button,
     .site-content a.button:not(.compare):not(.add_to_wishlist), .site-content button.button, .site-content input.button,
     .single_add_to_cart_button, .checkout-button, #place_order, .woocommerce-Button, .widget_shopping_cart .buttons .button,
     ul.products li.product form.cart button, .am-collect-media button, .cwgstock_button
@@ -2320,7 +2340,7 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
     padding: 6px 16px
 }
 
-:is(#page, #mf-quick-view-modal, .swal2-container) :where(.ul-btn--lg, #topcta a, #bottomcta a, .elementor-button) {
+:is(#page, #mf-quick-view-modal, .swal2-container) :where(.ul-btn--lg, .elementor-button) {
     min-height: 54px;
     padding: 12px 32px;
     font-size: 20px
