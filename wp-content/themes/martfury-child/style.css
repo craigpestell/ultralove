@@ -714,7 +714,7 @@ h1,h2,h3,h4 {
     color: #3b1d4a!important;
     background: rgba(255,255,255,.8);
     border: 1px solid rgb(177,101,255);
-    border-radius: 999px;
+    border-radius: calc(0.6em + 10px);
     padding: 10px 28px;
     margin: 0 15px 30px!important;
     line-height: 1.2
@@ -748,6 +748,7 @@ h1,h2,h3,h4 {
 @media (max-width:767px) {
     #topcta h1 {
         padding: 8px 18px;
+        border-radius: calc(0.6em + 8px);
         margin-left: 10px!important;
         margin-right: 10px!important;
         margin-bottom: 24px!important
@@ -1539,7 +1540,7 @@ h1,h2,h3,h4 {
     color: #3b1d4a!important;
     background: rgba(255,255,255,.8);
     border: 1px solid rgb(177,101,255);
-    border-radius: 999px;
+    border-radius: calc(0.6em + 8px);
     padding: 8px 22px;
     margin: 0 auto 24px!important;
     line-height: 1.2
@@ -1623,7 +1624,7 @@ h1,h2,h3,h4 {
     width: fit-content;
     background: rgba(255,255,255,.8);
     border: 1px solid rgb(177,101,255);
-    border-radius: 999px;
+    border-radius: calc(0.6em + 10px);
     padding: 10px 28px;
     margin: 0 auto 44px!important;
     line-height: 1.2
@@ -2077,12 +2078,13 @@ html body {
     max-width: 100%!important
 }
 
-/* Center the text inside every pill, so a heading that wraps to two lines stays centered, and
-   use the display text weight rather than the 500 all h1-h4 get above. */
+/* Center the text inside every pill, so a heading that wraps to two lines stays centered (text-wrap: balance
+   evens the lines out instead of a long first line over a short last one), and use the display text weight rather than the 500 all h1-h4 get above. */
 #topcta h1,
 #bottomcta h2,
 .site-footer .footer-widgets .widget-title {
     text-align: center!important;
+    text-wrap: balance;
     font-weight: var(--ul-display-weight)!important
 }
 
