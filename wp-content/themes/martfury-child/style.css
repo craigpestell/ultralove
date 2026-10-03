@@ -3806,6 +3806,15 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     }
 }
 
+/* The submit button is centred from the same 991px the footer collapses to one column at (see the footer
+   form above), so the page forms and the footer switch together. Gravity Forms makes .gform_footer a flex
+   container, so justify-content, not text-align, is what moves the button. */
+@media (max-width: 991px) {
+    #content .entry-content > .gform_wrapper .gform_footer {
+        justify-content: center
+    }
+}
+
 /*
  * Form fields - one style for the site's forms: log in / register and every My account form (addresses,
  * account details), the form pages' Gravity Forms (Buy Wholesale, Contact Us) and the Notify me dialog. 44px, lavender border,
