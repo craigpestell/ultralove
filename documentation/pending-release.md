@@ -23,7 +23,9 @@ get a file back).
 the go-ahead. Until then production still sends phones Martfury's separate mobile markup (user-agent detected),
 so the new phone header, product cards and product page don't show on real phones there.
 
-1. `wp theme mod set enable_mobile_version 0` (rollback: set it back to `1`).
+1. Code: `mu-plugins/martfury-mobile-detect-override.php` makes `martfury_is_mobile()` always false, so phones get the
+   same markup as desktop whatever the `enable_mobile_version` theme option says (no database step; the option can
+   stay as it is). Rollback: revert that file.
 2. Cloudflare > APO: turn off "Cache by device type" (one cached copy per page again).
 3. Purge Cloudflare (Purge Everything).
 
