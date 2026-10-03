@@ -1420,6 +1420,7 @@ h1,h2,h3,h4 {
 
 #footer-links .widget_nav_menu {
     text-align: center;
+    container: footer-links / inline-size
 }
 
 /*
@@ -1452,9 +1453,10 @@ h1,h2,h3,h4 {
    padding - all together in one text container, the same white glass, lavender border and rounded corners as the
    footer widget cards below, so they stay readable on any backdrop (on a dark one the Backdrops plugin turns the
    container to dark glass and the links white, like the other text boxes). The container spans the footer and
-   its links sit in 3 equal columns (dividers between them), then stack one per row (dividers between the rows)
-   from 767px down - later than the footer's own columns (991px), since three short links fit side by side at
-   tablet widths. Links go pink on hover / keyboard focus, which the mobile nav has no equivalent for. */
+   its links sit in 3 equal columns (dividers between them) and only stack one per row (dividers between the
+   rows) when the container is under 360px wide - about 120px a column, enough for the longest link and its
+   padding - so the layout follows the room the links actually have, not a device width (a container query on
+   the widget). Links go pink on hover / keyboard focus, which the mobile nav has no equivalent for. */
 #footer-links .widget_nav_menu ul {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1467,7 +1469,7 @@ h1,h2,h3,h4 {
     border-radius: 10px;
 }
 
-@media (max-width: 767px) {
+@container footer-links (max-width: 359px) {
     #footer-links .widget_nav_menu ul {
         grid-template-columns: minmax(0, 1fr)
     }
@@ -1486,7 +1488,7 @@ h1,h2,h3,h4 {
     border-left: 0
 }
 
-@media (max-width: 767px) {
+@container footer-links (max-width: 359px) {
     #footer-links .widget_nav_menu ul li {
         border-left: 0;
         border-top: 1px solid #dedede
