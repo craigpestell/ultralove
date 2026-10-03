@@ -37,6 +37,13 @@ back. Then purge Cloudflare (the footer is on every page).
 
 ## Already on production (not part of a release)
 
+- Cloudinary responsive breakpoints on (2026-10-03, prod only; the plugin is inactive on dev): option
+  `cloudinary_media_display` has `enable_breakpoints` on with `pixel_step` 90 (srcset 190w-1000w). The plugin
+  rewrites every image's `sizes` to `(max-width: Wpx) 100vw, Wpx`; `mu-plugins/30-woocommerce-loop-image-sizes.php`
+  puts the measured rule back on product cards (`cloudinary_pre_image_tag`). Original setting saved on
+  `ultralove-prod-app` at `/root/cloudinary_media_display-before-breakpoints-20261003T063224Z.json`. Rollback:
+  `sudo -u www-data wp option update cloudinary_media_display "$(cat <that file>)" --format=json`, then purge
+  Cloudflare. Not changed: `crop_sizes['300x300']` is `c_auto,g_auto,w_240,h_240`, so the "300w" candidate is 240px wide.
 - Martfury's phone-version fixed Add to cart bar off (2026-10-01, dev and prod): theme mod
   `product_add_to_cart_fixed_mobile` = 0 (`wp theme mod set product_add_to_cart_fixed_mobile 0`; unset it to
   restore Martfury's default, on). The child theme's add-to-cart button rules pinned the bar to the top-left over
