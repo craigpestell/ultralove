@@ -1508,7 +1508,8 @@ h1,h2,h3,h4 {
    its links sit in 3 equal columns (dividers between them) and only stack one per row (dividers between the
    rows) when the container is under 360px wide - about 120px a column, enough for the longest link and its
    padding - so the layout follows the room the links actually have, not a device width (a container query on
-   the widget). Links go pink on hover / keyboard focus, which the mobile nav has no equivalent for. */
+   the widget). Links go pink and underlined on hover / keyboard focus (the mobile nav has no equivalent), so the
+   change is more than a colour. */
 #footer-links .widget_nav_menu ul {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1571,7 +1572,10 @@ h1,h2,h3,h4 {
 }
 
 #page #footer-links .widget_nav_menu ul li a:is(:hover, :focus-visible) {
-    color: var(--ul-btn-pink)
+    color: var(--ul-btn-pink);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px
 }
 
 #page #footer-links .widget_nav_menu ul li a:focus-visible {
