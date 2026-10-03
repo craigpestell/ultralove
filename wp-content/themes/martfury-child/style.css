@@ -1425,8 +1425,9 @@ h1,h2,h3,h4 {
 /* Footer quick links (Ordering / About Us / Contact): underlined text links in brand pink, all together in one
    text container - the same white glass, lavender border and rounded corners as the footer widget cards below -
    so they stay readable on any backdrop (on a dark one the Backdrops plugin turns the container to dark glass,
-   like the other text boxes). The container spans the footer and its links sit in 3 equal columns, one per
-   footer column, then stack one per row from 991px down, where the footer's columns stack. The underline
+   like the other text boxes). The container spans the footer and its links sit in 3 equal columns, then stack
+   one per row from 767px down - later than the footer's own columns (991px), since three short links fit
+   side by side at tablet widths. The underline
    thickens and the pink darkens on hover / keyboard focus. */
 #footer-links .widget_nav_menu ul {
     display: grid;
@@ -1442,7 +1443,7 @@ h1,h2,h3,h4 {
     border-radius: 10px;
 }
 
-@media (max-width: 991px) {
+@media (max-width: 767px) {
     #footer-links .widget_nav_menu ul {
         grid-template-columns: minmax(0, 1fr)
     }
