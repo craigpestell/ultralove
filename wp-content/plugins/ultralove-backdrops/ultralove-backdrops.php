@@ -46,13 +46,13 @@ function ulbd_areas() {
 			'label'         => 'Footer box',
 			'description'   => '"Ordering wholesale products has never been easier." and the footer widgets below it (the site footer, footer#colophon), on every page.',
 			'selectors'     => array( 'body #colophon' ),
-			// The quick links (Ordering · About Us · Contact) are underlined pink text in pills: dark glass, white links.
-			'dark_css'      => 'body #bottomcta h2, body .site-footer .footer-widgets .widget-title, #colophon #footer-links .widget_nav_menu ul li a { background: rgba(0, 0, 0, .52); color: #fff !important; }'
-				. ' body .site-footer .footer-widgets .textwidget, body .site-footer .footer-widgets .gform_wrapper { background: rgba(0, 0, 0, .38); color: #fff !important; }'
+			// The quick links (Ordering · About Us · Contact) are underlined pink text in one text box: dark glass, white links.
+			'dark_css'      => 'body #bottomcta h2, body .site-footer .footer-widgets .widget-title { background: rgba(0, 0, 0, .52); color: #fff !important; }'
+				. ' body .site-footer .footer-widgets .textwidget, body .site-footer .footer-widgets .gform_wrapper, #colophon #footer-links .widget_nav_menu ul { background: rgba(0, 0, 0, .38); color: #fff !important; }'
 				. ' #colophon #footer-links .widget_nav_menu ul li a { color: #fff !important; }'
 				. ' #colophon #footer-links .widget_nav_menu ul li a:hover, #colophon #footer-links .widget_nav_menu ul li a:focus-visible { color: #f4c3d9 !important; }',
-			'pills'         => array( 'body #bottomcta h2', 'body .site-footer .footer-widgets .widget-title', '#colophon #footer-links .widget_nav_menu ul li a' ),
-			'boxes'         => array( 'body .site-footer .footer-widgets .textwidget', 'body .site-footer .footer-widgets .gform_wrapper' ),
+			'pills'         => array( 'body #bottomcta h2', 'body .site-footer .footer-widgets .widget-title' ),
+			'boxes'         => array( 'body .site-footer .footer-widgets .textwidget', 'body .site-footer .footer-widgets .gform_wrapper', '#colophon #footer-links .widget_nav_menu ul' ),
 		),
 	);
 }

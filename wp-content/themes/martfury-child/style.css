@@ -714,7 +714,7 @@ h1,h2,h3,h4 {
     color: #3b1d4a!important;
     background: rgba(255,255,255,.8);
     border: 1px solid rgb(177,101,255);
-    border-radius: 999px;
+    border-radius: calc(0.6em + 10px);
     padding: 10px 28px;
     margin: 0 15px 30px!important;
     line-height: 1.2
@@ -748,6 +748,7 @@ h1,h2,h3,h4 {
 @media (max-width:767px) {
     #topcta h1 {
         padding: 8px 18px;
+        border-radius: calc(0.6em + 8px);
         margin-left: 10px!important;
         margin-right: 10px!important;
         margin-bottom: 24px!important
@@ -1420,65 +1421,111 @@ h1,h2,h3,h4 {
 
 #footer-links .widget_nav_menu {
     text-align: center;
+    container: footer-links / inline-size
 }
 
-/* Footer quick links (Ordering / About Us / Contact): underlined text links in brand pink, so they read as
-   links, each in its own pill - the footer headings' white glass, lavender border and rounded ends - so they
-   stay readable on any backdrop (on a dark one the Backdrops plugin turns them to dark glass, like the other
-   pills). Separate pills wrap whole onto a new row on narrow screens. The underline thickens and the pink
-   darkens on hover / keyboard focus. */
+/*
+ * Standard text link - .ul-link, for any link in running text or a list of links (the button system's
+ * counterpart for links that aren't buttons): brand pink, underlined 1px with a 4px offset, darker pink and a
+ * 2px underline on hover / keyboard focus, and the focus ring colour on keyboard focus. Markup we don't
+ * control joins the standard through the selector list below (the intro text above a form page's form), as the button system does. Under #page, so it outweighs the parent theme's and plugins'
+ * link colours without !important; the Backdrops plugin's dark footer keeps its own white links.
+ */
+#page :where(.ul-link, .entry-content:has(> .gform_wrapper) > p a) {
+    color: var(--ul-btn-pink);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    transition: color .15s ease, text-decoration-thickness .15s ease
+}
+
+#page :where(.ul-link, .entry-content:has(> .gform_wrapper) > p a):is(:hover, :focus-visible) {
+    color: var(--ul-btn-pink-dark);
+    text-decoration-thickness: 2px
+}
+
+#page :where(.ul-link, .entry-content:has(> .gform_wrapper) > p a):focus-visible {
+    outline: 2px solid var(--ul-btn-focus);
+    outline-offset: 3px
+}
+
+/* Footer quick links (Ordering / About Us / Contact): the mobile nav's link style (parent theme's
+   .primary-mobile-nav) - plain dark text, no underline, rows set off by 1px #dedede dividers with 14px 15px
+   padding - all together in one text container, the same white glass, lavender border and rounded corners as the
+   footer widget cards below, so they stay readable on any backdrop (on a dark one the Backdrops plugin turns the
+   container to dark glass and the links white, like the other text boxes). The container spans the footer and
+   its links sit in 3 equal columns (dividers between them) and only stack one per row (dividers between the
+   rows) when the container is under 360px wide - about 120px a column, enough for the longest link and its
+   padding - so the layout follows the room the links actually have, not a device width (a container query on
+   the widget). Links go pink on hover / keyboard focus, which the mobile nav has no equivalent for. */
 #footer-links .widget_nav_menu ul {
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: stretch;
     width: 100%;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: center;
-    gap: 12px;
     margin: 0;
     padding: 0;
+    background: rgba(255,255,255,.7);
+    border: 1px solid rgb(177,101,255);
+    border-radius: 10px;
+}
+
+@container footer-links (max-width: 359px) {
+    #footer-links .widget_nav_menu ul {
+        grid-template-columns: minmax(0, 1fr)
+    }
 }
 
 #footer-links .widget_nav_menu ul li {
     display: flex;
     align-items: center;
+    justify-content: center;
     margin: 0;
+    padding: 14px 15px 13px;
+    border-left: 1px solid #dedede
+}
+
+#footer-links .widget_nav_menu ul li:first-child {
+    border-left: 0
+}
+
+@container footer-links (max-width: 359px) {
+    #footer-links .widget_nav_menu ul li {
+        border-left: 0;
+        border-top: 1px solid #dedede
+    }
+
+    #footer-links .widget_nav_menu ul li:first-child {
+        border-top: 0
+    }
 }
 
 #footer-links .widget_nav_menu ul li:after {
     display: none
 }
 
-#footer-links .widget_nav_menu ul li a {
-    display: inline-flex;
-    align-items: center;
-    min-height: 40px;
-    padding: 0 20px;
+#page #footer-links .widget_nav_menu ul li a {
+    display: block;
     font-size: 18px;
     font-weight: 500;
-    color: var(--ul-btn-pink)!important;
-    text-decoration: underline!important;
-    text-decoration-thickness: 1px!important;
-    text-underline-offset: 4px;
-    background: rgba(255,255,255,.8);
-    border: 1px solid rgb(177,101,255);
-    border-radius: 999px;
-    transition: color .15s ease, text-decoration-thickness .15s ease;
+    color: #000;
+    text-decoration: none;
+    transition: none
 }
 
-#footer-links .widget_nav_menu ul li a:before {
-    display: none!important;
-    content: none!important;
+/* The parent theme's bullet before each footer link (specificity beaten by the #page id). */
+#page #footer-links .widget_nav_menu ul li a:before {
+    display: none;
+    content: none
 }
 
-#footer-links .widget_nav_menu ul li a:hover,
-#footer-links .widget_nav_menu ul li a:focus-visible {
-    color: var(--ul-btn-pink-dark)!important;
-    text-decoration-thickness: 2px!important;
+#page #footer-links .widget_nav_menu ul li a:is(:hover, :focus-visible) {
+    color: var(--ul-btn-pink)
 }
 
-#footer-links .widget_nav_menu ul li a:focus-visible {
+#page #footer-links .widget_nav_menu ul li a:focus-visible {
     outline: 2px solid var(--ul-btn-focus);
-    outline-offset: 3px;
+    outline-offset: 3px
 }
 
 /* Footer widget cards (About Ultra Love / Become A Wholesale Buyer / Email Us): the same pill
@@ -1493,7 +1540,7 @@ h1,h2,h3,h4 {
     color: #3b1d4a!important;
     background: rgba(255,255,255,.8);
     border: 1px solid rgb(177,101,255);
-    border-radius: 999px;
+    border-radius: calc(0.6em + 8px);
     padding: 8px 22px;
     margin: 0 auto 24px!important;
     line-height: 1.2
@@ -1545,12 +1592,19 @@ h1,h2,h3,h4 {
     padding-bottom: 0!important
 }
 
-@media (max-width:767px) {
-    /* Phones: the Send Message button centred, like the rest of the footer there. */
+@media (max-width:991px) {
+    /* Once the footer is one stacked column (991px and below) the Send Message button and the
+       Learn More/Register buttons are centred, not left-aligned under a centred heading. */
     .site-footer .footer-widgets #gform_1 .gform_footer {
         justify-content: center
     }
 
+    .site-footer .footer-widgets .textwidget {
+        text-align: center
+    }
+}
+
+@media (max-width:767px) {
     .site-footer .footer-widgets .widget-title {
         padding: 7px 16px
     }
@@ -1570,7 +1624,7 @@ h1,h2,h3,h4 {
     width: fit-content;
     background: rgba(255,255,255,.8);
     border: 1px solid rgb(177,101,255);
-    border-radius: 999px;
+    border-radius: calc(0.6em + 10px);
     padding: 10px 28px;
     margin: 0 auto 44px!important;
     line-height: 1.2
@@ -2024,12 +2078,13 @@ html body {
     max-width: 100%!important
 }
 
-/* Center the text inside every pill, so a heading that wraps to two lines stays centered, and
-   use the display text weight rather than the 500 all h1-h4 get above. */
+/* Center the text inside every pill, so a heading that wraps to two lines stays centered (text-wrap: balance
+   evens the lines out instead of a long first line over a short last one), and use the display text weight rather than the 500 all h1-h4 get above. */
 #topcta h1,
 #bottomcta h2,
 .site-footer .footer-widgets .widget-title {
     text-align: center!important;
+    text-wrap: balance;
     font-weight: var(--ul-display-weight)!important
 }
 
@@ -3740,12 +3795,6 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     color: #4a3558
 }
 
-.entry-content:has(> .gform_wrapper) > p a {
-    color: var(--ul-btn-pink);
-    text-decoration: underline;
-    text-underline-offset: 3px
-}
-
 @media (min-width: 1200px) {
     .entry-content:has(> .gform_wrapper) {
         display: grid;
@@ -3796,6 +3845,15 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
 @media (max-width: 767px) {
     #content .entry-content > .gform_wrapper {
         padding: 22px 16px
+    }
+}
+
+/* The submit button is centred from the same 991px the footer collapses to one column at (see the footer
+   form above), so the page forms and the footer switch together. Gravity Forms makes .gform_footer a flex
+   container, so justify-content, not text-align, is what moves the button. */
+@media (max-width: 991px) {
+    #content .entry-content > .gform_wrapper .gform_footer {
+        justify-content: center
     }
 }
 
