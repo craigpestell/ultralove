@@ -1433,3 +1433,17 @@ function ultralove_meta_description_trim( $text, $max = 155 ) {
 	$space = mb_strrpos( $cut, ' ' );
 	return rtrim( $space ? mb_substr( $cut, 0, $space ) : $cut, ' ,.;:-' ) . '…';
 }
+
+/**
+ * Body class for a page whose own content holds a Gravity Form (Contact Us, Buy Wholesale): style.css lays
+ * those pages out as intro text beside / above a form card (.ul-form-page). The same test the Gravity Forms
+ * lazy loader uses (mu-plugins/02-lazy-load-gravity-forms.php); the footer's form is a widget and doesn't count.
+ */
+add_filter( 'body_class', 'ultralove_form_page_body_class' );
+function ultralove_form_page_body_class( $classes ) {
+	$post = is_singular() ? get_queried_object() : null;
+	if ( $post instanceof WP_Post && ( has_shortcode( $post->post_content, 'gravityform' ) || has_block( 'gravityforms/form', $post ) ) ) {
+		$classes[] = 'ul-form-page';
+	}
+	return $classes;
+}
