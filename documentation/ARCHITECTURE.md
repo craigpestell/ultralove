@@ -123,7 +123,7 @@ at most 10 busy at once):
 
 PHP settings (`ops/php/99-ultralove-production.ini`): memory_limit 384M, max_execution_time / max_input_time 300,
 max_input_vars 3000, post/upload 100M, expose_php off; OPcache 512 MB, 64 MB interned strings, 100k files,
-`validate_timestamps=0` (deploys restart PHP-FPM); realpath cache 4M / 600 s; tracing JIT with a 64 MB buffer.
+`validate_timestamps=0` (deploys restart PHP-FPM); realpath cache TTL 600 s (size stays at PHP's 4M default); tracing JIT with a 64 MB buffer.
 
 Measured on 2026-10-02 (requests on the droplet itself): uncached catalog pages 1.5-2 s each, as on the previous
 droplet; 8 concurrent clients -> 3.5 req/s, p95 3.2 s, no errors, at most 9 workers busy, ~1.3 GB RAM used.
