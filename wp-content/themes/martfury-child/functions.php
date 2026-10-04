@@ -385,10 +385,24 @@ function ultralove_capture_instock_notifier_catalog_button() {
  * (logged-in users); otherwise the same quantity + button row as in-stock ones (see the Quantity
  * Field on Shop Page plugin), but disabled, with the button reading "Out of stock".
  */
+/**
+ * The card's price box (Martfury's product_loop_footer_buttons(), on woocommerce_after_shop_loop_item_title)
+ * holds a second copy of the cart form, and style.css hides it in grid and list view alike. Flag that hook
+ * so woocommerce_template_loop_add_to_cart() below skips building the copy.
+ */
+add_action( 'woocommerce_after_shop_loop_item_title', function () {
+	$GLOBALS['ultralove_in_card_price_box'] = true;
+}, 9 );
+add_action( 'woocommerce_after_shop_loop_item_title', function () {
+	$GLOBALS['ultralove_in_card_price_box'] = false;
+}, 11 );
+
 if (!function_exists('woocommerce_template_loop_add_to_cart')) {
 	function woocommerce_template_loop_add_to_cart() {
 		global $product;
 		if ( ! $product->is_purchasable() ) return;
+		// In-stock items give the price box a cart form that is always hidden; only the notify row can show there.
+		if ( ! empty( $GLOBALS['ultralove_in_card_price_box'] ) && $product->is_in_stock() ) return;
 		if ( ! $product->is_in_stock() ) {
 			$notify = '';
 			if ( ! empty( $GLOBALS['ultralove_instock_notifier_catalog_button'] ) ) {
