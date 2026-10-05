@@ -2600,45 +2600,30 @@ a.add_to_wishlist + a.view-wishlist {
     margin-left: 15px
 }
 
-/* Quick view / wishlist on the thumbnail:the parent theme's (and production's) white bar that slides up
-   over the bottom of the image on hover, icons inside. Only fixes on top of it:
-   - the heart is centred in its hover circle: YITH Wishlist 4 draws it as an SVG with a 5px right margin
+/* Wishlist heart on the thumbnail (js/product-card-wishlist.js adds it after the page loads): a round,
+   semi-transparent white button (with a light blur behind it, so the heart stays legible) in the image's
+   bottom right corner, always showing at every width (touch screens can't hover). It turns the parent theme's
+   white bar that slides up over the image on hover into that button, hence the #page weight to beat the
+   bar's hover and focus states. Also:
+   - the heart is centred in the circle: YITH Wishlist 4 draws it as an SVG with a 5px right margin
      and a 25px width, and the parent theme adds a 2px top margin, which pushed it off-centre;
    - in the "added" / "already in wishlist" states YITH outputs a text link, so the text is hidden and a
-     filled heart drawn in the brand pink instead (white on the pink hover circle);
-   - the bar also shows when the card has keyboard focus;
-   - the bar is semi-transparent white (with a light blur behind it, so the icons stay legible);
-   - it fades as well as slides, both ways: the parent theme only transitions bottom, so its opacity
-     snapped to 0 on un-hover and the slide back down happened out of sight. */
-.woocommerce ul.products li.product .mf-product-thumbnail .footer-button {
+     filled heart drawn in the brand pink instead (white on the pink hover circle). */
+#page ul.products li.product .mf-product-thumbnail .footer-button {
+    left: auto;
+    right: 8px;
+    bottom: 8px;
+    padding: 0;
+    border-radius: 50%;
+    opacity: 1;
+    transition: none;
     background-color: rgba(255,255,255,.75);
     -webkit-backdrop-filter: blur(4px);
-    backdrop-filter: blur(4px);
-    transition: bottom .3s ease, opacity .3s ease
+    backdrop-filter: blur(4px)
 }
 
-body:not(.shop-view-list) ul.products li.product .product-inner:focus-within .mf-product-thumbnail .footer-button {
-    bottom: 0;
-    opacity: 1
-}
-
-/* Below 992px (phones and tablets - mostly touch screens, which can't hover) the bar isn't used: it
-   shrinks to a round button holding the wishlist heart, always showing in the image's bottom right
-   corner. At #page weight to beat the bar's hover and focus states. */
-@media (max-width: 991px) {
-    #page ul.products li.product .mf-product-thumbnail .footer-button {
-        left: auto;
-        right: 8px;
-        bottom: 8px;
-        padding: 0;
-        border-radius: 50%;
-        opacity: 1;
-        transition: none
-    }
-
-    #page ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist {
-        margin: 0
-    }
+#page ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist {
+    margin: 0
 }
 
 ul.products li.product .mf-product-thumbnail .footer-button .yith-wcwl-add-to-wishlist a .yith-wcwl-icon,
