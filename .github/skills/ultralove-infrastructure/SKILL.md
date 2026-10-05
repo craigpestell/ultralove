@@ -72,7 +72,7 @@ systemctl is-active nginx php8.5-fpm
 journalctl -u nginx -u php8.5-fpm --since '10 minutes ago' --no-pager
 ```
 
-Check the Nginx vhost before changing FastCGI parameters, timeouts, redirects, or caching. There is no known explicit `fastcgi_cache` or `proxy_cache` configuration, so do not infer that page responses are origin-cached by Nginx.
+Check the Nginx vhost before changing FastCGI parameters, timeouts, redirects, or caching. Anonymous HTML is cached by Nginx's FastCGI cache (`ops/nginx/11-ultralove-page-cache.conf`, 5 minutes; the `X-Cache` response header shows HIT/MISS/BYPASS). Logged-in, cart, wishlist-session and comment cookies, POSTs, ajax and cart/checkout/my-account bypass it. A stale page after a change: `find /var/cache/nginx/ultralove -type f -delete` (`deploy.sh` does this on every deploy).
 
 When adjusting PHP-FPM capacity, collect current process counts, memory pressure, request backlog indicators, and error-log evidence. Set pool values from observed workload and available memory, not generic defaults.
 
