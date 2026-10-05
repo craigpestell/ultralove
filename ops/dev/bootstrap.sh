@@ -93,6 +93,9 @@ log "Configuring nginx"
 mkdir -p "$WP_ROOT" /var/log/wordpress
 chown www-data:www-data /var/log/wordpress
 touch /var/log/wordpress/debug.log && chown www-data:www-data /var/log/wordpress/debug.log
+# Anonymous page cache, same zone and bypass rules as production (uploaded by rebuild.sh).
+install -d /var/cache/nginx
+install -m 0644 /root/11-ultralove-page-cache.conf /etc/nginx/conf.d/11-ultralove-page-cache.conf
 cat > /etc/nginx/sites-available/ultralove-dev.conf <<EOF
 server {
     listen 127.0.0.1:80 default_server;
@@ -128,6 +131,14 @@ server {
         fastcgi_pass unix:/run/php/${PHP}-fpm.sock;
         fastcgi_param HTTPS on;
         fastcgi_read_timeout 300;
+        fastcgi_cache ultralove;
+        fastcgi_cache_key "\$scheme\$host\$request_uri";
+        fastcgi_cache_valid 200 301 5m;
+        fastcgi_cache_bypass \$ultralove_skip_cache;
+        fastcgi_no_cache \$ultralove_skip_cache;
+        fastcgi_cache_lock on;
+        fastcgi_cache_use_stale updating error timeout http_500 http_503;
+        add_header X-Cache \$upstream_cache_status always;
     }
 }
 EOF
