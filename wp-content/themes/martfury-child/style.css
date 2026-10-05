@@ -133,7 +133,7 @@ Template: martfury
     display: inherit
 }
 
-.entry-summary .quantity label,.ribbons .sale-text .amount,.shop-view-list .footer-button form {
+.entry-summary .quantity label,.ribbons .sale-text .amount {
     display: none!important
 }
 
@@ -214,10 +214,6 @@ Template: martfury
     min-height: 80px
 }
 
-.shop-view-list .mf-product-price-box {
-    padding-top: 65px
-}
-
 .ul-home-products .cart label,.mf-shop-content .cart label,.product_tag-discontinued .ribbons,.product_tag-discontinued .stock {
     display: none!important
 }
@@ -269,10 +265,6 @@ Template: martfury
 .ul-home-products .quantity .qty {
     width: 22px;
     font-size: 13px!important
-}
-
-.shop-view-list .mf-shop-content .cart .quantity {
-    margin-top: 20px
 }
 
 .cwg_popup_submit {
@@ -344,16 +336,8 @@ Template: martfury
     text-align: center
 }
 
-.woocommerce.shop-view-list ul.products:not(.slick-slider) li.product .mf-product-content br {
-    display: inherit
-}
-
 .woocommerce .ribbons .ribbon {
     background-color: #b3094b
-}
-
-.woocommerce.shop-view-list ul.products:not(.slick-slider) li.product .mf-product-details h2 {
-    padding-top: 20px!important
 }
 
 .woocommerce-cart .woocommerce .cart-collaterals .cart_totals table.shop_table td {
@@ -480,7 +464,6 @@ Template: martfury
 
 .woocommerce ul.products li.product .woo-loop-product__title:hover a,
 .woocommerce ul.products li.product .woo-loop-product__title a:focus-visible,
-.woocommerce.shop-view-list ul.products:not(.slick-slider) li.product .mf-product-details h2 a:hover,
 .mf-products-of-category .products-box ul.products li.product .mf-product-content h2 a:hover {
     color: #b3094b
 }
@@ -858,8 +841,7 @@ h1,h2,h3,h4 {
    toolbar) up to 767px - so at 768-991px the sidebar, printed after the product grid, stacked below it.
    Martfury's own (max-width: 767px) rules for the panel and the toolbar, applied to 768-991px too. */
 @media (min-width:768px) and (max-width:991px) {
-    .woocommerce:not(.full-content) .shop-toolbar .products-found,
-    .woocommerce:not(.full-content) .shop-toolbar .shop-view {
+    .woocommerce:not(.full-content) .shop-toolbar .products-found {
         width: 50%
     }
 
@@ -886,10 +868,6 @@ h1,h2,h3,h4 {
         overflow: hidden;
         display: block;
         max-width: 90%
-    }
-
-    .woocommerce:not(.full-content) .shop-toolbar .shop-view {
-        order: 2
     }
 
     .catalog-filter-mobile .catalog-sidebar {
@@ -1198,23 +1176,6 @@ h1,h2,h3,h4 {
 .woocommerce #mf-catalog-toolbar .woocommerce-ordering li > ul li a.active,
 .woocommerce #mf-catalog-toolbar .woocommerce-ordering li > ul li a:hover {
     color: #b3094b
-}
-
-.woocommerce #mf-catalog-toolbar .shop-view {
-    color: #7a5a8c
-}
-
-.woocommerce #mf-catalog-toolbar .shop-view .mf-shop-view {
-    color: #c9a3dc;
-    transition: color .15s ease
-}
-
-.woocommerce #mf-catalog-toolbar .shop-view .mf-shop-view:hover {
-    color: #b3094b
-}
-
-.woocommerce #mf-catalog-toolbar .shop-view .mf-shop-view.current {
-    color: #3b1d4a
 }
 
 /* (The footer form's button is styled by the button system, see "Buttons" below; the #topcta / #bottomcta
@@ -2467,7 +2428,6 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
  * Titles (SKU / name / promo note, separated by <br>) get a fixed 6-line box
  * (7 on phones) and are clamped with an ellipsis; the price/cart box is pinned to
  * the bottom of the card. Quantity + Add to cart sit in a nowrap flex row.
- * List view (.shop-view-list) is left alone.
  */
 body:not(.shop-view-list) ul.products:not(.slick-slider) li.product {
     display: flex
@@ -2662,15 +2622,10 @@ body:not(.shop-view-list) ul.products li.product .product-inner:focus-within .mf
     opacity: 1
 }
 
-/* Below 992px (phones and tablets - mostly touch screens, which can't hover) the bar isn't used: Quick View
-   is dropped (on a phone its popup was nearly full screen and showed little the product page doesn't), and
-   the bar shrinks to a round button holding the wishlist heart, always showing in the image's bottom right
+/* Below 992px (phones and tablets - mostly touch screens, which can't hover) the bar isn't used: it
+   shrinks to a round button holding the wishlist heart, always showing in the image's bottom right
    corner. At #page weight to beat the bar's hover and focus states. */
 @media (max-width: 991px) {
-    #page ul.products li.product .mf-product-quick-view {
-        display: none
-    }
-
     #page ul.products li.product .mf-product-thumbnail .footer-button {
         left: auto;
         right: 8px;

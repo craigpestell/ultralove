@@ -14,7 +14,6 @@ class Martfury_WooCommerce {
 	/**
 	 * @var string shop view
 	 */
-	public $shop_view;
 
 	/**
 	 * @var string top_categories
@@ -416,7 +415,6 @@ class Martfury_WooCommerce {
 		$this->catalog_layout   = martfury_get_catalog_layout();
 		$this->catalog_elements = $this->get_catalog_elements();
 		$this->new_duration     = martfury_get_option( 'product_newness' );
-		$this->shop_view        = isset( $_COOKIE['shop_view'] ) ? $_COOKIE['shop_view'] : martfury_get_option( 'catalog_view_' . $this->catalog_layout );
 		$this->product_layout   = martfury_get_product_layout();
 		$this->product_layout_default();
 
@@ -426,7 +424,6 @@ class Martfury_WooCommerce {
 				'product_loop_footer_buttons'
 			), 10 );
 
-			add_action( 'woocommerce_after_shop_loop_item_title', 'woocommerce_template_single_excerpt', 8 );
 		}
 	}
 
@@ -761,13 +758,6 @@ class Martfury_WooCommerce {
 		if ( function_exists( 'woocommerce_template_loop_add_to_cart' ) ) {
 			woocommerce_template_loop_add_to_cart();
 		}
-
-		echo '<div class="action-button">';
-		if ( shortcode_exists( 'yith_wcwl_add_to_wishlist' ) ) {
-			echo do_shortcode( '[yith_wcwl_add_to_wishlist]' );
-		}
-		$this->product_compare();
-		echo '</div>';
 
 		echo '</div>';
 
@@ -2170,21 +2160,6 @@ class Martfury_WooCommerce {
 			$total    = $wp_query->found_posts;
 			$output[] = '<div class="products-found"><strong>' . $total . '</strong>' . esc_html__( 'Products found', 'martfury' ) . '</div>';
 
-		}
-
-		if ( in_array( 'view', $elements ) ) {
-			$list_current = $this->shop_view == 'list' ? 'current' : '';
-			$grid_current = $this->shop_view == 'grid' ? 'current' : '';
-			$output[]     = sprintf(
-				'<div class="shop-view">' .
-				'<span>%s</span>' .
-				'<a href="#" class="grid-view mf-shop-view %s" data-view="grid"><i class="icon-grid"></i></a>' .
-				'<a href="#" class="list-view mf-shop-view %s" data-view="list"><i class="icon-list4"></i></a>' .
-				'</div>',
-				esc_html__( 'View', 'martfury' ),
-				$grid_current,
-				$list_current
-			);
 		}
 
 		if ( in_array( 'filter', $elements ) ) {
@@ -4232,20 +4207,6 @@ class Martfury_WooCommerce {
 
 			if ( in_array( 'cart', $featured_icons ) && martfury_get_option( 'product_loop_hover' ) == '1' ) {
 				add_action( 'martfury_after_product_loop_thumbnail_link', 'woocommerce_template_loop_add_to_cart', 20 );
-			}
-
-			if ( in_array( 'qview', $featured_icons ) ) {
-				add_action( 'martfury_after_product_loop_thumbnail_link', array(
-					$this,
-					'product_loop_quick_view'
-				), 20 );
-			}
-
-			if ( in_array( 'wishlist', $featured_icons ) ) {
-				add_action( 'martfury_after_product_loop_thumbnail_link', array(
-					$this,
-					'product_loop_wishlist'
-				), 30 );
 			}
 
 			if ( in_array( 'compare', $featured_icons ) ) {
