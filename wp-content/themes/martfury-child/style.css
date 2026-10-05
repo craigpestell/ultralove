@@ -1125,15 +1125,20 @@ h1,h2,h3,h4 {
     border-radius: 999px!important
 }
 
-/* Catalog toolbar (products found / sort / grid-list view): a white card matching the sidebar's instead
-   of the #f5f5f5 strip; the sort menu as a lavender-bordered pill with a rounded dropdown, the view
-   icons in muted lavender with the current one in plum. */
+/* Catalog toolbar (products found / sort): a white card matching the sidebar's instead of the #f5f5f5
+   strip; the sort menu as a lavender-bordered pill with a rounded dropdown. */
 .woocommerce #mf-catalog-toolbar {
     background: #fff;
     border: 1px solid rgba(177,101,255,.3);
     border-radius: 10px;
     padding: 0 16px;
     box-shadow: 0 6px 18px rgba(177,101,255,.12)
+}
+
+/* The parent reserves 45px right of the sort menu on a multi-item toolbar; with no view switcher
+   beside it the menu sits flush with the card's padding. */
+.woocommerce .shop-toolbar.multiple .woocommerce-ordering {
+    margin-right: 0
 }
 
 .woocommerce #mf-catalog-toolbar .products-found {
