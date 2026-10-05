@@ -157,6 +157,9 @@ if printf '%s\n' "$CHANGES" | awk '{print $NF}' | grep -q '\.php$'; then
   remote "systemctl restart '$PHP_FPM_SERVICE' && systemctl is-active --quiet '$PHP_FPM_SERVICE'" || die "$PHP_FPM_SERVICE failed to restart! Roll back: deploy/rollback.sh $ENV_NAME"
 fi
 
+# Cached anonymous HTML (ops/nginx/11-ultralove-page-cache.conf) still has the old markup; the directory is absent on servers without the cache.
+remote "find /var/cache/nginx/ultralove -type f -delete 2>/dev/null; true"
+
 remote "echo '$SHA' > '$STATE_DIR/deployed_sha' && echo \"\$(date -u +%FT%TZ) deploy $SHA from ${BASE_SHA} by ${USER:-unknown} backup=$BACKUP${SKIP_GATE_REASON:+ skip-dev-gate=\\\"$SKIP_GATE_REASON\\\"}\" >> '$STATE_DIR/deploy.log'"
 log "Recorded $SHORT as deployed on $ENV_NAME"
 
