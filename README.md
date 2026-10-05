@@ -63,6 +63,7 @@ tarball backup, mirror of owned paths, php-fpm restart when PHP changed, smoke t
 | Script | Purpose |
 | --- | --- |
 | `deploy/deploy.sh <env>` | Deploy a commit (`--ref`, `--dry-run`, `--yes`, `--adopt`, `--skip-dev-gate`) |
+| `deploy/ship-dev.sh` | Push the current branch and deploy it to dev, printing one result line (full output in a temp log) |
 | `deploy/pull-live.sh <env>` | Copy live owned files into the working tree to commit server-side drift |
 | `deploy/rollback.sh <env> [backup]` | Restore the latest (or given) pre-deploy backup |
 | `deploy/smoke-test.sh <env>` | HTTP smoke test of key pages |

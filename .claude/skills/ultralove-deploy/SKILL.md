@@ -23,6 +23,9 @@ Adding a new custom plugin means updating **both** `.gitignore` and `owned-paths
    deploy/deploy.sh dev --ref <branch-or-sha> --dry-run   # review the change list
    deploy/deploy.sh dev --ref <branch-or-sha> --yes
    ```
+   For a routine deploy of the checked-out branch, `deploy/ship-dev.sh` pushes it and runs
+   the deploy, printing one result line (verbose output goes to a temp log; failures print
+   its tail). Use it instead of the two commands above unless you need the dry run.
 3. After the user confirms dev, merge the PR. **The "Deploy to dev" GitHub Action
    deploys the merge commit to dev automatically** (check it passed: `gh run list
    --workflow deploy-dev.yml -L 1`). Then deploy to prod from a trusted machine. Prod
