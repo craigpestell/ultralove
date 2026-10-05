@@ -15,6 +15,7 @@ REPO="$(cd "$DIR/../.." && pwd)"
 
 "$DIR/provision.sh"
 PREFIX="$(ssh "$PROD_HOST" "cd '$WP_ROOT' && wp --allow-root --skip-plugins --skip-themes db prefix")"
+scp -q "$REPO/ops/nginx/11-ultralove-page-cache.conf" "$DEV_HOST_ALIAS:/root/11-ultralove-page-cache.conf"
 ssh "$DEV_HOST_ALIAS" "DEV_DOMAIN='$DEV_DOMAIN' PROD_DOMAIN='$PROD_DOMAIN' WP_ROOT='$WP_ROOT' PHP_VERSION='$PHP_VERSION' \
   DB_NAME='$DB_NAME' DB_USER='$DB_USER' WP_ACCESSIBLE_HOSTS='$WP_ACCESSIBLE_HOSTS' TABLE_PREFIX='$PREFIX' bash -s" < "$DIR/bootstrap.sh"
 "$DIR/setup-prod-push.sh"

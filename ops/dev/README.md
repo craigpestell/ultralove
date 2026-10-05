@@ -9,7 +9,7 @@ network and had prod's keys; it was compromised on 2026-09-18 and destroyed.)
 
 | | |
 |---|---|
-| Droplet | `ultralove-dev` (s-4vcpu-8gb, sfo2): Ubuntu 26.04, nginx + PHP 8.5 + MySQL 8.4 + Redis on one box (the same stack as production since 2026-10-02) |
+| Droplet | `ultralove-dev-managed` (id 606134262, sfo2): Ubuntu 26.04, nginx + PHP 8.5 + Redis, database on prod's DigitalOcean managed MySQL cluster (`db-mysql-sfo2-16643`, database `wordpress_dev`), the same arrangement as production. Live since 2026-10-05; it replaced `ultralove-dev` (local MySQL) |
 | Network | Own VPC `ultralove-dev-vpc` (10.140.0.0/20), no route to prod or mail |
 | Inbound | DO firewall + UFW: **SSH only** (key-only, fail2ban). nginx listens on 127.0.0.1 |
 | Web access | Cloudflare Tunnel (`cloudflared`, outbound only) → Cloudflare Access login (email PIN) for `DEV_ACCESS_EMAILS` |
@@ -20,6 +20,13 @@ network and had prod's keys; it was compromised on 2026-09-18 and destroyed.)
 | Side effects | mu-plugin `00-ultralove-environment-guard` suppresses all email; plugins holding live credentials (Mailgun, Mailchimp, Updraft, Cloudflare, Cloudinary, ManageWP, Jetpack) are deactivated; webhooks disabled; pending scheduled actions cancelled |
 
 ## Scripts
+
+The scripts below were written for the earlier single-box dev (local MySQL). `ultralove-dev-managed` was built by hand
+on top of that setup: `rebuild.sh`, `bootstrap.sh` and `refresh-db.sh` still install and load a local MySQL, so
+they need a managed-database variant (`DB_HOST`/`DB_NAME` in `wp-config.php`, restore into the cluster) before the
+next rebuild. `bootstrap.sh` already installs the nginx page cache (`ops/nginx/11-ultralove-page-cache.conf`).
+`setup-prod-push.sh` has not been re-run for the new droplet, so `sync-code.sh` and `refresh-db.sh` (prod -> dev)
+won't work until it is.
 
 | Script | Does |
 |---|---|
