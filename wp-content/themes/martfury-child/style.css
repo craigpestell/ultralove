@@ -839,17 +839,45 @@ h1,h2,h3,h4 {
    layouts at 992px (the header's menu row, Bootstrap's col-md columns that put the sidebar beside the grid),
    but Martfury only turns the sidebar into its off-canvas Filter panel (with the Filter button in the
    toolbar) up to 767px - so at 768-991px the sidebar, printed after the product grid, stacked below it.
-   Martfury's own (max-width: 767px) rules for the panel and the toolbar, applied to 768-991px too. */
-@media (min-width:768px) and (max-width:991px) {
+   Martfury's own (max-width: 767px) rules for the panel, applied to 768-991px too. */
+/* Toolbar with the Filter button (below 992px): "Products found" on its own row, then the sort menu
+   filling the row beside the Filter button. Martfury's percentage widths (50% / 70% / 30%) wrapped
+   "Products found" onto two lines and left the sort menu short of the Filter button. */
+@media (max-width:991px) {
+    .woocommerce:not(.full-content) .shop-toolbar {
+        column-gap: 16px
+    }
+
     .woocommerce:not(.full-content) .shop-toolbar .products-found {
-        width: 50%
+        width: 100%;
+        white-space: nowrap
+    }
+
+    .woocommerce:not(.full-content) .shop-toolbar .woocommerce-ordering {
+        flex: 1 1 0;
+        width: auto;
+        min-width: 0;
+        order: 3
+    }
+
+    .woocommerce:not(.full-content) .shop-toolbar .woocommerce-ordering > li {
+        flex: 1 1 0;
+        min-width: 0
+    }
+
+    .woocommerce #mf-catalog-toolbar .woocommerce-ordering .current {
+        box-sizing: border-box;
+        width: 100%;
+        min-width: 0
     }
 
     .woocommerce:not(.full-content) .shop-toolbar .mf-filter-mobile {
         display: flex;
         align-items: center;
         justify-content: flex-end;
-        width: 30%
+        flex: none;
+        width: auto;
+        order: 4
     }
 
     .woocommerce:not(.full-content) .shop-toolbar .mf-filter-mobile span {
@@ -858,18 +886,15 @@ h1,h2,h3,h4 {
         font-weight: 400
     }
 
-    .woocommerce:not(.full-content) .shop-toolbar .woocommerce-ordering {
-        width: 70%;
-        order: 3
-    }
-
     .woocommerce:not(.full-content) .shop-toolbar .woocommerce-ordering .current span {
         white-space: nowrap;
         overflow: hidden;
         display: block;
         max-width: 90%
     }
+}
 
+@media (min-width:768px) and (max-width:991px) {
     .catalog-filter-mobile .catalog-sidebar {
         width: 85%;
         background-color: #fff;
