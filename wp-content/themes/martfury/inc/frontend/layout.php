@@ -44,8 +44,7 @@ function martfury_body_classes( $classes ) {
 		$classes[]      = martfury_get_layout();
 		$catalog_layout = martfury_get_catalog_layout();
 		$classes[]      = 'mf-catalog-layout-' . $catalog_layout;
-		$shop_view      = isset( $_COOKIE['shop_view'] ) ? $_COOKIE['shop_view'] : martfury_get_option( 'catalog_view_' . $catalog_layout );
-		$classes[]      = 'shop-view-' . $shop_view;
+		$classes[]      = 'shop-view-grid';
 
 		if ( intval( martfury_get_option( 'catalog_ajax_filter' ) ) ) {
 			$classes[] = 'catalog-ajax-filter';

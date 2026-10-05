@@ -96,6 +96,18 @@ function martfury_child_enqueue_scripts() {
         $card_cart_path = get_stylesheet_directory() . '/js/product-card-cart.js';
         wp_enqueue_script( 'ultralove-product-card-cart', get_stylesheet_directory_uri() . '/js/product-card-cart.js', array( 'jquery' ), (string) filemtime( $card_cart_path ), true );
 
+        // Product cards: wishlist hearts are added after the page loads (js/product-card-wishlist.js) and filled
+        // by YITH. YITH only enqueues its script and styles when a wishlist button is in the page's HTML, which
+        // the cards no longer have, so enqueue them here (cart, checkout and account pages have no cards).
+        if ( function_exists( 'YITH_WCWL_Frontend' ) && ! is_cart() && ! is_checkout() && ! is_account_page() ) {
+            YITH_WCWL_Frontend()->enqueue_scripts();
+            YITH_WCWL_Frontend()->enqueue_styles_and_stuffs();
+
+            $card_wishlist_path = get_stylesheet_directory() . '/js/product-card-wishlist.js';
+            $yith_handle        = wp_script_is( 'jquery-yith-wcwl-user', 'registered' ) ? 'jquery-yith-wcwl-user' : 'jquery-yith-wcwl';
+            wp_enqueue_script( 'ultralove-product-card-wishlist', get_stylesheet_directory_uri() . '/js/product-card-wishlist.js', array( 'jquery', $yith_handle ), (string) filemtime( $card_wishlist_path ), true );
+        }
+
         // Checkout: the customer chooses the payment method (none chosen in advance).
         if ( is_checkout() ) {
             $payment_choice_path = get_stylesheet_directory() . '/js/checkout-payment-choice.js';
@@ -387,7 +399,7 @@ function ultralove_capture_instock_notifier_catalog_button() {
  */
 /**
  * The card's price box (Martfury's product_loop_footer_buttons(), on woocommerce_after_shop_loop_item_title)
- * holds a second copy of the cart form, and style.css hides it in grid and list view alike. Flag that hook
+ * holds a second copy of the cart form, and style.css hides it. Flag that hook
  * so woocommerce_template_loop_add_to_cart() below skips building the copy.
  */
 add_action( 'woocommerce_after_shop_loop_item_title', function () {
