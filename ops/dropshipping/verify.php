@@ -117,15 +117,26 @@ try {
 	$assert( '' === ob_get_clean(), 'Disabled checkout must not render dropshipping fields.' );
 	UltraLove_Dropshipping::enqueue();
 	$assert( ! wp_script_is( 'ultralove-dropshipping', 'enqueued' ), 'Disabled checkout must not enqueue dropshipping JavaScript.' );
+	$assert( ! wp_style_is( 'ultralove-dropshipping', 'enqueued' ), 'Disabled checkout must not enqueue dropshipping styles.' );
+	ob_start();
+	UltraLove_Dropshipping::delivery_heading();
+	$assert( '' === ob_get_clean(), 'Disabled checkout must not render a recipient section heading.' );
 	$errors = new WP_Error();
 	UltraLove_Dropshipping::validate( array( UltraLove_Dropshipping::FIELD => true, 'ship_to_different_address' => true, 'billing_email' => UltraLove_Dropshipping::retailer_email() ), $errors );
 	$assert( in_array( 'ul_dropship_unapproved', $errors->get_error_codes(), true ), 'Disabled checkout must reject forged opt-ins.' );
 	update_option( UltraLove_Dropshipping::OPTION, 'yes' );
 	wp_set_current_user( $user_ids['unapproved'] );
 	$assert( ! UltraLove_Dropshipping::approved(), 'Ordinary customer must not be approved.' );
+	ob_start();
+	UltraLove_Dropshipping::delivery_heading();
+	$assert( '' === ob_get_clean(), 'Unapproved checkout must not render a recipient section heading.' );
 	wp_set_current_user( 0 );
 	$assert( ! UltraLove_Dropshipping::approved(), 'Guest must not be approved.' );
 	wp_set_current_user( $user_ids['approved'] );
+	ob_start();
+	UltraLove_Dropshipping::delivery_heading();
+	$heading = ob_get_clean();
+	$assert( false !== strpos( $heading, 'Customer delivery details' ) && false !== strpos( $heading, ' hidden' ), 'Approved checkout must have a delivery heading hidden until opt-in.' );
 
 	$data = array( UltraLove_Dropshipping::FIELD => true, 'ship_to_different_address' => true, 'billing_email' => UltraLove_Dropshipping::retailer_email() );
 	$errors = new WP_Error();

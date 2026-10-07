@@ -8,6 +8,7 @@
         }
 
         var $different = $('#ship-to-different-address-checkbox');
+        var $shipping = $('.shipping_address');
         var $email = $('#billing_email');
         var originalEmail = $email.val();
         var originalReadonly = $email.prop('readonly');
@@ -23,6 +24,13 @@
             var enabled = $choice.prop('checked');
             $('#ultralove-dropship-help').toggle(enabled);
             $('#ship-to-different-address').toggle(!enabled);
+            $('#ultralove-dropship-delivery-title').prop('hidden', !enabled);
+            $shipping.toggleClass('ultralove-dropship-delivery', enabled);
+            if (enabled) {
+                $shipping.attr({ role: 'group', 'aria-labelledby': 'ultralove-dropship-delivery-title' });
+            } else {
+                $shipping.removeAttr('role aria-labelledby');
+            }
             $email.prop('readonly', enabled || originalReadonly);
             if (enabled) {
                 $email.val(ultraloveDropshipping.retailerEmail);

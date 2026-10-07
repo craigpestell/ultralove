@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UltraLove Dropshipping
  * Description: Approved retailers shipping directly to their customers.
- * Version: 1.1.0
+ * Version: 1.1.1
  * Author: UltraLove
  * Requires Plugins: woocommerce
  * Text Domain: ultralove-dropshipping
@@ -27,6 +27,7 @@ final class UltraLove_Dropshipping {
 		add_action( 'personal_options_update', array( __CLASS__, 'save_profile' ) );
 		add_action( 'edit_user_profile_update', array( __CLASS__, 'save_profile' ) );
 		add_action( 'woocommerce_checkout_before_customer_details', array( __CLASS__, 'checkout_field' ) );
+		add_action( 'woocommerce_before_checkout_shipping_form', array( __CLASS__, 'delivery_heading' ) );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue' ) );
 		add_action( 'woocommerce_checkout_update_order_review', array( __CLASS__, 'update_review' ) );
 		add_filter( 'woocommerce_checkout_posted_data', array( __CLASS__, 'posted_data' ) );
@@ -161,9 +162,16 @@ final class UltraLove_Dropshipping {
 		if ( ! self::approved() || ! is_checkout() || is_order_received_page() || is_checkout_pay_page() ) {
 			return;
 		}
-		wp_enqueue_script( 'ultralove-dropshipping', plugins_url( 'checkout.js', __FILE__ ), array( 'jquery', 'wc-checkout' ), '1.0.2', true );
+		wp_enqueue_style( 'ultralove-dropshipping', plugins_url( 'checkout.css', __FILE__ ), array(), '1.1.1' );
+		wp_enqueue_script( 'ultralove-dropshipping', plugins_url( 'checkout.js', __FILE__ ), array( 'jquery', 'wc-checkout' ), '1.1.1', true );
 		$customer = new WC_Customer( get_current_user_id() );
 		wp_localize_script( 'ultralove-dropshipping', 'ultraloveDropshipping', array( 'retailerEmail' => self::retailer_email(), 'savedShipping' => $customer->get_shipping() ) );
+	}
+
+	public static function delivery_heading() {
+		if ( self::approved() ) {
+			echo '<h3 id="ultralove-dropship-delivery-title" hidden>' . esc_html__( 'Customer delivery details', 'ultralove-dropshipping' ) . '</h3>';
+		}
 	}
 
 	public static function update_review( $posted ) {
