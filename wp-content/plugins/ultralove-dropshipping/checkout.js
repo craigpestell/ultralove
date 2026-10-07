@@ -28,7 +28,7 @@
                 if (clearRecipient) {
                     $('.shipping_address :input[name^="shipping_"]').each(function () {
                         if (this.name !== 'shipping_country') {
-                            $(this).val('').trigger('change');
+                            $(this).val('').trigger('input').trigger('change.select2');
                         }
                     });
                 }

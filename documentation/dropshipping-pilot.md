@@ -35,6 +35,8 @@ choices are unchanged. No handling fee is added. Shipping is calculated for
 the parcel destination. An order belongs to the retailer and has one delivery
 address. Recipient addresses are not saved to the retailer's account profile.
 Ordinary wholesale orders remain available without opting in.
+Newly revealed recipient fields start without validation errors; ordinary
+WooCommerce validation still runs on user interaction and checkout submission.
 
 ## Warehouse checklist
 
