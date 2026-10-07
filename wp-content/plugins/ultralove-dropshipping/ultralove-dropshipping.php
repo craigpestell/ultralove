@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UltraLove Dropshipping
  * Description: Development pilot for approved retailers shipping directly to their customers.
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: UltraLove
  * Requires Plugins: woocommerce
  * Text Domain: ultralove-dropshipping
@@ -157,7 +157,7 @@ final class UltraLove_Dropshipping {
 		if ( ! self::approved() || ! is_checkout() || is_order_received_page() || is_checkout_pay_page() ) {
 			return;
 		}
-		wp_enqueue_script( 'ultralove-dropshipping', plugins_url( 'checkout.js', __FILE__ ), array( 'jquery', 'wc-checkout' ), '1.0.1', true );
+		wp_enqueue_script( 'ultralove-dropshipping', plugins_url( 'checkout.js', __FILE__ ), array( 'jquery', 'wc-checkout' ), '1.0.2', true );
 		$customer = new WC_Customer( get_current_user_id() );
 		wp_localize_script( 'ultralove-dropshipping', 'ultraloveDropshipping', array( 'retailerEmail' => self::retailer_email(), 'savedShipping' => $customer->get_shipping() ) );
 	}

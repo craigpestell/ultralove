@@ -22,6 +22,7 @@
         function applyChoice(clearRecipient) {
             var enabled = $choice.prop('checked');
             $('#ultralove-dropship-help').toggle(enabled);
+            $('#ship-to-different-address').toggle(!enabled);
             $email.prop('readonly', enabled || originalReadonly);
             if (enabled) {
                 $email.val(ultraloveDropshipping.retailerEmail);

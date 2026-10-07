@@ -37,6 +37,9 @@ address. Recipient addresses are not saved to the retailer's account profile.
 Ordinary wholesale orders remain available without opting in.
 Newly revealed recipient fields start without validation errors; ordinary
 WooCommerce validation still runs on user interaction and checkout submission.
+While dropshipping is selected, the redundant **Ship to a different address?**
+toggle is hidden; the separate delivery address remains enabled. Opting out
+restores the normal toggle and destination choice.
 
 ## Warehouse checklist
 
