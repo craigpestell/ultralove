@@ -2205,6 +2205,14 @@ html body {
     color: var(--mf-primary-color)
 }
 
+.woocommerce-checkout-review-order-table .cart_item .product-name b {
+    font-weight: inherit
+}
+
+.woocommerce-checkout form.checkout .payments-title {
+    margin-top: var(--ul-region-gap)
+}
+
 /*
  * Every button on the site in one weight (500). Don't give individual buttons their own weight; a
  * genuine special case gets an explicit, commented exception after this rule. Covers native buttons
