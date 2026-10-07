@@ -2214,14 +2214,16 @@ html body {
     border: 1px solid #bfbfbf
 }
 
-/* Keep footer separators row-wide without changing the table's layout or content inset. */
+/* Keep separators row-wide without changing the table's layout or content inset. */
+.woocommerce-checkout table.woocommerce-checkout-review-order-table tbody tr,
 .woocommerce-checkout table.woocommerce-checkout-review-order-table tfoot tr {
     background: linear-gradient(#ccc, #ccc) top / 100% 1px no-repeat
 }
 
-.woocommerce-checkout table.woocommerce-checkout-review-order-table tfoot th,
-.woocommerce-checkout table.woocommerce-checkout-review-order-table tfoot td {
-    border-top: 0
+.woocommerce-checkout table.woocommerce-checkout-review-order-table tr > th,
+.woocommerce-checkout table.woocommerce-checkout-review-order-table tr > td {
+    border-top: 0;
+    border-bottom: 0
 }
 
 .woocommerce-checkout #payment .ul-payment-methods-panel {
