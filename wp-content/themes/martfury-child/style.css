@@ -2210,8 +2210,19 @@ html body {
 }
 
 .woocommerce-checkout table.woocommerce-checkout-review-order-table,
-.woocommerce-checkout #payment .wc_payment_methods {
+.woocommerce-checkout #payment .ul-payment-methods-panel {
     border: 1px solid #bfbfbf
+}
+
+.woocommerce-checkout #payment .ul-payment-methods-panel {
+    padding: 25px;
+    background-color: #f6f6f6
+}
+
+.woocommerce-checkout #payment ul.wc_payment_methods {
+    padding: 0;
+    border: 0;
+    background-color: transparent
 }
 
 .woocommerce-checkout form.checkout .payments-title {
