@@ -2209,6 +2209,11 @@ html body {
     font-weight: inherit
 }
 
+.woocommerce-checkout table.woocommerce-checkout-review-order-table,
+.woocommerce-checkout #payment .wc_payment_methods {
+    border: 1px solid #bfbfbf
+}
+
 .woocommerce-checkout form.checkout .payments-title {
     margin-top: var(--ul-region-gap)
 }
