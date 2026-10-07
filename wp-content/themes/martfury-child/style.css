@@ -2215,7 +2215,7 @@ html body {
 }
 
 /* Keep separators row-wide without changing the table's layout or content inset. */
-.woocommerce-checkout table.woocommerce-checkout-review-order-table tbody tr,
+.woocommerce-checkout table.woocommerce-checkout-review-order-table tbody tr:first-child,
 .woocommerce-checkout table.woocommerce-checkout-review-order-table tfoot tr {
     background: linear-gradient(#ccc, #ccc) top / 100% 1px no-repeat
 }
