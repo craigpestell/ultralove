@@ -37,6 +37,50 @@ try {
 	}
 	update_user_meta( $user_ids['approved'], UltraLove_Dropshipping::APPROVAL, 'yes' );
 	wp_set_current_user( $user_ids['admin'] );
+	delete_option( UltraLove_Dropshipping::OPTION );
+	$assert( ! UltraLove_Dropshipping::enabled(), 'Absent option must default off.' );
+	update_option( UltraLove_Dropshipping::OPTION, 'no' );
+	ob_start();
+	UltraLove_Dropshipping::profile( get_userdata( $user_ids['approved'] ) );
+	$assert( '' === ob_get_clean(), 'Disabled dropshipping must hide user-profile controls even from administrators.' );
+	ob_start();
+	UltraLove_Dropshipping::admin_page();
+	$disabled_admin = ob_get_clean();
+	$assert( false !== strpos( $disabled_admin, 'ultralove_dropshipping_enabled' ), 'Disabled feature must retain its admin switch.' );
+	$assert( ! UltraLove_Dropshipping::approved(), 'Account approval cannot bypass the disabled feature.' );
+	$die_handler = function () {
+		return function ( $message, $title, $arguments ) {
+			throw new RuntimeException( (string) $message, (int) $arguments['response'] );
+		};
+	};
+	add_filter( 'wp_die_handler', $die_handler );
+	try {
+		foreach ( array( 'yes', 'no' ) as $approval ) {
+			update_user_meta( $user_ids['approved'], UltraLove_Dropshipping::APPROVAL, $approval );
+			$_POST = array(
+				'ultralove_dropshipping_nonce' => wp_create_nonce( 'ultralove_dropshipping_approval_' . $user_ids['approved'] ),
+			);
+			if ( 'no' === $approval ) {
+				$_POST['ultralove_dropshipping_approved'] = 'yes';
+			}
+			$blocked = false;
+			try {
+				UltraLove_Dropshipping::save_profile( $user_ids['approved'] );
+			} catch ( RuntimeException $error ) {
+				$assert( 403 === $error->getCode(), 'Disabled approval changes must be rejected with 403.' );
+				$blocked = true;
+			}
+			$assert( $blocked, 'A valid stale nonce cannot grant or revoke access while disabled.' );
+			$assert( $approval === get_user_meta( $user_ids['approved'], UltraLove_Dropshipping::APPROVAL, true ), 'Rejected save must preserve the existing approval.' );
+		}
+	} finally {
+		remove_filter( 'wp_die_handler', $die_handler );
+	}
+	update_option( UltraLove_Dropshipping::OPTION, 'yes' );
+	update_user_meta( $user_ids['approved'], UltraLove_Dropshipping::APPROVAL, 'yes' );
+	ob_start();
+	UltraLove_Dropshipping::profile( get_userdata( $user_ids['approved'] ) );
+	$assert( false !== strpos( ob_get_clean(), 'name="ultralove_dropshipping_approved"' ), 'Enabling dropshipping restores administrator approval controls.' );
 	ob_start();
 	UltraLove_Dropshipping::admin_page();
 	$admin_content = ob_get_clean();
@@ -68,6 +112,14 @@ try {
 	$assert( UltraLove_Dropshipping::approved(), 'Approved user must be eligible.' );
 	update_option( UltraLove_Dropshipping::OPTION, 'no' );
 	$assert( ! UltraLove_Dropshipping::approved(), 'Disabled pilot must fail closed.' );
+	ob_start();
+	UltraLove_Dropshipping::checkout_field();
+	$assert( '' === ob_get_clean(), 'Disabled checkout must not render dropshipping fields.' );
+	UltraLove_Dropshipping::enqueue();
+	$assert( ! wp_script_is( 'ultralove-dropshipping', 'enqueued' ), 'Disabled checkout must not enqueue dropshipping JavaScript.' );
+	$errors = new WP_Error();
+	UltraLove_Dropshipping::validate( array( UltraLove_Dropshipping::FIELD => true, 'ship_to_different_address' => true, 'billing_email' => UltraLove_Dropshipping::retailer_email() ), $errors );
+	$assert( in_array( 'ul_dropship_unapproved', $errors->get_error_codes(), true ), 'Disabled checkout must reject forged opt-ins.' );
 	update_option( UltraLove_Dropshipping::OPTION, 'yes' );
 	wp_set_current_user( $user_ids['unapproved'] );
 	$assert( ! UltraLove_Dropshipping::approved(), 'Ordinary customer must not be approved.' );

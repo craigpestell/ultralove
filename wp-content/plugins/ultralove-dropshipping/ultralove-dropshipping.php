@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: UltraLove Dropshipping
- * Description: Development pilot for approved retailers shipping directly to their customers.
- * Version: 1.0.2
+ * Description: Approved retailers shipping directly to their customers.
+ * Version: 1.1.0
  * Author: UltraLove
  * Requires Plugins: woocommerce
  * Text Domain: ultralove-dropshipping
@@ -45,8 +45,8 @@ final class UltraLove_Dropshipping {
 	}
 
 	public static function save_settings() {
-		if ( ! current_user_can( 'manage_options' ) || 'development' !== wp_get_environment_type() ) {
-			wp_die( esc_html__( 'Only administrators can configure the development dropshipping pilot.', 'ultralove-dropshipping' ), '', array( 'response' => 403 ) );
+		if ( ! current_user_can( 'manage_options' ) || ! self::supported_environment() ) {
+			wp_die( esc_html__( 'You cannot configure dropshipping in this environment.', 'ultralove-dropshipping' ), '', array( 'response' => 403 ) );
 		}
 		check_admin_referer( 'ultralove_dropshipping_settings' );
 		update_option( self::OPTION, isset( $_POST['ultralove_dropshipping_enabled'] ) && 'yes' === $_POST['ultralove_dropshipping_enabled'] ? 'yes' : 'no' );
@@ -58,30 +58,30 @@ final class UltraLove_Dropshipping {
 		if ( ! current_user_can( 'manage_options' ) ) {
 			wp_die( esc_html__( 'You cannot manage dropshipping.', 'ultralove-dropshipping' ), '', array( 'response' => 403 ) );
 		}
-		$development = 'development' === wp_get_environment_type();
-		$retailers   = get_users( array( 'meta_key' => self::APPROVAL, 'meta_value' => 'yes', 'number' => 100, 'orderby' => 'display_name' ) );
+		$supported = self::supported_environment();
+		$retailers = get_users( array( 'meta_key' => self::APPROVAL, 'meta_value' => 'yes', 'number' => 100, 'orderby' => 'display_name' ) );
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Dropshipping', 'ultralove-dropshipping' ); ?></h1>
 			<?php if ( isset( $_GET['updated'] ) && '1' === $_GET['updated'] ) : ?>
-				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Dropshipping pilot settings saved.', 'ultralove-dropshipping' ); ?></p></div>
+				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Dropshipping settings saved.', 'ultralove-dropshipping' ); ?></p></div>
 			<?php endif; ?>
-			<p><?php esc_html_e( 'UltraLove ships an approved retailer order directly to one customer. Manual checkout pilot; no CSV order import or Shopify integration.', 'ultralove-dropshipping' ); ?></p>
-			<?php if ( $development ) : ?>
+			<p><?php esc_html_e( 'UltraLove ships an approved retailer order directly to one customer. Manual checkout; no CSV order import or Shopify integration.', 'ultralove-dropshipping' ); ?></p>
+			<?php if ( $supported ) : ?>
 				<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
 					<input type="hidden" name="action" value="ultralove_dropshipping_settings">
 					<?php wp_nonce_field( 'ultralove_dropshipping_settings' ); ?>
 					<p><label><input type="checkbox" name="ultralove_dropshipping_enabled" value="yes" <?php checked( self::enabled() ); ?>>
-						<?php esc_html_e( 'Enable the dropshipping pilot on this development site', 'ultralove-dropshipping' ); ?>
+						<?php esc_html_e( 'Enable dropshipping', 'ultralove-dropshipping' ); ?>
 					</label></p>
 					<p><?php esc_html_e( 'Turning this off blocks new dropship orders without deleting existing order markers or account approvals.', 'ultralove-dropshipping' ); ?></p>
 					<?php submit_button(); ?>
 				</form>
 			<?php else : ?>
-				<div class="notice notice-warning inline"><p><?php esc_html_e( 'The pilot is disabled outside development. Production requires a separate release review.', 'ultralove-dropshipping' ); ?></p></div>
+				<div class="notice notice-warning inline"><p><?php esc_html_e( 'Dropshipping is unavailable in this environment.', 'ultralove-dropshipping' ); ?></p></div>
 			<?php endif; ?>
 			<h2><?php esc_html_e( 'Retailer approval', 'ultralove-dropshipping' ); ?></h2>
-			<p><?php esc_html_e( 'Enable the pilot, then edit a retailer under Users and check Dropshipping pilot approval.', 'ultralove-dropshipping' ); ?>
+			<p><?php esc_html_e( 'Enable dropshipping, then edit a retailer under Users and check Dropshipping approval.', 'ultralove-dropshipping' ); ?>
 				<a href="<?php echo esc_url( admin_url( 'users.php' ) ); ?>"><?php esc_html_e( 'Manage users', 'ultralove-dropshipping' ); ?></a>
 			</p>
 			<h3><?php esc_html_e( 'Approved accounts (up to 100 shown)', 'ultralove-dropshipping' ); ?></h3>
@@ -101,8 +101,12 @@ final class UltraLove_Dropshipping {
 		<?php
 	}
 
+	public static function supported_environment() {
+		return in_array( wp_get_environment_type(), array( 'development', 'production' ), true );
+	}
+
 	public static function enabled() {
-		return 'development' === wp_get_environment_type() && 'yes' === get_option( self::OPTION, 'no' );
+		return self::supported_environment() && 'yes' === get_option( self::OPTION, 'no' );
 	}
 
 	public static function approved() {
@@ -122,9 +126,9 @@ final class UltraLove_Dropshipping {
 		}
 		wp_nonce_field( 'ultralove_dropshipping_approval_' . $user->ID, 'ultralove_dropshipping_nonce' );
 		?>
-		<h2><?php esc_html_e( 'Dropshipping pilot', 'ultralove-dropshipping' ); ?></h2>
+		<h2><?php esc_html_e( 'Dropshipping', 'ultralove-dropshipping' ); ?></h2>
 		<p><label><input type="checkbox" name="ultralove_dropshipping_approved" value="yes" <?php checked( 'yes', get_user_meta( $user->ID, self::APPROVAL, true ) ); ?>>
-			<?php esc_html_e( 'Approve this account to place dropshipping orders on dev.', 'ultralove-dropshipping' ); ?>
+			<?php esc_html_e( 'Approve this account to place dropshipping orders.', 'ultralove-dropshipping' ); ?>
 		</label></p>
 		<?php
 	}
@@ -182,7 +186,7 @@ final class UltraLove_Dropshipping {
 			return;
 		}
 		if ( ! self::approved() ) {
-			$errors->add( 'ul_dropship_unapproved', __( 'Dropshipping is available only to approved retailer accounts in the dev pilot.', 'ultralove-dropshipping' ) );
+			$errors->add( 'ul_dropship_unapproved', __( 'Dropshipping is available only to approved retailer accounts when the feature is enabled.', 'ultralove-dropshipping' ) );
 		}
 		if ( ! WC()->cart->needs_shipping_address() || empty( $data['ship_to_different_address'] ) ) {
 			$errors->add( 'ul_dropship_address', __( 'For dropshipping, select Ship to a different address and enter your customer delivery address.', 'ultralove-dropshipping' ) );

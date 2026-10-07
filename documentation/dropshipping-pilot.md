@@ -1,4 +1,4 @@
-# Dropshipping development pilot
+# Dropshipping rollout and operations
 
 UltraLove fulfils an approved retailer's order directly to one customer.
 This milestone uses classic WooCommerce checkout, not CSV order import or
@@ -9,18 +9,41 @@ Shopify integration. Catalogue exports remain separate.
 Deploy the committed branch with `deploy/deploy.sh dev --ref <branch> --dry-run`,
 then `deploy/deploy.sh dev --ref <branch> --yes`. Activate
 **UltraLove Dropshipping** in Plugins, then open **WooCommerce > Dropshipping**.
-Check **Enable the dropshipping pilot on this development site** and save.
-The option defaults to `no`; the checkout feature refuses to
-run outside `WP_ENVIRONMENT_TYPE=development`.
+Check **Enable dropshipping** and save.
+The option defaults to `no` on each site. Development and production are
+supported; other environment types cannot enable the feature.
 
 The Dropshipping page links to Users, approved accounts, and WooCommerce orders.
-An administrator edits a retailer in Users and checks the dropshipping approval.
+When enabled, an administrator edits a retailer in Users and checks the
+dropshipping approval. While disabled, user-profile approval fields are hidden
+and approval changes are rejected server-side, including stale submissions.
+Disabling the feature preserves existing approvals but blocks all dropshipping.
 Existing accounts are not approved automatically. Removing approval
 blocks new dropship orders, including checkout submissions already in progress.
 
 Do not change dev's email suppression, outbound HTTP block, webhook isolation,
 or payment configuration. Use synthetic addresses and an offline gateway for
 tests; never remit funds or dispatch a test order.
+
+## Production deployment, initially disabled
+
+1. Pass CI and verify the release candidate on dev.
+2. Merge its reviewed PR into main. Confirm the automatic dev deployment
+   succeeded and verify that exact merge SHA, not just the earlier branch SHA.
+3. Review `deploy/deploy.sh prod --ref <verified-main-sha> --dry-run`, then
+   deploy through the same pipeline. Retain the preceding SHA and backup path.
+   Do not bypass drift checks or the exact-SHA dev gate.
+4. Set `ultralove_dropshipping_enabled` to `no` on production before activating
+   **UltraLove Dropshipping**. Plugin activation is not feature enablement.
+5. Confirm **WooCommerce > Dropshipping** exists with its switch unchecked.
+   Confirm user profiles have no approval checkbox, ordinary checkout has no
+   dropshipping opt-in/script, and the production approval baseline is unchanged.
+
+Do not copy dev's options or user approvals. Do not create production test orders,
+send test emails, take payments, change customer addresses, or disable normal
+production mail/webhooks. Use read-only rendering and service/log checks for the
+disabled release. Feature enablement requires separate approval and review of
+production notification/invoice integrations and warehouse readiness.
 
 ## Retailer checkout
 
@@ -59,7 +82,10 @@ Staff must confirm this workflow before any real pilot fulfilment.
 
 ## Verification and rollback
 
-Run `ops/dropshipping/verify.php` via `wp eval-file` on dev after deployment and
+Run `php ops/dropshipping/test-gate.php` locally for isolated environment and
+default-off policy coverage. It does not connect to WordPress or a database.
+
+Run `ops/dropshipping/verify.php` via `wp eval-file` **on dev only**, after deployment and
 activation. It creates and deletes only its own synthetic users, product, and
 order, and restores the prior pilot option. Run browser checks for two different
 recipient addresses followed by ordinary checkout, plus unauthorized and
@@ -74,6 +100,7 @@ active. Prefer disabling the pilot over deactivating/removing the plugin when
 marked orders still need handling. Code rollback uses the deploy pipeline;
 never delete existing orders as part of rollback.
 
-Production release is excluded. Before it, review the development-only gate,
-destinations, eligible products, payment policy, tax treatment, handling fees,
-service levels, returns, and physical fulfilment responsibilities.
+Production activation is initially disabled. Before enabling, review destinations,
+eligible products, payment policy, tax treatment, handling fees, service levels,
+returns, production notification/invoice integrations, and physical fulfilment
+responsibilities. Account approval alone cannot enable the feature.

@@ -1,13 +1,24 @@
 # Pending production release
 
-## Dev-only dropshipping pilot (not a production release)
+## Dropshipping production rollout (disabled)
 
 `ultralove-dropshipping` adds approved-retailer manual dropship checkout.
-Its option defaults off and its checkout gate only runs in development.
-Plugin activation, `ultralove_dropshipping_enabled=yes`, and individual user
-approvals are dev-only configuration steps, not production release instructions.
-See [the pilot runbook](dropshipping-pilot.md) for packing, verification, and
-rollback. Do not ship or enable the pilot on production without a separate review.
+The same code supports development and production; the feature defaults off
+independently on each environment.
+
+After CI, merge, and verification of the exact main SHA on dev, deploy that SHA
+to production through `deploy/deploy.sh`. Set
+`ultralove_dropshipping_enabled=no` **before** activating the plugin.
+Activate **UltraLove Dropshipping**, verify its admin page is available with
+the switch unchecked, and leave all production account approvals unchanged.
+User-profile approval fields stay hidden and access changes are rejected while
+the switch is off. Ordinary checkout remains unchanged.
+
+Feature enablement is a separate approval, not part of code deployment.
+Do not copy dev options/users or run synthetic integration tests on production.
+See [the runbook](dropshipping-pilot.md) for verification, packing, and rollback.
+This is a separate rollout; do not automatically apply the unrelated database
+or Cloudflare steps listed below.
 
 Everything below is on **dev.ultralove.ca** and waits for the client's approval, then ships to
 production as one release. Code goes through `deploy/deploy.sh` (see the `ultralove-deploy` skill);
@@ -16,8 +27,10 @@ in the order listed.
 
 ## Code
 
-Nothing pending: production runs `main` (`84ac3c8`, deployed 2026-10-02 04:58 UTC) on the new production droplet
-(Ubuntu 26.04, PHP 8.5 - see `documentation/ARCHITECTURE.md` 1.3). After a deploy that changes page HTML, purge
+The pre-dropshipping production baseline is `708abcd` (verified 2026-10-07).
+The dropshipping release follows the disabled-rollout procedure above on the
+production droplet (Ubuntu 26.04, PHP 8.5 - see `documentation/ARCHITECTURE.md` 1.3).
+After a deploy that changes cacheable page HTML, purge
 Cloudflare (Caching > Purge Everything, or the changed URLs): APO serves cached HTML (`cf-cache-status: HIT`)
 until then.
 

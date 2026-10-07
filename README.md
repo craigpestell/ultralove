@@ -24,7 +24,7 @@ Details (config locations, firewall, PHP-FPM sizing, backups): `documentation/AR
 | `wp-content/themes/martfury-child/` | Child theme customizations, incl. `css/critical.css` (generated - see `ops/critical-css/`) |
 | `wp-content/plugins/hide-price-until-login/` | Custom plugin |
 | `wp-content/plugins/ultralove-*/` | Custom plugins: Banners, Backdrops, product export sync, product stock export |
-| `wp-content/plugins/ultralove-dropshipping/` | Approved-retailer manual checkout pilot, development-only; see [pilot runbook](documentation/dropshipping-pilot.md) |
+| `wp-content/plugins/ultralove-dropshipping/` | Approved-retailer manual checkout, default off on each environment; see [dropshipping runbook](documentation/dropshipping-pilot.md) |
 | `wp-content/mu-plugins/` | Custom MU plugins (ManageWP's `0-worker.php` excluded) |
 | `wp-content/object-cache.php`, `cloudinary-*.php`, `run-cloudinary-workers.sh` | Redis drop-in and Cloudinary maintenance scripts |
 | `deploy/` | Deploy pipeline (see below) |
