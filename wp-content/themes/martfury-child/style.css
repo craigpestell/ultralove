@@ -2214,6 +2214,16 @@ html body {
     border: 1px solid #bfbfbf
 }
 
+/* Keep footer separators row-wide without changing the table's layout or content inset. */
+.woocommerce-checkout table.woocommerce-checkout-review-order-table tfoot tr {
+    background: linear-gradient(#ccc, #ccc) top / 100% 1px no-repeat
+}
+
+.woocommerce-checkout table.woocommerce-checkout-review-order-table tfoot th,
+.woocommerce-checkout table.woocommerce-checkout-review-order-table tfoot td {
+    border-top: 0
+}
+
 .woocommerce-checkout #payment .ul-payment-methods-panel {
     padding: 25px;
     background-color: #f6f6f6
@@ -2225,7 +2235,8 @@ html body {
     background-color: transparent
 }
 
-.woocommerce-checkout form.checkout .payments-title {
+.woocommerce-checkout form.checkout .payments-title,
+.woocommerce-checkout #order_comments_field {
     margin-top: var(--ul-region-gap)
 }
 
