@@ -1,5 +1,14 @@
 # Pending production release
 
+## Dev-only dropshipping pilot (not a production release)
+
+`ultralove-dropshipping` adds approved-retailer manual dropship checkout.
+Its option defaults off and its checkout gate only runs in development.
+Plugin activation, `ultralove_dropshipping_enabled=yes`, and individual user
+approvals are dev-only configuration steps, not production release instructions.
+See [the pilot runbook](dropshipping-pilot.md) for packing, verification, and
+rollback. Do not ship or enable the pilot on production without a separate review.
+
 Everything below is on **dev.ultralove.ca** and waits for the client's approval, then ships to
 production as one release. Code goes through `deploy/deploy.sh` (see the `ultralove-deploy` skill);
 the database / plugin steps are **not code** and have to be repeated on the production server by hand,
