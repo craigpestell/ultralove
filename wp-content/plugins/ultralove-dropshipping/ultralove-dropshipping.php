@@ -20,6 +20,8 @@ final class UltraLove_Dropshipping {
 	const EMAIL    = '_ultralove_dropship_retailer_email';
 
 	public static function init() {
+		add_action( 'admin_menu', array( __CLASS__, 'admin_menu' ) );
+		add_action( 'admin_post_ultralove_dropshipping_settings', array( __CLASS__, 'save_settings' ) );
 		add_action( 'show_user_profile', array( __CLASS__, 'profile' ) );
 		add_action( 'edit_user_profile', array( __CLASS__, 'profile' ) );
 		add_action( 'personal_options_update', array( __CLASS__, 'save_profile' ) );
@@ -36,6 +38,68 @@ final class UltraLove_Dropshipping {
 		add_action( 'woocommerce_email_before_order_table', array( __CLASS__, 'email_instructions' ), 10, 4 );
 		add_action( 'woocommerce_order_details_before_order_table', array( __CLASS__, 'order_instructions' ) );
 		add_filter( 'woocommerce_email_classes', array( __CLASS__, 'email_filters' ) );
+	}
+
+	public static function admin_menu() {
+		add_submenu_page( 'woocommerce', __( 'Dropshipping', 'ultralove-dropshipping' ), __( 'Dropshipping', 'ultralove-dropshipping' ), 'manage_options', 'ultralove-dropshipping', array( __CLASS__, 'admin_page' ) );
+	}
+
+	public static function save_settings() {
+		if ( ! current_user_can( 'manage_options' ) || 'development' !== wp_get_environment_type() ) {
+			wp_die( esc_html__( 'Only administrators can configure the development dropshipping pilot.', 'ultralove-dropshipping' ), '', array( 'response' => 403 ) );
+		}
+		check_admin_referer( 'ultralove_dropshipping_settings' );
+		update_option( self::OPTION, isset( $_POST['ultralove_dropshipping_enabled'] ) && 'yes' === $_POST['ultralove_dropshipping_enabled'] ? 'yes' : 'no' );
+		wp_safe_redirect( admin_url( 'admin.php?page=ultralove-dropshipping&updated=1' ) );
+		exit;
+	}
+
+	public static function admin_page() {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You cannot manage dropshipping.', 'ultralove-dropshipping' ), '', array( 'response' => 403 ) );
+		}
+		$development = 'development' === wp_get_environment_type();
+		$retailers   = get_users( array( 'meta_key' => self::APPROVAL, 'meta_value' => 'yes', 'number' => 100, 'orderby' => 'display_name' ) );
+		?>
+		<div class="wrap">
+			<h1><?php esc_html_e( 'Dropshipping', 'ultralove-dropshipping' ); ?></h1>
+			<?php if ( isset( $_GET['updated'] ) && '1' === $_GET['updated'] ) : ?>
+				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Dropshipping pilot settings saved.', 'ultralove-dropshipping' ); ?></p></div>
+			<?php endif; ?>
+			<p><?php esc_html_e( 'UltraLove ships an approved retailer order directly to one customer. Manual checkout pilot; no CSV order import or Shopify integration.', 'ultralove-dropshipping' ); ?></p>
+			<?php if ( $development ) : ?>
+				<form action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>" method="post">
+					<input type="hidden" name="action" value="ultralove_dropshipping_settings">
+					<?php wp_nonce_field( 'ultralove_dropshipping_settings' ); ?>
+					<p><label><input type="checkbox" name="ultralove_dropshipping_enabled" value="yes" <?php checked( self::enabled() ); ?>>
+						<?php esc_html_e( 'Enable the dropshipping pilot on this development site', 'ultralove-dropshipping' ); ?>
+					</label></p>
+					<p><?php esc_html_e( 'Turning this off blocks new dropship orders without deleting existing order markers or account approvals.', 'ultralove-dropshipping' ); ?></p>
+					<?php submit_button(); ?>
+				</form>
+			<?php else : ?>
+				<div class="notice notice-warning inline"><p><?php esc_html_e( 'The pilot is disabled outside development. Production requires a separate release review.', 'ultralove-dropshipping' ); ?></p></div>
+			<?php endif; ?>
+			<h2><?php esc_html_e( 'Retailer approval', 'ultralove-dropshipping' ); ?></h2>
+			<p><?php esc_html_e( 'Enable the pilot, then edit a retailer under Users and check Dropshipping pilot approval. Only administrators can approve accounts.', 'ultralove-dropshipping' ); ?>
+				<a href="<?php echo esc_url( admin_url( 'users.php' ) ); ?>"><?php esc_html_e( 'Manage users', 'ultralove-dropshipping' ); ?></a>
+			</p>
+			<h3><?php esc_html_e( 'Approved accounts (up to 100 shown)', 'ultralove-dropshipping' ); ?></h3>
+			<?php if ( $retailers ) : ?>
+				<ul>
+					<?php foreach ( $retailers as $retailer ) : ?>
+						<li><a href="<?php echo esc_url( get_edit_user_link( $retailer->ID ) ); ?>"><?php echo esc_html( $retailer->display_name ); ?></a></li>
+					<?php endforeach; ?>
+				</ul>
+			<?php else : ?>
+				<p><?php esc_html_e( 'No accounts have been approved.', 'ultralove-dropshipping' ); ?></p>
+			<?php endif; ?>
+			<h2><?php esc_html_e( 'Order handling', 'ultralove-dropshipping' ); ?></h2>
+			<p><?php echo esc_html( self::instructions() ); ?></p>
+			<p><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=shop_order' ) ); ?>"><?php esc_html_e( 'Open WooCommerce orders', 'ultralove-dropshipping' ); ?></a></p>
+			<p><?php esc_html_e( 'Dropship instructions appear on each marked order and its emails. Existing prices and shipping rules remain unchanged; no handling fee is added. Confirm payment and discreet packing manually before dispatch.', 'ultralove-dropshipping' ); ?></p>
+		</div>
+		<?php
 	}
 
 	public static function enabled() {

@@ -25,8 +25,8 @@ $assert          = function ( $condition, $message ) use ( &$checks ) {
 try {
 	update_option( UltraLove_Dropshipping::OPTION, 'yes' );
 	$suffix = strtolower( wp_generate_password( 12, false ) );
-	foreach ( array( 'approved', 'unapproved' ) as $kind ) {
-		$id = wp_insert_user( array( 'user_login' => 'dropship-test-' . $kind . '-' . $suffix, 'user_pass' => wp_generate_password( 32 ), 'user_email' => $kind . '-' . $suffix . '@example.invalid', 'role' => 'customer' ) );
+	foreach ( array( 'approved', 'unapproved', 'admin' ) as $kind ) {
+		$id = wp_insert_user( array( 'user_login' => 'dropship-test-' . $kind . '-' . $suffix, 'user_pass' => wp_generate_password( 32 ), 'user_email' => $kind . '-' . $suffix . '@example.invalid', 'role' => 'admin' === $kind ? 'administrator' : 'customer' ) );
 		if ( is_wp_error( $id ) ) {
 			throw new RuntimeException( $id->get_error_message() );
 		}
@@ -36,7 +36,23 @@ try {
 		$customer->save();
 	}
 	update_user_meta( $user_ids['approved'], UltraLove_Dropshipping::APPROVAL, 'yes' );
+	wp_set_current_user( $user_ids['admin'] );
+	ob_start();
+	UltraLove_Dropshipping::admin_page();
+	$admin_content = ob_get_clean();
+	$assert( false !== strpos( $admin_content, 'ultralove_dropshipping_enabled' ), 'WordPress admin must expose the pilot switch.' );
+	$assert( false !== strpos( $admin_content, 'user-edit.php?user_id=' . $user_ids['approved'] ), 'Admin page must link to approved retailer.' );
+	$_POST = array( 'ultralove_dropshipping_nonce' => wp_create_nonce( 'ultralove_dropshipping_approval_' . $user_ids['approved'] ) );
+	UltraLove_Dropshipping::save_profile( $user_ids['approved'] );
+	$assert( 'no' === get_user_meta( $user_ids['approved'], UltraLove_Dropshipping::APPROVAL, true ), 'Administrator can revoke approval.' );
+	$_POST['ultralove_dropshipping_approved'] = 'yes';
+	UltraLove_Dropshipping::save_profile( $user_ids['approved'] );
+	$assert( 'yes' === get_user_meta( $user_ids['approved'], UltraLove_Dropshipping::APPROVAL, true ), 'Administrator can approve retailer.' );
+	$_POST = array();
 	wp_set_current_user( $user_ids['approved'] );
+	ob_start();
+	UltraLove_Dropshipping::profile( get_userdata( $user_ids['approved'] ) );
+	$assert( '' === ob_get_clean(), 'Retailer cannot see self-approval controls.' );
 	wc_load_cart();
 	WC()->customer = new WC_Customer( $user_ids['approved'], true );
 	WC()->cart->empty_cart();

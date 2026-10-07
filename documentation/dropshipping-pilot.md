@@ -8,12 +8,14 @@ Shopify integration. Catalogue exports remain separate.
 
 Deploy the committed branch with `deploy/deploy.sh dev --ref <branch> --dry-run`,
 then `deploy/deploy.sh dev --ref <branch> --yes`. Activate
-`ultralove-dropshipping` and set `ultralove_dropshipping_enabled` to `yes` using
-WP-CLI on dev. The option defaults to `no`; the checkout feature refuses to
+**UltraLove Dropshipping** in Plugins, then open **WooCommerce > Dropshipping**.
+Check **Enable the dropshipping pilot on this development site** and save.
+The option defaults to `no`; the checkout feature refuses to
 run outside `WP_ENVIRONMENT_TYPE=development`.
 
-An administrator then edits a retailer in Users and checks the dropshipping
-approval. Existing accounts are not approved automatically. Removing approval
+The Dropshipping page links to Users, approved accounts, and WooCommerce orders.
+An administrator edits a retailer in Users and checks the dropshipping approval.
+Existing accounts are not approved automatically. Removing approval
 blocks new dropship orders, including checkout submissions already in progress.
 
 Do not change dev's email suppression, outbound HTTP block, webhook isolation,
@@ -59,8 +61,9 @@ recipient addresses followed by ordinary checkout, plus unauthorized and
 revoked approvals. Confirm retailer profile isolation, normal shipping totals,
 order metadata, and email recipients without sending mail.
 
-Disable new dropship checkouts with
-`wp option update ultralove_dropshipping_enabled no`.
+Disable new dropship checkouts by unchecking the pilot switch on
+**WooCommerce > Dropshipping** and saving. For command-line recovery,
+use `wp option update ultralove_dropshipping_enabled no`.
 Existing order markers and notification protection remain while the plugin is
 active. Prefer disabling the pilot over deactivating/removing the plugin when
 marked orders still need handling. Code rollback uses the deploy pipeline;
