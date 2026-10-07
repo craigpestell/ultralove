@@ -81,7 +81,7 @@ final class UltraLove_Dropshipping {
 				<div class="notice notice-warning inline"><p><?php esc_html_e( 'The pilot is disabled outside development. Production requires a separate release review.', 'ultralove-dropshipping' ); ?></p></div>
 			<?php endif; ?>
 			<h2><?php esc_html_e( 'Retailer approval', 'ultralove-dropshipping' ); ?></h2>
-			<p><?php esc_html_e( 'Enable the pilot, then edit a retailer under Users and check Dropshipping pilot approval. Only administrators can approve accounts.', 'ultralove-dropshipping' ); ?>
+			<p><?php esc_html_e( 'Enable the pilot, then edit a retailer under Users and check Dropshipping pilot approval.', 'ultralove-dropshipping' ); ?>
 				<a href="<?php echo esc_url( admin_url( 'users.php' ) ); ?>"><?php esc_html_e( 'Manage users', 'ultralove-dropshipping' ); ?></a>
 			</p>
 			<h3><?php esc_html_e( 'Approved accounts (up to 100 shown)', 'ultralove-dropshipping' ); ?></h3>
@@ -95,9 +95,8 @@ final class UltraLove_Dropshipping {
 				<p><?php esc_html_e( 'No accounts have been approved.', 'ultralove-dropshipping' ); ?></p>
 			<?php endif; ?>
 			<h2><?php esc_html_e( 'Order handling', 'ultralove-dropshipping' ); ?></h2>
-			<p><?php echo esc_html( self::instructions() ); ?></p>
+			<p><?php esc_html_e( 'Ship directly to the customer delivery address.', 'ultralove-dropshipping' ); ?></p>
 			<p><a href="<?php echo esc_url( admin_url( 'edit.php?post_type=shop_order' ) ); ?>"><?php esc_html_e( 'Open WooCommerce orders', 'ultralove-dropshipping' ); ?></a></p>
-			<p><?php esc_html_e( 'Dropship instructions appear on each marked order and its emails. Existing prices and shipping rules remain unchanged; no handling fee is added. Confirm payment and discreet packing manually before dispatch.', 'ultralove-dropshipping' ); ?></p>
 		</div>
 		<?php
 	}
