@@ -2205,6 +2205,43 @@ html body {
     color: var(--mf-primary-color)
 }
 
+.woocommerce-checkout-review-order-table .cart_item .product-name b {
+    font-weight: inherit
+}
+
+.woocommerce-checkout table.woocommerce-checkout-review-order-table,
+.woocommerce-checkout #payment .ul-payment-methods-panel {
+    border: 1px solid #bfbfbf
+}
+
+/* Keep separators row-wide without changing the table's layout or content inset. */
+.woocommerce-checkout table.woocommerce-checkout-review-order-table tbody tr:first-child,
+.woocommerce-checkout table.woocommerce-checkout-review-order-table tfoot tr {
+    background: linear-gradient(#ccc, #ccc) top / 100% 1px no-repeat
+}
+
+.woocommerce-checkout table.woocommerce-checkout-review-order-table tr > th,
+.woocommerce-checkout table.woocommerce-checkout-review-order-table tr > td {
+    border-top: 0;
+    border-bottom: 0
+}
+
+.woocommerce-checkout #payment .ul-payment-methods-panel {
+    padding: 25px;
+    background-color: #f6f6f6
+}
+
+.woocommerce-checkout #payment ul.wc_payment_methods {
+    padding: 0;
+    border: 0;
+    background-color: transparent
+}
+
+.woocommerce-checkout form.checkout .payments-title,
+.woocommerce-checkout #order_comments_field {
+    margin-top: var(--ul-region-gap)
+}
+
 /*
  * Every button on the site in one weight (500). Don't give individual buttons their own weight; a
  * genuine special case gets an explicit, commented exception after this rule. Covers native buttons
