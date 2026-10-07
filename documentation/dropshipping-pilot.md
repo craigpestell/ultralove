@@ -63,6 +63,9 @@ WooCommerce validation still runs on user interaction and checkout submission.
 While dropshipping is selected, the redundant **Ship to a different address?**
 toggle is hidden; the separate delivery address remains enabled. Opting out
 restores the normal toggle and destination choice.
+Recipient fields appear in a separate bordered **Customer delivery details**
+section, distinct from retailer billing. Its heading and styling disappear
+when opting out; ordinary shipping fields keep their existing appearance.
 
 ## Warehouse checklist
 
