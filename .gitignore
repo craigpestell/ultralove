@@ -51,3 +51,4 @@ desktop.ini
 /ops/**/.sync-staging/
 /ops/**/.dev-validation-passed
 /.claude/settings.local.json
+/.claude/worktrees/
