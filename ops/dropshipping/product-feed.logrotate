@@ -1,0 +1,10 @@
+/root/.ultralove-product-feed/reconcile.log {
+    daily
+    rotate 7
+    maxsize 5M
+    compress
+    missingok
+    notifempty
+    copytruncate
+    su root root
+}

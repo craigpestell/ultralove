@@ -1,0 +1,170 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "UltraLove Supplier Product Feed",
+    "version": "1.0.0",
+    "description": "Read-only supplier catalog. WooCommerce-compatible field names with explicit supplier extensions; not a drop-in wc/v3 API. All published products and published variations of published parents are included, including out-of-stock products. No product listing approval flag. Existing CSV exports are unchanged. Prices are supplier prices, not retailer markup. API stock quantities are not reservations."
+  },
+  "servers": [{"url": "https://dev.ultralove.ca/wp-json/ultralove-feed/v1"}],
+  "security": [{"ApplicationPassword": []}],
+  "paths": {
+    "/products": {
+      "get": {
+        "operationId": "listProducts",
+        "description": "Import all pages in ascending ID order. Save generation and change_cursor from the FIRST page, then replay changes after that cursor to catch updates during the import. Do not advance the saved change cursor using later snapshot pages.",
+        "parameters": [
+          {"$ref": "#/components/parameters/AfterId"},
+          {"$ref": "#/components/parameters/PerPage"},
+          {"$ref": "#/components/parameters/Ids"}
+        ],
+        "responses": {
+          "200": {"description": "Catalog page", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Products"}}}},
+          "default": {"$ref": "#/components/responses/Error"}
+        }
+      }
+    },
+    "/products/{id}": {
+      "get": {
+        "operationId": "getProduct",
+        "parameters": [{"name": "id", "in": "path", "required": true, "schema": {"type": "integer", "minimum": 1}}],
+        "responses": {
+          "200": {"description": "Current published product", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Product"}}}},
+          "default": {"$ref": "#/components/responses/Error"}
+        }
+      }
+    },
+    "/inventory": {
+      "get": {
+        "operationId": "listInventory",
+        "parameters": [
+          {"$ref": "#/components/parameters/AfterId"},
+          {"$ref": "#/components/parameters/PerPage"},
+          {"$ref": "#/components/parameters/Ids"}
+        ],
+        "responses": {
+          "200": {"description": "Current inventory page", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Inventories"}}}},
+          "default": {"$ref": "#/components/responses/Error"}
+        }
+      }
+    },
+    "/changes": {
+      "get": {
+        "operationId": "listChanges",
+        "description": "At-least-once current-state notifications, not historical product snapshots. Apply upserts by product ID and removals idempotently. Save cursor only after applying the entire page; repeat until has_more=false. Delivery cursors are allocated after producer commits, so event creation order is not cursor order. Seven-day retention; 409 feed_resync_required requires a new full import. Normal WooCommerce updates are journaled immediately. Reconciliation catches bypassed hooks within a full scheduled scan.",
+        "parameters": [
+          {"name": "after", "in": "query", "required": true, "schema": {"type": "integer", "minimum": 0}},
+          {"name": "generation", "in": "query", "required": true, "schema": {"type": "string", "format": "uuid"}},
+          {"$ref": "#/components/parameters/PerPage"}
+        ],
+        "responses": {
+          "200": {"description": "Ordered change page", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Changes"}}}},
+          "default": {"$ref": "#/components/responses/Error"}
+        }
+      }
+    },
+    "/openapi": {
+      "get": {
+        "operationId": "getContract",
+        "responses": {"200": {"description": "This OpenAPI 3.1 contract"}, "default": {"$ref": "#/components/responses/Error"}}
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "ApplicationPassword": {
+        "type": "http",
+        "scheme": "basic",
+        "description": "WordPress username and revocable application password over HTTPS, not an ordinary login password. Account requires ultralove_read_product_feed, or existing manage_woocommerce permission. Application passwords inherit the account's other WordPress capabilities: do not issue administrator credentials to resellers. Dev also remains behind Cloudflare Access. 300 requests per account per minute; 429 includes Retry-After. Responses are private/no-store."
+      }
+    },
+    "parameters": {
+      "AfterId": {"name": "after_id", "in": "query", "schema": {"type": "integer", "minimum": 0, "default": 0}},
+      "PerPage": {"name": "per_page", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 100, "default": 100}},
+      "Ids": {
+        "name": "ids[]", "in": "query", "style": "form", "explode": true,
+        "description": "Optional product IDs. Supply repeated ids[]=17186 values. Unpublished/nonexistent IDs do not appear.",
+        "schema": {"type": "array", "maxItems": 100, "items": {"type": "integer", "minimum": 1}}
+      }
+    },
+    "responses": {
+      "Error": {
+        "description": "400 invalid parameters/cursor; 401 unauthenticated; 403 forbidden; 404 unpublished/missing product; 409 full resync required; 429 rate limit; 503 feed unavailable. WordPress authentication and unsupported-method errors retain their native error codes.",
+        "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Error"}}}
+      }
+    },
+    "schemas": {
+      "InventoryCore": {
+        "type": "object",
+        "required": ["id", "parent_id", "sku", "manage_stock", "stock_quantity", "stock_status", "backorders", "stock_owner_id"],
+        "properties": {
+          "id": {"type": "integer", "minimum": 1},
+          "parent_id": {"type": "integer", "minimum": 0},
+          "sku": {"type": "string", "description": "Existing SKU; may be empty. Use id for identity, not title or array position."},
+          "manage_stock": {"type": "boolean"},
+          "stock_quantity": {"type": ["integer", "null"], "description": "WooCommerce stock quantity; null means no managed quantity. Negative quantities can occur with backorders. Not a guaranteed available-to-promise/reserved quantity."},
+          "stock_status": {"type": "string", "enum": ["instock", "outofstock", "onbackorder"]},
+          "backorders": {"type": "string", "enum": ["no", "notify", "yes"]},
+          "stock_owner_id": {"type": "integer", "minimum": 1, "description": "Supplier extension: parent ID when variations share parent-managed stock. Do not sum shared quantities."}
+        }
+      },
+      "Inventory": {"allOf": [{"$ref": "#/components/schemas/InventoryCore"}], "unevaluatedProperties": false},
+      "Product": {
+        "allOf": [
+          {"$ref": "#/components/schemas/InventoryCore"},
+          {
+            "type": "object",
+            "required": ["name", "type", "permalink", "description", "short_description", "price", "regular_price", "sale_price", "currency", "prices_include_tax", "date_modified_gmt", "global_unique_id", "images", "categories", "brands", "attributes", "variations"],
+            "properties": {
+              "name": {"type": "string"},
+              "type": {"type": "string", "description": "WooCommerce product type, including variation. All published types remain visible."},
+              "permalink": {"type": "string", "format": "uri"},
+              "description": {"type": "string", "description": "Sanitized HTML."},
+              "short_description": {"type": "string", "description": "Sanitized HTML. Unlike the legacy CSV Excerpt column, this is the actual short description."},
+              "price": {"type": "string", "description": "Active WooCommerce supplier price; decimal string, or empty if unset."},
+              "regular_price": {"type": "string"},
+              "sale_price": {"type": "string"},
+              "currency": {"type": "string", "pattern": "^[A-Z]{3}$"},
+              "prices_include_tax": {"type": "boolean", "description": "How WooCommerce stores these prices; not an order tax calculation."},
+              "date_modified_gmt": {"type": ["string", "null"], "format": "date-time", "description": "Informational only; do not use as the incremental stock cursor."},
+              "global_unique_id": {"type": "string", "description": "Native WooCommerce identifier, falling back to existing hwp_product_gtin UPC metadata. Preserve leading zeros; never fabricate a GTIN."},
+              "images": {"type": "array", "items": {"type": "object", "required": ["id", "src", "alt"], "additionalProperties": false, "properties": {"id": {"type": "integer", "minimum": 1}, "src": {"type": "string", "format": "uri"}, "alt": {"type": "string"}}}},
+              "categories": {"type": "array", "items": {"$ref": "#/components/schemas/Term"}},
+              "brands": {"type": "array", "items": {"$ref": "#/components/schemas/Term"}},
+              "attributes": {"type": "array", "items": {"type": "object", "required": ["name", "options"], "additionalProperties": false, "properties": {"name": {"type": "string"}, "options": {"type": "array", "items": {"type": "string"}}}}},
+              "variations": {"type": "array", "items": {"type": "integer", "minimum": 1}}
+            }
+          }
+        ],
+        "unevaluatedProperties": false
+      },
+      "Term": {"type": "object", "required": ["id", "name", "slug"], "additionalProperties": false, "properties": {"id": {"type": "integer", "minimum": 1}, "name": {"type": "string"}, "slug": {"type": "string"}}},
+      "SnapshotCore": {
+        "type": "object",
+        "required": ["generation", "change_cursor", "next_after_id", "has_more"],
+        "properties": {"generation": {"type": "string", "format": "uuid"}, "change_cursor": {"type": "integer", "minimum": 0}, "next_after_id": {"type": "integer", "minimum": 0}, "has_more": {"type": "boolean"}}
+      },
+      "Products": {"allOf": [{"$ref": "#/components/schemas/SnapshotCore"}, {"type": "object", "required": ["products"], "properties": {"products": {"type": "array", "maxItems": 100, "items": {"$ref": "#/components/schemas/Product"}}}}], "unevaluatedProperties": false},
+      "Inventories": {"allOf": [{"$ref": "#/components/schemas/SnapshotCore"}, {"type": "object", "required": ["inventory"], "properties": {"inventory": {"type": "array", "maxItems": 100, "items": {"$ref": "#/components/schemas/Inventory"}}}}], "unevaluatedProperties": false},
+      "Changes": {
+        "type": "object", "additionalProperties": false,
+        "required": ["generation", "cursor", "latest_cursor", "has_more", "changes"],
+        "properties": {
+          "generation": {"type": "string", "format": "uuid"},
+          "cursor": {"type": "integer", "minimum": 0},
+          "latest_cursor": {"type": "integer", "minimum": 0},
+          "has_more": {"type": "boolean"},
+          "changes": {
+            "type": "array", "maxItems": 100,
+            "items": {
+              "type": "object", "additionalProperties": false,
+              "required": ["cursor", "id", "action", "product", "changed_at"],
+              "properties": {"cursor": {"type": "integer", "minimum": 1}, "id": {"type": "integer", "minimum": 1}, "action": {"type": "string", "enum": ["upsert", "delete"]}, "product": {"oneOf": [{"$ref": "#/components/schemas/Product"}, {"type": "null"}]}, "changed_at": {"type": "string", "format": "date-time"}},
+              "allOf": [{"if": {"properties": {"action": {"const": "delete"}}}, "then": {"properties": {"product": {"type": "null"}}}, "else": {"properties": {"product": {"$ref": "#/components/schemas/Product"}}}}]
+            }
+          }
+        }
+      },
+      "Error": {"type": "object", "required": ["code", "message", "data"], "properties": {"code": {"type": "string"}, "message": {"type": "string"}, "data": {"type": "object", "required": ["status"], "properties": {"status": {"type": "integer", "minimum": 400, "maximum": 599}}}}}
+    }
+  }
+}

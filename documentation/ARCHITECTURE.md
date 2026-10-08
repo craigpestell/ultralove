@@ -305,6 +305,13 @@ initial markup, show status/mappings, and expose nonce-protected test tracking
 on bridge-created WooCommerce orders. The plugin defaults off and refuses
 production even if its options are copied.
 
+The client confirmed that resellers may add **any UltraLove catalog product**
+to their own catalog. No per-product dropshipping listing flag or supplier
+listing approval is required. Keep reseller product selection separate from
+stock/order availability. The three-product selection, 25-product cap, and
+simple-product checks are technical pilot limits only; the test connector is
+not yet a full-catalog reseller browsing/import interface.
+
 Feature branch `feat/dev-shopify-supplier` / draft PR #138 deployed through the
 normal drift-safe pipeline; the first deployment was commit `0a43a88` and added
 only the two new supplier PHP files. CI and origin smoke tests passed.
