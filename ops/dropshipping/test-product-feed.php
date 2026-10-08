@@ -109,8 +109,9 @@ $posts = array(
     4 => (object) array( 'post_type' => 'product_variation', 'post_status' => 'publish', 'post_parent' => 2 ),
     5 => (object) array( 'post_type' => 'product_variation', 'post_status' => 'private', 'post_parent' => 1 ),
     6 => (object) array( 'post_type' => 'page', 'post_status' => 'publish', 'post_parent' => 0 ),
+    9 => (object) array( 'post_type' => 'product_variation', 'post_status' => 'publish', 'post_parent' => 99 ),
 );
-foreach ( array( 1 => true, 2 => false, 3 => true, 4 => false, 5 => false, 6 => false, 7 => false ) as $id => $visible ) {
+foreach ( array( 1 => true, 2 => false, 3 => true, 4 => false, 5 => false, 6 => false, 7 => false, 9 => false ) as $id => $visible ) {
     $assert( UltraLove_Product_Feed::visible( $id ) === $visible, 'Published catalog visibility: ' . $id );
 }
 $products = array( 1 => new WC_Product( 1, 0, true, 'outofstock' ), 3 => new WC_Product( 3, 12, true, 'instock', 1 ), 8 => new WC_Product( 8, null, false ) );

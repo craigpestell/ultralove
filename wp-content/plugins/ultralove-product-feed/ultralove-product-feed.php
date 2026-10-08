@@ -212,7 +212,7 @@ final class UltraLove_Product_Feed {
     }
 
     public static function catalog_condition(): string {
-        return "(p.post_status='publish' AND (p.post_type='product' OR (p.post_type='product_variation' AND parent.post_type='product' AND parent.post_status='publish')))";
+        return "(p.post_status='publish' AND (p.post_type='product' OR (p.post_type='product_variation' AND parent.ID IS NOT NULL AND parent.post_type='product' AND parent.post_status='publish')))";
     }
 
     public static function catalog_ids( int $after, int $limit, array $ids = array() ): array {

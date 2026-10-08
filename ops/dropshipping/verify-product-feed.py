@@ -16,6 +16,7 @@ import jsonschema
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--schema-only", action="store_true")
+parser.add_argument("--benchmark-only", action="store_true")
 parser.add_argument("--spec", default="/var/www/html/wp-content/plugins/ultralove-product-feed/openapi.json")
 options = parser.parse_args()
 spec = json.loads(Path(options.spec).read_text())
@@ -64,9 +65,10 @@ def validate(data, name):
     jsonschema.Draft202012Validator(schema, format_checker=jsonschema.FormatChecker()).validate(data)
 
 
-control("setup")
+if not options.benchmark_only:
+    control("setup")
 client = json.loads((directory / "client.json").read_text())
-denied = json.loads((directory / "denied.json").read_text())
+denied = None if options.benchmark_only else json.loads((directory / "denied.json").read_text())
 fixture = json.loads((directory / "fixture.json").read_text())
 product_id = fixture["id"]
 
@@ -101,6 +103,33 @@ def changes(after, generation, per_page=100):
     return success("/changes?" + query, "Changes")
 
 
+if options.benchmark_only:
+    control("rate-reset")
+    control("cold-cache")
+    status, body, _, cold_catalog = request("/products?per_page=100")
+    check(status == 200, "cold product page served after targeted product-cache invalidation")
+    validate(body, "Products")
+    control("cold-cache")
+    status, body, _, cold_inventory = request("/inventory?per_page=50")
+    check(status == 200, "cold inventory page served after targeted product-cache invalidation")
+    validate(body, "Inventories")
+    report = {"cold_catalog_seconds": cold_catalog, "cold_inventory_seconds": cold_inventory}
+    for path, schema, key in (("/products?per_page=100", "Products", "catalog_p95_seconds"),
+                              ("/inventory?per_page=50", "Inventories", "inventory_p95_seconds")):
+        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+            timings = list(executor.map(lambda _: request(path), range(30)))
+        check(all(item[0] == 200 for item in timings), f"five concurrent clients successfully read {path}")
+        for _, data, _, _ in timings:
+            validate(data, schema)
+        durations = sorted(item[3] for item in timings)
+        p95 = durations[math.ceil(0.95 * len(durations)) - 1]
+        check(p95 <= 2.0, f"{key} {p95:.3f}s <= 2s")
+        report[key] = p95
+    (directory / "performance.json").write_text(json.dumps(report))
+    (directory / "performance.json").chmod(0o600)
+    print("METRICS:", json.dumps(report), flush=True)
+    raise SystemExit(0)
+
 producer = None
 producer_log = None
 try:
@@ -132,6 +161,10 @@ try:
     check(len(inventory["inventory"]) == 1 and inventory["inventory"][0]["stock_quantity"] == fixture["stock"], "inventory filter matches current source quantity")
     record = success("/products/" + str(product_id), "Product")
     check(record["id"] == product_id and "meta_data" not in record and "purchase_note" not in record, "product response is schema-valid and excludes private metadata")
+    control("access-revoke")
+    check(request("/inventory?per_page=1")[0] == 403, "nonce-protected staff account control revokes API access")
+    control("access-grant")
+    check(request("/inventory?per_page=1")[0] == 200, "nonce-protected staff account control restores API access")
 
     control("stock")
     check(success("/products/" + str(product_id), "Product")["stock_quantity"] == fixture["stock"] - 1, "stock change visible on next HTTP request")
@@ -207,6 +240,7 @@ finally:
         producer.wait(timeout=30)
     if producer_log:
         producer_log.close()
+    control("access-grant")
     control("restore")
     control("rate-reset")
     control("cleanup")

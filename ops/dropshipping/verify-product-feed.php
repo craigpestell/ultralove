@@ -130,9 +130,30 @@ if ( $mode === 'setup' ) {
             $current = hash_file( 'sha256', trailingslashit( wp_upload_dir()['basedir'] ) . $name );
             if ( $current !== $hash ) { WP_CLI::error( 'CSV changed during read-only API verification: ' . $name ); }
         }
+    } elseif ( $mode === 'cold-cache' ) {
+        foreach ( UltraLove_Product_Feed::catalog_ids( 0, 100 ) as $cold_id ) {
+            clean_post_cache( $cold_id );
+            wc_delete_product_transients( $cold_id );
+        }
+    } elseif ( $mode === 'access-grant' || $mode === 'access-revoke' ) {
+        $client = json_decode( file_get_contents( $directory . 'client.json' ), true, 512, JSON_THROW_ON_ERROR );
+        $administrators = get_users( array( 'role' => 'administrator', 'number' => 1 ) );
+        if ( ! $administrators ) { WP_CLI::error( 'A dev administrator is required for account control verification.' ); }
+        $previous = get_current_user_id();
+        $post = $_POST;
+        wp_set_current_user( $administrators[0]->ID );
+        try {
+            $_POST = array( 'ultralove_feed_nonce' => wp_create_nonce( 'ultralove_feed_access_' . $client['user_id'] ) );
+            if ( $mode === 'access-grant' ) { $_POST['ultralove_feed_access'] = '1'; }
+            UltraLove_Product_Feed::save_profile( $client['user_id'] );
+        } finally {
+            $_POST = $post;
+            wp_set_current_user( $previous );
+        }
     } elseif ( $mode === 'cleanup' ) {
         $denied = json_decode( file_get_contents( $directory . 'denied.json' ), true, 512, JSON_THROW_ON_ERROR );
-        if ( ! WP_Application_Passwords::delete_application_password( $denied['user_id'], $denied['uuid'] ) ) {
+        $deleted = WP_Application_Passwords::delete_application_password( $denied['user_id'], $denied['uuid'] );
+        if ( is_wp_error( $deleted ) || ! $deleted ) {
             WP_CLI::error( 'Could not revoke own denied test credential.' );
         }
         unlink( $directory . 'denied.json' );
