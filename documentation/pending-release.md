@@ -27,6 +27,12 @@ in the order listed.
 
 ## Code
 
+**Update cart icon removal** - the child theme suppresses the parent theme's
+decorative `::before` icon on cart/checkout tables to avoid the reported Firefox
+artifact. The button label, shared spacing, and cart-update behavior are unchanged.
+Code-only change for dev preview; production awaits approval. No database or
+plugin-setting changes are required.
+
 **Checkout checkbox visibility** - dev preview, awaiting user testing and production approval.
 The child theme draws outlined unchecked boxes and pink checked boxes with white ticks
 without relying on the reduced icon font. This covers the terms agreement and other
