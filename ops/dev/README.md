@@ -16,7 +16,7 @@ network and had prod's keys; it was compromised on 2026-09-18 and destroyed.)
 | Data | Anonymized copy of prod. `DEV_KEEP_EMAILS` accounts (Craig, client) kept intact to log in |
 | Uploads | Not copied; nginx 302-redirects missing `/wp-content/uploads/*` to ultralove.ca |
 | Code | Custom code: `deploy/deploy.sh dev` (auto on merge to main). Core/vendor plugins: copied from prod |
-| wp-config | Dev-only: own DB creds + salts, `WP_ENVIRONMENT_TYPE=development`, `DISALLOW_FILE_MODS`, WP-cron off, outbound HTTP blocked except wordpress.org |
+| wp-config | Dev-only: own DB creds + salts, `WP_ENVIRONMENT_TYPE=development`, `DISALLOW_FILE_MODS`, WP-cron off, outbound HTTP blocked except the existing WordPress hosts and the exact Shopify integration test-store hostname |
 | Side effects | mu-plugin `00-ultralove-environment-guard` suppresses all email; plugins holding live credentials (Mailgun, Mailchimp, Updraft, Cloudflare, Cloudinary, ManageWP, Jetpack) are deactivated; webhooks disabled; pending scheduled actions cancelled |
 
 ## Scripts
@@ -66,3 +66,68 @@ Plugin/WordPress updates: update on dev first by copying the new version into de
   `wp cloudinary unsync` CLI (`php/class-connect.php`, `php/sync/class-unsync.php`,
   `php/traits/trait-cli.php`; May 2026). Re-apply or confirm upstream fixes after updating.
 - `revslider`: Cloudinary optimization customization (see documentation/ARCHITECTURE.md).
+
+## Shopify supplier test workflow
+
+**Status: prepared locally, not deployed or connected on dev yet.**
+Deployment is awaiting approval to commit/push the feature branch. The setup
+below describes the intended configuration; no dev credentials, cron entry,
+or Shopify egress exception have been installed yet.
+
+**WooCommerce > Shopify Supplier** controls the dev-only
+`ultralove-shopify-supplier` plugin. It remains disabled on production regardless
+of copied options. Only the Shopify development store
+`ultralove-integration-lab.myshopify.com` is supported; no other Shopify hostname
+is permitted by the outbound allowlist.
+
+Select up to 25 **existing** published simple products with SKUs, prices, and
+managed stock, an approved dropshipping retailer, and an initial retail markup.
+No synthetic products are created on dev. The initial pilot will select existing
+product IDs `17186`, `17188`, and `17192` (SKUs `1513`, `2455`, `70072`).
+Imports are Shopify drafts with dev-specific handles, variant mappings, and the
+tag `ultralove-dev-supplier`. Stock sync preserves retailer-edited prices.
+Deselection stops forwarding; manually archive a Shopify draft if it is no
+longer needed.
+
+The CLI command `wp ultralove shopify sync` runs under the root-only system
+worker, not as a browser callback or public webhook. Credentials and logs live
+in `/root/.ultralove-shopify-dev/` with permissions `0600`; credentials are never
+stored in WordPress options or displayed by the admin page. The five-minute cron
+entry is `/etc/cron.d/ultralove-shopify-dev`. The earlier integration-lab worker
+must be paused before handing supplier ownership to dev.
+
+Only paid Shopify **test** orders tagged `ultralove-dev-supplier` are accepted.
+Use the fictional delivery recipient `Synthetic Recipient` at
+`123 Synthetic Street` and a complete Canadian test address. Product lines are
+real catalog items; test customers/orders are deliberately not real transactions.
+Orders belong to the chosen approved retailer and use its billing email and
+WooCommerce product prices. They start on hold without supplier payment.
+Shipping and tax are excluded from these integration-test totals.
+Email suppression, payment configuration, Access, and disabled external
+integrations remain unchanged.
+
+Bridge-created orders expose **Shopify test tracking** under their shipping
+details. Enter a `LAB-` number and mark the test order completed to return
+tracking for supplier-owned lines only, without notifying the recipient.
+Already-forwarded tracking cannot be changed silently.
+
+Verification:
+
+```sh
+php ops/dropshipping/test-shopify-supplier.php
+# On dev, with the committed verifier uploaded outside the web root:
+wp --allow-root --path=/var/www/html eval-file /root/.ultralove-shopify-dev/verify-shopify-bridge.php
+wp --allow-root --path=/var/www/html ultralove shopify sync
+```
+
+The live verifier uses selected existing products, temporarily adjusts/restores
+dev stock, creates/deletes only its own test orders, and checks mixed-line
+isolation, wholesale attribution, stock synchronization, retry behavior, and
+tracking. It does not create products, change production inventory, enable a
+payment gateway, or make a real supplier payment. Run it with at least two
+selected products and positive stock on the first product.
+
+Disable the connection on **WooCommerce > Shopify Supplier** to stop the worker
+without deleting mappings/orders. Remove only `/etc/cron.d/ultralove-shopify-dev`
+to pause scheduling. Revoke the app credential separately if retiring the
+connection. This is not independent-retailer OAuth or a production rollout.

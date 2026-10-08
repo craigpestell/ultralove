@@ -1,0 +1,15 @@
+#cloud-config
+ssh_pwauth: false
+write_files:
+  - path: /etc/ultralove-integration-lab
+    permissions: '0644'
+    content: |
+      ultralove-integration-lab
+  - path: /etc/ssh/sshd_config.d/00-integration-lab.conf
+    permissions: '0644'
+    content: |
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      PermitRootLogin prohibit-password
+runcmd:
+  - [systemctl, reload, ssh]

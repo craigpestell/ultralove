@@ -22,6 +22,7 @@ P /mu-plugins/0-worker.php
 + /plugins/
 + /plugins/hide-price-until-login/***
 + /plugins/ultralove-*/***
+# Includes ultralove-shopify-supplier; deploy it only through the normal pipeline.
 
 + /themes/
 + /themes/martfury/***

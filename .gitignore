@@ -25,6 +25,7 @@
 /wp-content/plugins/*
 !/wp-content/plugins/hide-price-until-login/
 !/wp-content/plugins/ultralove-*/
+# Shopify supplier code is covered by the custom-plugin whitelist above.
 
 !/wp-content/themes/
 /wp-content/themes/*
