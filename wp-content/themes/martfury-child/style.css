@@ -3813,10 +3813,9 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     color: var(--ul-btn-pink)
 }
 
-/* Remember me: Martfury hides the real checkbox and draws one with a Linearicons glyph - an empty glyph
-   when unchecked (so no box showed at all) and one the child theme's icon subset doesn't include when
-   checked. Drawn in CSS instead: a lavender-bordered box, pink with a white tick when checked. */
-.woocommerce .customer-login .woocommerce-form__label-for-checkbox span:before {
+/* Martfury's empty checkbox glyph is missing from the icon subset. Draw the box and tick without fonts. */
+.woocommerce .customer-login .woocommerce-form__label-for-checkbox span:before,
+.woocommerce-checkout form .woocommerce-form__label-for-checkbox > .woocommerce-form__input-checkbox + span:not(.required):before {
     content: "";
     top: -2px;
     width: 18px;
@@ -3829,14 +3828,41 @@ body:not(.logged-in) .entry-summary .ced_hpul_single_summary_wrapper > span:firs
     transition: background-color .15s ease, border-color .15s ease
 }
 
-.woocommerce .customer-login .woocommerce-form__label-for-checkbox .woocommerce-form__input-checkbox:checked + span:before {
+.woocommerce .customer-login .woocommerce-form__label-for-checkbox .woocommerce-form__input-checkbox:checked + span:before,
+.woocommerce-checkout form .woocommerce-form__label-for-checkbox > .woocommerce-form__input-checkbox:checked + span:not(.required):before {
     content: "";
     border-color: var(--ul-btn-pink);
     background: var(--ul-btn-pink) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E") center / 14px no-repeat
 }
 
-.woocommerce .customer-login .woocommerce-form__label-for-checkbox .woocommerce-form__input-checkbox:focus-visible + span:before {
+.woocommerce .customer-login .woocommerce-form__label-for-checkbox .woocommerce-form__input-checkbox:focus-visible + span:before,
+.woocommerce-checkout form .woocommerce-form__label-for-checkbox > .woocommerce-form__input-checkbox:focus-visible + span:not(.required):before {
     box-shadow: 0 0 0 3px rgba(177,101,255,.3)
+}
+
+.woocommerce-checkout form .woocommerce-form__label-for-checkbox > .woocommerce-form__input-checkbox,
+.woocommerce-checkout form.checkout .woocommerce-form__label-for-checkbox > .woocommerce-form__input-checkbox {
+    display: inline-block;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap
+}
+
+.woocommerce-checkout form .woocommerce-form__label-for-checkbox > .woocommerce-form__input-checkbox + span:not(.required) {
+    padding-left: 28px;
+    line-height: 1.5
+}
+
+.woocommerce-checkout form .woocommerce-form__label-for-checkbox > .woocommerce-form__input-checkbox + span:not(.required):before {
+    top: 1px;
+    left: 0
 }
 
 /*

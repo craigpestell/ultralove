@@ -27,6 +27,16 @@ in the order listed.
 
 ## Code
 
+**Checkout checkbox visibility** - dev preview, awaiting user testing and production approval.
+The child theme draws outlined unchecked boxes and pink checked boxes with white ticks
+without relying on the reduced icon font. This covers the terms agreement and other
+standard checkout checkbox labels, including checkout login's Remember me, account
+creation, and alternate shipping address where available. Hidden inputs remain
+keyboard-focusable with a visible focus ring. Native/plugin-specific checkbox markup
+and payment/shipping radios are unchanged. Targeted browser fixtures passed against
+trimmed desktop and original phone styles; full cart/checkout testing is left to the user.
+No database or plugin-setting changes are required.
+
 The pre-dropshipping production baseline is `708abcd` (verified 2026-10-07).
 The dropshipping release follows the disabled-rollout procedure above on the
 production droplet (Ubuntu 26.04, PHP 8.5 - see `documentation/ARCHITECTURE.md` 1.3).
