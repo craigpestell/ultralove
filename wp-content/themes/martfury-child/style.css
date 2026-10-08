@@ -2391,6 +2391,12 @@ html body :is(button, .button, .btn, .btn-primary, .btn-primary-small, .btn-prim
     border-color: var(--ul-btn-pink)
 }
 
+/* Remove the parent theme's icon-font glyph; keep the Update cart label and shared button spacing. */
+:is(#page, #mf-quick-view-modal) :where(.woocommerce table.cart .btn-update, .woocommerce table.checkout .btn-update)::before {
+    content: none;
+    display: none
+}
+
 /* Tertiary. */
 :is(#page, #mf-quick-view-modal, .swal2-container) :where(.ul-btn--tertiary, .show-password-input) {
     color: var(--ul-btn-plum);
