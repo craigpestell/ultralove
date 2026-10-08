@@ -256,12 +256,17 @@ final class UltraLove_Product_Feed {
         $parent = $product->get_parent_id() ? wc_get_product( $product->get_parent_id() ) : null;
         $taxonomy_id = $parent ? $parent->get_id() : $id;
         $images = array();
+        $warnings = array();
         $image_id = $product->get_image_id() ?: ( $parent ? $parent->get_image_id() : 0 );
         $gallery = $parent ? $parent->get_gallery_image_ids() : $product->get_gallery_image_ids();
         foreach ( array_unique( array_filter( array_merge( array( $image_id ), $gallery ) ) ) as $attachment ) {
             $url = wp_get_attachment_url( $attachment );
             if ( ! $url ) {
-                throw new RuntimeException( 'Missing catalog image ' . $attachment . ' for product ' . $id );
+                $warnings[] = array( 'code' => 'missing_image', 'attachment_id' => (int) $attachment );
+                $message = 'Missing catalog image ' . $attachment . ' for product ' . $id;
+                wc_get_logger()->warning( $message, array( 'source' => 'ultralove-product-feed' ) );
+                error_log( '[ultralove-product-feed] ' . $message );
+                continue;
             }
             $images[] = array( 'id' => (int) $attachment, 'src' => $url, 'alt' => (string) get_post_meta( $attachment, '_wp_attachment_image_alt', true ) );
         }
@@ -289,7 +294,7 @@ final class UltraLove_Product_Feed {
             'currency' => get_woocommerce_currency(), 'prices_include_tax' => wc_prices_include_tax(),
             'date_modified_gmt' => $modified ? gmdate( 'Y-m-d\TH:i:s\Z', $modified->getTimestamp() ) : null,
             'global_unique_id' => $product->get_global_unique_id() ?: (string) get_post_meta( $id, 'hwp_product_gtin', true ),
-            'images' => $images, 'categories' => self::terms( $taxonomy_id, 'product_cat' ),
+            'images' => $images, 'data_warnings' => $warnings, 'categories' => self::terms( $taxonomy_id, 'product_cat' ),
             'brands' => self::terms( $taxonomy_id, 'product_brand' ), 'attributes' => $attributes,
             'variations' => $product->is_type( 'variable' )
                 ? array_values( array_filter( array_map( 'intval', $product->get_children() ), array( __CLASS__, 'visible' ) ) ) : array(),
@@ -347,6 +352,7 @@ final class UltraLove_Product_Feed {
 
     public static function log_error( string $message ): void {
         wc_get_logger()->error( $message, array( 'source' => 'ultralove-product-feed' ) );
+        error_log( '[ultralove-product-feed] ' . $message );
     }
 }
 UltraLove_Product_Feed::init();

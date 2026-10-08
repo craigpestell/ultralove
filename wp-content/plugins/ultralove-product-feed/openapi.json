@@ -113,7 +113,7 @@
           {"$ref": "#/components/schemas/InventoryCore"},
           {
             "type": "object",
-            "required": ["name", "type", "permalink", "description", "short_description", "price", "regular_price", "sale_price", "currency", "prices_include_tax", "date_modified_gmt", "global_unique_id", "images", "categories", "brands", "attributes", "variations"],
+            "required": ["name", "type", "permalink", "description", "short_description", "price", "regular_price", "sale_price", "currency", "prices_include_tax", "date_modified_gmt", "global_unique_id", "images", "data_warnings", "categories", "brands", "attributes", "variations"],
             "properties": {
               "name": {"type": "string"},
               "type": {"type": "string", "description": "WooCommerce product type, including variation. All published types remain visible."},
@@ -128,6 +128,7 @@
               "date_modified_gmt": {"type": ["string", "null"], "format": "date-time", "description": "Informational only; do not use as the incremental stock cursor."},
               "global_unique_id": {"type": "string", "description": "Native WooCommerce identifier, falling back to existing hwp_product_gtin UPC metadata. Preserve leading zeros; never fabricate a GTIN."},
               "images": {"type": "array", "items": {"type": "object", "required": ["id", "src", "alt"], "additionalProperties": false, "properties": {"id": {"type": "integer", "minimum": 1}, "src": {"type": "string", "format": "uri"}, "alt": {"type": "string"}}}},
+              "data_warnings": {"type": "array", "description": "Explicit source data-quality issues. Missing attachment references are omitted from images, not invented or used to exclude products.", "items": {"type": "object", "required": ["code", "attachment_id"], "additionalProperties": false, "properties": {"code": {"const": "missing_image"}, "attachment_id": {"type": "integer", "minimum": 1}}}},
               "categories": {"type": "array", "items": {"$ref": "#/components/schemas/Term"}},
               "brands": {"type": "array", "items": {"$ref": "#/components/schemas/Term"}},
               "attributes": {"type": "array", "items": {"type": "object", "required": ["name", "options"], "additionalProperties": false, "properties": {"name": {"type": "string"}, "options": {"type": "array", "items": {"type": "string"}}}}},

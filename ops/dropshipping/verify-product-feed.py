@@ -25,7 +25,12 @@ assert spec["openapi"] == "3.1.0"
 assert all(set(path) == {"get"} for path in spec["paths"].values())
 assert set(spec["paths"]) == {"/products", "/products/{id}", "/inventory", "/changes", "/openapi"}
 if options.schema_only:
-    print("PASS: OpenAPI contract and all JSON schemas validated.")
+    samples = subprocess.run(["php", str(Path(__file__).with_name("test-product-feed.php")), "--samples"], text=True, capture_output=True, check=True)
+    payload = next(line.split("FEED-SAMPLES:", 1)[1] for line in samples.stdout.splitlines() if "FEED-SAMPLES:" in line)
+    validator = jsonschema.Draft202012Validator({"components": spec["components"], "$ref": "#/components/schemas/Product"}, format_checker=jsonschema.FormatChecker())
+    for sample in json.loads(payload):
+        validator.validate(sample)
+    print("PASS: OpenAPI schemas and isolated simple/variation product responses validated.")
     raise SystemExit(0)
 
 directory = Path("/root/.ultralove-product-feed")
@@ -111,13 +116,16 @@ try:
     generation = first["generation"]
     cursor = first["change_cursor"]
     received = []
+    warning_products = 0
     page = first
     while True:
         received.extend(item["id"] for item in page["products"])
+        warning_products += sum(bool(item["data_warnings"]) for item in page["products"])
         if not page["has_more"]:
             break
         page = success(f'/products?per_page=100&after_id={page["next_after_id"]}', "Products")
     check(received == fixture["ids"] and len(received) == len(set(received)), f"all {len(received)} published products match WooCommerce, ordered without duplicates")
+    check(True, f"{warning_products} products with missing image references remain importable with explicit warnings")
     control("csv")
     check(True, "CSV bytes unchanged by full-catalog read requests")
     inventory = success("/inventory?ids[]=" + str(product_id), "Inventories")

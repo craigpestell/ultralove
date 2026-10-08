@@ -65,7 +65,6 @@ Plugin/WordPress updates: update on dev first by copying the new version into de
   regex allows digits in cloud names; "Unsync all Cloudinary media" bulk action and
   `wp cloudinary unsync` CLI (`php/class-connect.php`, `php/sync/class-unsync.php`,
   `php/traits/trait-cli.php`; May 2026). Re-apply or confirm upstream fixes after updating.
-- `revslider`: Cloudinary optimization customization (see documentation/ARCHITECTURE.md).
 
 ## Shopify supplier test workflow
 
@@ -203,6 +202,9 @@ is `null`, not zero; negative backorder quantities are preserved. Variations
 carry `parent_id` and `stock_owner_id` for inherited/shared parent inventory.
 Only published variations of published parents are exposed. Images retain
 their source URLs, so private dev images still require Access.
+Deleted image references appear in `data_warnings` and server logs; only the
+missing image is omitted, not the product. No source catalog/media is repaired
+or changed by reading the API.
 
 ### Initial import and incremental synchronization
 

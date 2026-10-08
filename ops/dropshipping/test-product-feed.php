@@ -23,6 +23,14 @@ function current_user_can( $cap, ...$args ) { return in_array( $cap, $GLOBALS['c
 function get_current_user_id() { return 1; }
 function register_rest_route( $namespace, $route, $args ) { $GLOBALS['routes'][$route] = $args; }
 function get_post( $id ) { return $GLOBALS['posts'][$id] ?? null; }
+function wp_strip_all_tags( $text ) { return strip_tags( $text ); }
+function wp_kses_post( $text ) { return $text; }
+function wp_get_attachment_url( $id ) { return $id === 101 ? 'https://example.invalid/existing-image.jpg' : false; }
+function get_post_meta( $id, $key, $single ) { return $key === 'hwp_product_gtin' ? '00012345678905' : ''; }
+function taxonomy_exists( $taxonomy ) { return false; }
+function get_woocommerce_currency() { return 'CAD'; }
+function wc_prices_include_tax() { return false; }
+function wc_get_logger() { return new class { public function warning( ...$args ) {} }; }
 class WooCommerce {}
 class WP_REST_Server { const READABLE = 'GET'; }
 class WP_Error {
@@ -37,6 +45,21 @@ class WC_Product {
     public function get_stock_status() { return $this->status; }
     public function get_backorders() { return 'no'; }
     public function get_stock_managed_by_id() { return $this->parent ?: $this->id; }
+    public function get_id() { return $this->id; }
+    public function get_image_id() { return $this->parent ? 0 : 101; }
+    public function get_gallery_image_ids() { return array( 102 ); }
+    public function get_attributes() { return $this->parent ? array( 'colour' => 'black' ) : array(); }
+    public function get_date_modified() { return new DateTimeImmutable( '2026-10-08T00:00:00Z' ); }
+    public function get_name() { return 'Existing<br>catalog product'; }
+    public function get_type() { return $this->parent ? 'variation' : 'simple'; }
+    public function get_permalink() { return 'https://example.invalid/product/' . $this->id; }
+    public function get_description() { return '<p>Existing description</p>'; }
+    public function get_short_description() { return 'Existing short description'; }
+    public function get_price( $context ) { return '17.65'; }
+    public function get_regular_price( $context ) { return '18.00'; }
+    public function get_sale_price( $context ) { return '17.65'; }
+    public function get_global_unique_id() { return ''; }
+    public function is_type( $type ) { return $this->get_type() === $type; }
 }
 function wc_get_product( $id ) { return $GLOBALS['products'][$id] ?? false; }
 $wpdb = new class {
@@ -100,4 +123,14 @@ $rejected = false;
 try { UltraLove_Product_Feed::inventory( 99 ); }
 catch ( RuntimeException $error ) { $rejected = true; }
 $assert( $rejected, 'Missing product is explicitly rejected, not a success-shaped stock default.' );
+$simple = UltraLove_Product_Feed::product( 1 );
+$variation = UltraLove_Product_Feed::product( 3 );
+$assert( $simple['name'] === 'Existing catalog product' && $simple['short_description'] === 'Existing short description', 'Standard product text is normalized without copying legacy CSV Excerpt bug.' );
+$assert( $simple['global_unique_id'] === '00012345678905' && $simple['price'] === '17.65', 'Identifiers retain leading zeros and monetary values remain strings.' );
+$assert( $simple['data_warnings'] === array( array( 'code' => 'missing_image', 'attachment_id' => 102 ) ) && count( $simple['images'] ) === 1, 'Missing attachment explicitly warned while valid image and product remain available.' );
+$assert( $variation['type'] === 'variation' && $variation['parent_id'] === 1 && $variation['images'] === $simple['images'], 'Variation representation inherits parent images without a live synthetic product.' );
+$assert( $variation['attributes'] === array( array( 'name' => 'colour', 'options' => array( 'black' ) ) ), 'Variation selected options have documented shape.' );
 echo $checks . " product feed assertions passed.\n";
+if ( in_array( '--samples', $argv, true ) ) {
+    echo 'FEED-SAMPLES:' . json_encode( array( $simple, $variation ), JSON_THROW_ON_ERROR ) . "\n";
+}
