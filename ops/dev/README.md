@@ -69,10 +69,11 @@ Plugin/WordPress updates: update on dev first by copying the new version into de
 
 ## Shopify supplier test workflow
 
-**Status: prepared locally, not deployed or connected on dev yet.**
-Deployment is awaiting approval to commit/push the feature branch. The setup
-below describes the intended configuration; no dev credentials, cron entry,
-or Shopify egress exception have been installed yet.
+**Status: deployed, connected, and live-tested on dev (2026-10-08 UTC).**
+Feature branch `feat/dev-shopify-supplier` is under draft PR #138; it has not
+been merged or deployed to production. Twenty isolated policy assertions and
+28 live workflow assertions pass. Root-only credentials, the narrow Shopify
+egress exception, and the five-minute cron entry are installed.
 
 **WooCommerce > Shopify Supplier** controls the dev-only
 `ultralove-shopify-supplier` plugin. It remains disabled on production regardless
@@ -82,10 +83,13 @@ is permitted by the outbound allowlist.
 
 Select up to 25 **existing** published simple products with SKUs, prices, and
 managed stock, an approved dropshipping retailer, and an initial retail markup.
-No synthetic products are created on dev. The initial pilot will select existing
+No synthetic products are created on dev. The initial pilot selects existing
 product IDs `17186`, `17188`, and `17192` (SKUs `1513`, `2455`, `70072`).
 Imports are Shopify drafts with dev-specific handles, variant mappings, and the
 tag `ultralove-dev-supplier`. Stock sync preserves retailer-edited prices.
+All three imported images reached Shopify's ready state; titles/SKUs match and
+stock was restored to `327`, `125`, and `414` after verification.
+The earlier lab's two synthetic Shopify products remain archived.
 Deselection stops forwarding; manually archive a Shopify draft if it is no
 longer needed.
 
@@ -94,7 +98,9 @@ worker, not as a browser callback or public webhook. Credentials and logs live
 in `/root/.ultralove-shopify-dev/` with permissions `0600`; credentials are never
 stored in WordPress options or displayed by the admin page. The five-minute cron
 entry is `/etc/cron.d/ultralove-shopify-dev`. The earlier integration-lab worker
-must be paused before handing supplier ownership to dev.
+is paused. An actual scheduler-triggered cycle succeeded at
+`2026-10-08T17:05:07+00:00`, confirmed by the root worker log and
+`ul_dev_shopify_last_success`, not just a manual invocation.
 
 Only paid Shopify **test** orders tagged `ultralove-dev-supplier` are accepted.
 Use the fictional delivery recipient `Synthetic Recipient` at

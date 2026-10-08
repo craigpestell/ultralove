@@ -1,6 +1,6 @@
 <?php
 /**
- * Live synthetic integration tests. Own test orders are removed; catalog stays.
+ * Live test-order verification. Own test orders are removed; catalog stays.
  */
 if ( ! defined( 'WP_CLI' ) || ! WP_CLI ) {
     exit( 1 );
@@ -143,6 +143,7 @@ try {
     $stock = $bridge->graphql( 'query($id:ID!) {productVariant(id:$id) {inventoryQuantity}}', array( 'id' => $variant['id'] ) );
     $assert( $stock['productVariant']['inventoryQuantity'] === $initial_stock - 1, 'imported order stock reduction synchronizes back to Shopify' );
     if ( $dev ) {
+        require_once WC_ABSPATH . 'includes/admin/wc-meta-box-functions.php';
         $administrators = get_users( array( 'role' => 'administrator', 'number' => 1 ) );
         if ( ! $administrators ) {
             throw new RuntimeException( 'A dev administrator is required for admin-surface verification.' );
@@ -205,7 +206,7 @@ try {
     $sent = wp_mail( 'recipient@example.invalid', 'Synthetic bridge check', 'Must not leave the lab.' );
     remove_action( 'phpmailer_init', $mail_check );
     $assert( $sent && ! $initialized, 'lab email is still suppressed before transport' );
-    WP_CLI::success( 'Live synthetic catalog, stock, mixed order, wholesale, duplicate, and tracking tests passed.' );
+    WP_CLI::success( 'Live catalog, stock, mixed test-order, wholesale, duplicate, and tracking tests passed.' );
 } finally {
     foreach ( $order_ids as $id ) {
         foreach ( wc_get_orders( array( 'limit' => -1, 'meta_key' => $order_meta, 'meta_value' => $id ) ) as $own_order ) {

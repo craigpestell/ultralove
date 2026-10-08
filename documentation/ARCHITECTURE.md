@@ -288,30 +288,47 @@ multi-location allocation, robust queue recovery/monitoring, and real warehouse
 integration still need a separately scoped production implementation.
 Do not remove the test-only guards to deploy this worker to production.
 
-**Dev supplier preparation (2026-10-08 UTC): existing products only.**
+**Dev supplier connected (2026-10-08 UTC): existing products only.**
 Following the user's request to use dev's catalog instead of synthetic products,
 the old lab cron entry was removed and only its two verified Shopify fixtures
 (`LAB-SIMPLE-001`, `LAB-SIMPLE-002`) were archived. Other Shopify products were
 not changed. The earlier lab cycle results above are historical; that worker
 is now paused.
 
-The new `ultralove-shopify-supplier` plugin is implemented locally, with shared
+The new `ultralove-shopify-supplier` plugin is deployed and active on dev, with shared
 bridge code extracted to its `includes/class-test-bridge.php`; the old lab
-entry point retains a compatibility wrapper. The proposed dev pilot uses
+entry point retains a compatibility wrapper in git. The dev pilot uses
 existing product IDs `17186`, `17188`, `17192` (SKUs `1513`, `2455`, `70072`),
-selected read-only from the dev catalog. No synthetic products were created.
+selected from the existing dev catalog. No synthetic products were created.
 Its administrator controls select existing products, an approved retailer and
 initial markup, show status/mappings, and expose nonce-protected test tracking
 on bridge-created WooCommerce orders. The plugin defaults off and refuses
 production even if its options are copied.
 
-Twenty isolated configuration-policy assertions and PHP syntax checks pass.
-Dev's deployed revision remains `f229e6bc4bb8adf4fdc835b1c993a716c0539215`,
-with no drift. **The new plugin has not been deployed, activated, connected,
-or tested live on dev.** Deployment needs a committed, pushed feature branch;
-approval to push was requested but could not be obtained while the user was
-unavailable. No bypass, dev credentials, network exception, or dev scheduler
-was installed. Resume through the normal deploy pipeline; see
+Feature branch `feat/dev-shopify-supplier` / draft PR #138 deployed through the
+normal drift-safe pipeline; the first deployment was commit `0a43a88` and added
+only the two new supplier PHP files. CI and origin smoke tests passed.
+Twenty isolated configuration-policy assertions, PHP syntax checks, and
+28 live dev assertions pass, including administrator controls/tracking,
+catalog identity, stock changes, mixed-line routing, wholesale attribution,
+duplicate protection, tracking return and lost-acknowledgement replay.
+All three genuine Shopify imports are drafts with ready images. Verification
+removed its own test orders and restored stock to `327`, `125`, and `414`;
+retailer-edited prices remain preserved.
+
+A dedicated approved test retailer, `shopify-dev-retailer`, owns forwarded
+orders; no existing customer profile was changed. App credentials and logs
+are root-only under `/root/.ultralove-shopify-dev/` (directory `0700`,
+credential/log files `0600`). `WP_HTTP_BLOCK_EXTERNAL` remains enabled; only
+`ultralove-integration-lab.myshopify.com` was appended to the existing allowed
+hosts, and an unrelated outbound host was verified blocked. The five-minute
+worker is installed at `/etc/cron.d/ultralove-shopify-dev`; an actual
+scheduler-triggered cycle succeeded at `2026-10-08T17:05:07+00:00`, confirmed
+by its root-only log and `ul_dev_shopify_last_success`.
+Email remains suppressed, gateway settings unchanged, and Access/network
+isolation intact. No main merge, production deployment, real payment or
+shipment occurred. Independent-retailer OAuth and production order handling
+remain outside this test workflow; see
 [the dev workflow](../ops/dev/README.md#shopify-supplier-test-workflow).
 
 The droplet is billable until explicitly destroyed. Teardown must target only
