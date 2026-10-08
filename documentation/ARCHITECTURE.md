@@ -342,6 +342,71 @@ The droplet is billable until explicitly destroyed. Teardown must target only
 droplet `607169886`, its lab firewall, tag, and VPC after confirming they have no
 other members; never use production/dev cleanup scripts.
 
+### 1.7 Supplier product and inventory feed (dev)
+
+The feed-first milestone adds the separate `ultralove-product-feed` plugin to
+dev; implementation revision `ff51422` was deployed through the normal
+drift-safe pipeline on `2026-10-08`. It is hard-guarded by the development
+environment, exact dev home URL and `wordpress_dev` database. Production is
+unchanged. The existing CSV exporter and three-product Shopify test connector
+remain separate and their source was not changed by this milestone.
+
+The authenticated read-only namespace is `/wp-json/ultralove-feed/v1`:
+`/products`, `/products/{id}`, `/inventory`, `/changes`, and `/openapi`.
+The OpenAPI 3.1 contract uses WooCommerce-compatible operational field names
+with explicit supplier extensions; it is not a drop-in `wc/v3` replacement.
+All published products, including out-of-stock products, can be listed;
+there is no per-product eligibility flag or Shopify-pilot catalog cap.
+Published variations require published parents and expose shared stock identity.
+
+Native WordPress application passwords authenticate scoped customer accounts
+over HTTPS; `ultralove_read_product_feed` grants catalog access independently
+of dropshipping approval. Staff grant/revoke access from a nonce-protected
+user-profile control. Dev Cloudflare Access still applies. Responses are
+`private, no-store`, with a 300-request/account/minute quota and `Retry-After`.
+Only whitelisted product data is exposed; unknown stock is null, prices remain
+decimal strings, and missing images produce explicit warnings rather than
+discarding products.
+
+Three dedicated tables hold feed bookkeeping: `ultralove_feed_changes`,
+`ultralove_feed_state`, and `ultralove_feed_rates`. Producers enqueue within
+their transactions; a database-locked publisher assigns delivery sequence
+numbers only after commit. Clients save the first catalog page's generation
+and cursor, finish the initial import, then replay current-state upserts and
+removals idempotently. Seven-day contiguous-prefix retention and generation
+checks require a full resync when a cursor expires or the journal is rebuilt.
+After database restoration, operators explicitly rotate generation and reset
+the reconciliation checkpoint.
+
+`/etc/cron.d/ultralove-product-feed` runs a 500-record reconciliation batch
+every minute, refreshing product caches to detect changes that bypass hooks.
+A completed scan also detects removals. The initial full scan covered all
+6,430 published products in 13 batches/105.257 seconds and completed at
+`2026-10-08T18:24:33+00:00`, with 6,430 fingerprint records and checkpoint zero.
+The scheduler was installed at `2026-10-08T18:24:34Z`; its root-only log is
+bounded by `/etc/logrotate.d/ultralove-product-feed` (daily, seven rotations,
+5 MB maximum-size trigger). Runtime credentials and evidence are under
+`/root/.ultralove-product-feed/`, directory `0700`, private files `0600`.
+Actual cron launches at `18:25:01` and `18:26:01` each successfully processed
+500 records; the checkpoint advanced to product ID 22460 without manual runs.
+
+Verification passed 335 isolated feed assertions, 20 existing supplier-policy
+assertions, schema validation and 33 live HTTP checks against the full genuine
+catalog. Dev has zero published variations; isolated tests cover their DTOs
+and stock inheritance. Six benchmark checks under five concurrent clients
+measured cold catalog/inventory pages at 0.572/0.380 seconds and warm p95 at
+1.176/0.779 seconds, below the two-second target. Thirty-five products have
+pre-existing missing attachment references; these remain importable with
+`data_warnings`, without modifying source media. Read-only traversal preserved
+CSV bytes; mutation tests restored stock/status and account scope. The existing
+Shopify scheduler continued succeeding at `2026-10-08T18:25:06+00:00`.
+
+No synthetic products, orders, real payment, email, shipment, main merge or
+production deployment was introduced by this feed milestone. Shopify adaptation
+and transactional dropshipping remain future phases. See the
+[feed runbook](../ops/dev/README.md#supplier-product-and-inventory-feed) and
+[OpenAPI contract](../wp-content/plugins/ultralove-product-feed/openapi.json).
+
 ## 2) Prod App Droplet (PRODUCTION-WEB-ultralove.ca)
 
 ### 2.1 OS / Platform

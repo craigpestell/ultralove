@@ -265,3 +265,42 @@ database restore/rebuild, explicitly rotate `ultralove_feed_generation` using
 `wp_generate_uuid4()` and reset `ultralove_feed_reconcile_after` to zero so clients
 must resynchronize. Recreating a missing journal also rotates the generation.
 The existing CSV download workflow stays available throughout recovery.
+
+### Verified dev baseline (2026-10-08 UTC)
+
+Implementation revision `ff51422` is deployed and active. Verification covered
+all **6,430 published products** without omissions or duplicates. Dev currently
+has no published variations; isolated contract tests cover variations, parent
+visibility and shared stock ownership.
+
+- 335 isolated feed assertions, 20 existing supplier policy assertions, and
+  OpenAPI schema validation pass.
+- 33 live HTTP checks pass, including full catalog schema coverage, next-request
+  stock freshness, account-access revocation, committed-event ordering,
+  tombstones, cursor expiry, reconciliation and the exact account quota.
+- Six additional benchmark checks pass under five concurrent clients:
+  cold catalog (100 products) **0.572s**, cold inventory (50 records) **0.380s**;
+  warm p95 catalog **1.176s**, inventory **0.779s**, both below the two-second target.
+  Cold tests invalidate only the selected products' caches, not the whole site.
+- The initial full reconciliation processed all 6,430 products in 13 batches
+  in **105.257s**, completed at `2026-10-08T18:24:33+00:00`, populated 6,430
+  fingerprint records and reset its checkpoint to zero.
+- The minute worker and daily/seven-rotation log policy were installed at
+  `2026-10-08T18:24:34Z`; targeted logrotate validation passed.
+  Actual cron launches at `18:25:01` and `18:26:01` each completed a 500-record
+  batch, advancing the checkpoint to product ID 22460 without manual runs.
+- 35 products contain pre-existing missing image references. They remain
+  importable with explicit `data_warnings`; catalog/media data is untouched.
+
+CSV bytes remained unchanged during the read-only API traversal. Live mutation
+tests restored their source stock/status, account access and reconciliation
+checkpoint; the denied credential was revoked. Final checks confirmed both CSV
+files remained available, the test customer had only its intended feed access,
+and the existing Shopify worker still succeeded at
+`2026-10-08T18:25:06+00:00`. Verification/performance results and reconciliation
+evidence are retained under the root-only runtime directory.
+
+This completes the feed-first dev scope only: contract, read-only API,
+incremental synchronization/reconciliation, and dev testing/deployment.
+Full-catalog Shopify import, independent-retailer OAuth, order placement,
+payment, fulfillment and production rollout are separate future phases.
