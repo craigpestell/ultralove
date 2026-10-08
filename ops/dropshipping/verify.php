@@ -128,11 +128,31 @@ try {
 	wp_set_current_user( $user_ids['unapproved'] );
 	$assert( ! UltraLove_Dropshipping::approved(), 'Ordinary customer must not be approved.' );
 	ob_start();
+	UltraLove_Dropshipping::checkout_field();
+	$assert( '' === ob_get_clean(), 'Unapproved checkout must not render the dropshipping checkbox.' );
+	ob_start();
 	UltraLove_Dropshipping::delivery_heading();
 	$assert( '' === ob_get_clean(), 'Unapproved checkout must not render a recipient section heading.' );
 	wp_set_current_user( 0 );
 	$assert( ! UltraLove_Dropshipping::approved(), 'Guest must not be approved.' );
 	wp_set_current_user( $user_ids['approved'] );
+	$previous_choice = WC()->session->get( UltraLove_Dropshipping::FIELD, false );
+	try {
+		foreach ( array( false, true ) as $selected ) {
+			WC()->session->set( UltraLove_Dropshipping::FIELD, $selected );
+			ob_start();
+			UltraLove_Dropshipping::checkout_field();
+			$field = ob_get_clean();
+			$assert( false !== strpos( $field, 'woocommerce-form__label-for-checkbox checkbox' ), 'Dropshipping must use the shared checkout checkbox label classes.' );
+			$assert( 1 === preg_match( '/<input\b[^>]*class="woocommerce-form__input woocommerce-form__input-checkbox input-checkbox"[^>]*>\s*<span>/', $field ), 'Dropshipping must use the shared checkbox input classes and adjacent text span.' );
+			$assert( false !== strpos( $field, 'id="ultralove_dropship_field"' ) && false !== strpos( $field, 'for="ultralove_dropship"' ), 'Dropshipping must retain its wrapper ID and associated label.' );
+			$assert( false !== strpos( $field, 'name="ultralove_dropship" id="ultralove_dropship" value="1"' ), 'Dropshipping must retain its submitted field identity and value.' );
+			$assert( $selected === ( false !== strpos( $field, 'checked=' ) ), 'Dropshipping must render its saved session selection.' );
+			$assert( false === strpos( $field, 'class="required"' ) && false === strpos( $field, 'validate-required' ) && ! preg_match( '/<input\b[^>]*\srequired(?:\s|=|\/?>)/', $field ), 'Dropshipping must remain optional.' );
+		}
+	} finally {
+		WC()->session->set( UltraLove_Dropshipping::FIELD, $previous_choice );
+	}
 	ob_start();
 	UltraLove_Dropshipping::delivery_heading();
 	$heading = ob_get_clean();
