@@ -27,6 +27,7 @@ final class UltraLove_Dropshipping {
 		add_action( 'personal_options_update', array( __CLASS__, 'save_profile' ) );
 		add_action( 'edit_user_profile_update', array( __CLASS__, 'save_profile' ) );
 		add_action( 'woocommerce_checkout_before_customer_details', array( __CLASS__, 'checkout_field' ) );
+		add_filter( 'woocommerce_form_field_checkbox', array( __CLASS__, 'checkbox_markup' ), 10, 4 );
 		add_action( 'woocommerce_before_checkout_shipping_form', array( __CLASS__, 'delivery_heading' ) );
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue' ) );
 		add_action( 'woocommerce_checkout_update_order_review', array( __CLASS__, 'update_review' ) );
@@ -152,10 +153,20 @@ final class UltraLove_Dropshipping {
 		}
 		woocommerce_form_field(
 			self::FIELD,
-			array( 'type' => 'checkbox', 'label' => __( 'Dropship this order directly to my customer', 'ultralove-dropshipping' ), 'class' => array( 'form-row-wide' ) ),
+			array( 'type' => 'checkbox', 'label' => __( 'Dropship this order directly to my customer', 'ultralove-dropshipping' ), 'class' => array( 'form-row-wide' ), 'label_class' => array( 'woocommerce-form__label', 'woocommerce-form__label-for-checkbox' ), 'input_class' => array( 'woocommerce-form__input', 'woocommerce-form__input-checkbox' ) ),
 			WC()->session->get( self::FIELD, false )
 		);
 		echo '<p id="ultralove-dropship-help">' . esc_html__( 'Keep your retailer billing details. Enter one customer delivery address below. Discreet packing; no wholesale invoice in the parcel. Order emails go to your retailer billing email.', 'ultralove-dropshipping' ) . '</p>';
+	}
+
+	/**
+	 * Wrap the checkbox label text in a span so the child theme's drawn checkbox (input + span:before) applies.
+	 */
+	public static function checkbox_markup( $field, $key, $args, $value ) {
+		if ( self::FIELD !== $key || ! empty( $args['label'] ) && false !== strpos( $field, '<span>' . $args['label'] ) ) {
+			return $field;
+		}
+		return str_replace( ' /> ' . $args['label'], ' /><span>' . $args['label'] . '</span>', $field );
 	}
 
 	public static function enqueue() {
