@@ -58,6 +58,8 @@ choices are unchanged. No handling fee is added. Shipping is calculated for
 the parcel destination. An order belongs to the retailer and has one delivery
 address. Recipient addresses are not saved to the retailer's account profile.
 Ordinary wholesale orders remain available without opting in.
+The optional dropshipping checkbox uses the same shared checkout styling as
+the terms-and-conditions checkbox, including checked and keyboard-focus states.
 Newly revealed recipient fields start without validation errors; ordinary
 WooCommerce validation still runs on user interaction and checkout submission.
 While dropshipping is selected, the redundant **Ship to a different address?**
@@ -94,6 +96,9 @@ order, and restores the prior pilot option. Run browser checks for two different
 recipient addresses followed by ordinary checkout, plus unauthorized and
 revoked approvals. Confirm retailer profile isolation, normal shipping totals,
 order metadata, and email recipients without sending mail.
+Compare the dropshipping and terms checkboxes on desktop and mobile: unchecked,
+checked, keyboard focus, label clicks, and wrapping. Confirm dropshipping
+remains optional and its selection survives checkout updates.
 
 Disable new dropship checkouts by unchecking the pilot switch on
 **WooCommerce > Dropshipping** and saving. For command-line recovery,

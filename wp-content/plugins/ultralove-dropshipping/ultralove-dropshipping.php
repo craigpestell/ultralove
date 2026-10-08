@@ -150,11 +150,14 @@ final class UltraLove_Dropshipping {
 		if ( ! self::approved() || ! WC()->cart->needs_shipping_address() ) {
 			return;
 		}
-		woocommerce_form_field(
-			self::FIELD,
-			array( 'type' => 'checkbox', 'label' => __( 'Dropship this order directly to my customer', 'ultralove-dropshipping' ), 'class' => array( 'form-row-wide' ) ),
-			WC()->session->get( self::FIELD, false )
-		);
+		?>
+		<p class="form-row form-row-wide" id="ultralove_dropship_field">
+			<label class="woocommerce-form__label woocommerce-form__label-for-checkbox checkbox" for="ultralove_dropship">
+				<input type="checkbox" class="woocommerce-form__input woocommerce-form__input-checkbox input-checkbox" name="ultralove_dropship" id="ultralove_dropship" value="1" <?php checked( WC()->session->get( self::FIELD, false ), 1 ); ?> />
+				<span><?php esc_html_e( 'Dropship this order directly to my customer', 'ultralove-dropshipping' ); ?></span>
+			</label>
+		</p>
+		<?php
 		echo '<p id="ultralove-dropship-help">' . esc_html__( 'Keep your retailer billing details. Enter one customer delivery address below. Discreet packing; no wholesale invoice in the parcel. Order emails go to your retailer billing email.', 'ultralove-dropshipping' ) . '</p>';
 	}
 
