@@ -1,0 +1,1 @@
+* * * * * root /usr/bin/php8.5 /usr/local/bin/wp --allow-root --path=/var/www/html ultralove feed reconcile --batch-size=500 >> /root/.ultralove-product-feed/reconcile.log 2>&1

@@ -1,0 +1,1 @@
+*/5 * * * * root /usr/bin/php8.5 /usr/local/bin/wp --allow-root --path=/var/www/html ultralove shopify sync >> /root/.ultralove-shopify-dev/worker.log 2>&1

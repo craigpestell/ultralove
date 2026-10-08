@@ -93,6 +93,320 @@ lists 11 entries, some stale (section 8).
 
 A droplet built for production must carry the `Production` tag to be monitored (`provision-droplet.sh` sets it).
 
+### 1.6 Shopify/WooCommerce integration lab (2026-10-08 UTC)
+
+Dedicated synthetic-data supplier backend, created with approval at USD 12/month
+under DigitalOcean team `ultralove`. This is separate from production and the
+existing development environment; no database, credentials, or uploads were copied.
+
+| Resource | Value |
+|---|---|
+| Droplet | `ultralove-integration-lab`, ID `607169886`, SFO2, `s-1vcpu-2gb` |
+| Public / private IPv4 | `104.248.211.144` / `10.150.0.2` |
+| VPC | `ultralove-integration-lab-vpc`, `455858af-fe9d-4c22-806a-77508a14bd4c`, `10.150.0.0/20` |
+| Cloud firewall | `ultralove-integration-lab-fw`, `ed6e74c4-90b5-4b5e-89c7-a8d1704876c9`, lab tag only |
+| Supplier URL | `https://ultralove-lab.104-248-211-144.sslip.io` (temporary IP-derived hostname; no UltraLove DNS changes) |
+| Shopify retailer | `https://admin.shopify.com/store/ultralove-integration-lab`, development store, test gateway listed |
+| Stack | Ubuntu 24.04.5, nginx 1.24, PHP 8.5.11 FPM/CLI (Ondrej PHP PPA), MariaDB (loopback only), WordPress 7.1.3, WooCommerce 11.2.0 |
+| WordPress root | `/var/www/integration-lab` |
+| Admin | `lab-admin`; password stored only in root-readable `/root/.ultralove-integration-lab/admin-password` |
+
+Cloud firewall and UFW restrict SSH to administrator IPv4 `154.20.223.24`.
+Nginx restricts `/wp-admin/` and `/wp-login.php` to that address and loopback.
+HTTP/HTTPS are public for integration callbacks; HTTPS uses a Let's Encrypt
+certificate with automatic renewal. Update both firewalls and Nginx if the
+administrator IP changes. MySQL is not exposed.
+
+Outbound RFC1918 traffic is denied. Public DNS (`1.1.1.1`, `1.0.0.1`, global
+`~.` route) avoids the otherwise blocked private VPC DNS resolver. The lab
+MU plugin suppresses and logs all attempted email. Search indexing and customer
+registration are disabled; no payment gateway is enabled. Two synthetic products
+have SKU `LAB-SIMPLE-001` (stock 10) and `LAB-SIMPLE-002` (stock 5).
+
+Provisioning sources: [cloud-init](../ops/integration-lab/cloud-init.yaml) and
+[bootstrap](../ops/integration-lab/bootstrap.sh). The bootstrap refuses an existing
+WordPress configuration and requires the lab-only host marker. It is not a
+production deployment target. WordPress is extracted with system tar because
+WP-CLI's extractor truncated long paths in this release; core and WooCommerce
+checksums were verified after correcting that extraction.
+
+Baseline verification: run [verify.php](../ops/integration-lab/verify.php) using
+`wp eval-file` on this host. System cron runs WordPress jobs every five minutes,
+explicitly with `/usr/bin/php8.5`. Nginx uses `/run/php/php8.5-fpm.sock`; FPM and
+CLI share the lab's memory/upload limits and error-display restrictions.
+PHP 8.3 packages remain installed for rollback, but its FPM service is stopped
+and disabled. Pre-upgrade Nginx, cron, and lab PHP configuration are saved in
+root-only `/root/.ultralove-integration-lab/php85-before-20261008T051303Z`.
+Production connector installation and full production-plugin compatibility
+have **not** been validated; custom lab-only flow results are recorded below.
+Keep real data, payment
+credentials, and warehouse/carrier automation out of this lab. No paid backups
+were enabled; recreate synthetic data rather than treating this as durable commerce.
+
+**Syncerize evaluation (2026-10-08 UTC): rejected as shipped.** Its
+[WooCommerce overview](https://syncerize.tawk.help/article/syncerize-overview-for-woocommerce)
+documents cross-platform order forwarding and fulfillment, but excludes partial
+fulfillment on WooCommerce. The official live package and update manifest both
+identified version `1.2.50`. Package SHA-256:
+`900f7a1f742f2f48e90e5a1373dc0c6a882876d76c8a23725964cab1b9e99892`.
+
+Before activation, only the vendor's helper functions and order controller were
+loaded in a private WP-CLI process, with the current user explicitly set to zero.
+A REST dispatch with no Authorization header returned HTTP 200 and changed a
+new synthetic order from pending to cancelled. This confirmed an access-control
+failure, not just a suspicious route declaration. The synthetic order was
+deleted in a finally block; the baseline checks passed afterward. No plugin
+activation, public vendor routes, store connection, paid plan, or live orders
+were involved. Catalog sync, mixed-cart routing, wholesale accounting, and
+tracking tests were not run after this failed prerequisite. Do not install
+this package on production or expose its routes on the public lab.
+
+**Syncee preparation (2026-10-08 UTC): both apps installed, stores not connected.** Official
+`syncee-for-suppliers` version `1.0.26` is active only on the supplier lab, with
+WordPress.org package checksums verified. All seven installer endpoints reject
+anonymous requests; actual HTTPS requests to the installer data endpoint and an
+unsolicited token callback returned HTTP 401. Its WooCommerce, WordPress,
+permalink, administrator email, store-name, and cURL prerequisites passed on
+PHP 8.5.11. The full lab baseline still passes with synthetic inventory unchanged,
+no orders, no enabled gateways, and email suppression intact.
+
+Run [verify-syncee.php](../ops/integration-lab/verify-syncee.php) through
+`wp eval-file` on this host to repeat the **unconnected** installer checks.
+The plugin's administrator setup is at
+`/wp-admin/admin.php?page=syncee-for-suppliers`. No WooCommerce API authorization,
+supplier account registration, or supplier access tokens have been created.
+
+The user restored the authenticated Shopify session. **Syncee AI Dropship**
+was then authorized on `ultralove-integration-lab` and verified in Shopify's
+installed-app list and installation details. Its permissions cover customer data,
+store-owner data, products, orders, and other store data; no production store was
+authorized. Shopify warned that the app does not yet support ship-and-pickup
+in one order. This is a compatibility warning, not proof about ordinary
+mixed-supplier shipped carts.
+
+Retailer onboarding did not complete: "Skip all steps" repeatedly returned to
+step 3, including after reopening the app. Browser resource timing recorded
+HTTP 404 for the default retailer catalog and HTTP 500 for
+`entry.syncee.com/syncee-product-service/api/v3/suppliers/search`.
+The cause of the onboarding loop is not established. No suggested marketplace
+products were deliberately imported and no paid plan or trial was approved.
+
+The [Shopify app listing](https://apps.shopify.com/syncee-1) advertises 25 imports
+on Free, but lists **Private suppliers** and **Suppliers with Retailer Approval**
+under Basic at **US$39.99/month** (with a trial/promotion). A free development-store
+exception has not been established; installing the app alone does not demonstrate
+access to a private supplier. Supplier onboarding should proceed only if an
+explicitly synthetic/private test catalog is allowed without a paid charge or
+live payment provider. Syncee's documented order process requires the retailer
+to pay before forwarding. Test payment support and supplier approval remain
+unresolved; do not submit this synthetic lab as a real public marketplace supplier
+or claim end-to-end automation is verified.
+Product import, inventory synchronization, mixed-cart routing, wholesale order
+accounting, and tracking return remain untested **for Syncee**.
+
+**Custom test connector (2026-10-08 UTC): connected and verified.**
+The free, own-organization Shopify app **UltraLove Dropshipping Lab**
+(Dev Dashboard app `433204330497`, organization `239653376`) is installed only
+on `ultralove-integration-lab.myshopify.com`. It uses Admin GraphQL API `2026-10`
+with `write_products`, `write_inventory`, `read_locations`, `write_orders`,
+`write_merchant_managed_fulfillment_orders`, and `write_fulfillments`.
+Client credentials are in separate root-only files
+`/root/.ultralove-integration-lab/shopify-client-id` and
+`/root/.ultralove-integration-lab/shopify-client-secret`, outside the web root
+and repository. An initial secret surfaced in the browser's accessibility
+snapshot despite the field being masked; it was rotated and revoked before
+use. The replacement was transferred through the clipboard and SSH without
+displaying its contents, and the clipboard was cleared. The worker exchanges
+credentials for an ephemeral token each invocation; it does not persist tokens.
+This own-organization grant is **not** authentication for independent retailers.
+
+[shopify-bridge.php](../ops/integration-lab/shopify-bridge.php) is a root-only
+WP-CLI worker, not a public WordPress plugin or webhook endpoint. It refuses
+other hosts, databases, currencies, and environment types. It targets exactly
+the two lab SKUs and Shopify's merchant-owned **Shop location**; the development
+store also has sample locations that must not be selected automatically.
+Stable product handles and saved variant IDs keep reimports idempotent.
+Initial retail prices use a synthetic 50% markup; subsequent synchronization
+preserves retailer-edited prices. Inventory uses compare-and-swap
+`changeFromQuantity` and the required `@idempotent` directive.
+
+The worker polls paid **test** Shopify orders tagged
+`ultralove-integration-lab`, forwards only mapped variants, and attributes them
+to the synthetic WooCommerce customer `shopify-lab-retailer`.
+The recipient must be `Synthetic Recipient` at `123 Synthetic Street` with a
+complete Canadian delivery address. Billing and notification metadata use
+`retailer@example.invalid`. Supplier lines use WooCommerce prices rather than
+retail prices. Orders begin **on hold**, with no supplier payment recorded;
+Shopify test payment is not wholesale payment. The worker's exclusive process
+lock, source-order metadata, and import-completion marker prevent duplicate
+creation; incomplete imports stop with an explicit reconciliation error.
+For completed synthetic supplier orders, setting `_ul_lab_tracking_number`
+to a `LAB-` number returns tracking for mapped lines only, with
+`notifyCustomer: false`. It never completes unrelated retailer lines.
+
+The deployed worker and verifier are in `/root/.ultralove-integration-lab/`.
+[shopify-bridge.cron](../ops/integration-lab/shopify-bridge.cron) is installed as
+`/etc/cron.d/integration-lab-shopify-bridge` and runs every five minutes under
+PHP 8.5. Logs are root-only at
+`/root/.ultralove-integration-lab/shopify-bridge.log`; the WordPress option
+`ul_lab_shopify_last_success` records a successful cycle. To pause the bridge,
+remove only that cron file; catalog products and mappings are retained.
+The existing system-managed WordPress cron and safety MU plugin are unchanged.
+An actual scheduler-triggered successful cycle was verified at
+`2026-10-08T16:20:07+00:00`, not just a manual invocation. Nginx, PHP 8.5 FPM,
+MariaDB, and cron were active; credential and log permissions were `0600`.
+Shopify's browser product list also showed the two synthetic imports with
+restored stock quantities of 10 and 5.
+
+Run the live test through WP-CLI on the lab:
+
+```sh
+cd /var/www/integration-lab
+wp --allow-root eval-file /root/.ultralove-integration-lab/verify-shopify-bridge.php
+wp --allow-root eval-file /root/.ultralove-integration-lab/verify.php
+```
+
+[verify-shopify-bridge.php](../ops/integration-lab/verify-shopify-bridge.php)
+verified actual API effects: catalog reimport identity, retailer-price
+preservation, inventory change and restoration, mixed-line isolation,
+retailer attribution and recipient address, wholesale totals, unpaid supplier
+status, once-only stock reduction, duplicate polling, unpaid/unmapped/non-test
+order rejection, invalid stock/address rejection, tracking return, partial
+fulfillment, duplicate tracking and lost-acknowledgement replay,
+disabled gateways, and suppressed email. It creates explicitly synthetic
+Shopify orders through `orderCreate(test: true)`, then deletes only its own
+orders on both platforms and restores stock. The imported catalog and synthetic
+retailer account remain. No real funds, emails, parcels, or production data
+are used.
+
+**Scope:** this is a working single-store API-flow test environment, not the
+production dropshipping service. It does not publish products to the Online
+Store channel or prove a browser checkout. Independent-retailer OAuth,
+merchant approval, configurable catalogs/pricing, production wholesale taxes
+and shipping, supplier settlement, cancellations/refunds, variants,
+multi-location allocation, robust queue recovery/monitoring, and real warehouse
+integration still need a separately scoped production implementation.
+Do not remove the test-only guards to deploy this worker to production.
+
+**Dev supplier connected (2026-10-08 UTC): existing products only.**
+Following the user's request to use dev's catalog instead of synthetic products,
+the old lab cron entry was removed and only its two verified Shopify fixtures
+(`LAB-SIMPLE-001`, `LAB-SIMPLE-002`) were archived. Other Shopify products were
+not changed. The earlier lab cycle results above are historical; that worker
+is now paused.
+
+The new `ultralove-shopify-supplier` plugin is deployed and active on dev, with shared
+bridge code extracted to its `includes/class-test-bridge.php`; the old lab
+entry point retains a compatibility wrapper in git. The dev pilot uses
+existing product IDs `17186`, `17188`, `17192` (SKUs `1513`, `2455`, `70072`),
+selected from the existing dev catalog. No synthetic products were created.
+Its administrator controls select existing products, an approved retailer and
+initial markup, show status/mappings, and expose nonce-protected test tracking
+on bridge-created WooCommerce orders. The plugin defaults off and refuses
+production even if its options are copied.
+
+The client confirmed that resellers may add **any UltraLove catalog product**
+to their own catalog. No per-product dropshipping listing flag or supplier
+listing approval is required. Keep reseller product selection separate from
+stock/order availability. The three-product selection, 25-product cap, and
+simple-product checks are technical pilot limits only; the test connector is
+not yet a full-catalog reseller browsing/import interface.
+
+Feature branch `feat/dev-shopify-supplier` / draft PR #138 deployed through the
+normal drift-safe pipeline; the first deployment was commit `0a43a88` and added
+only the two new supplier PHP files. CI and origin smoke tests passed.
+Twenty isolated configuration-policy assertions, PHP syntax checks, and
+28 live dev assertions pass, including administrator controls/tracking,
+catalog identity, stock changes, mixed-line routing, wholesale attribution,
+duplicate protection, tracking return and lost-acknowledgement replay.
+All three genuine Shopify imports are drafts with ready images. Verification
+removed its own test orders and restored stock to `327`, `125`, and `414`;
+retailer-edited prices remain preserved.
+
+A dedicated approved test retailer, `shopify-dev-retailer`, owns forwarded
+orders; no existing customer profile was changed. App credentials and logs
+are root-only under `/root/.ultralove-shopify-dev/` (directory `0700`,
+credential/log files `0600`). `WP_HTTP_BLOCK_EXTERNAL` remains enabled; only
+`ultralove-integration-lab.myshopify.com` was appended to the existing allowed
+hosts, and an unrelated outbound host was verified blocked. The five-minute
+worker is installed at `/etc/cron.d/ultralove-shopify-dev`; an actual
+scheduler-triggered cycle succeeded at `2026-10-08T17:05:07+00:00`, confirmed
+by its root-only log and `ul_dev_shopify_last_success`.
+Email remains suppressed, gateway settings unchanged, and Access/network
+isolation intact. No main merge, production deployment, real payment or
+shipment occurred. Independent-retailer OAuth and production order handling
+remain outside this test workflow; see
+[the dev workflow](../ops/dev/README.md#shopify-supplier-test-workflow).
+
+The droplet is billable until explicitly destroyed. Teardown must target only
+droplet `607169886`, its lab firewall, tag, and VPC after confirming they have no
+other members; never use production/dev cleanup scripts.
+
+### 1.7 Supplier product and inventory feed (dev)
+
+The feed-first milestone adds the separate `ultralove-product-feed` plugin to
+dev; implementation revision `ff51422` was deployed through the normal
+drift-safe pipeline on `2026-10-08`. It is hard-guarded by the development
+environment, exact dev home URL and `wordpress_dev` database. Production is
+unchanged. The existing CSV exporter and three-product Shopify test connector
+remain separate and their source was not changed by this milestone.
+
+The authenticated read-only namespace is `/wp-json/ultralove-feed/v1`:
+`/products`, `/products/{id}`, `/inventory`, `/changes`, and `/openapi`.
+The OpenAPI 3.1 contract uses WooCommerce-compatible operational field names
+with explicit supplier extensions; it is not a drop-in `wc/v3` replacement.
+All published products, including out-of-stock products, can be listed;
+there is no per-product eligibility flag or Shopify-pilot catalog cap.
+Published variations require published parents and expose shared stock identity.
+
+Native WordPress application passwords authenticate scoped customer accounts
+over HTTPS; `ultralove_read_product_feed` grants catalog access independently
+of dropshipping approval. Staff grant/revoke access from a nonce-protected
+user-profile control. Dev Cloudflare Access still applies. Responses are
+`private, no-store`, with a 300-request/account/minute quota and `Retry-After`.
+Only whitelisted product data is exposed; unknown stock is null, prices remain
+decimal strings, and missing images produce explicit warnings rather than
+discarding products.
+
+Three dedicated tables hold feed bookkeeping: `ultralove_feed_changes`,
+`ultralove_feed_state`, and `ultralove_feed_rates`. Producers enqueue within
+their transactions; a database-locked publisher assigns delivery sequence
+numbers only after commit. Clients save the first catalog page's generation
+and cursor, finish the initial import, then replay current-state upserts and
+removals idempotently. Seven-day contiguous-prefix retention and generation
+checks require a full resync when a cursor expires or the journal is rebuilt.
+After database restoration, operators explicitly rotate generation and reset
+the reconciliation checkpoint.
+
+`/etc/cron.d/ultralove-product-feed` runs a 500-record reconciliation batch
+every minute, refreshing product caches to detect changes that bypass hooks.
+A completed scan also detects removals. The initial full scan covered all
+6,430 published products in 13 batches/105.257 seconds and completed at
+`2026-10-08T18:24:33+00:00`, with 6,430 fingerprint records and checkpoint zero.
+The scheduler was installed at `2026-10-08T18:24:34Z`; its root-only log is
+bounded by `/etc/logrotate.d/ultralove-product-feed` (daily, seven rotations,
+5 MB maximum-size trigger). Runtime credentials and evidence are under
+`/root/.ultralove-product-feed/`, directory `0700`, private files `0600`.
+Actual cron launches at `18:25:01` and `18:26:01` each successfully processed
+500 records; the checkpoint advanced to product ID 22460 without manual runs.
+
+Verification passed 335 isolated feed assertions, 20 existing supplier-policy
+assertions, schema validation and 33 live HTTP checks against the full genuine
+catalog. Dev has zero published variations; isolated tests cover their DTOs
+and stock inheritance. Six benchmark checks under five concurrent clients
+measured cold catalog/inventory pages at 0.572/0.380 seconds and warm p95 at
+1.176/0.779 seconds, below the two-second target. Thirty-five products have
+pre-existing missing attachment references; these remain importable with
+`data_warnings`, without modifying source media. Read-only traversal preserved
+CSV bytes; mutation tests restored stock/status and account scope. The existing
+Shopify scheduler continued succeeding at `2026-10-08T18:25:06+00:00`.
+
+No synthetic products, orders, real payment, email, shipment, main merge or
+production deployment was introduced by this feed milestone. Shopify adaptation
+and transactional dropshipping remain future phases. See the
+[feed runbook](../ops/dev/README.md#supplier-product-and-inventory-feed) and
+[OpenAPI contract](../wp-content/plugins/ultralove-product-feed/openapi.json).
+
 ## 2) Prod App Droplet (PRODUCTION-WEB-ultralove.ca)
 
 ### 2.1 OS / Platform

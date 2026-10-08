@@ -1,0 +1,1 @@
+*/5 * * * * root /usr/bin/php8.5 /usr/local/bin/wp --allow-root --path=/var/www/integration-lab eval-file /root/.ultralove-integration-lab/shopify-bridge.php >> /root/.ultralove-integration-lab/shopify-bridge.log 2>&1
