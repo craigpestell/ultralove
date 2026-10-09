@@ -83,6 +83,10 @@ $assert( ! $call( 'same_html', '<img src="https://ultralove.ca/wp-content/upload
     '<img src="https://ultralove.ca/wp-content/uploads/b.png">' ), 'Changed source image references are not normalized away.' );
 $assert( ! $call( 'same_html', '<b>First</b> second', 'First <b>second</b>' ), 'Meaningful inline formatting changes remain detectable.' );
 $assert( ! $call( 'same_html', 'Hello<b>world</b>', 'Hello <b>world</b>' ), 'Meaningful inline whitespace is preserved.' );
+$assert( $call( 'same_html', '<p>Caf&#233; &amp; tea<br>Next</p>', "Caf\xc3\xa9 &amp; tea\nNext" ), 'Entity encoding and generated line boundaries normalize equivalently.' );
+$assert( ! $call( 'same_html', '<a href="https://ultralove.ca/a">Link</a>', '<a href="https://ultralove.ca/b">Link</a>' ), 'Changed link targets remain detectable.' );
+$assert( ! $call( 'same_html', '<p style="color:red">Text</p>', '<p style="color:blue">Text</p>' ), 'Styled paragraph changes remain detectable.' );
+$assert( ! $call( 'same_html', '<img src="a" alt="Supplier">', '<img src="a" alt="Retailer">' ), 'Changed image attributes remain detectable.' );
 $with_inline_image = $record;
 $with_inline_image['description'] = '<img src="https://dev.ultralove.ca/wp-content/uploads/logo.png" />' . "\n\n" . 'Public description';
 $assert( str_contains( $payload( $with_inline_image )['descriptionHtml'], 'https://ultralove.ca/wp-content/uploads/logo.png' ), 'New Shopify descriptions use public production upload references.' );

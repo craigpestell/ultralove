@@ -882,6 +882,7 @@ final class UltraLove_Shopify_Catalog_Import {
     }
 
     private function verify( array $roots, array $catalog ): void {
+        $this->state['verified_once'] = ! empty( $this->state['verified_once'] ) || $this->state['phase'] === 'complete';
         $this->state['verification_errors'] = array();
         $this->save();
         foreach ( $roots as $id => $record ) {
@@ -929,7 +930,7 @@ final class UltraLove_Shopify_Catalog_Import {
                     }
                     if ( ! self::same_html( $product['descriptionHtml'], $input['descriptionHtml'] ) ) {
                         $original = (string) ( $record['description'] ?? '' );
-                        if ( $this->state['phase'] === 'complete' || $original === $input['descriptionHtml']
+                        if ( $this->state['verified_once'] || $original === $input['descriptionHtml']
                             || ! self::same_html( $product['descriptionHtml'], $original ) ) {
                             throw new RuntimeException( 'Draft description content differs; retailer edits will not be overwritten.' );
                         }
@@ -962,6 +963,7 @@ final class UltraLove_Shopify_Catalog_Import {
             $this->state['verification_errors']['coverage'] = 'Mapping/root coverage mismatch.';
         }
         $this->state['phase'] = $this->state['verification_errors'] ? 'verifying' : 'complete';
+        $this->state['verified_once'] = $this->state['verified_once'] || $this->state['phase'] === 'complete';
         $this->save();
         if ( $this->state['verification_errors'] ) {
             throw new RuntimeException( 'Catalog verification failed for ' . count( $this->state['verification_errors'] )

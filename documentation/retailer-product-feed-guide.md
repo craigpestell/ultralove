@@ -67,6 +67,26 @@ This is an operator-backed development connection, not yet an embedded retailer
 product-picker UI. Implementation and isolated tests do not establish live
 deployment or import success; record those results separately below.
 
+#### Verified development result (2026-10-09)
+
+- The real authenticated feed passed 15 bounded-browsing checks: default 50,
+  maximum 100, server rejection of 101, advancing pages, categories, combined
+  category/SKU filtering, and explicit selection capped at 50 parents.
+  Eight requests recorded 103 guarded SELECT statements and zero database writes.
+- One explicitly selected 50-parent page completed in the existing Shopify lab
+  store: **46 new unpublished drafts**, plus **four existing listings reused
+  unchanged**. There are 50 unique Shopify mappings and no bulk/verification errors.
+- Final live verification checked source variant coverage, SKUs, prices, barcodes,
+  options, stock, draft identity/status, and ready media. Repeating the same command
+  verified the completed batch again without recreating products.
+- Shopify normalizes HTML serialization. Verification compares content and
+  meaningful markup instead of raw bytes. New descriptions use public production
+  upload references; unchanged descriptions in still-unverified, owned drafts
+  received description-only repairs. Completed imports and reused listings are
+  never eligible for that repair.
+- This was a selected batch, not a full-catalog import. Remaining products are
+  discoverable through paging. Production remains disabled and untouched.
+
 Keep staff setup separate from actions a retailer can actually perform.
 Do not describe a lab-only administrator control as a retailer-facing screen.
 

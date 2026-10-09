@@ -140,6 +140,17 @@ still-draft products with matching supplier identity and this run's ownership;
 it must never delete reused, published, or unrelated listings. Do not run cleanup
 as part of normal verification. Production feed/plugins remain inactive.
 
+Live bounded-path verification on 2026-10-09 passed 15 authenticated feed checks
+(eight requests, 103 guarded SELECTs, zero database writes). The selected
+50-parent page completed with 46 new Shopify drafts and four unchanged reused
+listings; all 50 mappings are unique, variants/media verified, and no bulk or
+verification errors remain. Repeating the exact selection verified completion
+without additional creations. Retain its checkpoint and ownership ledger.
+Shopify HTML normalization is handled without accepting content/markup edits;
+new inline upload references use the public production host. The initial
+unverified drafts received only guarded description-reference repairs.
+This remains an operator-backed connector, not an embedded retailer picker.
+
 Select up to 25 **existing** published simple products with SKUs, prices, and
 managed stock, an approved dropshipping retailer, and an initial retail markup.
 No synthetic products are created on dev. The initial pilot selects existing
