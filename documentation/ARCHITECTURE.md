@@ -326,8 +326,10 @@ No new app, production change, order, payment, email or shipment was created.
 
 The interface has a separate private source repository,
 `craigpestell/ultralove-shopify-app`, and local workspace
-`/Users/craig/work/ultralove-shopify-app`. Its initial source is committed locally
-but has not been pushed; the GitHub repository is still empty pending approval.
+`/Users/craig/work/ultralove-shopify-app`. Its source is published privately:
+`main` contains the deployed foundation and `feat/embedded-catalog` contains the
+catalog/hosting increment for review. Runtime deployment used git archives and
+does not imply that the review branch has been merged.
 Catalog release `05f1160` is hosted on the existing isolated integration-lab
 droplet as non-root systemd service `ultralove-shopify`, using checksum-verified
 Node 24.21.0, a loopback-only listener on port 3097, a separate Nginx HTTPS vhost,
