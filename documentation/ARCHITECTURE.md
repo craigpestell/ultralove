@@ -313,7 +313,7 @@ Do not remove the test-only guards to deploy this worker to production.
 
 **Dev supplier connected (2026-10-08 UTC): existing products only.**
 
-**Embedded Shopify interface (2026-10-09 UTC): catalog and selections live.**
+**Embedded Shopify interface (2026-10-09 UTC): catalog, pricing and draft jobs live.**
 
 The same **UltraLove Dropshipping Lab** installation now opens
 `https://shopify-lab.104-248-211-144.sslip.io` inside Shopify admin.
@@ -330,7 +330,7 @@ The interface has a separate private source repository,
 `main` contains the deployed foundation and `feat/embedded-catalog` contains the
 catalog/hosting increment for review. Runtime deployment used git archives and
 does not imply that the review branch has been merged.
-Catalog release `05f1160` is hosted on the existing isolated integration-lab
+Pricing/import release `13306ab` is hosted on the existing isolated integration-lab
 droplet as non-root systemd service `ultralove-shopify`, using checksum-verified
 Node 24.21.0, a loopback-only listener on port 3097, a separate Nginx HTTPS vhost,
 and a Let's Encrypt certificate with automatic renewal. No firewall or UltraLove
@@ -364,13 +364,38 @@ selection persistence after reload, saving exactly 50 parents, disabled
 checkboxes at that limit and visible rejection of a forged 51-parent selection.
 Release `05f1160` additionally passed exact category-label access, readable entity
 decoding and clearing the unsaved selection. Existing saved selections were
-preserved during final checks. Eleven offline tests, type-check, lint, build and
+restored after import verification. Twenty-three offline tests, type-check, lint, app/worker build and
 migrations passed; npm audit reported zero vulnerabilities. Final app, Nginx and
 lab PHP-FPM checks were healthy, the listener remained loopback-only, foreign-shop
 requests returned 403 and invalid-signature webhooks returned 401.
-Selected imports and ongoing selection sync are not wired to this embedded UI.
+The embedded UI now previews immutable CAD pricing for 1-50 saved parents and
+queues confirmed draft-import jobs. The source branch `feat/draft-import-jobs`
+is based on the catalog review branch. A separate non-root
+`ultralove-shopify-imports` service processes persistent jobs/items and cross-job
+creation claims in the app database. The provisioner takes protected SQLite
+backups under `/srv/ultralove-shopify/backups` before additive migrations.
+The source-restricted proxy's read-only `import-plan` operation reuses the
+unchanged Shopify Supplier plugin's payload builder; Shopify mutations happen
+only in the app worker, never through the root PHP importer behind HTTP.
+The plugin remains required for this planning code and the original dev sync.
 
-App rollback: restore existing version `ultralove-dropshipping-lab-2` in the
+Live checks reused the original five listings with prices, content, publication
+state and inventory unchanged. Source `17539` (SKU `SE1414-50 BX`) created draft
+`8424579366975`: CAD 7.95 at 25% markup became CAD 9.94, stock 2, barcode
+`716770016270`, and one READY media item. Native Shopify admin confirmed it was
+not published anywhere. A second 30% preview reused it without repricing or
+duplication. An interrupted-job simulation preserved its creation claim and
+worker restart recovered the same draft through read-only reconciliation;
+exactly one listing existed. All three jobs completed, and the original five
+saved selections were restored. The draft and job history are retained for review.
+The original three-product sync still passed with retailer prices preserved.
+New imports do not enable ongoing selection sync, publication or order forwarding.
+
+Before any pre-jobs code rollback or return to the old app version, run
+`systemctl disable --now ultralove-shopify-imports` on the lab host. Preserve the
+database, creation claims, backups and additive migrations. Catalog release
+`05f1160` is the verified pre-jobs code rollback.
+App configuration rollback: restore existing version `ultralove-dropshipping-lab-2` in the
 Dev Dashboard, returning to the previous lab URL and `embedded=false`.
 Do not uninstall/recreate the app or rotate the worker's credentials.
 Hosting release `a419640` failed service read permissions and must not be used

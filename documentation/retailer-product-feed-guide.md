@@ -87,11 +87,11 @@ establish live deployment or import success; record those results separately.
 - This was a selected batch, not a full-catalog import. Remaining products are
   discoverable through paging. Production remains disabled and untouched.
 
-#### Embedded lab catalog browser verified (2026-10-09)
+#### Embedded lab catalog, pricing and draft jobs verified (2026-10-09)
 
 The same installed **UltraLove Dropshipping Lab** app now opens its authenticated
 catalog browser inside the Shopify test-store admin. Its separate web application
-is deployed as release `05f1160`; no second Shopify app was created.
+is deployed as release `13306ab`; no second Shopify app was created.
 
 - Browse 50 published parents per page, advance pages, search names/SKUs and
   filter by category. SKU `1513` and combined category/SKU filtering were verified.
@@ -102,7 +102,8 @@ is deployed as release `05f1160`; no second Shopify app was created.
   preserved during final verification.
 - Supplier wholesale CAD prices and stock are for review, not retailer price
   settings or permission to forward orders. Saving does not import, publish or
-  synchronize products. Pricing and draft-import jobs remain the next UI milestone.
+  synchronize products. The separate pricing/import screen now previews markup
+  and queues confirmed background draft imports, as described in section 4.
 - The application uses a source-restricted, pinned-key SSH proxy with a separate
   catalog credential. It reads the normal authenticated dev feed and allows
   routine authentication/feed database bookkeeping. Unlike the historical strict
@@ -122,10 +123,10 @@ Do not describe a lab-only administrator control as a retailer-facing screen.
 | 1 | UltraLove staff / retailer | Grant catalog access and issue dedicated, revocable feed credentials | Dedicated dev credential and actual revocation verified; external retailer onboarding pending |
 | 2 | Integrator / test operator | Configure the existing Shopify test app's connector to read the feed | Dev adapter deployed; authenticated feed pull and scheduled cycle verified |
 | 3 | Retailer | Choose products from the published catalog | Embedded test-store browsing and saved selections verified, capped at 50 parents; independent-store onboarding pending |
-| 4 | Retailer / connector | Set initial retail prices and import selected products as drafts | Operator import verified; pricing and draft-import jobs are not yet wired to the embedded UI |
-| 5 | Retailer | Review images, descriptions, SKUs, variants, prices, and availability | Fresh live simple-product draft data/media and retailer-edit preservation verified; retailer UI walkthrough and variable-product support pending |
-| 6 | Connector | Synchronize inventory and changes without overwriting retailer edits | Live stock, price, content and publication-state preservation verified |
-| 7 | Integrator / retailer | Recover from interruptions, removals, expired cursors, and revoked access | Live withdrawal/republication, 409 resync, removed scope and revoked password verified; rate-limit/transport failures isolated-tested |
+| 4 | Retailer / connector | Set initial retail prices and import selected products as drafts | Embedded lab CAD preview, confirmation, background creation and unchanged reuse verified |
+| 5 | Retailer | Review images, descriptions, SKUs, variants, prices, and availability | Native Shopify draft/media/price/stock review and existing-listing preservation verified; live variable-product import remains pending |
+| 6 | Connector | Synchronize inventory and changes without overwriting retailer edits | Original three-product sync verified; ongoing sync for app-owned imports remains pending |
+| 7 | Integrator / retailer | Recover from interruptions, removals, expired cursors, and revoked access | App creation-claim restart recovery verified; historical connector withdrawal, 409 resync and credential checks verified; app-owned ongoing change replay remains pending |
 | 8 | UltraLove staff / retailer | Separately approve and configure dropshipping fulfilment | Dev checkout/order tests verified; real pilot approval pending |
 | 9 | Retailer | Submit an order and receive tracking using the approved workflow | Feed-linked synthetic order/tracking regression passed; real retailer fulfilment remains unapproved |
 
@@ -265,15 +266,49 @@ well. Do not match products by title alone.
 
 ## 4. Initial import and pricing
 
-Record the initial price or markup controls, currency checks, duplicate handling,
-and where Shopify displays the import result and failures.
+In the allowlisted test-store app:
+
+1. Save 1-50 parents in the catalog and open **Review pricing and draft imports**.
+2. Enter an initial markup of 0-1000%, with at most two decimal places, then click
+   **Preview draft import**. The store must use CAD and the verified merchant
+   **Shop location**. Retail price is wholesale times `(1 + markup / 100)`,
+   rounded to two decimals; no FX, shipping, tax or fee adjustment is included.
+3. Review source prices, proposed prices, stock and missing-data/media warnings.
+   Existing listings are marked for unchanged reuse, not repricing.
+4. Confirm the displayed snapshot and choose **Queue draft import** within ten
+   minutes. Saved selections must still match it. Only one job per shop can run
+   or wait in the queue.
+5. Watch automatically refreshed per-product results and use the Shopify links
+   to review drafts. The separate non-root worker persists job/item state and
+   creation claims; public requests never execute a root importer.
+6. For failed items, use **Retry / reconcile failed items**. Completed items are
+   skipped. Uncertain creations are recovered by read-only lookup, never another
+   blind create; unresolved uncertainty or a deleted mapped listing requires
+   operator review. Do not run the standalone operator importer concurrently.
+
+Existing owned and recognized legacy listings retain prices, content, publication
+state and inventory. New listings are unpublished drafts; unsafe/unknown/shared
+stock remains zero with review warnings. Imports do not start ongoing sync or
+approve order forwarding.
+
+Live verification reused all five existing selections unchanged. Source `17539`
+(SKU `SE1414-50 BX`) created draft `8424579366975`, with CAD 7.95 wholesale,
+25% markup, CAD 9.94 retail, stock 2, barcode `716770016270`, and one READY image.
+Native Shopify admin confirmed Draft status and no publication anywhere.
+A second 30% preview reused the same listing without changing its 9.94 price.
+Worker restart recovered an intentionally interrupted creation through its
+persisted claim, with exactly one listing. All three jobs completed; the original
+five selections were restored. This retained draft is separate from the earlier
+operator-backed 50-parent batch and historical fresh-draft checks below.
 
 Verify that products arrive as drafts before any publication. Check titles,
 descriptions, images, SKU/barcode mappings, variant options, and stock ownership.
 Surface missing-image warnings rather than silently omitting products.
 Supplier prices must not be mistaken for the retailer's selling prices.
 
-The consumer must save the first catalog page's generation and change cursor,
+The app snapshots the feed generation/change cursor with its import plan, but
+does not yet replay changes or synchronize new mappings. The future ongoing-sync
+consumer must save the first catalog page's generation and change cursor,
 complete pagination, and then replay changes to catch updates made during the
 initial import. Record how the user knows the import has finished.
 
