@@ -80,7 +80,11 @@ final class UltraLove_Product_Feed {
             return new WP_Error( 'feed_forbidden', 'This account does not have catalog API access.', array( 'status' => 403 ) );
         }
         try {
-            if ( ! UltraLove_Feed_Journal::allow_request( get_current_user_id(), self::REQUESTS_PER_MINUTE ) ) {
+            $read_only = class_exists( 'UltraLove_Catalog_Read_Only' ) && UltraLove_Catalog_Read_Only::active();
+            $allowed = $read_only
+                ? UltraLove_Catalog_Read_Only::allow_request( get_current_user_id(), self::REQUESTS_PER_MINUTE )
+                : UltraLove_Feed_Journal::allow_request( get_current_user_id(), self::REQUESTS_PER_MINUTE );
+            if ( ! $allowed ) {
                 return new WP_Error( 'feed_rate_limit', 'Request limit reached. Retry in the next minute.', array( 'status' => 429 ) );
             }
         } catch ( RuntimeException $error ) {
@@ -99,9 +103,16 @@ final class UltraLove_Product_Feed {
             'after_id' => array( 'type' => 'integer', 'default' => 0, 'minimum' => 0 ),
             'ids' => array( 'type' => 'array', 'items' => array( 'type' => 'integer', 'minimum' => 1 ), 'maxItems' => self::PAGE_SIZE ),
         );
-        foreach ( array( '/products', '/inventory', '/products/(?P<id>\d+)', '/changes', '/openapi' ) as $path ) {
+        foreach ( array( '/products', '/inventory', '/products/(?P<id>\d+)', '/categories', '/changes', '/openapi' ) as $path ) {
             $args = $paging;
-            if ( $path === '/changes' ) {
+            if ( $path === '/products' ) {
+                $args['category_id'] = array( 'type' => 'integer', 'minimum' => 1 );
+                $args['search'] = array( 'type' => 'string', 'minLength' => 1, 'maxLength' => 100 );
+                $args['parents_only'] = array( 'type' => 'boolean', 'default' => false );
+            } elseif ( $path === '/categories' ) {
+                $args = array( 'after_id' => $paging['after_id'],
+                    'per_page' => array_merge( $paging['per_page'], array( 'default' => 50 ) ) );
+            } elseif ( $path === '/changes' ) {
                 $args = array(
                     'per_page' => $paging['per_page'],
                     'after' => array( 'type' => 'integer', 'required' => true, 'minimum' => 0 ),
@@ -139,8 +150,23 @@ final class UltraLove_Product_Feed {
             if ( str_ends_with( $route, '/openapi' ) ) {
                 return new WP_REST_Response( json_decode( file_get_contents( __DIR__ . '/openapi.json' ), true, 512, JSON_THROW_ON_ERROR ) );
             }
-            $cursor = UltraLove_Feed_Journal::publish();
+            $read_only = class_exists( 'UltraLove_Catalog_Read_Only' ) && UltraLove_Catalog_Read_Only::active();
+            $cursor = $read_only ? UltraLove_Feed_Journal::current_cursor() : UltraLove_Feed_Journal::publish();
             $generation = UltraLove_Feed_Journal::generation();
+            if ( str_ends_with( $route, '/categories' ) ) {
+                global $wpdb;
+                $size = (int) $request['per_page'];
+                $rows = $wpdb->get_results( $wpdb->prepare(
+                    "SELECT t.term_id,t.name,t.slug,tt.parent FROM {$wpdb->terms} t INNER JOIN {$wpdb->term_taxonomy} tt ON tt.term_id=t.term_id WHERE tt.taxonomy='product_cat' AND t.term_id>%d ORDER BY t.term_id LIMIT %d",
+                    (int) $request['after_id'], $size + 1
+                ) );
+                UltraLove_Feed_Journal::check_database();
+                $categories = array_map( static fn( $term ) => array( 'id' => (int) $term->term_id,
+                    'name' => $term->name, 'slug' => $term->slug, 'parent_id' => (int) $term->parent ), array_slice( $rows, 0, $size ) );
+                return new WP_REST_Response( array( 'generation' => $generation, 'change_cursor' => $cursor,
+                    'next_after_id' => $categories ? $categories[count( $categories ) - 1]['id'] : (int) $request['after_id'],
+                    'has_more' => count( $rows ) > $size, 'categories' => $categories ) );
+            }
             if ( str_ends_with( $route, '/changes' ) ) {
                 $after = (int) $request['after'];
                 $page = UltraLove_Feed_Journal::page( $after, (int) $request['per_page'] + 1 );
@@ -176,7 +202,10 @@ final class UltraLove_Product_Feed {
                 return new WP_REST_Response( self::product( $id ) );
             }
             $size = (int) $request['per_page'];
-            $ids = self::catalog_ids( (int) $request['after_id'], $size + 1, $request['ids'] ?? array() );
+            $ids = self::catalog_ids( (int) $request['after_id'], $size + 1, $request['ids'] ?? array(), array(
+                'category_id' => $request['category_id'] ?? 0, 'search' => $request['search'] ?? '',
+                'parents_only' => $request['parents_only'] ?? false,
+            ) );
             $more = count( $ids ) > $size;
             $items = array();
             $last = (int) $request['after_id'];
@@ -215,9 +244,34 @@ final class UltraLove_Product_Feed {
         return "(p.post_status='publish' AND (p.post_type='product' OR (p.post_type='product_variation' AND parent.ID IS NOT NULL AND parent.post_type='product' AND parent.post_status='publish')))";
     }
 
-    public static function catalog_ids( int $after, int $limit, array $ids = array() ): array {
+    public static function catalog_ids( int $after, int $limit, array $ids = array(), array $filters = array() ): array {
         global $wpdb;
         $filter = $ids ? ' AND p.ID IN (' . implode( ',', array_map( 'absint', $ids ) ) . ')' : '';
+        if ( ! empty( $filters['parents_only'] ) ) {
+            $filter .= " AND p.post_type='product'";
+        }
+        if ( ! empty( $filters['category_id'] ) ) {
+            $categories = array( (int) $filters['category_id'] );
+            $terms = $wpdb->get_results( "SELECT term_id,parent FROM {$wpdb->term_taxonomy} WHERE taxonomy='product_cat'" );
+            UltraLove_Feed_Journal::check_database();
+            do {
+                $prior_count = count( $categories );
+                foreach ( $terms as $term ) {
+                    if ( in_array( (int) $term->parent, $categories, true ) && ! in_array( (int) $term->term_id, $categories, true ) ) {
+                        $categories[] = (int) $term->term_id;
+                    }
+                }
+            } while ( count( $categories ) > $prior_count );
+            $filter .= " AND EXISTS (SELECT 1 FROM {$wpdb->term_relationships} cr INNER JOIN {$wpdb->term_taxonomy} ct ON ct.term_taxonomy_id=cr.term_taxonomy_id WHERE ct.taxonomy='product_cat' AND ct.term_id IN ("
+                . implode( ',', $categories ) . ") AND cr.object_id=CASE WHEN p.post_type='product_variation' THEN parent.ID ELSE p.ID END)";
+        }
+        if ( ( $filters['search'] ?? '' ) !== '' ) {
+            $search = '%' . $wpdb->esc_like( $filters['search'] ) . '%';
+            $filter .= $wpdb->prepare(
+                " AND (p.post_title LIKE %s OR parent.post_title LIKE %s OR EXISTS (SELECT 1 FROM {$wpdb->postmeta} sm WHERE sm.post_id IN (p.ID,parent.ID) AND sm.meta_key='_sku' AND sm.meta_value LIKE %s) OR EXISTS (SELECT 1 FROM {$wpdb->posts} child INNER JOIN {$wpdb->postmeta} cm ON cm.post_id=child.ID WHERE child.post_parent=p.ID AND child.post_type='product_variation' AND child.post_status='publish' AND cm.meta_key='_sku' AND cm.meta_value LIKE %s))",
+                $search, $search, $search, $search
+            );
+        }
         $query = $wpdb->prepare(
             "SELECT p.ID FROM {$wpdb->posts} p LEFT JOIN {$wpdb->posts} parent ON parent.ID=p.post_parent WHERE "
             . self::catalog_condition() . $filter . ' AND p.ID>%d ORDER BY p.ID LIMIT %d', $after, $limit

@@ -26,6 +26,47 @@ test phase.
 
 ## Step record
 
+### Bounded browsing and selected imports
+
+The existing Shopify app consumes this WooCommerce feed; there is no SQL export,
+CSV replacement, or second Shopify app. The entire published catalog remains
+available, but the initial connector does **not** automatically import it all.
+
+- Product browsing requests **50 parent products per page**. The feed rejects
+  requests above **100 records**; this is a per-request limit, not a total-catalog
+  ceiling. Follow `next_after_id` while `has_more` is true.
+- `/categories` provides authenticated category navigation, also defaulting to
+  50 records with a maximum of 100.
+- `/products` accepts `category_id` (including descendants), `search` (literal
+  partial name/SKU, including published variation SKUs), and `parents_only`.
+  Existing unfiltered consumers still see published variations.
+- The operator-backed app import accepts **1–50 explicitly selected parent
+  product IDs**. Published variants are included automatically, fetched in
+  requests of at most 100 records. Selecting a category does not import it.
+- New Shopify copies remain unpublished drafts. Missing prices, unknown or
+  unmanaged stock, and shared parent inventory require review and cannot become
+  sellable stock through invented/duplicated quantities.
+- Existing retailer listings keep their content, prices, inventory and
+  publication status. Listing permission does not approve order forwarding.
+
+The catalog-only app worker lives outside WordPress and uses the existing
+root-only app/feed credentials. Its selected feed checkpoint, resume state and
+created-versus-reused cleanup ledger are filesystem-only. It does not bootstrap
+WordPress or write product mappings/options/postmeta.
+
+Its loopback feed GETs explicitly request the dev-only catalog read mode. That
+mode installs a database-query guard before ordinary plugins and authentication,
+rejects write statements, uses the existing persistent object cache for request
+limits, and reads the published journal cursor without allocating new entries.
+The normal connection/account is unchanged; no special database connection or
+new account is created. A request requiring a database write fails explicitly
+rather than applying it. Normal feed clients and the selected-product/order
+worker retain their existing behavior.
+
+This is an operator-backed development connection, not yet an embedded retailer
+product-picker UI. Implementation and isolated tests do not establish live
+deployment or import success; record those results separately below.
+
 Keep staff setup separate from actions a retailer can actually perform.
 Do not describe a lab-only administrator control as a retailer-facing screen.
 

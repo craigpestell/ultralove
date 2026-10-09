@@ -88,6 +88,58 @@ The product selection below, its 25-product cap, and simple-product validation
 are test-connector safety/coverage limits, not business restrictions.
 The current pilot is not yet a full-catalog reseller browsing/import interface.
 
+### Bounded catalog app worker
+
+The existing Shopify app now has a feed-based catalog-only execution path.
+It browses 50 parent products per request (feed maximum 100), supports
+category/name/SKU filtering, and imports only an explicitly selected batch of
+at most 50 parent products. It never automatically imports the entire catalog
+or a category. Published child variants are fetched in batches of at most 100.
+The existing selected-product/order worker and its settings are unchanged.
+
+Run the repository's `ops/dropshipping/run-shopify-catalog.php` as an operator
+script outside the webroot, after deploying the related feed/connector code:
+
+```bash
+php8.5 /root/.ultralove-shopify-dev/run-shopify-catalog.php --browse
+php8.5 /root/.ultralove-shopify-dev/run-shopify-catalog.php --categories
+php8.5 /root/.ultralove-shopify-dev/run-shopify-catalog.php --browse --category-id=123 --search=SKU --after-id=456
+php8.5 /root/.ultralove-shopify-dev/run-shopify-catalog.php --import=17186,17188
+```
+
+Browse/filter arguments affect only retrieval; `--import` requires explicit
+IDs and cannot be combined with browse filters. New copies are drafts; existing
+retailer listings are reused without updates. Missing prices or ambiguous stock
+remain review-required and unavailable. Shopify may process selected imports
+asynchronously; the worker waits for completion and verifies all selected IDs,
+variants and media rather than treating a submitted job as success.
+
+No WordPress bootstrap or SQL export runs in this app worker. The loopback GETs
+use the authenticated feed with `X-UltraLove-Catalog-Read-Only: 1`. A dev-only MU
+guard rejects database writes, reads the existing journal cursor without
+publishing it, and uses the existing persistent object cache for its rate quota.
+The worker requires response headers confirming the guard and zero database
+writes. Unavailable cache, failed authentication or an attempted write fails
+the request, without advancing an import checkpoint. Normal feed requests and
+independent cron activity retain their existing behavior.
+
+Each sorted selection has a root-only directory
+`/root/.ultralove-shopify-dev/catalog-<selection hash>/`. Retain the original
+`feed-checkpoint.json` and the importer's ownership/resume ledger. Repeating the
+same `--import=...` command resumes that selection instead of recreating products.
+Do not replace a checkpoint during an uncertain import.
+
+After explicitly deciding to remove the imported copies, run:
+
+```bash
+php8.5 /root/.ultralove-shopify-dev/run-shopify-catalog.php --cleanup=17186,17188
+```
+
+Cleanup uses the same selection/checkpoint. It must only delete newly created,
+still-draft products with matching supplier identity and this run's ownership;
+it must never delete reused, published, or unrelated listings. Do not run cleanup
+as part of normal verification. Production feed/plugins remain inactive.
+
 Select up to 25 **existing** published simple products with SKUs, prices, and
 managed stock, an approved dropshipping retailer, and an initial retail markup.
 No synthetic products are created on dev. The initial pilot selects existing

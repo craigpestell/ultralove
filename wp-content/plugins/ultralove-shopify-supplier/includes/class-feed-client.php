@@ -2,16 +2,18 @@
 /**
  * Authenticated, CLI-only consumer of the private dev feed.
  */
-if ( ! defined( 'WP_CLI' ) || ! WP_CLI || ! defined( 'ABSPATH' ) ) {
+if ( PHP_SAPI !== 'cli' ) {
     exit( 1 );
 }
 
 final class UltraLove_Shopify_Feed_Client {
     private array $credentials;
+    private $transport;
 
-    public function __construct( array $credentials ) {
-        if ( wp_get_environment_type() !== 'development'
-            || home_url() !== 'https://dev.ultralove.ca' || DB_NAME !== 'wordpress_dev' ) {
+    public function __construct( array $credentials, ?callable $transport = null ) {
+        if ( $transport === null && ( ! defined( 'WP_CLI' ) || ! WP_CLI || ! defined( 'ABSPATH' )
+            || wp_get_environment_type() !== 'development'
+            || home_url() !== 'https://dev.ultralove.ca' || DB_NAME !== 'wordpress_dev' ) ) {
             throw new RuntimeException( 'Feed consumer is restricted to the dev supplier.' );
         }
         foreach ( array( 'username', 'password' ) as $key ) {
@@ -23,10 +25,11 @@ final class UltraLove_Shopify_Feed_Client {
             throw new RuntimeException( 'Invalid feed username.' );
         }
         $this->credentials = $credentials;
+        $this->transport = $transport;
     }
 
     public function request( string $route, array $query = array() ): array {
-        if ( ! in_array( $route, array( '/products', '/inventory', '/changes' ), true ) ) {
+        if ( ! in_array( $route, array( '/products', '/inventory', '/changes', '/categories' ), true ) ) {
             throw new InvalidArgumentException( 'Unsupported read-only feed route.' );
         }
         // Loopback exercises real REST authentication without opening private dev to the internet.
@@ -34,26 +37,29 @@ final class UltraLove_Shopify_Feed_Client {
         if ( $query ) {
             $url .= '?' . http_build_query( $query, '', '&', PHP_QUERY_RFC3986 );
         }
-        $response = wp_remote_get( $url, array(
+        $arguments = array(
             'timeout' => 30, 'redirection' => 0,
             'headers' => array(
                 'Host' => 'dev.ultralove.ca', 'X-Forwarded-Proto' => 'https', 'Accept' => 'application/json',
                 'Authorization' => 'Basic ' . base64_encode( $this->credentials['username'] . ':' . $this->credentials['password'] ),
             ),
-        ) );
-        if ( is_wp_error( $response ) ) {
+        );
+        $response = $this->transport ? ( $this->transport )( $url, $arguments ) : wp_remote_get( $url, $arguments );
+        if ( ! $this->transport && is_wp_error( $response ) ) {
             throw new RuntimeException( 'Feed transport failed: ' . $response->get_error_code() );
         }
-        $status = wp_remote_retrieve_response_code( $response );
+        $status = $this->transport ? $response['status'] : wp_remote_retrieve_response_code( $response );
+        $header = $this->transport ? static fn( $name ) => $response['headers'][$name] ?? '' : static fn( $name ) => wp_remote_retrieve_header( $response, $name );
+        $body = $this->transport ? $response['body'] : wp_remote_retrieve_body( $response );
         if ( $status !== 200 ) {
-            $retry = $status === 429 ? '; retry after ' . wp_remote_retrieve_header( $response, 'retry-after' ) . ' seconds' : '';
+            $retry = $status === 429 ? '; retry after ' . $header( 'retry-after' ) . ' seconds' : '';
             throw new RuntimeException( 'Feed HTTP ' . $status . $retry . '; no checkpoint advanced.', $status );
         }
-        if ( ! str_starts_with( strtolower( wp_remote_retrieve_header( $response, 'content-type' ) ), 'application/json' ) ) {
+        if ( ! str_starts_with( strtolower( $header( 'content-type' ) ), 'application/json' ) ) {
             throw new RuntimeException( 'Feed returned a non-JSON response.' );
         }
         try {
-            $data = json_decode( wp_remote_retrieve_body( $response ), true, 512, JSON_THROW_ON_ERROR );
+            $data = json_decode( $body, true, 512, JSON_THROW_ON_ERROR );
         } catch ( JsonException $error ) {
             throw new RuntimeException( 'Feed returned invalid JSON.', 0, $error );
         }
@@ -74,14 +80,38 @@ final class UltraLove_Shopify_Feed_Client {
         }
     }
 
-    public static function product( array $product ): array {
+    public static function product( array $product, bool $full_catalog = false ): array {
         foreach ( array( 'sku', 'name', 'type', 'description', 'currency', 'price', 'global_unique_id', 'stock_status' ) as $key ) {
             if ( ! isset( $product[$key] ) || ! is_string( $product[$key] ) ) {
                 throw new RuntimeException( 'Invalid feed product field: ' . $key );
             }
         }
-        if ( ! isset( $product['id'] ) || ! is_int( $product['id'] ) || $product['id'] < 1
-            || $product['type'] !== 'simple' || $product['sku'] === '' || $product['currency'] !== 'CAD'
+        if ( ! isset( $product['id'] ) || ! is_int( $product['id'] ) || $product['id'] < 1 || $product['currency'] !== 'CAD' ) {
+            throw new RuntimeException( 'Invalid supplier product identity/currency.' );
+        }
+        if ( $full_catalog ) {
+            if ( $product['type'] === '' || ! is_bool( $product['manage_stock'] ?? null )
+                || ! array_key_exists( 'stock_quantity', $product )
+                || ( $product['stock_quantity'] !== null && ! is_int( $product['stock_quantity'] ) )
+                || ! is_int( $product['parent_id'] ?? null ) || $product['parent_id'] < 0
+                || ( $product['type'] === 'variation' && $product['parent_id'] < 1 )
+                || ! is_int( $product['stock_owner_id'] ?? null ) || $product['stock_owner_id'] < 1
+                || ( $product['price'] !== '' && ( ! preg_match( '/^\d+(?:\.\d+)?$/D', $product['price'] ) || ! is_finite( (float) $product['price'] ) ) )
+                || ! is_array( $product['attributes'] ?? null ) ) {
+                throw new RuntimeException( 'Invalid full-catalog product fields.' );
+            }
+            foreach ( $product['attributes'] as $attribute ) {
+                if ( ! is_array( $attribute ) || ! is_string( $attribute['name'] ?? null )
+                    || ! is_array( $attribute['options'] ?? null ) ) {
+                    throw new RuntimeException( 'Invalid full-catalog attribute.' );
+                }
+                foreach ( $attribute['options'] as $value ) {
+                    if ( ! is_string( $value ) ) {
+                        throw new RuntimeException( 'Invalid full-catalog attribute value.' );
+                    }
+                }
+            }
+        } elseif ( $product['type'] !== 'simple' || $product['sku'] === ''
             || ! preg_match( '/^\d+(?:\.\d+)?$/', $product['price'] ) || (float) $product['price'] <= 0
             || ( $product['manage_stock'] ?? null ) !== true || ! is_int( $product['stock_quantity'] ?? null )
             || ! in_array( $product['stock_status'], array( 'instock', 'outofstock', 'onbackorder' ), true )
@@ -106,6 +136,176 @@ final class UltraLove_Shopify_Feed_Client {
             }
         }
         return $product;
+    }
+
+    public function all_products(): array {
+        $after = 0;
+        $state = array( 'products' => array() );
+        do {
+            $page = $this->request( '/products', array( 'after_id' => $after, 'per_page' => 100 ) );
+            self::snapshot_page( $page, 'products' );
+            if ( count( $page['products'] ) > 100 ) {
+                throw new RuntimeException( 'Feed exceeded the hard catalog request cap.' );
+            }
+            if ( ! isset( $state['generation'] ) ) {
+                $state['generation'] = $page['generation'];
+                $state['cursor'] = $page['change_cursor'];
+            } elseif ( $state['generation'] !== $page['generation'] || $page['change_cursor'] < $state['cursor'] ) {
+                throw new RuntimeException( 'Catalog generation/cursor changed during full import.' );
+            }
+            $last = $after;
+            foreach ( $page['products'] as $record ) {
+                if ( ! is_array( $record ) ) {
+                    throw new RuntimeException( 'Invalid full-catalog record.' );
+                }
+                $product = self::product( $record, true );
+                if ( $product['id'] <= $last || isset( $state['products'][$product['id']] ) ) {
+                    throw new RuntimeException( 'Unordered or duplicate full-catalog ID.' );
+                }
+                $state['products'][$product['id']] = $product;
+                $last = $product['id'];
+            }
+            if ( $page['next_after_id'] !== $last || ( $page['has_more'] && $last <= $after ) ) {
+                throw new RuntimeException( 'Full-catalog pagination did not advance correctly.' );
+            }
+            $after = $last;
+        } while ( $page['has_more'] );
+        if ( ! $state['products'] ) {
+            throw new RuntimeException( 'Refusing an empty full-catalog import.' );
+        }
+        foreach ( $state['products'] as $product ) {
+            if ( $product['parent_id'] && ! isset( $state['products'][$product['parent_id']] ) ) {
+                throw new RuntimeException( 'Full catalog contains a variation without its parent.' );
+            }
+        }
+        return $state;
+    }
+
+    public function products_page( array $filters = array() ): array {
+        $query = array_merge( array( 'after_id' => 0, 'per_page' => 50, 'parents_only' => true ), $filters );
+        foreach ( $query as $key => $value ) {
+            if ( ! in_array( $key, array( 'after_id', 'per_page', 'parents_only', 'category_id', 'search' ), true ) ) {
+                throw new InvalidArgumentException( 'Unsupported catalog browse filter.' );
+            }
+        }
+        if ( ! is_int( $query['per_page'] ) || $query['per_page'] < 1 || $query['per_page'] > 100
+            || ! is_int( $query['after_id'] ) || $query['after_id'] < 0
+            || ! is_bool( $query['parents_only'] )
+            || ( isset( $query['category_id'] ) && ( ! is_int( $query['category_id'] ) || $query['category_id'] < 1 ) )
+            || ( isset( $query['search'] ) && ( ! is_string( $query['search'] ) || $query['search'] === '' || mb_strlen( $query['search'] ) > 100 ) ) ) {
+            throw new InvalidArgumentException( 'Invalid catalog browse filters.' );
+        }
+        $page = $this->request( '/products', $query );
+        self::snapshot_page( $page, 'products' );
+        if ( count( $page['products'] ) > $query['per_page'] ) {
+            throw new RuntimeException( 'Feed exceeded the requested catalog page size.' );
+        }
+        $last = $query['after_id'];
+        foreach ( $page['products'] as &$record ) {
+            if ( ! is_array( $record ) ) {
+                throw new RuntimeException( 'Invalid catalog browse product.' );
+            }
+            $record = self::product( $record, true );
+            if ( $record['id'] <= $last || ( $query['parents_only'] && $record['parent_id'] ) ) {
+                throw new RuntimeException( 'Invalid catalog browse page ordering/parent selection.' );
+            }
+            $last = $record['id'];
+        }
+        unset( $record );
+        if ( $page['next_after_id'] !== $last || ( $page['has_more'] && $last <= $query['after_id'] ) ) {
+            throw new RuntimeException( 'Catalog browse page did not advance correctly.' );
+        }
+        return $page;
+    }
+
+    public function selected_products( array $ids ): array {
+        if ( ! $ids || count( $ids ) > 50 || count( array_unique( $ids ) ) !== count( $ids ) ) {
+            throw new InvalidArgumentException( 'Select between 1 and 50 distinct products per import batch.' );
+        }
+        foreach ( $ids as $id ) {
+            if ( ! is_int( $id ) || $id < 1 ) {
+                throw new InvalidArgumentException( 'Selected supplier IDs must be positive integers.' );
+            }
+        }
+        $state = array( 'products' => array() );
+        $read = function ( array $batch ) use ( &$state ): array {
+            $page = $this->request( '/products', array( 'ids' => $batch, 'per_page' => 100 ) );
+            self::snapshot_page( $page, 'products' );
+            if ( $page['has_more'] || count( $page['products'] ) !== count( $batch ) ) {
+                throw new RuntimeException( 'Selected product/variation is missing or unavailable; no partial import.' );
+            }
+            if ( ! isset( $state['generation'] ) ) {
+                $state['generation'] = $page['generation'];
+                $state['cursor'] = $page['change_cursor'];
+            } elseif ( $state['generation'] !== $page['generation'] || $page['change_cursor'] < $state['cursor'] ) {
+                throw new RuntimeException( 'Feed changed while reading the selected batch.' );
+            }
+            $products = array();
+            foreach ( $page['products'] as $record ) {
+                if ( ! is_array( $record ) ) {
+                    throw new RuntimeException( 'Invalid selected catalog product.' );
+                }
+                $product = self::product( $record, true );
+                if ( ! in_array( $product['id'], $batch, true ) || isset( $products[$product['id']] ) || isset( $state['products'][$product['id']] ) ) {
+                    throw new RuntimeException( 'Unexpected or duplicate selected product.' );
+                }
+                $products[$product['id']] = $product;
+                $state['products'][$product['id']] = $product;
+            }
+            return $products;
+        };
+        $roots = $read( $ids );
+        $children = array();
+        foreach ( $roots as $product ) {
+            if ( $product['parent_id'] ) {
+                throw new InvalidArgumentException( 'Select the parent product; published variants are included automatically.' );
+            }
+            if ( ! is_array( $product['variations'] ?? null ) ) {
+                throw new RuntimeException( 'Selected product has invalid variation IDs.' );
+            }
+            foreach ( $product['variations'] as $id ) {
+                if ( ! is_int( $id ) || $id < 1 || isset( $children[$id] ) ) {
+                    throw new RuntimeException( 'Invalid or duplicate published variation ID.' );
+                }
+                $children[$id] = $product['id'];
+            }
+        }
+        foreach ( array_chunk( array_keys( $children ), 100 ) as $batch ) {
+            foreach ( $read( $batch ) as $product ) {
+                if ( $product['parent_id'] !== $children[$product['id']] || $product['type'] !== 'variation' ) {
+                    throw new RuntimeException( 'Selected variation has changed parent/type.' );
+                }
+            }
+        }
+        ksort( $state['products'] );
+        return $state;
+    }
+
+    public function categories_page( array $filters = array() ): array {
+        $query = array_merge( array( 'after_id' => 0, 'per_page' => 50 ), $filters );
+        if ( array_diff( array_keys( $query ), array( 'after_id', 'per_page' ) )
+            || ! is_int( $query['after_id'] ) || $query['after_id'] < 0
+            || ! is_int( $query['per_page'] ) || $query['per_page'] < 1 || $query['per_page'] > 100 ) {
+            throw new InvalidArgumentException( 'Invalid category pagination.' );
+        }
+        $page = $this->request( '/categories', $query );
+        self::snapshot_page( $page, 'categories' );
+        if ( count( $page['categories'] ) > $query['per_page'] ) {
+            throw new RuntimeException( 'Category feed exceeded the requested page size.' );
+        }
+        $last = $query['after_id'];
+        foreach ( $page['categories'] as $category ) {
+            if ( ! is_array( $category ) || ! is_int( $category['id'] ?? null ) || $category['id'] <= $last
+                || ! is_string( $category['name'] ?? null ) || ! is_string( $category['slug'] ?? null )
+                || ! is_int( $category['parent_id'] ?? null ) || $category['parent_id'] < 0 ) {
+                throw new RuntimeException( 'Invalid/unordered category feed item.' );
+            }
+            $last = $category['id'];
+        }
+        if ( $page['next_after_id'] !== $last || ( $page['has_more'] && $last <= $query['after_id'] ) ) {
+            throw new RuntimeException( 'Category pagination did not advance correctly.' );
+        }
+        return $page;
     }
 
     public function read( array $ids, array $state = array() ): array {
