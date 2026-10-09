@@ -31,6 +31,11 @@ jobs:
       - name: Shellcheck deploy scripts
         run: shellcheck -x -S warning deploy/*.sh
 
+      - name: Product CSV regression tests
+        run: |
+          php -l ops/product-export/verify.php
+          php ops/product-export/test.php
+
       - name: No DB dumps, invoices, archives, backups or oversized files
         run: |
           bad=$(git ls-files | grep -Ei '\.(sql|sql\.gz|zip|tgz|tar|bak|xlsx)$|\.bak-|(^|/)invoice|(^|/)statement-' || true)

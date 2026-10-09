@@ -204,7 +204,30 @@ or claim end-to-end automation is verified.
 Product import, inventory synchronization, mixed-cart routing, wholesale order
 accounting, and tracking return remain untested **for Syncee**.
 
+**Legacy plugin cleanup (2026-10-09 UTC):** the unconnected
+`syncee-for-suppliers` plugin was deactivated on the isolated supplier lab after
+the custom dev product-feed/Shopify workflow superseded this evaluation.
+All three installer/token options were still absent, and the old lab bridge
+cron was absent. The active-plugin list was backed up root-only at
+`/root/.ultralove-integration-lab/plugin-cleanup/active-plugins-before-20261009.json`.
+At the user's subsequent request, all 18 plugin files were deleted with
+`wp plugin delete syncee-for-suppliers`; the plugin directory is confirmed
+absent. A root-only recovery archive outside the webroot is retained at
+`/root/.ultralove-integration-lab/plugin-cleanup/syncee-for-suppliers-1.0.26-before-delete-20261009T1042Z.tgz`.
+Deletion did not run the plugin's database uninstall routine.
+Nginx and PHP 8.5 FPM remained active and the lab origin returned HTTP 200.
+Rollback: on the lab only, extract that archive into
+`/var/www/integration-lab/wp-content/plugins`, restore ownership to `www-data`,
+then run
+`wp plugin activate syncee-for-suppliers --allow-root` from
+`/var/www/integration-lab`. This does not uninstall the separate Shopify
+Syncee app, change billing, destroy the lab, or change dev/production plugins.
+The earlier Syncee verification results above describe the historical active
+evaluation; file restoration and reactivation are required to repeat its
+installer checks.
+
 **Custom test connector (2026-10-08 UTC): connected and verified.**
+
 The free, own-organization Shopify app **UltraLove Dropshipping Lab**
 (Dev Dashboard app `433204330497`, organization `239653376`) is installed only
 on `ultralove-integration-lab.myshopify.com`. It uses Admin GraphQL API `2026-10`
@@ -705,6 +728,37 @@ Evidence used to confirm these were safe to deactivate:
 Action taken: deactivated (not deleted) all four WebToffee plugins via `wp plugin deactivate`. Active plugin count dropped from 48 to 44. Verified live: homepage/shop return 200, wp-admin login redirect (302) unaffected, WP All Import/Export plugins remain active, and nginx error log shows only pre-existing unrelated WooCommerce core deprecation notices (`wc_enqueue_js`), not new errors from the deactivation.
 
 Not yet done: deleting the plugin files themselves. Deactivation is fully reversible from the WordPress admin at any time; deletion should wait for a monitoring period.
+
+#### Catalog CSV consolidation (2026-10-09)
+
+The standard retailer and Shopify product CSVs have one owner:
+`ultralove-product-export-sync`, displayed as **UltraLove Product CSV Export**
+version 1.1.0. Its installation path, option keys and job hooks are preserved.
+**WooCommerce > Product CSV Export** provides generation status, both downloads,
+and a nonce-protected **Queue Export Now** action. The old WooCommerce
+**Update Product CSV** and Tools **Product Export Generations** pages redirect
+to this page without adding visible duplicate menu entries.
+
+The child theme's separate full-catalog writers and manual export form were
+removed. The plugin remains responsible for debounced product/stock-change
+updates and the 15-minute fallback; it clears obsolete
+`ultralove_refresh_product_exports_hourly` events, including events with
+arguments. Customer-account download links, CSV filenames, column order,
+pagination, gallery rows, and Shopify draft status are preserved.
+
+This does **not** merge or disable the distinct stock-only plugin,
+`[exportstock]` shortcode, WP All Import/Export suite, authenticated product
+feed, manual dropshipping, or Shopify supplier connector. CSV downloads still
+serve customers independently of the API feed, which is inactive on production.
+The four legacy WebToffee plugins remain inactive on dev and absent on production.
+No active dev/production plugin was made redundant by the menu/code consolidation.
+
+Verification: `php ops/product-export/test.php` (also run in CI), followed by
+`wp eval-file - --allow-root < ops/product-export/verify.php` on dev.
+Keep the existing export-sync plugin active when deploying the cleaned-up
+theme. Rollback restores the preceding plugin/theme release through the normal
+deployment pipeline; no plugin activation migration or source product edits
+are required.
 
 ### 4.8 CSS/JS Optimization Plugin — Autoptimize (2026-09-14)
 

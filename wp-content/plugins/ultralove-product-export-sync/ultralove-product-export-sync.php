@@ -1,8 +1,8 @@
 <?php
 /**
- * Plugin Name: UltraLove Product Export Sync
- * Description: Keeps product export CSV files up to date using debounced background jobs and fallback cron.
- * Version: 1.0.0
+ * Plugin Name: UltraLove Product CSV Export
+ * Description: Standard retailer and Shopify product CSV generation, automatic updates and export status in one admin page.
+ * Version: 1.1.0
  * Author: UltraLove
  */
 
@@ -20,6 +20,7 @@ final class UltraLove_Product_Export_Sync {
     const STATUS_OPTION     = 'ultralove_export_sync_status';
     const REPAIR_OPTION     = 'ultralove_export_sync_cron_repaired';
     const DEBOUNCE_SECONDS  = 60;
+    const LEGACY_HOURLY_HOOK = 'ultralove_refresh_product_exports_hourly';
 
     public static function init() {
         add_filter( 'cron_schedules', array( __CLASS__, 'register_cron_interval' ) );
@@ -112,6 +113,7 @@ final class UltraLove_Product_Export_Sync {
     }
 
     public static function clear_legacy_schedules() {
+        self::clear_hook_schedules( self::LEGACY_HOURLY_HOOK );
         self::clear_hook_schedules_with_args( self::WP_SINGLE_HOOK );
         self::clear_hook_schedules_with_args( self::WP_RECURRING_HOOK );
     }
@@ -172,6 +174,7 @@ final class UltraLove_Product_Export_Sync {
     }
 
     public static function unschedule_all() {
+        self::clear_hook_schedules( self::LEGACY_HOURLY_HOOK );
         while ( $ts = wp_next_scheduled( self::WP_SINGLE_HOOK ) ) {
             wp_unschedule_event( $ts, self::WP_SINGLE_HOOK );
         }
@@ -276,7 +279,7 @@ final class UltraLove_Product_Export_Sync {
         );
 
         $columns = ( 'shopify' === $format ) ? $shopify_columns : $default_columns;
-        fputcsv( $csv_file, $columns );
+        fputcsv( $csv_file, $columns, ',', '"', '\\' );
 
         $page     = 1;
         $per_page = 200;
@@ -324,7 +327,7 @@ final class UltraLove_Product_Export_Sync {
                             $line[] = 'draft';
                         }
 
-                        fputcsv( $csv_file, $line );
+                        fputcsv( $csv_file, $line, ',', '"', '\\' );
                         $rows++;
                     }
                 } else {
@@ -351,7 +354,7 @@ final class UltraLove_Product_Export_Sync {
                         $line[] = 'draft';
                     }
 
-                    fputcsv( $csv_file, $line );
+                    fputcsv( $csv_file, $line, ',', '"', '\\' );
                     $rows++;
 
                     if ( 'shopify' === $format ) {
@@ -363,7 +366,7 @@ final class UltraLove_Product_Export_Sync {
                                 $gallery_line[0] = $product->get_sku();
                                 $gallery_line[7] = wp_get_attachment_url( $image_id );
 
-                                fputcsv( $csv_file, $gallery_line );
+                                fputcsv( $csv_file, $gallery_line, ',', '"', '\\' );
                                 $rows++;
                             }
                         }
@@ -438,28 +441,27 @@ final class UltraLove_Product_Export_Sync {
     public static function register_admin_page() {
         add_submenu_page(
             'woocommerce',
-            'Product Export Sync',
-            'Product Export Sync',
+            'Product CSV Export',
+            'Product CSV Export',
             'manage_woocommerce',
             'ultralove-export-sync',
             array( __CLASS__, 'render_admin_page' )
         );
 
-        add_management_page(
-            'Product Export Generations',
-            'Product Export Generations',
-            'manage_woocommerce',
-            'ultralove-export-generations',
-            array( __CLASS__, 'render_tools_page' )
-        );
+        foreach ( array( 'ultralove-export-generations' => 'tools.php', 'am-export-products' => 'woocommerce' ) as $slug => $parent ) {
+            $hook = add_submenu_page( $parent, 'Product CSV Export', 'Product CSV Export', 'manage_woocommerce', $slug, array( __CLASS__, 'render_admin_page' ) );
+            remove_submenu_page( $parent, $slug );
+            add_action( 'load-' . $hook, array( __CLASS__, 'redirect_legacy_page' ) );
+        }
+    }
+
+    public static function redirect_legacy_page() {
+        wp_safe_redirect( admin_url( 'admin.php?page=ultralove-export-sync' ) );
+        exit;
     }
 
     public static function render_admin_page() {
-        self::render_status_page( 'Product Export Sync' );
-    }
-
-    public static function render_tools_page() {
-        self::render_status_page( 'Product Export Generations' );
+        self::render_status_page( 'Product CSV Export' );
     }
 
     private static function render_status_page( $page_title ) {
@@ -494,7 +496,15 @@ final class UltraLove_Product_Export_Sync {
         ?>
         <div class="wrap">
             <h1><?php echo esc_html( $page_title ); ?></h1>
-            <p>This process keeps both CSV exports updated when products and stock change.</p>
+            <p>Standard retailer and Shopify catalog CSVs update automatically when products and stock change. Use Queue Export Now to regenerate both files.</p>
+            <p>
+                <?php if ( file_exists( $default_csv ) ) : ?>
+                    <a class="button" href="<?php echo esc_url( trailingslashit( $upload_dir['baseurl'] ) . 'ultralove-product-export.csv' ); ?>" download>Download Standard CSV</a>
+                <?php endif; ?>
+                <?php if ( file_exists( $shopify_csv ) ) : ?>
+                    <a class="button" href="<?php echo esc_url( trailingslashit( $upload_dir['baseurl'] ) . 'ultralove-product-export-shopify.csv' ); ?>" download>Download Shopify CSV</a>
+                <?php endif; ?>
+            </p>
 
             <table class="widefat striped" style="max-width: 900px;">
                 <tbody>
