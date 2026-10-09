@@ -53,7 +53,18 @@ Record:
 
 Verified technical facts:
 
-- Staff grant access under **Users > Edit user > Supplier catalog API**.
+- Administrators grant other accounts access under
+  **Users > Edit user > Supplier catalog API**. This grant/revoke control remains
+  administrator-only; it is not a shop-manager onboarding task.
+- Shop managers and administrators already have feed-reading access through
+  `manage_woocommerce`. No per-user feed checkbox is needed for these roles.
+  Ordinary customers still require an explicit catalog grant.
+- For a manager's own separate API client, use **Profile > Application Passwords**
+  over HTTPS. Give the credential a descriptive client-specific name, store the
+  one-time password securely, and revoke it from the same section when no longer
+  needed. An application password inherits the manager's other permissions:
+  **never give a manager's credential to a retailer**. Use a dedicated,
+  catalog-only customer account for a retailer connector.
 - Dev base URL: `https://dev.ultralove.ca/wp-json/ultralove-feed/v1`.
 - Requests require both account permission and authentication over HTTPS.
 - Cloudflare Access still protects dev. Feed credentials alone do not bypass
@@ -76,6 +87,46 @@ retailers' Shopify stores.
 
 Keep this phase product-only. Connecting a catalog must not silently enable
 order forwarding, supplier payment, production dropshipping, or notifications.
+
+### Administrator-led setup of the existing dev connection
+
+This is a staff workflow for the existing test store, not independent-retailer
+self-service. **WooCommerce > Shopify Supplier** is available on dev to
+staff administrators with `manage_options`. The menu, page and settings-save
+handler use the same permission; shop managers and customer accounts cannot
+access them. Shop managers' automatic feed-reading permission does not grant
+connection-management rights. Saving still requires a valid nonce and validated
+settings.
+
+The existing worker already has a separate root-only catalog credential.
+Administrators do not issue, enter or rotate that credential on this screen.
+Cloudflare Access and the fixed Shopify test-store allowlist remain unchanged.
+
+1. An administrator/operator confirms the dev feed and supplier plugins,
+   worker credential and test-store connection are installed. An approved dev
+   retailer and enabled dev dropshipping are prerequisites of this existing
+   test connector; catalog listing itself does not grant fulfilment approval.
+2. The staff administrator opens **WooCommerce > Shopify Supplier**.
+3. Under **Existing product IDs**, enter comma-separated IDs from the existing
+   WooCommerce catalog, up to 25 published simple products with SKUs, prices and
+   managed stock. Out-of-stock products with known zero stock are allowed.
+4. Choose the existing **Approved retailer** and set **Initial retail markup (%)**.
+   This markup affects newly created Shopify products only, not existing
+   retailer selling prices.
+5. Preserve the approved **Enable dev supplier sync** state and use
+   **Save Changes**. The existing scheduled worker reads the saved selection.
+   This screen does not provide a new product-only worker mode; an operator
+   uses `wp ultralove shopify sync --catalog-only` for a product-only check.
+6. Check **Last successful catalog sync** and any displayed error, then review
+   imported drafts in Shopify. New products remain unpublished; previously
+   mapped products retain their existing publication state.
+7. To stop a product's sync and forwarding, remove its ID and save. Its Shopify
+   product and mapping remain; deselected stock is no longer kept current.
+
+Do not change live dev settings merely to rehearse these steps. The original
+three-product selection and 0% markup remain the verification baseline.
+Retailer-facing product browsing/selection, additional stores, and production
+availability remain separate pending work.
 
 ## 3. Select products
 
