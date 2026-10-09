@@ -54,6 +54,8 @@ final class UltraLove_Catalog_Read_Only {
         if ( ( $_SERVER['HTTP_X_ULTRALOVE_CATALOG_READ_ONLY'] ?? '' ) !== '1'
             || ( $_SERVER['REQUEST_METHOD'] ?? '' ) !== 'GET'
             || ! in_array( $_SERVER['REMOTE_ADDR'] ?? '', array( '127.0.0.1', '::1' ), true )
+            || ! empty( $_SERVER['HTTP_CF_CONNECTING_IP'] ) || ! empty( $_SERVER['HTTP_CF_RAY'] )
+            || ! empty( $_SERVER['HTTP_CF_ACCESS_JWT_ASSERTION'] )
             || ( $_SERVER['HTTP_HOST'] ?? '' ) !== 'dev.ultralove.ca'
             || ! defined( 'WP_ENVIRONMENT_TYPE' ) || WP_ENVIRONMENT_TYPE !== 'development'
             || ! defined( 'DB_NAME' ) || DB_NAME !== 'wordpress_dev'

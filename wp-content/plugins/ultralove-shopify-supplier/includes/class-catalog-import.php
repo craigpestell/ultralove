@@ -381,7 +381,7 @@ final class UltraLove_Shopify_Catalog_Import {
             $headers[] = 'X-Shopify-Access-Token: ' . $this->token;
         }
         $options = array( CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => false,
-            CURLOPT_CONNECTTIMEOUT => 30, CURLOPT_TIMEOUT => 900, CURLOPT_PROTOCOLS => CURLPROTO_HTTPS,
+            CURLOPT_CONNECTTIMEOUT => 30, CURLOPT_TIMEOUT => 900, CURLOPT_PROTOCOLS_STR => 'https',
             CURLOPT_SSL_VERIFYPEER => true, CURLOPT_SSL_VERIFYHOST => 2 );
         if ( $body !== null ) {
             $options[CURLOPT_POST] = true;
@@ -395,7 +395,6 @@ final class UltraLove_Shopify_Catalog_Import {
         $response = curl_exec( $curl );
         $status = (int) curl_getinfo( $curl, CURLINFO_HTTP_CODE );
         $error = curl_errno( $curl );
-        curl_close( $curl );
         if ( $response === false || $status < 200 || $status >= 300 ) {
             // Never echo a signed storage URL, token, credentials or an OAuth response.
             throw new RuntimeException( 'Connector HTTP failure: status ' . $status . ', curl code ' . $error . '. No mutation was retried.' );

@@ -46,40 +46,12 @@ try {
     $pages = 0;
     $queries = 0;
     $transport = static function ( string $url, array $arguments ) use ( &$pages, &$queries ): array {
-        if ( ! preg_match( '~^http://localhost/wp-json/ultralove-feed/v1/(products|categories)\?~', $url ) ) {
-            throw new RuntimeException( 'Catalog app may only GET the configured loopback catalog feed.' );
-        }
-        $headers = array();
-        $request_headers = array_merge( $arguments['headers'], array( 'X-UltraLove-Catalog-Read-Only' => '1' ) );
-        foreach ( $request_headers as $name => $value ) {
-            $headers[] = $name . ': ' . $value;
-        }
-        $response_headers = array();
-        $curl = curl_init( $url );
-        curl_setopt_array( $curl, array( CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => false,
-            CURLOPT_CONNECTTIMEOUT => 10, CURLOPT_TIMEOUT => 120, CURLOPT_HTTPHEADER => $headers,
-            CURLOPT_HEADERFUNCTION => static function ( $handle, string $line ) use ( &$response_headers ): int {
-                if ( str_contains( $line, ':' ) ) {
-                    list( $name, $value ) = explode( ':', $line, 2 );
-                    $response_headers[strtolower( trim( $name ) )] = trim( $value );
-                }
-                return strlen( $line );
-            },
-        ) );
-        $body = curl_exec( $curl );
-        $status = curl_getinfo( $curl, CURLINFO_RESPONSE_CODE );
-        if ( $body === false ) {
-            throw new RuntimeException( 'Product feed transport failed: curl ' . curl_errno( $curl ) . '.' );
-        }
-        if ( ( $response_headers['x-ultralove-catalog-read-only'] ?? '' ) !== '1'
-            || ( $response_headers['x-ultralove-catalog-database-writes'] ?? '' ) !== '0' ) {
-            throw new RuntimeException( 'Feed request did not confirm its database-write guard; refusing import.' );
-        }
-        if ( $status === 200 ) {
+        $response = UltraLove_Shopify_Feed_Client::catalog_transport( $url, $arguments );
+        if ( $response['status'] === 200 ) {
             ++$pages;
-            $queries += (int) ( $response_headers['x-ultralove-catalog-selects'] ?? 0 );
+            $queries += (int) ( $response['headers']['x-ultralove-catalog-selects'] ?? 0 );
         }
-        return array( 'status' => $status, 'headers' => $response_headers, 'body' => $body );
+        return $response;
     };
     $credentials = json_decode( UltraLove_Shopify_Catalog_Import::private_file(
         '/root/.ultralove-shopify-dev/feed-client.json' ), true, 512, JSON_THROW_ON_ERROR );

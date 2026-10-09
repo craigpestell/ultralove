@@ -69,6 +69,38 @@ final class UltraLove_Shopify_Feed_Client {
         return $data;
     }
 
+    public static function catalog_transport( string $url, array $arguments ): array {
+        if ( ! preg_match( '~^http://localhost/wp-json/ultralove-feed/v1/(products|categories|inventory)\?~', $url ) ) {
+            throw new RuntimeException( 'Catalog app may only GET the configured loopback feed.' );
+        }
+        $headers = array();
+        foreach ( array_merge( $arguments['headers'], array( 'X-UltraLove-Catalog-Read-Only' => '1' ) ) as $name => $value ) {
+            $headers[] = $name . ': ' . $value;
+        }
+        $response_headers = array();
+        $curl = curl_init( $url );
+        curl_setopt_array( $curl, array( CURLOPT_RETURNTRANSFER => true, CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_CONNECTTIMEOUT => 10, CURLOPT_TIMEOUT => 120, CURLOPT_HTTPHEADER => $headers,
+            CURLOPT_HEADERFUNCTION => static function ( $handle, string $line ) use ( &$response_headers ): int {
+                if ( str_contains( $line, ':' ) ) {
+                    list( $name, $value ) = explode( ':', $line, 2 );
+                    $response_headers[strtolower( trim( $name ) )] = trim( $value );
+                }
+                return strlen( $line );
+            },
+        ) );
+        $body = curl_exec( $curl );
+        $status = curl_getinfo( $curl, CURLINFO_RESPONSE_CODE );
+        if ( $body === false ) {
+            throw new RuntimeException( 'Product feed transport failed: curl ' . curl_errno( $curl ) . '.' );
+        }
+        if ( ( $response_headers['x-ultralove-catalog-read-only'] ?? '' ) !== '1'
+            || ( $response_headers['x-ultralove-catalog-database-writes'] ?? '' ) !== '0' ) {
+            throw new RuntimeException( 'Feed request did not confirm its database-write guard; refusing import.' );
+        }
+        return array( 'status' => $status, 'headers' => $response_headers, 'body' => $body );
+    }
+
     private static function snapshot_page( array $page, string $items ): void {
         if ( ! isset( $page['generation'], $page['change_cursor'], $page['next_after_id'], $page['has_more'], $page[$items] )
             || ! is_string( $page['generation'] )

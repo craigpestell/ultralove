@@ -48,6 +48,10 @@ $_SERVER['HTTP_HOST'] = 'ultralove.ca';
 UltraLove_Catalog_Read_Only::init();
 $assert( ! UltraLove_Catalog_Read_Only::active(), 'Production is never enabled.' );
 $_SERVER['HTTP_HOST'] = 'dev.ultralove.ca';
+$_SERVER['HTTP_CF_CONNECTING_IP'] = '198.51.100.1';
+UltraLove_Catalog_Read_Only::init();
+$assert( ! UltraLove_Catalog_Read_Only::active(), 'Cloudflare tunnel/proxy requests are not trusted as local readers even when their socket is loopback.' );
+unset( $_SERVER['HTTP_CF_CONNECTING_IP'] );
 $_SERVER['REQUEST_URI'] = '/shop/';
 UltraLove_Catalog_Read_Only::init();
 $assert( ! UltraLove_Catalog_Read_Only::active(), 'Unrelated pages unchanged.' );
@@ -115,6 +119,7 @@ $client = new UltraLove_Shopify_Feed_Client( array( 'username' => 'test', 'passw
 $reject( static fn() => $client->all_products(), 'Duplicate/unordered records rejected.' );
 $client = new UltraLove_Shopify_Feed_Client( array( 'username' => 'test', 'password' => 'test' ), static fn() => $bad_page( array( $variation ), 1, false ) );
 $reject( static fn() => $client->all_products(), 'Missing variation parent rejected.' );
+$reject( static fn() => UltraLove_Shopify_Feed_Client::catalog_transport( 'https://example.invalid/products', array() ), 'Catalog transport cannot send credentials to a different host.' );
 $browse_queries = array();
 $client = new UltraLove_Shopify_Feed_Client( array( 'username' => 'test', 'password' => 'test' ),
     static function ( $url ) use ( $record, $bad_page, &$browse_queries ): array {
