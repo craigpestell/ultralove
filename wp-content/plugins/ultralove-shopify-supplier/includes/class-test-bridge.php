@@ -22,6 +22,8 @@ final class UltraLove_Shopify_Test_Bridge {
     private string $retailer_login;
     private float $markup;
     private array $skus;
+    private ?UltraLove_Shopify_Feed_Client $feed = null;
+    private array $selected_ids = array();
     private $lock;
 
     public function __construct( string $source = 'lab' ) {
@@ -45,7 +47,7 @@ final class UltraLove_Shopify_Test_Bridge {
             $this->markup = 50;
         } elseif ( $source === 'dev' && home_url() === 'https://dev.ultralove.ca' && DB_NAME === 'wordpress_dev'
             && class_exists( 'UltraLove_Shopify_Supplier' ) && UltraLove_Shopify_Supplier::enabled() ) {
-            $settings = UltraLove_Shopify_Supplier::settings();
+            $settings = UltraLove_Shopify_Supplier::validate( UltraLove_Shopify_Supplier::settings(), false );
             $this->directory = '/root/.ultralove-shopify-dev/';
             $this->product_meta = '_ul_dev_shopify_product';
             $this->order_meta = '_ul_dev_shopify_order';
@@ -57,22 +59,26 @@ final class UltraLove_Shopify_Test_Bridge {
             }
             $this->retailer_login = $retailer->user_login;
             $this->skus = array();
-            foreach ( $settings['product_ids'] as $id ) {
-                $product = wc_get_product( $id );
-                if ( ! UltraLove_Shopify_Supplier::eligible( $product ) ) {
-                    throw new RuntimeException( 'Selected product is no longer eligible: ' . $id );
-                }
-                $this->skus[] = $product->get_sku();
-            }
-            if ( ! $this->skus ) {
-                throw new RuntimeException( 'Select existing dev products before connecting Shopify.' );
-            }
+            $this->selected_ids = $settings['product_ids'];
         } else {
             throw new RuntimeException( 'Unsupported supplier source or disabled dev integration.' );
         }
         $this->lock = fopen( $this->directory . 'shopify-bridge.lock', 'c' );
         if ( ! $this->lock || ! flock( $this->lock, LOCK_EX | LOCK_NB ) ) {
             throw new RuntimeException( 'Another bridge worker is running, or the lock is unavailable.' );
+        }
+        if ( $source === 'dev' ) {
+            require_once __DIR__ . '/class-feed-client.php';
+            $credentials = json_decode( $this->credential( 'feed-client.json' ), true, 512, JSON_THROW_ON_ERROR );
+            if ( ! is_array( $credentials ) ) {
+                throw new RuntimeException( 'Invalid root-only feed credentials.' );
+            }
+            $this->feed = new UltraLove_Shopify_Feed_Client( $credentials );
+            $state = $this->feed->read( $this->selected_ids, get_option( 'ul_dev_shopify_feed_state', array() ) );
+            $this->skus = array_column( $state['products'], 'sku' );
+            if ( count( $this->skus ) !== count( array_unique( $this->skus ) ) ) {
+                throw new RuntimeException( 'Selected feed products have duplicate SKUs.' );
+            }
         }
         $response = wp_remote_post( 'https://' . self::SHOP . '/admin/oauth/access_token', array(
             'timeout' => 30,
@@ -166,8 +172,48 @@ final class UltraLove_Shopify_Test_Bridge {
     }
 
     public function sync_catalog(): void {
-        foreach ( $this->skus as $sku ) {
-            $product = $this->product( $sku );
+        $state = $this->feed ? $this->feed->read( $this->selected_ids, get_option( 'ul_dev_shopify_feed_state', array() ) ) : null;
+        $catalog = $state ? $state['products'] : array();
+        if ( ! $this->feed ) {
+            foreach ( $this->skus as $sku ) {
+                $product = $this->product( $sku );
+                $catalog[$product->get_id()] = array(
+                    'sku' => $sku, 'name' => wp_strip_all_tags( str_replace( '<br>', ' ', $product->get_name() ) ),
+                    'description' => wp_kses_post( $product->get_description() ),
+                    'price' => $product->get_price(), 'stock_quantity' => $product->get_stock_quantity(),
+                    'images' => array(), 'data_warnings' => array(),
+                );
+            }
+        }
+        $skus = array_column( $catalog, 'sku' );
+        if ( count( $skus ) !== count( array_unique( $skus ) ) ) {
+            throw new RuntimeException( 'Selected feed products have duplicate SKUs.' );
+        }
+        if ( $state !== null ) {
+            foreach ( $this->selected_ids as $id ) {
+                $local = wc_get_product( $id );
+                $mapping = $local ? $local->get_meta( $this->product_meta ) : null;
+                if ( $mapping && ! isset( $state['mappings'][$id] ) ) {
+                    $state['mappings'][$id] = $mapping;
+                }
+            }
+        }
+        foreach ( $catalog as $id => $record ) {
+            $sku = $record['sku'];
+            $product = wc_get_product( $id );
+            if ( ! $product ) {
+                throw new RuntimeException( 'Supplier product vanished during mapping; retry the sync.' );
+            }
+            foreach ( $record['data_warnings'] as $warning ) {
+                WP_CLI::warning( 'Product ' . $id . ' has missing feed image ' . $warning['attachment_id'] . '; remaining media retained.' );
+            }
+            $prior = $product->get_meta( $this->product_meta );
+            $checkpoint_prior = $state['mappings'][$id] ?? null;
+            foreach ( array_filter( array( $prior, $checkpoint_prior ) ) as $mapping ) {
+                if ( $mapping['variants']['nodes'][0]['sku'] !== $sku ) {
+                    throw new RuntimeException( 'Mapped supplier SKU changed; manual reconciliation required.' );
+                }
+            }
             $handle = sanitize_title( 'ultralove-' . ( $this->source === 'dev' ? 'dev-' : '' ) . $sku );
             $data = $this->graphql( 'query($query:String!) {products(first:2, query:$query) {nodes {id handle variants(first:2) {nodes {id sku price inventoryItem {id}}}}}}',
                 array( 'query' => 'handle:' . $handle ) );
@@ -176,10 +222,13 @@ final class UltraLove_Shopify_Test_Bridge {
                 throw new RuntimeException( 'Ambiguous Shopify lab product handle.' );
             }
             if ( ! $matches ) {
+                if ( $prior || $checkpoint_prior ) {
+                    throw new RuntimeException( 'Mapped Shopify product is missing; manual reconciliation required.' );
+                }
                 $input = array(
-                    'title' => wp_strip_all_tags( str_replace( '<br>', ' ', $product->get_name() ) ),
+                    'title' => $record['name'],
                     'handle' => $handle,
-                    'descriptionHtml' => wp_kses_post( $product->get_description() ),
+                    'descriptionHtml' => $record['description'],
                     'vendor' => $this->source === 'dev' ? 'UltraLove' : 'UltraLove Integration Lab',
                     'status' => $this->source === 'dev' ? 'DRAFT' : 'ACTIVE',
                     'tags' => array( $this->tag ),
@@ -187,17 +236,19 @@ final class UltraLove_Shopify_Test_Bridge {
                     'variants' => array( array(
                         'optionValues' => array( array( 'optionName' => 'Title', 'name' => 'Default Title' ) ),
                         'sku' => $sku,
-                        'price' => number_format( (float) $product->get_price() * ( 1 + $this->markup / 100 ), 2, '.', '' ),
+                        'price' => number_format( (float) $record['price'] * ( 1 + $this->markup / 100 ), 2, '.', '' ),
                         'inventoryItem' => array( 'tracked' => true, 'requiresShipping' => true ),
-                        'inventoryQuantities' => array( array( 'locationId' => $this->location, 'name' => 'available', 'quantity' => $product->get_stock_quantity() ) ),
+                        'inventoryQuantities' => array( array( 'locationId' => $this->location, 'name' => 'available', 'quantity' => $record['stock_quantity'] ) ),
                     ) ),
                 );
-                if ( $this->source === 'dev' && $product->get_image_id() ) {
-                    $image = wp_get_attachment_url( $product->get_image_id() );
-                    if ( $image ) {
-                        $image = str_replace( 'https://dev.ultralove.ca/wp-content/uploads/', 'https://ultralove.ca/wp-content/uploads/', $image );
-                        $input['files'] = array( array( 'originalSource' => $image, 'contentType' => 'IMAGE', 'alt' => $input['title'] ) );
-                    }
+                if ( $record['images'] ) {
+                    $input['files'] = array_map( static fn( $image ) => array(
+                        'originalSource' => str_replace( 'https://dev.ultralove.ca/wp-content/uploads/', 'https://ultralove.ca/wp-content/uploads/', $image['src'] ),
+                        'contentType' => 'IMAGE', 'alt' => $image['alt'] ?: $record['name'],
+                    ), $record['images'] );
+                }
+                if ( ! empty( $record['global_unique_id'] ) ) {
+                    $input['variants'][0]['barcode'] = $record['global_unique_id'];
                 }
                 $data = $this->graphql( 'mutation($input:ProductSetInput!) {productSet(input:$input,synchronous:true) {product {id handle variants(first:2) {nodes {id sku price inventoryItem {id}}}} userErrors {field message}}}',
                     array( 'input' => $input ) );
@@ -209,29 +260,55 @@ final class UltraLove_Shopify_Test_Bridge {
                 || $remote['variants']['nodes'][0]['sku'] !== $sku ) {
                 throw new RuntimeException( 'Shopify lab product has unexpected variants.' );
             }
-            $prior = $product->get_meta( $this->product_meta );
             if ( $prior && $prior['id'] !== $remote['id'] ) {
                 throw new RuntimeException( 'Mapped Shopify product was replaced; manual reconciliation required.' );
             }
+            if ( $checkpoint_prior && $checkpoint_prior['id'] !== $remote['id'] ) {
+                throw new RuntimeException( 'Checkpoint Shopify product was replaced; manual reconciliation required.' );
+            }
             $product->update_meta_data( $this->product_meta, $remote );
             $product->save();
-            $variant = $remote['variants']['nodes'][0];
-            $inventory = $this->graphql( 'query($id:ID!,$location:ID!) {inventoryItem(id:$id) {inventoryLevel(locationId:$location) {quantities(names:["available"]) {quantity}}}}',
-                array( 'id' => $variant['inventoryItem']['id'], 'location' => $this->location ) );
-            $level = $inventory['inventoryItem']['inventoryLevel'];
-            if ( ! $level ) {
-                throw new RuntimeException( 'Mapped variant is not stocked at the test location.' );
-            }
-            $available = $level['quantities'][0]['quantity'];
-            $quantity = $product->get_stock_quantity();
-            if ( $available !== $quantity ) {
-                $this->graphql( 'mutation($input:InventorySetQuantitiesInput!,$key:String!) {inventorySetQuantities(input:$input) @idempotent(key:$key) {userErrors {field message}}}',
-                    array( 'key' => wp_generate_uuid4(), 'input' => array(
-                        'name' => 'available', 'reason' => 'correction',
-                        'quantities' => array( array( 'inventoryItemId' => $variant['inventoryItem']['id'], 'locationId' => $this->location, 'quantity' => $quantity, 'changeFromQuantity' => $available ) ),
-                    ) ) );
+            $quantity = $record['stock_quantity'];
+            $this->set_inventory( $remote, $quantity );
+            if ( $state !== null ) {
+                $state['mappings'][$id] = $remote;
             }
             WP_CLI::log( 'Synced ' . $sku . '; stock ' . $quantity . '; retailer price preserved.' );
+        }
+        if ( $state !== null ) {
+            foreach ( $state['mappings'] as $id => $remote ) {
+                if ( in_array( $id, $this->selected_ids, true ) && ! isset( $catalog[$id] ) ) {
+                    $this->set_inventory( $remote, 0 );
+                    WP_CLI::warning( 'Supplier product ' . $id . ' withdrawn: mapped stock zeroed; retailer product retained.' );
+                }
+            }
+            $this->skus = $skus;
+            update_option( 'ul_dev_shopify_feed_state', $state, false );
+            if ( get_option( 'ul_dev_shopify_feed_state' ) !== $state ) {
+                throw new RuntimeException( 'Could not persist feed checkpoint; retry the sync.' );
+            }
+            update_option( 'ul_dev_shopify_feed_last_success', gmdate( 'c' ), false );
+        }
+    }
+
+    private function set_inventory( array $remote, int $quantity ): void {
+        $variant = $remote['variants']['nodes'][0];
+        $inventory = $this->graphql( 'query($id:ID!,$location:ID!) {inventoryItem(id:$id) {id sku inventoryLevel(locationId:$location) {quantities(names:["available"]) {quantity}}}}',
+            array( 'id' => $variant['inventoryItem']['id'], 'location' => $this->location ) );
+        if ( ! $inventory['inventoryItem'] || $inventory['inventoryItem']['sku'] !== $variant['sku'] ) {
+            throw new RuntimeException( 'Mapped inventory identity changed; manual reconciliation required.' );
+        }
+        $level = $inventory['inventoryItem']['inventoryLevel'];
+        if ( ! $level ) {
+            throw new RuntimeException( 'Mapped variant is not stocked at the test location.' );
+        }
+        $available = $level['quantities'][0]['quantity'];
+        if ( $available !== $quantity ) {
+            $this->graphql( 'mutation($input:InventorySetQuantitiesInput!,$key:String!) {inventorySetQuantities(input:$input) @idempotent(key:$key) {userErrors {field message}}}',
+                array( 'key' => wp_generate_uuid4(), 'input' => array(
+                    'name' => 'available', 'reason' => 'correction',
+                    'quantities' => array( array( 'inventoryItemId' => $variant['inventoryItem']['id'], 'locationId' => $this->location, 'quantity' => $quantity, 'changeFromQuantity' => $available ) ),
+                ) ) );
         }
     }
 

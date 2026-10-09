@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UltraLove Shopify Supplier
  * Description: Development supplier controls for the Shopify integration test store.
- * Version: 0.1.0
+ * Version: 0.2.0
  * Author: UltraLove
  * Requires Plugins: woocommerce, ultralove-dropshipping
  * Text Domain: ultralove-shopify-supplier
@@ -52,7 +52,7 @@ final class UltraLove_Shopify_Supplier {
         }
     }
 
-    public static function validate( array $settings ): array {
+    public static function validate( array $settings, bool $check_products = true ): array {
         foreach ( $settings['product_ids'] as $id ) {
             if ( ! ctype_digit( (string) $id ) || (int) $id < 1 ) {
                 throw new InvalidArgumentException( 'Product IDs must be positive integers.' );
@@ -63,7 +63,7 @@ final class UltraLove_Shopify_Supplier {
             throw new InvalidArgumentException( 'Select up to 25 valid existing product IDs.' );
         }
         foreach ( $ids as $id ) {
-            if ( ! self::eligible( wc_get_product( $id ) ) ) {
+            if ( $check_products && ! self::eligible( wc_get_product( $id ) ) ) {
                 throw new InvalidArgumentException( 'Product ' . $id . ' must be a published, priced simple product with a SKU and managed stock.' );
             }
         }
@@ -131,6 +131,9 @@ final class UltraLove_Shopify_Supplier {
             <?php endif; ?>
             <p>Last successful sync: <strong><?php echo esc_html( get_option( 'ul_dev_shopify_last_success', 'Not yet run' ) ); ?></strong>.
                 The root-only worker runs every five minutes; credentials never appear in WordPress.</p>
+            <p>Catalog source: authenticated dev product feed. Last successful catalog sync:
+                <strong><?php echo esc_html( get_option( 'ul_dev_shopify_feed_last_success', 'Not yet run' ) ); ?></strong>.
+                Supplier withdrawal zeroes mapped stock without deleting the retailer product.</p>
             <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
                 <input type="hidden" name="action" value="ultralove_shopify_supplier">
                 <?php wp_nonce_field( 'ultralove_shopify_supplier' ); ?>
@@ -173,7 +176,15 @@ final class UltraLove_Shopify_Supplier {
         <?php
     }
 
-    public static function sync(): void {
+    /**
+     * Synchronize the guarded dev Shopify test connection.
+     *
+     * ## OPTIONS
+     *
+     * [--catalog-only]
+     * : Synchronize product feed data without importing orders or returning tracking.
+     */
+    public static function sync( array $args = array(), array $options = array() ): void {
         if ( ! self::enabled() ) {
             WP_CLI::log( 'Dev Shopify supplier is disabled; no external requests or mutations.' );
             return;
@@ -181,9 +192,15 @@ final class UltraLove_Shopify_Supplier {
         $previous_user = get_current_user_id();
         try {
             require_once __DIR__ . '/includes/class-test-bridge.php';
-            $settings = self::validate( self::settings() );
+            // Withdrawn products must reach the feed consumer so mapped inventory can be zeroed.
+            $settings = self::validate( self::settings(), false );
             wp_set_current_user( $settings['retailer_id'] );
-            ( new UltraLove_Shopify_Test_Bridge( 'dev' ) )->run();
+            $bridge = new UltraLove_Shopify_Test_Bridge( 'dev' );
+            if ( isset( $options['catalog-only'] ) ) {
+                $bridge->sync_catalog();
+            } else {
+                $bridge->run();
+            }
             update_option( 'ul_dev_shopify_status', array( 'error' => null ), false );
         } catch ( Throwable $error ) {
             update_option( 'ul_dev_shopify_status', array( 'error' => $error->getMessage(), 'failed_at' => gmdate( 'c' ) ), false );
