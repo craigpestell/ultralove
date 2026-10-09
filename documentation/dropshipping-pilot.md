@@ -4,6 +4,10 @@ UltraLove fulfils an approved retailer's order directly to one customer.
 This milestone uses classic WooCommerce checkout, not CSV order import or
 Shopify integration. Catalogue exports remain separate.
 
+The [retailer product feed setup notes](retailer-product-feed-guide.md) track
+the feed-to-Shopify walkthrough and its separate dropshipping steps. They
+distinguish verified behaviour from instructions still awaiting consumer tests.
+
 ## Enable on dev
 
 Deploy the committed branch with `deploy/deploy.sh dev --ref <branch> --dry-run`,

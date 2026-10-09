@@ -94,6 +94,12 @@ No synthetic products are created on dev. The initial pilot selects existing
 product IDs `17186`, `17188`, and `17192` (SKUs `1513`, `2455`, `70072`).
 Imports are Shopify drafts with dev-specific handles, variant mappings, and the
 tag `ultralove-dev-supplier`. Stock sync preserves retailer-edited prices.
+The dev catalog consumer now uses authenticated product, inventory, and change
+feed HTTP requests rather than WooCommerce content getters. Local product objects
+remain in use for mapping persistence and the existing synthetic order workflow.
+Supplier withdrawal zeroes mapped stock and excludes that SKU from forwarding;
+it does not delete or archive the retailer's product. Republishing reuses its
+mapping. Unknown/unmanaged stock and unsupported types fail explicitly.
 All three imported images reached Shopify's ready state; titles/SKUs match and
 stock was restored to `327`, `125`, and `414` after verification.
 The earlier lab's two synthetic Shopify products remain archived.
@@ -128,6 +134,15 @@ Verification:
 
 ```sh
 php ops/dropshipping/test-shopify-supplier.php
+php ops/dropshipping/test-shopify-feed.php
+# After the feed-consumer code is deployed, provision its separate credential:
+ssh ultralove-dev-app 'wp --allow-root --path=/var/www/html eval-file -' \
+  < ops/dropshipping/setup-shopify-feed.php
+# Product-only sync (does not import orders or return tracking):
+wp --allow-root --path=/var/www/html ultralove shopify sync --catalog-only
+# Product-only live verification; source stock/status and retailer edits restored:
+ssh ultralove-dev-app 'wp --allow-root --path=/var/www/html eval-file -' \
+  < ops/dropshipping/verify-shopify-feed.php
 # On dev, with the committed verifier uploaded outside the web root:
 wp --allow-root --path=/var/www/html eval-file /root/.ultralove-shopify-dev/verify-shopify-bridge.php
 wp --allow-root --path=/var/www/html ultralove shopify sync
@@ -145,14 +160,40 @@ without deleting mappings/orders. Remove only `/etc/cron.d/ultralove-shopify-dev
 to pause scheduling. Revoke the app credential separately if retiring the
 connection. This is not independent-retailer OAuth or a production rollout.
 
+The feed credential belongs to the marked customer-role `shopify-feed-consumer`
+account, with only the additional `ultralove_read_product_feed` capability and no
+dropshipping approval. It is separate from the verifier's rotating credentials.
+The application password is kept in root-only `feed-client.json` beside the
+existing Shopify credentials, never in options. Setup is idempotent; revocation
+requires explicitly removing the obsolete root file and rerunning setup.
+Do not display the file.
+
+This operator-only consumer authenticates against the fixed loopback REST URL
+with the dev Host header. WordPress's standard localhost transport is permitted
+without widening external HTTP access or changing Cloudflare Access. Retailer
+onboarding must instead use approved HTTPS access; this is not an external
+connection recipe. Feed state (catalog DTOs, generation/cursor and mappings,
+not secrets) lives in `ul_dev_shopify_feed_state`. It advances only after every
+Shopify catalog mutation succeeds. A 409 starts a fresh snapshot and change
+replay without deleting mappings. 401/403/429, malformed responses and partial
+Shopify failures stop the cycle with a visible error; no checkpoint advances.
+429 reports `Retry-After`; the existing five-minute scheduler supplies the next
+attempt, rather than immediately retrying inside the worker.
+
 ## Supplier product and inventory feed
 
 The separate `ultralove-product-feed` plugin implements the feed-first milestone
 on **dev only**. Its OpenAPI 3.1 contract is
 [`openapi.json`](../../wp-content/plugins/ultralove-product-feed/openapi.json).
 It uses WooCommerce-compatible field names with explicitly documented supplier
-extensions; it is not a drop-in `wc/v3` endpoint. The Shopify test bridge and all
-existing CSV exporters remain unchanged.
+extensions; it is not a drop-in `wc/v3` endpoint. The dev Shopify test bridge
+consumes it for catalog data; the dedicated lab source and CSV exporters remain
+unchanged.
+
+Record the exact consumer setup and test results in the
+[retailer product feed guide](../../documentation/retailer-product-feed-guide.md)
+while adapting the existing Shopify test connector to this feed. Keep lab-only
+operator steps distinct from released retailer instructions.
 
 ### Account access and endpoints
 
