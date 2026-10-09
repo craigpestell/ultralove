@@ -1,7 +1,7 @@
 # Retailer product feed and dropshipping setup notes
 
 **Status: working notes, not released retailer instructions.**
-Last updated: 2026-10-08.
+Last updated: 2026-10-09.
 
 Record the exact steps while connecting the existing Shopify test app to the
 UltraLove product feed. Turn verified steps into retailer instructions only
@@ -31,15 +31,15 @@ Do not describe a lab-only administrator control as a retailer-facing screen.
 
 | Step | Actor | Action to document | Current status |
 |---|---|---|---|
-| 1 | UltraLove staff / retailer | Grant catalog access and issue dedicated, revocable feed credentials | Feed access controls verified; retailer onboarding walkthrough pending |
-| 2 | Integrator / test operator | Configure the existing Shopify test app's connector to read the feed | Existing Shopify app verified; feed adapter pending |
-| 3 | Retailer | Choose products from the published catalog | Feed catalog verified; consumer selection workflow pending |
-| 4 | Retailer / connector | Set initial retail prices and import selected products as drafts | Direct-source pilot verified; feed-driven import pending |
-| 5 | Retailer | Review images, descriptions, SKUs, variants, prices, and availability | Feed-driven Shopify review pending |
-| 6 | Connector | Synchronize inventory and changes without overwriting retailer edits | Direct-source stock/price preservation verified; feed-driven sync pending |
-| 7 | Integrator / retailer | Recover from interruptions, removals, expired cursors, and revoked access | Feed recovery contract verified; consumer recovery tests pending |
+| 1 | UltraLove staff / retailer | Grant catalog access and issue dedicated, revocable feed credentials | Dedicated dev credential and actual revocation verified; external retailer onboarding pending |
+| 2 | Integrator / test operator | Configure the existing Shopify test app's connector to read the feed | Dev adapter deployed; authenticated feed pull and scheduled cycle verified |
+| 3 | Retailer | Choose products from the published catalog | Staff's three-product dev selection verified; retailer-facing selection UI pending |
+| 4 | Retailer / connector | Set initial retail prices and import selected products as drafts | New creation/markup/media/barcode verified in isolated bridge tests; live existing mappings reused |
+| 5 | Retailer | Review images, descriptions, SKUs, variants, prices, and availability | Live SKU/stock and retailer-edit preservation verified; new live draft/media review pending |
+| 6 | Connector | Synchronize inventory and changes without overwriting retailer edits | Live stock, price, content and publication-state preservation verified |
+| 7 | Integrator / retailer | Recover from interruptions, removals, expired cursors, and revoked access | Live withdrawal/republication, 409 resync, removed scope and revoked password verified; rate-limit/transport failures isolated-tested |
 | 8 | UltraLove staff / retailer | Separately approve and configure dropshipping fulfilment | Dev checkout/order tests verified; real pilot approval pending |
-| 9 | Retailer | Submit an order and receive tracking using the approved workflow | Existing lab test-order/tracking flow verified; feed-linked end-to-end test pending |
+| 9 | Retailer | Submit an order and receive tracking using the approved workflow | Feed-linked synthetic order/tracking regression passed; real retailer fulfilment remains unapproved |
 
 ## 1. Catalog access and credentials
 
@@ -167,8 +167,36 @@ Local validation: **53 isolated Shopify feed consumer assertions**, plus
 **20 supplier policy** and **335 product-feed assertions**, passed. The dev
 WordPress HTTP client reached the loopback REST endpoint and received the
 expected unauthenticated **401 JSON**, without an outbound-allowlist change.
-Live authenticated Shopify verification and scheduled-cycle evidence are still
-pending at this record's initial commit.
+### Verified dev results, 2026-10-09
+
+- Deployed code commit `c6c25fdde12a785efe5904d975dc44fe031b76bd` using
+  `deploy/ship-dev.sh`; three owned plugin files changed, staging PHP lint and
+  all four origin smoke tests passed. Nginx and PHP-FPM are active.
+- Dedicated catalog credential provisioned without displaying its password.
+  `wp ultralove shopify sync --catalog-only` then pulled IDs **17186, 17188,
+  17192**, SKUs **1513, 2455, 70072**, with stock **327, 125, 414** into their
+  existing mappings in `ultralove-integration-lab.myshopify.com`.
+- **19 live product-only assertions passed**, including stock mutation and
+  restoration, title/description/price preservation, withdrawal to zero stock,
+  republication on the same mapping, real HTTP 409 resync, removed capability,
+  and actual application-password revocation. The dedicated worker credential
+  was not rotated or revoked by those tests.
+- The verifier initially assumed these existing Shopify products were drafts.
+  Investigation found all three already **ACTIVE**. The verifier was corrected
+  to check publication-state preservation, rather than changing their status.
+  New draft creation is verified by the isolated bridge tests, not claimed as a
+  new live creation in this phase.
+- **28 existing synthetic order/tracking regression assertions passed** with
+  the feed consumer in place. Own test orders were removed and stock restored;
+  payment configuration and email suppression remained unchanged.
+- A genuine scheduled feed-linked bridge cycle completed at
+  **2026-10-09T02:35:08+00:00**, evidenced by the worker log and
+  `ul_dev_shopify_last_success`. Later manual verification left three products,
+  cursor **7412**, and no worker error. This is a verified dev cadence, not a
+  production service-level promise.
+- Production remains at `5e920b074237b0f57dd0fd062ded9bc599c63ae5`; both supplier
+  plugins are inactive and dropshipping is `no`. No production deployment or
+  enablement occurred during this work.
 
 ## 7. Recovery and disconnect
 

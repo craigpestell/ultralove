@@ -92,7 +92,7 @@ Select up to 25 **existing** published simple products with SKUs, prices, and
 managed stock, an approved dropshipping retailer, and an initial retail markup.
 No synthetic products are created on dev. The initial pilot selects existing
 product IDs `17186`, `17188`, and `17192` (SKUs `1513`, `2455`, `70072`).
-Imports are Shopify drafts with dev-specific handles, variant mappings, and the
+New imports are Shopify drafts with dev-specific handles, variant mappings, and the
 tag `ultralove-dev-supplier`. Stock sync preserves retailer-edited prices.
 The dev catalog consumer now uses authenticated product, inventory, and change
 feed HTTP requests rather than WooCommerce content getters. Local product objects
@@ -100,6 +100,12 @@ remain in use for mapping persistence and the existing synthetic order workflow.
 Supplier withdrawal zeroes mapped stock and excludes that SKU from forwarding;
 it does not delete or archive the retailer's product. Republishing reuses its
 mapping. Unknown/unmanaged stock and unsupported types fail explicitly.
+On 2026-10-09 the authenticated feed pull and **19 live product-only assertions**
+passed, followed by **28 synthetic order/tracking regression assertions**.
+The already-mapped Shopify products were ACTIVE; their publication state was
+preserved, not changed back to draft. Source stock/status and temporarily edited
+Shopify content were restored. A genuine feed-linked scheduled cycle completed
+at `2026-10-09T02:35:08+00:00`.
 All three imported images reached Shopify's ready state; titles/SKUs match and
 stock was restored to `327`, `125`, and `414` after verification.
 The earlier lab's two synthetic Shopify products remain archived.

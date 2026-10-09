@@ -39,7 +39,6 @@ $client = new UltraLove_Shopify_Feed_Client( $credential );
 $revocation_uuid = null;
 try {
     $assert( count( $state['products'] ) === count( $settings['product_ids'] ), 'All selected products consumed through authenticated feed.' );
-    $assert( $baseline['status'] === 'DRAFT', 'Existing test product remains a draft.' );
     $assert( $baseline['variants']['nodes'][0]['sku'] === $state['products'][$id]['sku'], 'Feed and Shopify SKU identity match.' );
     $assert( $baseline['variants']['nodes'][0]['inventoryQuantity'] === $stock, 'Initial feed stock matches Shopify.' );
     $assert( ! str_contains( wp_json_encode( $state ), $credential['password'] ), 'Checkpoint contains no credential.' );
@@ -52,6 +51,7 @@ try {
     $assert( $edited['id'] === $remote_id && $edited['variants']['nodes'][0]['id'] === $variant_id, 'Repeated feed sync preserves product/variant mapping.' );
     $assert( $edited['variants']['nodes'][0]['inventoryQuantity'] === max( 0, $stock - 1 ), 'Live supplier stock change reaches Shopify.' );
     $assert( $edited['title'] === 'Retailer edit - feed verification' && str_contains( $edited['descriptionHtml'], 'Retailer-owned verification content.' ), 'Retailer title and description survive stock sync.' );
+    $assert( $edited['status'] === $baseline['status'], 'Existing retailer publication state survives stock sync.' );
     $assert( $edited['variants']['nodes'][0]['price'] === $baseline['variants']['nodes'][0]['price'], 'Retailer price survives stock sync.' );
 
     $product = wc_get_product( $id );
@@ -59,7 +59,7 @@ try {
     $product->save();
     $bridge->sync_catalog();
     $withdrawn = $query();
-    $assert( $withdrawn['variants']['nodes'][0]['inventoryQuantity'] === 0 && $withdrawn['status'] === 'DRAFT', 'Supplier withdrawal zeroes availability without deleting or publishing retailer product.' );
+    $assert( $withdrawn['variants']['nodes'][0]['inventoryQuantity'] === 0 && $withdrawn['status'] === $baseline['status'], 'Supplier withdrawal zeroes availability without deleting or changing retailer publication state.' );
     $assert( ! in_array( $state['products'][$id]['sku'], $bridge->skus(), true ), 'Withdrawn SKU is excluded from the forwarding allowlist.' );
     $product->set_status( $status );
     $product->save();
