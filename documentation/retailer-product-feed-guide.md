@@ -125,8 +125,8 @@ Do not describe a lab-only administrator control as a retailer-facing screen.
 | 3 | Retailer | Choose products from the published catalog | Embedded test-store browsing and saved selections verified, capped at 50 parents; independent-store onboarding pending |
 | 4 | Retailer / connector | Set initial retail prices and import selected products as drafts | Embedded lab CAD preview, confirmation, background creation and unchanged reuse verified |
 | 5 | Retailer | Review images, descriptions, SKUs, variants, prices, and availability | Native Shopify draft/media/price/stock review and existing-listing preservation verified; live variable-product import remains pending |
-| 6 | Connector | Synchronize inventory and changes without overwriting retailer edits | Original three-product sync verified; opt-in app-owned inventory sync implemented and tested locally, not yet deployed/enabled |
-| 7 | Integrator / retailer | Recover from interruptions, removals, expired cursors, and revoked access | App creation-claim restart recovery verified; app-owned inventory withdrawal, expired-cursor/generation recovery and uncertain-mutation retries tested locally; live inventory cutover remains pending |
+| 6 | Connector | Synchronize inventory and changes without overwriting retailer edits | Opt-in app-owned inventory sync deployed to development/lab; authenticated stock reads and embedded controls verified; enrollment remains off, live correction verification pending |
+| 7 | Integrator / retailer | Recover from interruptions, removals, expired cursors, and revoked access | App creation-claim restart recovery verified; app-owned inventory withdrawal, expired-cursor/generation recovery and uncertain-mutation retries tested locally; live legacy cutover and stock-write recovery verification remain pending |
 | 8 | UltraLove staff / retailer | Separately approve and configure dropshipping fulfilment | Dev checkout/order tests verified; real pilot approval pending |
 | 9 | Retailer | Submit an order and receive tracking using the approved workflow | Feed-linked synthetic order/tracking regression passed; real retailer fulfilment remains unapproved |
 
@@ -289,7 +289,7 @@ In the allowlisted test-store app:
 Existing canonical app-owned listings retain prices, content, publication
 state and inventory. New listings are unpublished drafts; unsafe/unknown/shared
 stock remains zero with review warnings. The current app no longer reuses old
-test fixtures; historical verification below predates that local change.
+test fixtures; historical verification below predates that change.
 Imports do not automatically enroll products in ongoing sync or
 approve order forwarding.
 
@@ -312,7 +312,7 @@ The app snapshots the feed generation/change cursor with its import plan.
 Its opt-in inventory consumer independently reads current stock on enrollment
 and validates the supplier journal on subsequent cycles; it does not synchronize
 catalog content or add supplier variants automatically. This implementation is
-locally tested, not yet deployed or enabled. Record how the user knows the import
+deployed to the lab but not enabled. Record how the user knows the import
 has finished.
 
 ## 5. Review and publication
@@ -326,7 +326,7 @@ workflow has been tested.
 
 ## 6. Inventory and change synchronization
 
-The locally implemented app inventory page is `/app/inventory`, linked from the
+The deployed app inventory page is `/app/inventory`, linked from the
 catalog. Each completed app-owned product requires explicit confirmation and
 enrollment. The existing non-root worker targets five-minute cycles after queued
 imports. Last success, next due time, variant count and errors are visible.
@@ -343,7 +343,15 @@ pauses for explicit review/re-enrollment. Supplier `Retry-After` delays retries.
 Deploy the development feed client and restricted proxy, apply the app inventory
 migration, retire the old development scheduler and resolve its test-fixture
 claims before enabling canonical imports. None of that live cutover is performed
-by the local regression tests.
+by the local regression tests. The development feed client (`618a71a`), restricted
+proxy and app inventory migration were deployed on 2026-10-09 with app release
+`107030b`. All 50 app tests, type-check, lint and app/worker builds passed on the
+lab host. Development site smoke tests returned 200. Authenticated source `17539`
+inventory and checkpoint reads succeeded (one variant, cursor `9027`), and the
+inventory controls loaded inside Shopify Admin without console errors.
+The database contains zero inventory enrollments and no queued/running imports;
+no live stock correction was sent. The original connector/cron and test fixtures
+remain intact pending a separate legacy cutover. Production was not changed.
 
 Verify:
 
