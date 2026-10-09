@@ -134,6 +134,26 @@ final class UltraLove_Shopify_Supplier {
             <p>Catalog source: authenticated dev product feed. Last successful catalog sync:
                 <strong><?php echo esc_html( get_option( 'ul_dev_shopify_feed_last_success', 'Not yet run' ) ); ?></strong>.
                 Supplier withdrawal zeroes mapped stock without deleting the retailer product.</p>
+            <h2>Administrator setup</h2>
+            <p>Staff administrators configure this existing development-store connection.
+                Shop managers have feed-reading access but cannot configure this screen.
+                Do not use it to connect another retailer's Shopify store.</p>
+            <ol>
+                <li>Choose existing supplier product IDs and an already-approved dev retailer below.
+                    Catalog listing permission does not grant dropshipping approval.</li>
+                <li>Set the initial retail markup, then save. New products import as unpublished Shopify drafts;
+                    existing products keep their publication state and retailer-edited prices.</li>
+                <li>Check the last successful catalog sync and any error above, then review drafts in Shopify.
+                    Removing an ID stops its sync and forwarding without deleting its Shopify product.</li>
+            </ol>
+            <p>Shop managers already have read-only catalog API access. For a separate API client, create a
+                revocable application password under
+                <a href="<?php echo esc_url( admin_url( 'profile.php#application-passwords-section' ) ); ?>">Profile &gt; Application Passwords</a>.
+                Development access restrictions still apply. Application passwords inherit the account's permissions;
+                never share a manager's credentials with a retailer.</p>
+            <p>The existing Shopify worker uses its own dedicated catalog credential, stored outside WordPress.
+                This screen does not create, reveal or rotate credentials. Granting another account catalog access
+                remains an administrator-only action.</p>
             <form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>">
                 <input type="hidden" name="action" value="ultralove_shopify_supplier">
                 <?php wp_nonce_field( 'ultralove_shopify_supplier' ); ?>

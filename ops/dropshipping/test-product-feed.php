@@ -64,11 +64,23 @@ class WC_Product {
 function wc_get_product( $id ) { return $GLOBALS['products'][$id] ?? false; }
 $wpdb = new class {
     public string $prefix = 'wp_';
+    public string $posts = 'wp_posts';
+    public string $postmeta = 'wp_postmeta';
+    public string $term_taxonomy = 'wp_term_taxonomy';
+    public string $term_relationships = 'wp_term_relationships';
     public string $last_error = '';
     public int $requests = 0;
-    public function prepare( $sql, ...$args ) { return $sql; }
+    public array $prepared = array();
+    public string $last_query = '';
+    public function prepare( $sql, ...$args ) { $this->prepared[] = array( $sql, $args ); return $sql; }
     public function query( $sql ) { ++$this->requests; return 1; }
     public function get_var( $sql ) { return $this->requests; }
+    public function esc_like( $text ) { return addcslashes( $text, '_%\\' ); }
+    public function get_col( $sql ) { $this->last_query = $sql; return array( '1', '3' ); }
+    public function get_results( $sql ) {
+        return array( (object) array( 'term_id' => 1, 'parent' => 0 ), (object) array( 'term_id' => 2, 'parent' => 1 ),
+            (object) array( 'term_id' => 3, 'parent' => 2 ) );
+    }
 };
 require __DIR__ . '/../../wp-content/plugins/ultralove-product-feed/ultralove-product-feed.php';
 $assert = static function ( bool $pass, string $label ) use ( &$checks ): void {
@@ -96,11 +108,14 @@ $home = 'https://ultralove.ca';
 $assert( ! UltraLove_Product_Feed::supported(), 'Production hostname is refused.' );
 $home = 'https://dev.ultralove.ca';
 UltraLove_Product_Feed::routes();
-$assert( count( $routes ) === 5, 'All five documented read routes registered.' );
+$assert( count( $routes ) === 6, 'All six documented read routes registered.' );
 foreach ( $routes as $route ) {
     $assert( $route['methods'] === 'GET' && $route['permission_callback'] === array( 'UltraLove_Product_Feed', 'permissions' ), 'Every route is read-only and authenticated.' );
 }
 $assert( $routes['/products']['args']['per_page']['maximum'] === 100, 'Catalog pagination has exact bound.' );
+$assert( $routes['/categories']['args']['per_page']['default'] === 50 && $routes['/categories']['args']['per_page']['maximum'] === 100, 'Category browsing defaults to 50 and has the same hard request cap.' );
+$assert( $routes['/products']['args']['category_id']['minimum'] === 1 && $routes['/products']['args']['search']['maxLength'] === 100, 'Category/search filters have exact validation bounds.' );
+$assert( $routes['/products']['args']['parents_only']['default'] === false, 'Existing full-feed variation visibility stays unchanged.' );
 $assert( $routes['/changes']['args']['generation']['required'], 'Change consumer must identify dataset generation.' );
 $posts = array(
     1 => (object) array( 'post_type' => 'product', 'post_status' => 'publish', 'post_parent' => 0 ),
@@ -131,6 +146,15 @@ $assert( $simple['global_unique_id'] === '00012345678905' && $simple['price'] ==
 $assert( $simple['data_warnings'] === array( array( 'code' => 'missing_image', 'attachment_id' => 102 ) ) && count( $simple['images'] ) === 1, 'Missing attachment explicitly warned while valid image and product remain available.' );
 $assert( $variation['type'] === 'variation' && $variation['parent_id'] === 1 && $variation['images'] === $simple['images'], 'Variation representation inherits parent images without a live synthetic product.' );
 $assert( $variation['attributes'] === array( array( 'name' => 'colour', 'options' => array( 'black' ) ) ), 'Variation selected options have documented shape.' );
+$assert( UltraLove_Product_Feed::catalog_ids( 0, 51, array(), array( 'parents_only' => true, 'category_id' => 1, 'search' => '50%_SKU' ) ) === array( 1, 3 ), 'Filtered catalog retains integer IDs.' );
+$assert( str_contains( $wpdb->last_query, "p.post_type='product'" ) && str_contains( $wpdb->last_query, 'ct.term_id IN (1,2,3)' ), 'Parent browsing and descendant-category filters are applied together.' );
+$assert( str_contains( $wpdb->last_query, "CASE WHEN p.post_type='product_variation' THEN parent.ID ELSE p.ID END" ), 'Variations inherit source-parent categorization.' );
+$assert( str_contains( $wpdb->last_query, "child.post_status='publish'" ) && str_contains( $wpdb->last_query, "cm.meta_key='_sku'" ), 'Published variation SKU searches find the parent card, not private variants.' );
+$search_call = $wpdb->prepared[count( $wpdb->prepared ) - 2];
+$assert( $search_call[1] === array_fill( 0, 4, '%50\\%\\_SKU%' ), 'Name/SKU filters use prepared, literal wildcard-safe search values.' );
+$before = $wpdb->requests;
+UltraLove_Product_Feed::catalog_ids( 0, 51 );
+$assert( ! str_contains( $wpdb->last_query, 'ct.term_id' ) && ! str_contains( $wpdb->last_query, "p.post_type='product' AND" ) && $wpdb->requests === $before, 'Unfiltered callers retain all-type visibility without write queries.' );
 echo $checks . " product feed assertions passed.\n";
 if ( in_array( '--samples', $argv, true ) ) {
     echo 'FEED-SAMPLES:' . json_encode( array( $simple, $variation ), JSON_THROW_ON_ERROR ) . "\n";

@@ -13,7 +13,21 @@ $option = array();
 $approved = 'yes';
 $dropshipping = true;
 $checks = 0;
-function add_action( ...$args ) {}
+$actions = array();
+$caps = array();
+$nonce_valid = true;
+$menu = null;
+function add_action( $hook, $callback, ...$args ) { $GLOBALS['actions'][$hook] = $callback; }
+function current_user_can( $cap ) { return in_array( $cap, $GLOBALS['caps'], true ); }
+function add_submenu_page( ...$args ) { $GLOBALS['menu'] = $args; }
+function wp_die( $message, $title, $args ) { throw new RuntimeException( $message, $args['response'] ); }
+function check_admin_referer( $action ) {
+    if ( ! $GLOBALS['nonce_valid'] ) { throw new RuntimeException( 'Invalid nonce.', 403 ); }
+}
+function wp_unslash( $value ) { return $value; }
+function update_option( $key, $value, $autoload ) { $GLOBALS['option'] = $value; }
+function admin_url( $path ) { return 'https://dev.ultralove.ca/wp-admin/' . $path; }
+function wp_safe_redirect( $url ) { throw new RuntimeException( $url, 302 ); }
 function wp_get_environment_type() { return $GLOBALS['environment']; }
 function home_url() { return $GLOBALS['home']; }
 function get_option( $key, $default = false ) { return $GLOBALS['option']; }
@@ -73,4 +87,45 @@ foreach ( array( 'missing-product', 'negative-id', 'empty-selection', 'unapprove
     catch ( InvalidArgumentException $error ) { $rejected = true; }
     $assert( $rejected, 'Invalid configuration rejected: ' . $case );
 }
+$approved = 'yes';
+$product->managed = true;
+$GLOBALS['actions']['admin_menu']();
+$assert( $menu[3] === 'manage_options', 'Shopify Supplier menu remains administrator-only.' );
+$post = array( 'enabled' => '1', 'product_ids' => '17186', 'retailer_id' => '1', 'markup' => '50' );
+foreach ( array(
+    array( 'caps' => array(), 'nonce' => true, 'environment' => 'development', 'status' => 403, 'label' => 'Customer cannot change the connection.' ),
+    array( 'caps' => array( 'manage_woocommerce' ), 'nonce' => true, 'environment' => 'development', 'status' => 403, 'label' => 'Shop-manager feed access does not grant supplier configuration.' ),
+    array( 'caps' => array( 'manage_options' ), 'nonce' => false, 'environment' => 'development', 'status' => 403, 'label' => 'Administrator still requires a valid settings nonce.' ),
+    array( 'caps' => array( 'manage_options' ), 'nonce' => true, 'environment' => 'production', 'status' => 403, 'label' => 'Administrator configuration remains dev-only.' ),
+    array( 'caps' => array( 'manage_options' ), 'nonce' => true, 'environment' => 'development', 'status' => 302, 'label' => 'Administrator can save validated dev configuration.' ),
+    array( 'caps' => array( 'manage_options', 'manage_woocommerce' ), 'nonce' => true, 'environment' => 'development', 'status' => 302, 'label' => 'Administrator retains configuration access.' ),
+) as $case ) {
+    $caps = $case['caps'];
+    $nonce_valid = $case['nonce'];
+    $environment = $case['environment'];
+    $option = array();
+    $_POST = $post;
+    $status = null;
+    try { UltraLove_Shopify_Supplier::save(); }
+    catch ( RuntimeException $error ) { $status = $error->getCode(); }
+    $assert( $status === $case['status'], $case['label'] );
+    $assert( $case['status'] === 302
+        ? $option === array( 'enabled' => true, 'product_ids' => array( 17186 ), 'retailer_id' => 1, 'markup' => 50.0 )
+        : $option === array(), 'Denied requests cannot mutate supplier settings.' );
+}
+$environment = 'development';
+$caps = array();
+$denied = false;
+try { UltraLove_Shopify_Supplier::page(); }
+catch ( RuntimeException $error ) { $denied = $error->getCode() === 403; }
+$assert( $denied, 'Customer cannot render the supplier configuration page.' );
+$caps = array( 'manage_woocommerce' );
+$denied = false;
+try { UltraLove_Shopify_Supplier::page(); }
+catch ( RuntimeException $error ) { $denied = $error->getCode() === 403; }
+$assert( $denied, 'Shop manager cannot render the administrator configuration page.' );
+$environment = 'production';
+$menu = null;
+$GLOBALS['actions']['admin_menu']();
+$assert( $menu === null, 'Supplier menu remains absent on production.' );
 echo $checks . " supplier policy assertions passed.\n";

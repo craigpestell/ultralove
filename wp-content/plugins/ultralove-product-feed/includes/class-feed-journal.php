@@ -168,6 +168,13 @@ final class UltraLove_Feed_Journal {
         } );
     }
 
+    public static function current_cursor(): int {
+        global $wpdb;
+        $cursor = (int) $wpdb->get_var( 'SELECT COALESCE(MAX(seq),0) FROM ' . self::table( 'changes' ) );
+        self::check_database();
+        return $cursor;
+    }
+
     public static function floor(): int {
         global $wpdb;
         $result = (int) $wpdb->get_var( 'SELECT COALESCE(MIN(seq),1)-1 FROM ' . self::table( 'changes' ) );

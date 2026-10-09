@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "UltraLove Supplier Product Feed",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Read-only supplier catalog. WooCommerce-compatible field names with explicit supplier extensions; not a drop-in wc/v3 API. All published products and published variations of published parents are included, including out-of-stock products. No product listing approval flag. Existing CSV exports are unchanged. Prices are supplier prices, not retailer markup. API stock quantities are not reservations."
   },
   "servers": [{"url": "https://dev.ultralove.ca/wp-json/ultralove-feed/v1"}],
@@ -11,14 +11,39 @@
     "/products": {
       "get": {
         "operationId": "listProducts",
-        "description": "Import all pages in ascending ID order. Save generation and change_cursor from the FIRST page, then replay changes after that cursor to catch updates during the import. Do not advance the saved change cursor using later snapshot pages.",
+        "description": "Browse one bounded page at a time; the Shopify connector requests 50 products per page and imports only explicitly selected batches of at most 50 parent products. The API hard cap is 100 records per request, not a total-catalog limit. Category filters include descendant categories and variations inherit parent categories. Search matches product/parent names and SKUs. Existing unfiltered consumers can still traverse all pages in ascending ID order, save generation/change_cursor from the FIRST page, and replay changes after that cursor.",
         "parameters": [
           {"$ref": "#/components/parameters/AfterId"},
           {"$ref": "#/components/parameters/PerPage"},
-          {"$ref": "#/components/parameters/Ids"}
+          {"$ref": "#/components/parameters/Ids"},
+          {"name": "category_id", "in": "query", "schema": {"type": "integer", "minimum": 1}, "description": "Category term ID, including its descendants."},
+          {"name": "search", "in": "query", "schema": {"type": "string", "minLength": 1, "maxLength": 100}, "description": "Literal partial product-name or SKU search."},
+          {"name": "parents_only", "in": "query", "schema": {"type": "boolean", "default": false}, "description": "True for retailer product cards. Variants remain available through IDs and are included when importing their selected parent."}
         ],
         "responses": {
           "200": {"description": "Catalog page", "content": {"application/json": {"schema": {"$ref": "#/components/schemas/Products"}}}},
+          "default": {"$ref": "#/components/responses/Error"}
+        }
+      }
+    },
+    "/categories": {
+      "get": {
+        "operationId": "listCategories",
+        "description": "Authenticated, ID-paginated product-category navigation. Empty categories may be returned. Requests default to 50 categories with a hard cap of 100.",
+        "parameters": [
+          {"$ref": "#/components/parameters/AfterId"},
+          {"name": "per_page", "in": "query", "schema": {"type": "integer", "minimum": 1, "maximum": 100, "default": 50}}
+        ],
+        "responses": {
+          "200": {"description": "Category page", "content": {"application/json": {"schema": {"type": "object", "required": ["generation", "change_cursor", "next_after_id", "has_more", "categories"], "properties": {
+            "generation": {"type": "string", "format": "uuid"},
+            "change_cursor": {"type": "integer", "minimum": 0},
+            "next_after_id": {"type": "integer", "minimum": 0},
+            "has_more": {"type": "boolean"},
+            "categories": {"type": "array", "maxItems": 100, "items": {"type": "object", "required": ["id", "name", "slug", "parent_id"], "properties": {
+              "id": {"type": "integer", "minimum": 1}, "name": {"type": "string"}, "slug": {"type": "string"}, "parent_id": {"type": "integer", "minimum": 0}
+            }}}
+          }}}}},
           "default": {"$ref": "#/components/responses/Error"}
         }
       }

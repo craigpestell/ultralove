@@ -2,6 +2,23 @@
 
 ## Dropshipping production rollout (disabled)
 
+**Production status, 2026-10-08:** release `5e920b0` is deployed and verified.
+The existing Dropshipping plugin remains active with
+`ultralove_dropshipping_enabled=no`; the admin switch is unchecked, approval
+fields and the checkout opt-in are hidden, and the approval baseline is
+unchanged. The supplier feed and Shopify supplier code are installed but their
+plugins remain inactive. No production test users, products, orders, payments,
+emails, or shipments were created.
+
+This release includes the shared dropshipping checkbox markup and regenerated
+critical CSS. Staging PHP lint, service checks, and public smoke tests passed.
+Cloudflare cache was purged through the configured WordPress plugin after a
+normal home-page request was found to contain stale CSS; normal home and Sale
+Products requests then matched the released inline CSS. The previous revision
+was `f229e6b`, backed up at
+`/var/lib/ultralove-deploy/backups/20261009T011121Z-f229e6bc4b.tgz`.
+Feature enablement still requires separate approval.
+
 `ultralove-dropshipping` adds approved-retailer manual dropship checkout.
 The same code supports development and production; the feature defaults off
 independently on each environment.

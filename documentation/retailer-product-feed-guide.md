@@ -26,6 +26,67 @@ test phase.
 
 ## Step record
 
+### Bounded browsing and selected imports
+
+The existing Shopify app consumes this WooCommerce feed; there is no SQL export,
+CSV replacement, or second Shopify app. The entire published catalog remains
+available, but the initial connector does **not** automatically import it all.
+
+- Product browsing requests **50 parent products per page**. The feed rejects
+  requests above **100 records**; this is a per-request limit, not a total-catalog
+  ceiling. Follow `next_after_id` while `has_more` is true.
+- `/categories` provides authenticated category navigation, also defaulting to
+  50 records with a maximum of 100.
+- `/products` accepts `category_id` (including descendants), `search` (literal
+  partial name/SKU, including published variation SKUs), and `parents_only`.
+  Existing unfiltered consumers still see published variations.
+- The operator-backed app import accepts **1–50 explicitly selected parent
+  product IDs**. Published variants are included automatically, fetched in
+  requests of at most 100 records. Selecting a category does not import it.
+- New Shopify copies remain unpublished drafts. Missing prices, unknown or
+  unmanaged stock, and shared parent inventory require review and cannot become
+  sellable stock through invented/duplicated quantities.
+- Existing retailer listings keep their content, prices, inventory and
+  publication status. Listing permission does not approve order forwarding.
+
+The catalog-only app worker lives outside WordPress and uses the existing
+root-only app/feed credentials. Its selected feed checkpoint, resume state and
+created-versus-reused cleanup ledger are filesystem-only. It does not bootstrap
+WordPress or write product mappings/options/postmeta.
+
+Its loopback feed GETs explicitly request the dev-only catalog read mode. That
+mode installs a database-query guard before ordinary plugins and authentication,
+rejects write statements, uses the existing persistent object cache for request
+limits, and reads the published journal cursor without allocating new entries.
+The normal connection/account is unchanged; no special database connection or
+new account is created. A request requiring a database write fails explicitly
+rather than applying it. Normal feed clients and the selected-product/order
+worker retain their existing behavior.
+
+This is an operator-backed development connection, not yet an embedded retailer
+product-picker UI. Implementation and isolated tests do not establish live
+deployment or import success; record those results separately below.
+
+#### Verified development result (2026-10-09)
+
+- The real authenticated feed passed 15 bounded-browsing checks: default 50,
+  maximum 100, server rejection of 101, advancing pages, categories, combined
+  category/SKU filtering, and explicit selection capped at 50 parents.
+  Eight requests recorded 103 guarded SELECT statements and zero database writes.
+- One explicitly selected 50-parent page completed in the existing Shopify lab
+  store: **46 new unpublished drafts**, plus **four existing listings reused
+  unchanged**. There are 50 unique Shopify mappings and no bulk/verification errors.
+- Final live verification checked source variant coverage, SKUs, prices, barcodes,
+  options, stock, draft identity/status, and ready media. Repeating the same command
+  verified the completed batch again without recreating products.
+- Shopify normalizes HTML serialization. Verification compares content and
+  meaningful markup instead of raw bytes. New descriptions use public production
+  upload references; unchanged descriptions in still-unverified, owned drafts
+  received description-only repairs. Completed imports and reused listings are
+  never eligible for that repair.
+- This was a selected batch, not a full-catalog import. Remaining products are
+  discoverable through paging. Production remains disabled and untouched.
+
 Keep staff setup separate from actions a retailer can actually perform.
 Do not describe a lab-only administrator control as a retailer-facing screen.
 
@@ -34,8 +95,8 @@ Do not describe a lab-only administrator control as a retailer-facing screen.
 | 1 | UltraLove staff / retailer | Grant catalog access and issue dedicated, revocable feed credentials | Dedicated dev credential and actual revocation verified; external retailer onboarding pending |
 | 2 | Integrator / test operator | Configure the existing Shopify test app's connector to read the feed | Dev adapter deployed; authenticated feed pull and scheduled cycle verified |
 | 3 | Retailer | Choose products from the published catalog | Staff's three-product dev selection verified; retailer-facing selection UI pending |
-| 4 | Retailer / connector | Set initial retail prices and import selected products as drafts | New creation/markup/media/barcode verified in isolated bridge tests; live existing mappings reused |
-| 5 | Retailer | Review images, descriptions, SKUs, variants, prices, and availability | Live SKU/stock and retailer-edit preservation verified; new live draft/media review pending |
+| 4 | Retailer / connector | Set initial retail prices and import selected products as drafts | Fresh live draft, initial markup and media verified; populated barcode mapping remains isolated-tested |
+| 5 | Retailer | Review images, descriptions, SKUs, variants, prices, and availability | Fresh live simple-product draft data/media and retailer-edit preservation verified; retailer UI walkthrough and variable-product support pending |
 | 6 | Connector | Synchronize inventory and changes without overwriting retailer edits | Live stock, price, content and publication-state preservation verified |
 | 7 | Integrator / retailer | Recover from interruptions, removals, expired cursors, and revoked access | Live withdrawal/republication, 409 resync, removed scope and revoked password verified; rate-limit/transport failures isolated-tested |
 | 8 | UltraLove staff / retailer | Separately approve and configure dropshipping fulfilment | Dev checkout/order tests verified; real pilot approval pending |
@@ -53,7 +114,18 @@ Record:
 
 Verified technical facts:
 
-- Staff grant access under **Users > Edit user > Supplier catalog API**.
+- Administrators grant other accounts access under
+  **Users > Edit user > Supplier catalog API**. This grant/revoke control remains
+  administrator-only; it is not a shop-manager onboarding task.
+- Shop managers and administrators already have feed-reading access through
+  `manage_woocommerce`. No per-user feed checkbox is needed for these roles.
+  Ordinary customers still require an explicit catalog grant.
+- For a manager's own separate API client, use **Profile > Application Passwords**
+  over HTTPS. Give the credential a descriptive client-specific name, store the
+  one-time password securely, and revoke it from the same section when no longer
+  needed. An application password inherits the manager's other permissions:
+  **never give a manager's credential to a retailer**. Use a dedicated,
+  catalog-only customer account for a retailer connector.
 - Dev base URL: `https://dev.ultralove.ca/wp-json/ultralove-feed/v1`.
 - Requests require both account permission and authentication over HTTPS.
 - Cloudflare Access still protects dev. Feed credentials alone do not bypass
@@ -76,6 +148,70 @@ retailers' Shopify stores.
 
 Keep this phase product-only. Connecting a catalog must not silently enable
 order forwarding, supplier payment, production dropshipping, or notifications.
+
+### Administrator-led setup of the existing dev connection
+
+This is a staff workflow for the existing test store, not independent-retailer
+self-service. **WooCommerce > Shopify Supplier** is available on dev to
+staff administrators with `manage_options`. The menu, page and settings-save
+handler use the same permission; shop managers and customer accounts cannot
+access them. Shop managers' automatic feed-reading permission does not grant
+connection-management rights. Saving still requires a valid nonce and validated
+settings.
+
+The existing worker already has a separate root-only catalog credential.
+Administrators do not issue, enter or rotate that credential on this screen.
+Cloudflare Access and the fixed Shopify test-store allowlist remain unchanged.
+
+1. An administrator/operator confirms the dev feed and supplier plugins,
+   worker credential and test-store connection are installed. An approved dev
+   retailer and enabled dev dropshipping are prerequisites of this existing
+   test connector; catalog listing itself does not grant fulfilment approval.
+2. The staff administrator opens **WooCommerce > Shopify Supplier**.
+3. Under **Existing product IDs**, enter comma-separated IDs from the existing
+   WooCommerce catalog, up to 25 published simple products with SKUs, prices and
+   managed stock. Out-of-stock products with known zero stock are allowed.
+4. Choose the existing **Approved retailer** and set **Initial retail markup (%)**.
+   This markup affects newly created Shopify products only, not existing
+   retailer selling prices.
+5. Preserve the approved **Enable dev supplier sync** state and use
+   **Save Changes**. The existing scheduled worker reads the saved selection.
+   This screen does not provide a new product-only worker mode; an operator
+   uses `wp ultralove shopify sync --catalog-only` for a product-only check.
+6. Check **Last successful catalog sync** and any displayed error, then review
+   imported drafts in Shopify. New products remain unpublished; previously
+   mapped products retain their existing publication state.
+7. To stop a product's sync and forwarding, remove its ID and save. Its Shopify
+   product and mapping remain; deselected stock is no longer kept current.
+
+Do not change live dev settings merely to rehearse these steps. The original
+three-product selection and 0% markup remain the verification baseline.
+Retailer-facing product browsing/selection, additional stores, and production
+availability remain separate pending work.
+
+**Dev verification, 2026-10-09:** guidance deployed in `6f7185d`; one owned
+plugin file changed, staging PHP lint and all four origin smoke checks passed.
+**36 supplier policy**, **335 product-feed**, and **53 feed-consumer** isolated
+assertions passed, followed by **18 live staff/manager assertions**:
+
+- An existing staff administrator could render setup, selection/markup fields,
+  the save nonce and credential guidance. Invalid input was rejected without
+  changing settings.
+- A temporary standard Shop Manager, with no administrator permission or
+  explicit catalog grant, read the feed using actual HTTP application-password
+  authentication. Its own credential creation/revocation permissions were
+  confirmed under HTTPS; the revoked password subsequently returned **401**.
+- That manager could not view/save the administrator configuration or alter
+  another account's catalog grant (**403**). Customer configuration requests
+  were also rejected with **403**.
+- Original selection, retailer, markup and approval were unchanged. Email
+  suppression passed, no product/order/payment/dispatch action was run, and
+  the temporary manager and application password were removed.
+
+No access-policy expansion or production change occurred. Evidence is retained
+on dev in `/root/.ultralove-shopify-dev/staff-onboarding-verification.log`.
+This verifies role boundaries and server-rendered guidance, not a completed
+retailer-facing browser walkthrough or support for another Shopify store.
 
 ## 3. Select products
 
@@ -197,6 +333,55 @@ expected unauthenticated **401 JSON**, without an outbound-allowlist change.
 - Production remains at `5e920b074237b0f57dd0fd062ded9bc599c63ae5`; both supplier
   plugins are inactive and dropshipping is `no`. No production deployment or
   enablement occurred during this work.
+
+### Fresh draft import verified, 2026-10-09
+
+- Ran the product-only [fresh draft verifier](../ops/dropshipping/verify-shopify-draft.php)
+  on `ultralove-dev-managed` against the existing Shopify development store.
+  **23 live assertions passed**. No plugin/runtime code was changed.
+- Existing published supplier product **17194**, SKU **70081**, had neither a
+  local mapping nor a Shopify SKU/handle match before import. It created
+  Shopify product **8424340586559**, handle `ultralove-dev-70081`, as **DRAFT**
+  with no publication timestamp. The draft remains available for staff review:
+  [open in Shopify admin](https://ultralove-integration-lab.myshopify.com/admin/products/8424340586559).
+- Temporarily selected that product alongside the original three and used a
+  **50% initial markup**: supplier price **CAD 1.85**, Shopify selling price
+  **CAD 2.78**. Tracked inventory at **Shop location** was **720**.
+- Feed title/description, supplier tag/vendor, simple-product default variant,
+  and SKU matched. This product has **no barcode**; absence was preserved.
+  Populated barcode transfer remains covered by isolated tests, not this live
+  fixture. Variable products are outside the current connector's coverage.
+- The single feed image reached **READY**, retained its feed alt text, and
+  measured **351 x 431** pixels. An independent request to the Shopify CDN
+  returned **HTTP 200**, `image/jpeg`, **39,065 bytes**. There were no missing
+  image warnings for this product; missing-image behavior was not induced here.
+- Repeated import preserved the product, variant and media IDs without a
+  duplicate. Temporary retailer title, description and price edits survived
+  another sync while the product remained unpublished; those edits were then
+  restored to the initial imported values.
+- The scheduled worker was paused only for the temporary selection and resumed
+  afterward. Original settings were restored: IDs **17186, 17188, 17192**,
+  original **0%** markup, and the same retailer. The new draft and its mapping
+  are retained, but SKU **70081** is **deselected**, outside ongoing sync and
+  the order-forwarding allowlist. Its stock is a test snapshot, not a live
+  availability promise.
+- Final checks at **2026-10-09T06:28Z** confirmed the restored selection, draft
+  status, price/stock/media, no worker error, and active cron/Nginx/PHP-FPM.
+  Original Shopify products and supplier status/stock/price were unchanged.
+  Payment configuration was unchanged and development email suppression passed.
+- Root-only evidence is retained in
+  `/root/.ultralove-shopify-dev/fresh-draft-verification.log` and
+  `fresh-draft-final-state.log` on dev. No orders, payments, emails, shipments,
+  storefront publication, production deployment or production enablement were
+  performed.
+
+For another fresh verification, choose a different existing, eligible, unmapped
+simple product. Pause the dev worker with an exit-trap restoration and back up
+the non-secret supplier settings before running
+`wp --allow-root eval-file - <new-product-id>` with the verifier on stdin.
+The verifier refuses a running cron configuration or an already-mapped product,
+restores selection and retailer edits, and retains the resulting unpublished
+draft. Do not delete mappings to make the same product appear fresh.
 
 ## 7. Recovery and disconnect
 
