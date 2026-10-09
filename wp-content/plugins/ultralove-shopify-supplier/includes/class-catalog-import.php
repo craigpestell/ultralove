@@ -344,7 +344,8 @@ final class UltraLove_Shopify_Catalog_Import {
                 'values' => array_map( static fn( $value ) => array( 'name' => $value ), array_values( $option ) ) );
         }
         $input = array(
-            'title' => (string) ( $record['name'] ?? '' ), 'descriptionHtml' => (string) ( $record['description'] ?? '' ),
+            'title' => (string) ( $record['name'] ?? '' ),
+            'descriptionHtml' => str_replace( 'https://dev.ultralove.ca/wp-content/uploads/', 'https://ultralove.ca/wp-content/uploads/', (string) ( $record['description'] ?? '' ) ),
             'handle' => 'ultralove-catalog-' . $id, 'status' => 'DRAFT', 'vendor' => 'UltraLove',
             'tags' => array_values( array_unique( $tags ) ), 'productOptions' => $options, 'variants' => $variants,
             'metafields' => array( array( 'namespace' => 'ultralove_catalog', 'key' => 'supplier_id',
@@ -898,7 +899,6 @@ final class UltraLove_Shopify_Catalog_Import {
                     $input = self::payload( $record, $catalog, $this->location, $this->state['run_id'] );
                     if ( ! self::identity( $product, $id, $this->state['run_id'] )
                         || $product['status'] !== 'DRAFT' || $product['title'] !== $input['title']
-                        || $product['descriptionHtml'] !== $input['descriptionHtml']
                         || count( $product['variants'] ) !== count( $input['variants'] ) ) {
                         throw new RuntimeException( 'New draft fields or variant coverage differ; retailer edits will not be overwritten.' );
                     }
@@ -927,6 +927,20 @@ final class UltraLove_Shopify_Catalog_Import {
                     if ( $expected ) {
                         throw new RuntimeException( 'Source variant was omitted.' );
                     }
+                    if ( ! self::same_html( $product['descriptionHtml'], $input['descriptionHtml'] ) ) {
+                        $original = (string) ( $record['description'] ?? '' );
+                        if ( $this->state['phase'] === 'complete' || $original === $input['descriptionHtml']
+                            || ! self::same_html( $product['descriptionHtml'], $original ) ) {
+                            throw new RuntimeException( 'Draft description content differs; retailer edits will not be overwritten.' );
+                        }
+                        // Repair only our still-unverified draft's unchanged private-upload references.
+                        $updated = $this->graphql( 'mutation($product:ProductUpdateInput!){productUpdate(product:$product){product{id descriptionHtml} userErrors{field message}}}',
+                            array( 'product' => array( 'id' => $product['id'], 'descriptionHtml' => $input['descriptionHtml'] ) ) );
+                        if ( ( $updated['productUpdate']['product']['id'] ?? '' ) !== $product['id']
+                            || ! self::same_html( $updated['productUpdate']['product']['descriptionHtml'], $input['descriptionHtml'] ) ) {
+                            throw new RuntimeException( 'Owned draft upload-reference repair was not confirmed.' );
+                        }
+                    }
                     $media = $this->connection( 'media', 'id status mediaErrors{code message}', 100, $mapping['id'] );
                     if ( count( $media ) !== count( $input['files'] ?? array() ) ) {
                         throw new RuntimeException( 'Draft media coverage differs from the immutable feed.' );
@@ -954,6 +968,50 @@ final class UltraLove_Shopify_Catalog_Import {
                 . ' roots; details retained in the private state file. No existing listings were modified.' );
         }
         echo 'Catalog verified: ' . count( $roots ) . " roots, all source variants retained, existing listings unchanged.\n";
+    }
+
+    private static function same_html( string $left, string $right ): bool {
+        return self::html_signature( $left ) === self::html_signature( $right );
+    }
+
+    private static function html_signature( string $html ): array {
+        if ( ! class_exists( 'Dom\\HTMLDocument' ) ) {
+            throw new RuntimeException( 'HTML verification requires the existing PHP HTML5 DOM extension.' );
+        }
+        $document = Dom\HTMLDocument::createFromString( '<!doctype html><html><head><meta charset="utf-8"></head><body>'
+            . $html . '</body></html>', LIBXML_NOERROR );
+        $body = $document->getElementsByTagName( 'body' )->item( 0 );
+        $tokens = array();
+        $buffer = '';
+        $visible = '';
+        $normalize = static fn( string $text ): string => trim( preg_replace( '/\s+/u', ' ', $text ) );
+        $flush = static function () use ( &$tokens, &$buffer, $normalize ): void {
+            $text = $normalize( $buffer );
+            if ( $text !== '' ) { $tokens[] = array( 'text', $text ); }
+            $buffer = '';
+        };
+        $walk = static function ( $node ) use ( &$walk, &$tokens, &$buffer, &$visible, $flush ): void {
+            if ( $node instanceof Dom\Text ) {
+                $buffer .= $node->textContent;
+                $visible .= $node->textContent;
+                return;
+            }
+            if ( ! $node instanceof Dom\Element ) { return; }
+            $name = strtolower( $node->tagName );
+            $attributes = array();
+            foreach ( $node->attributes as $attribute ) { $attributes[$attribute->name] = $attribute->value; }
+            ksort( $attributes );
+            $wrapper = ! $attributes && in_array( $name, array( 'p', 'br' ), true );
+            $block = in_array( $name, array( 'p', 'br', 'div', 'li', 'section', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6' ), true );
+            if ( $block ) { $buffer .= ' '; $visible .= ' '; }
+            if ( ! $wrapper ) { $flush(); $tokens[] = array( 'open', $name, $attributes ); }
+            foreach ( $node->childNodes as $child ) { $walk( $child ); }
+            if ( ! $wrapper ) { $flush(); $tokens[] = array( 'close', $name ); }
+            if ( $block ) { $buffer .= ' '; $visible .= ' '; }
+        };
+        foreach ( $body->childNodes as $node ) { $walk( $node ); }
+        $flush();
+        return array( $tokens, $normalize( $visible ) );
     }
 
     private static function deletable( array $mapping, array $product, int $id, string $runId ): bool {

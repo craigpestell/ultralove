@@ -75,6 +75,17 @@ $assert( $input['variants'][0]['inventoryItem']['requiresShipping'] === true, 'A
 $assert( $input['files'][0]['originalSource'] === 'https://ultralove.ca/wp-content/uploads/image-1.jpg', 'Dev uploads rewritten to production public uploads.' );
 $assert( in_array( 'ultralove-catalog-run-' . $run, $input['tags'], true ), 'Unique run ownership tag included.' );
 $assert( $input['metafields'][0]['value'] === '1', 'Stable source root identity included.' );
+$assert( $call( 'same_html', "<img src=\"https://ultralove.ca/wp-content/uploads/logo.png\" />\r\n\r\nPublic description",
+    '<img src="https://ultralove.ca/wp-content/uploads/logo.png"><p>Public description</p>' ), 'Shopify void-tag/paragraph normalization is not a supplier content mismatch.' );
+$assert( $call( 'same_html', 'First paragraph' . "\n\n" . 'Second paragraph', '<p>First paragraph</p><p>Second paragraph</p>' ), 'Generated paragraph boundaries preserve source content.' );
+$assert( ! $call( 'same_html', '<p>Supplier description</p>', '<p>Retailer description</p>' ), 'Changed retailer description remains a mismatch.' );
+$assert( ! $call( 'same_html', '<img src="https://ultralove.ca/wp-content/uploads/a.png">',
+    '<img src="https://ultralove.ca/wp-content/uploads/b.png">' ), 'Changed source image references are not normalized away.' );
+$assert( ! $call( 'same_html', '<b>First</b> second', 'First <b>second</b>' ), 'Meaningful inline formatting changes remain detectable.' );
+$assert( ! $call( 'same_html', 'Hello<b>world</b>', 'Hello <b>world</b>' ), 'Meaningful inline whitespace is preserved.' );
+$with_inline_image = $record;
+$with_inline_image['description'] = '<img src="https://dev.ultralove.ca/wp-content/uploads/logo.png" />' . "\n\n" . 'Public description';
+$assert( str_contains( $payload( $with_inline_image )['descriptionHtml'], 'https://ultralove.ca/wp-content/uploads/logo.png' ), 'New Shopify descriptions use public production upload references.' );
 $assert( $payload( $record, null, 10 )['variants'][0]['price'] === '13.75', 'Explicit price markup applied.' );
 $record['requires_shipping'] = false;
 $assert( ! $payload( $record )['variants'][0]['inventoryItem']['requiresShipping'], 'Optional digital-product shipping flag honored.' );
