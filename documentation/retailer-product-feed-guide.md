@@ -63,9 +63,9 @@ new account is created. A request requiring a database write fails explicitly
 rather than applying it. Normal feed clients and the selected-product/order
 worker retain their existing behavior.
 
-This is an operator-backed development connection, not yet an embedded retailer
-product-picker UI. Implementation and isolated tests do not establish live
-deployment or import success; record those results separately below.
+This operator-backed development connection is distinct from the embedded
+product-picker UI described below. Implementation and isolated tests do not
+establish live deployment or import success; record those results separately.
 
 #### Verified development result (2026-10-09)
 
@@ -87,6 +87,33 @@ deployment or import success; record those results separately below.
 - This was a selected batch, not a full-catalog import. Remaining products are
   discoverable through paging. Production remains disabled and untouched.
 
+#### Embedded lab catalog browser verified (2026-10-09)
+
+The same installed **UltraLove Dropshipping Lab** app now opens its authenticated
+catalog browser inside the Shopify test-store admin. Its separate web application
+is deployed as release `05f1160`; no second Shopify app was created.
+
+- Browse 50 published parents per page, advance pages, search names/SKUs and
+  filter by category. SKU `1513` and combined category/SKU filtering were verified.
+- Select at most 50 parent products and click **Save selection**. Saved choices
+  persist after reload. A forged 51-parent submission is visibly rejected.
+- **Clear selection** clears the working selection; saving is a separate action.
+  Category names render decoded text, not HTML. Existing saved selections were
+  preserved during final verification.
+- Supplier wholesale CAD prices and stock are for review, not retailer price
+  settings or permission to forward orders. Saving does not import, publish or
+  synchronize products. Pricing and draft-import jobs remain the next UI milestone.
+- The application uses a source-restricted, pinned-key SSH proxy with a separate
+  catalog credential. It reads the normal authenticated dev feed and allows
+  routine authentication/feed database bookkeeping. Unlike the historical strict
+  verifier above, it does not request a no-write guard. The guard itself and
+  WordPress plugin/MU-plugin runtime remain unchanged.
+- The original three-product dev sync still passed with retailer prices preserved.
+  The new saved selections do not change that worker's selection or establish
+  ongoing sync for the previously imported 50-parent batch.
+- This is verified only for the allowlisted test store. Independent retailers,
+  real-order forwarding and production activation remain separate work.
+
 Keep staff setup separate from actions a retailer can actually perform.
 Do not describe a lab-only administrator control as a retailer-facing screen.
 
@@ -94,8 +121,8 @@ Do not describe a lab-only administrator control as a retailer-facing screen.
 |---|---|---|---|
 | 1 | UltraLove staff / retailer | Grant catalog access and issue dedicated, revocable feed credentials | Dedicated dev credential and actual revocation verified; external retailer onboarding pending |
 | 2 | Integrator / test operator | Configure the existing Shopify test app's connector to read the feed | Dev adapter deployed; authenticated feed pull and scheduled cycle verified |
-| 3 | Retailer | Choose products from the published catalog | Staff's three-product dev selection verified; retailer-facing selection UI pending |
-| 4 | Retailer / connector | Set initial retail prices and import selected products as drafts | Fresh live draft, initial markup and media verified; populated barcode mapping remains isolated-tested |
+| 3 | Retailer | Choose products from the published catalog | Embedded test-store browsing and saved selections verified, capped at 50 parents; independent-store onboarding pending |
+| 4 | Retailer / connector | Set initial retail prices and import selected products as drafts | Operator import verified; pricing and draft-import jobs are not yet wired to the embedded UI |
 | 5 | Retailer | Review images, descriptions, SKUs, variants, prices, and availability | Fresh live simple-product draft data/media and retailer-edit preservation verified; retailer UI walkthrough and variable-product support pending |
 | 6 | Connector | Synchronize inventory and changes without overwriting retailer edits | Live stock, price, content and publication-state preservation verified |
 | 7 | Integrator / retailer | Recover from interruptions, removals, expired cursors, and revoked access | Live withdrawal/republication, 409 resync, removed scope and revoked password verified; rate-limit/transport failures isolated-tested |
@@ -215,12 +242,22 @@ retailer-facing browser walkthrough or support for another Shopify store.
 
 ## 3. Select products
 
-Record the exact search/filter/selection controls that the consumer supports,
-how selections are saved, and how a retailer adds or removes products later.
+In the allowlisted Shopify test store, open **Apps > UltraLove Dropshipping Lab**:
+
+1. Enter **Search name or SKU**, choose **Category**, then click **Search catalog**.
+2. Use **Next 50 products** to browse further; **First product page** returns to
+   the start of the current filter. **More categories** appears when available.
+3. Check or uncheck products, up to 50 distinct parents across pages.
+4. Click **Save selection (no import)** to persist the choices. Reloading retains
+   saved choices. **Clear selection** only clears the working selection; save
+   afterward to persist an empty selection.
+
+These choices are not the scheduled worker's selection. Adding or removing a
+choice here does not create a Shopify product or start/stop its inventory sync.
 
 Retailers may select any published UltraLove catalog product, including
 out-of-stock products. Listing permission is separate from order availability.
-Do not carry the current connector's 25-product/simple-product lab limits into
+Do not carry the scheduled worker's 25-product/simple-product lab limits into
 the feed's business rules. Document any unsupported product types explicitly.
 
 Use stable supplier product/variation IDs for synchronization; record SKUs as

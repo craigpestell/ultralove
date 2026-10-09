@@ -312,6 +312,71 @@ integration still need a separately scoped production implementation.
 Do not remove the test-only guards to deploy this worker to production.
 
 **Dev supplier connected (2026-10-08 UTC): existing products only.**
+
+**Embedded Shopify interface (2026-10-09 UTC): catalog and selections live.**
+
+The same **UltraLove Dropshipping Lab** installation now opens
+`https://shopify-lab.104-248-211-144.sslip.io` inside Shopify admin.
+Active app version is `ultralove-lab-embedded-foundation`; its API version and
+six existing access scopes are unchanged. The only redirect allowlisted is
+`https://shopify-lab.104-248-211-144.sslip.io/auth/callback`.
+Real authenticated embedded rendering passed, and a subsequent dev product-only
+worker cycle synced the original three SKUs while preserving retailer prices.
+No new app, production change, order, payment, email or shipment was created.
+
+The interface has a separate private source repository,
+`craigpestell/ultralove-shopify-app`, and local workspace
+`/Users/craig/work/ultralove-shopify-app`. Its source is published privately:
+`main` contains the deployed foundation and `feat/embedded-catalog` contains the
+catalog/hosting increment for review. Runtime deployment used git archives and
+does not imply that the review branch has been merged.
+Catalog release `05f1160` is hosted on the existing isolated integration-lab
+droplet as non-root systemd service `ultralove-shopify`, using checksum-verified
+Node 24.21.0, a loopback-only listener on port 3097, a separate Nginx HTTPS vhost,
+and a Let's Encrypt certificate with automatic renewal. No firewall or UltraLove
+DNS policy changed. The existing WordPress lab vhost is unchanged.
+
+Code is under `/srv/ultralove-shopify/releases`, selected by `current`.
+Mode-0600 persistent SQLite sessions are under `/var/lib/ultralove-shopify`;
+the root-only environment is `/etc/ultralove-shopify/app.env`.
+The service reuses the installed app identity without reading the root worker's
+credential files itself. Its access logging excludes request query parameters.
+The deployed UI browses 50 published parents per page, searches names/SKUs,
+filters categories and saves at most 50 explicitly selected parent IDs in the
+app-owned SQLite database. Saving does not import, publish, synchronize inventory
+or approve order forwarding.
+
+The live transport uses a separate SSH key, pinned host key and forced PHP
+command on verified dev host `138.68.43.251` (`ultralove-dev-managed`), not the
+historical dev IP in the topology table. SSH account `ultralove-catalog-proxy`
+is restricted to source `104.248.211.144` and command `catalog-read`; an attempted
+`id` was rejected. The proxy uses the existing authenticated loopback HTTP feed
+with a separate revocable password on the catalog-only customer account.
+It grants no shell, forwarding or administrator access and changes no firewall
+or Cloudflare Access policy.
+Routine authentication/feed database bookkeeping is allowed, as confirmed by
+the user on 2026-10-09. This connection does not request the optional strict
+database-read mode. No WordPress plugin/MU-plugin runtime changes were deployed;
+the earlier local strict-read bookkeeping fix was removed before deployment.
+
+Live browser checks verified paging, SKU `1513`, combined category/SKU filtering,
+selection persistence after reload, saving exactly 50 parents, disabled
+checkboxes at that limit and visible rejection of a forged 51-parent selection.
+Release `05f1160` additionally passed exact category-label access, readable entity
+decoding and clearing the unsaved selection. Existing saved selections were
+preserved during final checks. Eleven offline tests, type-check, lint, build and
+migrations passed; npm audit reported zero vulnerabilities. Final app, Nginx and
+lab PHP-FPM checks were healthy, the listener remained loopback-only, foreign-shop
+requests returned 403 and invalid-signature webhooks returned 401.
+Selected imports and ongoing selection sync are not wired to this embedded UI.
+
+App rollback: restore existing version `ultralove-dropshipping-lab-2` in the
+Dev Dashboard, returning to the previous lab URL and `embedded=false`.
+Do not uninstall/recreate the app or rotate the worker's credentials.
+Hosting release `a419640` failed service read permissions and must not be used
+as a code rollback. The verified `a271a77` foundation remains an earlier rollback
+without catalog browsing; changing code does not undo persistent migrations.
+
 Following the user's request to use dev's catalog instead of synthetic products,
 the old lab cron entry was removed and only its two verified Shopify fixtures
 (`LAB-SIMPLE-001`, `LAB-SIMPLE-002`) were archived. Other Shopify products were
