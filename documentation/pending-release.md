@@ -44,6 +44,19 @@ in the order listed.
 
 ## Code
 
+**Product CSV admin consolidation** - standard retailer and Shopify CSV
+generation is owned only by **UltraLove Product CSV Export** (existing plugin
+slug `ultralove-product-export-sync`, version 1.1.0). One WooCommerce submenu
+replaces Product Export Sync, Update Product CSV and Product Export Generations;
+old page URLs redirect to the unified controls. The duplicate child-theme
+generator is removed and obsolete hourly export events are cleared.
+CSV schemas/URLs and customer-account links are unchanged. Keep this plugin
+active; stock-only exports, WP All Import/Export, the feed and dropshipping
+plugins are separate and unchanged. Production deployment awaits approval.
+The superseded, unconnected Syncee WordPress plugin was deactivated and its
+files deleted only on the isolated integration lab. A root-only recovery
+archive is retained outside the webroot; it was not installed on dev or production.
+
 **Update cart icon removal** - the child theme suppresses the parent theme's
 decorative `::before` icon on cart/checkout tables to avoid the reported Firefox
 artifact. The button label, shared spacing, and cart-update behavior are unchanged.
