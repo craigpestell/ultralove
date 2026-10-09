@@ -128,6 +128,30 @@ three-product selection and 0% markup remain the verification baseline.
 Retailer-facing product browsing/selection, additional stores, and production
 availability remain separate pending work.
 
+**Dev verification, 2026-10-09:** guidance deployed in `6f7185d`; one owned
+plugin file changed, staging PHP lint and all four origin smoke checks passed.
+**36 supplier policy**, **335 product-feed**, and **53 feed-consumer** isolated
+assertions passed, followed by **18 live staff/manager assertions**:
+
+- An existing staff administrator could render setup, selection/markup fields,
+  the save nonce and credential guidance. Invalid input was rejected without
+  changing settings.
+- A temporary standard Shop Manager, with no administrator permission or
+  explicit catalog grant, read the feed using actual HTTP application-password
+  authentication. Its own credential creation/revocation permissions were
+  confirmed under HTTPS; the revoked password subsequently returned **401**.
+- That manager could not view/save the administrator configuration or alter
+  another account's catalog grant (**403**). Customer configuration requests
+  were also rejected with **403**.
+- Original selection, retailer, markup and approval were unchanged. Email
+  suppression passed, no product/order/payment/dispatch action was run, and
+  the temporary manager and application password were removed.
+
+No access-policy expansion or production change occurred. Evidence is retained
+on dev in `/root/.ultralove-shopify-dev/staff-onboarding-verification.log`.
+This verifies role boundaries and server-rendered guidance, not a completed
+retailer-facing browser walkthrough or support for another Shopify store.
+
 ## 3. Select products
 
 Record the exact search/filter/selection controls that the consumer supports,
