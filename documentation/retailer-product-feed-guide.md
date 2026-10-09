@@ -34,8 +34,8 @@ Do not describe a lab-only administrator control as a retailer-facing screen.
 | 1 | UltraLove staff / retailer | Grant catalog access and issue dedicated, revocable feed credentials | Dedicated dev credential and actual revocation verified; external retailer onboarding pending |
 | 2 | Integrator / test operator | Configure the existing Shopify test app's connector to read the feed | Dev adapter deployed; authenticated feed pull and scheduled cycle verified |
 | 3 | Retailer | Choose products from the published catalog | Staff's three-product dev selection verified; retailer-facing selection UI pending |
-| 4 | Retailer / connector | Set initial retail prices and import selected products as drafts | New creation/markup/media/barcode verified in isolated bridge tests; live existing mappings reused |
-| 5 | Retailer | Review images, descriptions, SKUs, variants, prices, and availability | Live SKU/stock and retailer-edit preservation verified; new live draft/media review pending |
+| 4 | Retailer / connector | Set initial retail prices and import selected products as drafts | Fresh live draft, initial markup and media verified; populated barcode mapping remains isolated-tested |
+| 5 | Retailer | Review images, descriptions, SKUs, variants, prices, and availability | Fresh live simple-product draft data/media and retailer-edit preservation verified; retailer UI walkthrough and variable-product support pending |
 | 6 | Connector | Synchronize inventory and changes without overwriting retailer edits | Live stock, price, content and publication-state preservation verified |
 | 7 | Integrator / retailer | Recover from interruptions, removals, expired cursors, and revoked access | Live withdrawal/republication, 409 resync, removed scope and revoked password verified; rate-limit/transport failures isolated-tested |
 | 8 | UltraLove staff / retailer | Separately approve and configure dropshipping fulfilment | Dev checkout/order tests verified; real pilot approval pending |
@@ -197,6 +197,55 @@ expected unauthenticated **401 JSON**, without an outbound-allowlist change.
 - Production remains at `5e920b074237b0f57dd0fd062ded9bc599c63ae5`; both supplier
   plugins are inactive and dropshipping is `no`. No production deployment or
   enablement occurred during this work.
+
+### Fresh draft import verified, 2026-10-09
+
+- Ran the product-only [fresh draft verifier](../ops/dropshipping/verify-shopify-draft.php)
+  on `ultralove-dev-managed` against the existing Shopify development store.
+  **23 live assertions passed**. No plugin/runtime code was changed.
+- Existing published supplier product **17194**, SKU **70081**, had neither a
+  local mapping nor a Shopify SKU/handle match before import. It created
+  Shopify product **8424340586559**, handle `ultralove-dev-70081`, as **DRAFT**
+  with no publication timestamp. The draft remains available for staff review:
+  [open in Shopify admin](https://ultralove-integration-lab.myshopify.com/admin/products/8424340586559).
+- Temporarily selected that product alongside the original three and used a
+  **50% initial markup**: supplier price **CAD 1.85**, Shopify selling price
+  **CAD 2.78**. Tracked inventory at **Shop location** was **720**.
+- Feed title/description, supplier tag/vendor, simple-product default variant,
+  and SKU matched. This product has **no barcode**; absence was preserved.
+  Populated barcode transfer remains covered by isolated tests, not this live
+  fixture. Variable products are outside the current connector's coverage.
+- The single feed image reached **READY**, retained its feed alt text, and
+  measured **351 x 431** pixels. An independent request to the Shopify CDN
+  returned **HTTP 200**, `image/jpeg`, **39,065 bytes**. There were no missing
+  image warnings for this product; missing-image behavior was not induced here.
+- Repeated import preserved the product, variant and media IDs without a
+  duplicate. Temporary retailer title, description and price edits survived
+  another sync while the product remained unpublished; those edits were then
+  restored to the initial imported values.
+- The scheduled worker was paused only for the temporary selection and resumed
+  afterward. Original settings were restored: IDs **17186, 17188, 17192**,
+  original **0%** markup, and the same retailer. The new draft and its mapping
+  are retained, but SKU **70081** is **deselected**, outside ongoing sync and
+  the order-forwarding allowlist. Its stock is a test snapshot, not a live
+  availability promise.
+- Final checks at **2026-10-09T06:28Z** confirmed the restored selection, draft
+  status, price/stock/media, no worker error, and active cron/Nginx/PHP-FPM.
+  Original Shopify products and supplier status/stock/price were unchanged.
+  Payment configuration was unchanged and development email suppression passed.
+- Root-only evidence is retained in
+  `/root/.ultralove-shopify-dev/fresh-draft-verification.log` and
+  `fresh-draft-final-state.log` on dev. No orders, payments, emails, shipments,
+  storefront publication, production deployment or production enablement were
+  performed.
+
+For another fresh verification, choose a different existing, eligible, unmapped
+simple product. Pause the dev worker with an exit-trap restoration and back up
+the non-secret supplier settings before running
+`wp --allow-root eval-file - <new-product-id>` with the verifier on stdin.
+The verifier refuses a running cron configuration or an already-mapped product,
+restores selection and retailer edits, and retains the resulting unpublished
+draft. Do not delete mappings to make the same product appear fresh.
 
 ## 7. Recovery and disconnect
 
