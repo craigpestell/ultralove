@@ -77,6 +77,10 @@ when opting out; ordinary shipping fields keep their existing appearance.
 
 Dropship orders display **DROPSHIP** instructions in the admin order's shipping
 section, staff emails, and retailer order details/emails.
+The shipping row's **Items** summary displays a spaced, wrapping list with one
+product and its quantity per entry, rather than a comma-separated paragraph.
+This is display-only: saved shipping metadata, product lines, quantities, and
+totals are unchanged. Ordinary orders retain WooCommerce's existing rendering.
 
 1. Confirm payment/dispatch eligibility using the normal order workflow.
 2. Use the order's customer delivery address, not the retailer billing address.

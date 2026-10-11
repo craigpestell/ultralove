@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UltraLove Dropshipping
  * Description: Approved retailers shipping directly to their customers.
- * Version: 1.1.1
+ * Version: 1.1.2
  * Author: UltraLove
  * Requires Plugins: woocommerce
  * Text Domain: ultralove-dropshipping
@@ -38,6 +38,7 @@ final class UltraLove_Dropshipping {
 		add_action( 'woocommerce_admin_order_data_after_shipping_address', array( __CLASS__, 'admin_instructions' ) );
 		add_action( 'woocommerce_email_before_order_table', array( __CLASS__, 'email_instructions' ), 10, 4 );
 		add_action( 'woocommerce_order_details_before_order_table', array( __CLASS__, 'order_instructions' ) );
+		add_filter( 'woocommerce_order_item_display_meta_value', array( __CLASS__, 'shipping_items' ), 10, 3 );
 		add_filter( 'woocommerce_email_classes', array( __CLASS__, 'email_filters' ) );
 	}
 
@@ -253,6 +254,31 @@ final class UltraLove_Dropshipping {
 
 	public static function admin_instructions( $order ) {
 		self::order_instructions( $order );
+	}
+
+	public static function shipping_items( $display_value, $meta, $item ) {
+		if ( ! $item instanceof WC_Order_Item_Shipping || 'Items' !== $meta->key || ! is_string( $meta->value ) ) {
+			return $display_value;
+		}
+		$order = $item->get_order();
+		if ( ! $order || 'yes' !== $order->get_meta( self::MARKER ) ) {
+			return $display_value;
+		}
+
+		$value = trim( html_entity_decode( $meta->value, ENT_QUOTES | ENT_HTML5, 'UTF-8' ) );
+		// Split at WooCommerce's quantity suffix, not commas within product names.
+		preg_match_all( '/\G(.+?)\s+\x{00D7}\s+([0-9]+(?:\.[0-9]+)?)(?:,\s*|$)/us', $value, $matches, PREG_SET_ORDER );
+		if ( ! $matches || implode( '', array_column( $matches, 0 ) ) !== $value ) {
+			return $display_value;
+		}
+
+		$html = '<ul class="ultralove-dropship-items" style="display:block; margin:0; padding:0 0 0 20px; list-style:disc;">';
+		foreach ( $matches as $match ) {
+			$html .= '<li style="display:list-item; margin:0 0 8px; padding:0; line-height:1.5; overflow-wrap:anywhere;">'
+				. esc_html( trim( $match[1] ) )
+				. ' <strong style="white-space:nowrap;">&times; ' . esc_html( $match[2] ) . '</strong></li>';
+		}
+		return $html . '</ul>';
 	}
 
 	public static function email_instructions( $order, $sent_to_admin, $plain_text, $email ) {

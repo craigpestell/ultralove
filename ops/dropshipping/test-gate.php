@@ -45,6 +45,16 @@ function esc_html__( $text, $domain ) {
 function esc_html_e( $text, $domain ) {
 	echo esc_html__( $text, $domain );
 }
+function esc_html( $text ) {
+	return htmlspecialchars( $text, ENT_QUOTES, 'UTF-8' );
+}
+
+class WC_Order_Item_Shipping {
+	public $order;
+	public function get_order() {
+		return $this->order;
+	}
+}
 
 require __DIR__ . '/../../wp-content/plugins/ultralove-dropshipping/ultralove-dropshipping.php';
 
@@ -111,4 +121,40 @@ foreach ( array( 'disabled', 'unapproved', 'guest', 'no-shipping' ) as $case ) {
 	$assert( '' === ob_get_clean(), $case . ' checkout must not render dropshipping.' );
 }
 
-echo $checks . " environment, eligibility and checkout rendering assertions passed.\n";
+$shipping = new WC_Order_Item_Shipping();
+$shipping->order = new class {
+	public $marked = 'yes';
+	public function get_meta( $key ) {
+		return $this->marked;
+	}
+};
+$meta = (object) array( 'key' => 'Items', 'value' => 'First product &times; 2, Product, with a comma &times; 1, Green &amp; Pink &times; 3' );
+$original = '<p>Original summary</p>';
+$rendered = UltraLove_Dropshipping::shipping_items( $original, $meta, $shipping );
+$assert( 3 === substr_count( $rendered, '<li ' ), 'Every shipping product has its own list entry.' );
+$assert( false !== strpos( $rendered, 'Product, with a comma' ), 'Product-name commas must not split entries.' );
+$assert( false !== strpos( $rendered, 'Green &amp; Pink' ) && false === strpos( $rendered, '&amp;amp;' ), 'Product entities remain correctly escaped.' );
+$assert( false !== strpos( $rendered, '&times; 2</strong>' ) && false !== strpos( $rendered, '&times; 3</strong>' ), 'Quantities remain visible and attached to their products.' );
+$assert( false !== strpos( $rendered, 'display:list-item' ) && false !== strpos( $rendered, 'overflow-wrap:anywhere' ), 'Long names wrap within distinct list rows.' );
+$assert( 'First product &times; 2, Product, with a comma &times; 1, Green &amp; Pink &times; 3' === $meta->value, 'Saved shipping metadata remains unchanged.' );
+$meta->value = '<script>alert("x")</script> &times; 1';
+$rendered = UltraLove_Dropshipping::shipping_items( $original, $meta, $shipping );
+$assert( false === strpos( $rendered, '<script>' ) && false !== strpos( $rendered, '&lt;script&gt;' ), 'Product names cannot inject markup.' );
+$meta->value = html_entity_decode( 'Single product &times; 1.5', ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+$assert( 1 === substr_count( UltraLove_Dropshipping::shipping_items( $original, $meta, $shipping ), '<li ' ), 'Single items and fractional quantities are supported.' );
+foreach ( array( '', 'Legacy unstructured summary', 'Product &times; 1, incomplete tail' ) as $value ) {
+	$meta->value = $value;
+	$assert( $original === UltraLove_Dropshipping::shipping_items( $original, $meta, $shipping ), 'Nonstandard summaries retain WooCommerce rendering.' );
+}
+$meta->value = 'Product &times; 1';
+$shipping->order->marked = 'no';
+$assert( $original === UltraLove_Dropshipping::shipping_items( $original, $meta, $shipping ), 'Ordinary orders are unchanged.' );
+$shipping->order->marked = 'yes';
+$meta->key = 'Other field';
+$assert( $original === UltraLove_Dropshipping::shipping_items( $original, $meta, $shipping ), 'Other shipping metadata is unchanged.' );
+$meta->key = 'Items';
+$assert( $original === UltraLove_Dropshipping::shipping_items( $original, $meta, new stdClass() ), 'Product line-item metadata is unchanged.' );
+$shipping->order = false;
+$assert( $original === UltraLove_Dropshipping::shipping_items( $original, $meta, $shipping ), 'Detached shipping items are unchanged.' );
+
+echo $checks . " environment, eligibility, checkout and shipping summary rendering assertions passed.\n";
