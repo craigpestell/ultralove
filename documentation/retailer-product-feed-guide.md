@@ -125,8 +125,8 @@ Do not describe a lab-only administrator control as a retailer-facing screen.
 | 3 | Retailer | Choose products from the published catalog | Embedded test-store browsing and saved selections verified, capped at 50 parents; independent-store onboarding pending |
 | 4 | Retailer / connector | Set initial retail prices and import selected products as drafts | Embedded lab CAD preview, confirmation, background creation and unchanged reuse verified |
 | 5 | Retailer | Review images, descriptions, SKUs, variants, prices, and availability | Native Shopify draft/media/price/stock review and existing-listing preservation verified; live variable-product import remains pending |
-| 6 | Connector | Synchronize inventory and changes without overwriting retailer edits | Original three-product sync verified; ongoing sync for app-owned imports remains pending |
-| 7 | Integrator / retailer | Recover from interruptions, removals, expired cursors, and revoked access | App creation-claim restart recovery verified; historical connector withdrawal, 409 resync and credential checks verified; app-owned ongoing change replay remains pending |
+| 6 | Connector | Synchronize inventory and changes without overwriting retailer edits | Opt-in app-owned inventory sync deployed to development/lab; authenticated stock reads and embedded controls verified; enrollment remains off, live correction verification pending |
+| 7 | Integrator / retailer | Recover from interruptions, removals, expired cursors, and revoked access | App creation-claim restart recovery verified; app-owned inventory withdrawal, expired-cursor/generation recovery and uncertain-mutation retries tested locally; live legacy cutover and stock-write recovery verification remain pending |
 | 8 | UltraLove staff / retailer | Separately approve and configure dropshipping fulfilment | Dev checkout/order tests verified; real pilot approval pending |
 | 9 | Retailer | Submit an order and receive tracking using the approved workflow | Feed-linked synthetic order/tracking regression passed; real retailer fulfilment remains unapproved |
 
@@ -286,9 +286,11 @@ In the allowlisted test-store app:
    blind create; unresolved uncertainty or a deleted mapped listing requires
    operator review. Do not run the standalone operator importer concurrently.
 
-Existing owned and recognized legacy listings retain prices, content, publication
+Existing canonical app-owned listings retain prices, content, publication
 state and inventory. New listings are unpublished drafts; unsafe/unknown/shared
-stock remains zero with review warnings. Imports do not start ongoing sync or
+stock remains zero with review warnings. The current app no longer reuses old
+test fixtures; historical verification below predates that change.
+Imports do not automatically enroll products in ongoing sync or
 approve order forwarding.
 
 Live verification reused all five existing selections unchanged. Source `17539`
@@ -306,11 +308,12 @@ descriptions, images, SKU/barcode mappings, variant options, and stock ownership
 Surface missing-image warnings rather than silently omitting products.
 Supplier prices must not be mistaken for the retailer's selling prices.
 
-The app snapshots the feed generation/change cursor with its import plan, but
-does not yet replay changes or synchronize new mappings. The future ongoing-sync
-consumer must save the first catalog page's generation and change cursor,
-complete pagination, and then replay changes to catch updates made during the
-initial import. Record how the user knows the import has finished.
+The app snapshots the feed generation/change cursor with its import plan.
+Its opt-in inventory consumer independently reads current stock on enrollment
+and validates the supplier journal on subsequent cycles; it does not synchronize
+catalog content or add supplier variants automatically. This implementation is
+deployed to the lab but not enabled. Record how the user knows the import
+has finished.
 
 ## 5. Review and publication
 
@@ -323,8 +326,32 @@ workflow has been tested.
 
 ## 6. Inventory and change synchronization
 
-Record the configured synchronization interval, last-success indicator,
-stock location, stock interpretation, and visible error messages.
+The deployed app inventory page is `/app/inventory`, linked from the
+catalog. Each completed app-owned product requires explicit confirmation and
+enrollment. The existing non-root worker targets five-minute cycles after queued
+imports. Last success, next due time, variant count and errors are visible.
+Corrections set supplier-backed **on-hand** stock at the approved Shop location;
+committed Shopify order reservations remain in place. Unknown, unmanaged,
+shared, missing, withdrawn or out-of-stock supplier inventory becomes zero.
+No prices, descriptions, status/publication, orders or variants are changed.
+Pause stops new corrections, although a sent request may finish. Catalog
+deselection is independent of inventory enrollment.
+
+Persisted mappings/checkpoints and compare-and-set/idempotent requests recover
+from interruptions. An uncertain request past Shopify's 24-hour retry window
+pauses for explicit review/re-enrollment. Supplier `Retry-After` delays retries.
+Deploy the development feed client and restricted proxy, apply the app inventory
+migration, retire the old development scheduler and resolve its test-fixture
+claims before enabling canonical imports. None of that live cutover is performed
+by the local regression tests. The development feed client (`618a71a`), restricted
+proxy and app inventory migration were deployed on 2026-10-09 with app release
+`107030b`. All 50 app tests, type-check, lint and app/worker builds passed on the
+lab host. Development site smoke tests returned 200. Authenticated source `17539`
+inventory and checkpoint reads succeeded (one variant, cursor `9027`), and the
+inventory controls loaded inside Shopify Admin without console errors.
+The database contains zero inventory enrollments and no queued/running imports;
+no live stock correction was sent. The original connector/cron and test fixtures
+remain intact pending a separate legacy cutover. Production was not changed.
 
 Verify:
 
@@ -332,7 +359,8 @@ Verify:
 - Retailer-edited prices and descriptions remain intact.
 - Out-of-stock and unknown stock are handled explicitly; unknown stock is not
   silently treated as available stock.
-- A retailer's deselection stops synchronization without deleting their product.
+- A retailer can pause synchronization without deleting their product; changing
+  catalog selections does not silently pause an independently enrolled product.
 - Supplier removals have a defined, tested Shopify outcome.
 - Retries do not create duplicate products or double-apply inventory changes.
 

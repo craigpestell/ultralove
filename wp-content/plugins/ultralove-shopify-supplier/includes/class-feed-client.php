@@ -340,6 +340,74 @@ final class UltraLove_Shopify_Feed_Client {
         return $page;
     }
 
+    public function inventory_state( int $parent_id, ?array $checkpoint = null ): array {
+        if ( $parent_id < 1 || ( $checkpoint !== null && (
+            array_diff( array_keys( $checkpoint ), array( 'generation', 'cursor' ) )
+            || ! is_string( $checkpoint['generation'] ?? null )
+            || ! preg_match( '/^[a-f0-9-]{36}$/i', $checkpoint['generation'] )
+            || ! is_int( $checkpoint['cursor'] ?? null ) || $checkpoint['cursor'] < 0
+        ) ) ) {
+            throw new InvalidArgumentException( 'Invalid inventory synchronization checkpoint.' );
+        }
+        $page = $this->request( '/products', array( 'ids' => array( $parent_id ), 'per_page' => 100 ) );
+        self::snapshot_page( $page, 'products' );
+        if ( $page['has_more'] || count( $page['products'] ) > 1 ) {
+            throw new RuntimeException( 'Inventory parent lookup exceeded its bounds.' );
+        }
+        $ids = array();
+        if ( $page['products'] ) {
+            $parent = $page['products'][0];
+            if ( ! is_array( $parent ) || ( $parent['id'] ?? null ) !== $parent_id
+                || ( $parent['parent_id'] ?? null ) !== 0 || ( $parent['currency'] ?? null ) !== 'CAD'
+                || ! in_array( $parent['type'] ?? null, array( 'simple', 'variable' ), true )
+                || ! is_array( $parent['variations'] ?? null ) ) {
+                throw new RuntimeException( 'Supplier parent identity/type changed; review required.' );
+            }
+            $ids = $parent['type'] === 'simple' ? array( $parent_id ) : $parent['variations'];
+            if ( count( $ids ) > 2048 || count( array_unique( $ids ) ) !== count( $ids ) ) {
+                throw new RuntimeException( 'Supplier variants exceeded their distinct inventory bounds.' );
+            }
+            foreach ( $ids as $id ) {
+                if ( ! is_int( $id ) || $id < 1 || ( $parent['type'] === 'variable' && $id === $parent_id ) ) {
+                    throw new RuntimeException( 'Invalid supplier inventory source ID.' );
+                }
+            }
+        }
+        $resynced = $checkpoint !== null && $checkpoint['generation'] !== $page['generation'];
+        $state = array( 'generation' => $page['generation'],
+            'cursor' => $checkpoint !== null && ! $resynced ? $checkpoint['cursor'] : $page['change_cursor'],
+            'products' => array() );
+        try {
+            $state = $this->changes( array(), $state );
+        } catch ( RuntimeException $error ) {
+            if ( $error->getCode() !== 409 ) {
+                throw $error;
+            }
+            $state['cursor'] = $page['change_cursor'];
+            $state = $this->changes( array(), $state );
+            $resynced = true;
+        }
+        $inventory = array();
+        foreach ( array_chunk( $ids, 100 ) as $batch ) {
+            $stock = $this->request( '/inventory', array( 'ids' => $batch, 'per_page' => 100 ) );
+            self::snapshot_page( $stock, 'inventory' );
+            if ( $stock['generation'] !== $state['generation'] || $stock['change_cursor'] < $state['cursor'] || $stock['has_more']
+                || count( $stock['inventory'] ) > count( $batch ) ) {
+                throw new RuntimeException( 'Inventory generation/pagination changed; retry without advancing the checkpoint.' );
+            }
+            foreach ( $stock['inventory'] as $record ) {
+                if ( ! is_array( $record ) || ! is_int( $record['id'] ?? null )
+                    || ! in_array( $record['id'], $batch, true ) || isset( $inventory[$record['id']] ) ) {
+                    throw new RuntimeException( 'Unexpected or duplicate inventory source.' );
+                }
+                $inventory[$record['id']] = $record;
+            }
+        }
+        return array( 'generation' => $state['generation'], 'cursor' => $state['cursor'],
+            'parent_id' => $parent_id, 'published' => (bool) $page['products'], 'source_ids' => $ids,
+            'inventory' => array_values( $inventory ), 'resynced' => $resynced );
+    }
+
     public function read( array $ids, array $state = array() ): array {
         if ( ! $ids || count( $ids ) > 100 ) {
             throw new InvalidArgumentException( 'Select between 1 and 100 supplier IDs per test consumer.' );
