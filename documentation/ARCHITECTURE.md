@@ -1035,6 +1035,26 @@ crawlers walking every brand combination.
 - Only part of the media library has synced so far (sync is ongoing).
 - Credentials live in the `cloudinary_connect` option and are not recorded here.
 
+### 6.2 Product images via Cloudflare (built, not switched on)
+
+`wp-content/mu-plugins/38-product-images-cloudflare.php` serves product images (cards, single-product
+gallery, thumbnails, zoom image) from `/cdn-cgi/image/` on the local upload instead of Cloudinary, so
+Cloudinary can be dropped. It does nothing until `ul_product_cdn` is `cloudflare`.
+
+- Switch: `wp option update ul_product_cdn cloudflare` (back: `cloudinary`). An editor can preview either
+  on any page with `?ul_product_cdn=cloudflare|cloudinary` (separate from the banners' `?ub_cdn=`).
+- Source is always the local original (`dual_full` keeps it). Cards are cut square with `gravity=auto`
+  (as Cloudinary's `c_fill,g_auto` was) at 300/450/600 px; single 600/900/1200; thumbnails 100/200; the
+  zoom image 1600. Few widths on purpose: Cloudflare bills each unique (image, parameters) pair once a
+  month (5,000 free, then $0.50 per 1,000), and `onerror=redirect` serves the full-size original if the
+  quota runs out. Change the widths in `ul_pcdn_profiles()`.
+- Front end only: not wp-admin, REST (the retailer feed keeps original URLs), WP-CLI or cron. JPEG, PNG
+  and WebP only.
+- Cutover: (1) Cloudinary plugin: image delivery off and auto-sync off; (2) set the option; (3) purge
+  Cloudflare, restart PHP-FPM. Rollback: set the option back and purge.
+- Not yet verified on a live server: the `/cdn-cgi/` URLs for product images, dev (behind Cloudflare
+  Access) and the `cloudinary_pre_image_tag` safety net.
+
 ## 6.5 Mail Transport
 
 ### 6.5.1 WordPress Outbound Mail
