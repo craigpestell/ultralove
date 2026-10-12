@@ -146,7 +146,13 @@ try {
 	$assert( ! ul_pcdn_is_product_image( 13 ), 'Current product context does not rewrite unrelated full-size images.' );
 	$product = null;
 	$card = ul_pcdn_candidates( 1, ul_pcdn_profile_for_size( 'woocommerce_thumbnail' ) );
-	$assert( array_keys( $card ) === array( 300, 450, 600, 'src' ) && $card['src']['w'] === 450 && $card['src']['h'] === 450, 'Hosted card widths and square geometry match existing profiles.' );
+	$assert( array_keys( $card ) === array( 200, 400, 'src' ) && $card['src']['w'] === 200 && $card['src']['h'] === 200, 'Hosted cards offer exactly 200/400-pixel square variants with a 200-pixel default.' );
+	foreach ( array( 200, 400 ) as $width ) {
+		$assert( $card[$width]['w'] === $width && $card[$width]['h'] === $width
+			&& str_contains( $card[$width]['url'], 'width=' . $width . ',' )
+			&& str_ends_with( $card[$width]['url'], 'height=' . $width ),
+			'Hosted card URL requests its exact square candidate dimensions.' );
+	}
 	$assert( ul_cf_images_is_url( $card['src']['url'] ), 'Product candidates use stored originals.' );
 	$dimensions[1] = array( 'width' => 200, 'height' => 150 );
 	$small = ul_pcdn_candidates( 1, ul_pcdn_profile_for_size( 'woocommerce_thumbnail' ) );
