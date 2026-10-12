@@ -17,6 +17,7 @@ $selected = array();
 $changed = 0;
 $preserved = 0;
 $tester = null;
+$stock_notice = null;
 foreach ( $titles as $row ) {
     $original = wp_strip_all_tags( str_replace( array( '<br>', '<br/>', '<br />' ), ' ', $row['post_title'] ) );
     $clean = UltraLove_Product_Feed::retail_name( $row['post_title'] );
@@ -24,6 +25,9 @@ foreach ( $titles as $row ) {
         ++$changed;
         if ( $tester === null && stripos( $row['post_title'], '3 UNITS BOUGHT' ) !== false ) {
             $tester = (int) $row['ID'];
+        }
+        if ( $stock_notice === null && stripos( $row['post_title'], 'WHILE STOCK LASTS' ) !== false ) {
+            $stock_notice = (int) $row['ID'];
         }
         if ( count( $selected ) < 8 ) {
             $selected[] = (int) $row['ID'];
@@ -37,6 +41,9 @@ if ( ! $changed || ! $preserved ) {
 }
 if ( $tester !== null && ! in_array( $tester, $selected, true ) ) {
     $selected[] = $tester;
+}
+if ( $stock_notice !== null && ! in_array( $stock_notice, $selected, true ) ) {
+    $selected[] = $stock_notice;
 }
 foreach ( $titles as $row ) {
     if ( stripos( $row['post_title'], '<b' ) !== false
