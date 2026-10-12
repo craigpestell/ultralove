@@ -34,6 +34,7 @@ function get_attached_file( $id, $unfiltered = false ) { return $GLOBALS['files'
 function wp_get_attachment_metadata( $id ) { return $GLOBALS['dimensions'][$id] ?? array(); }
 function get_post_mime_type( $id ) { return $GLOBALS['mimes'][$id] ?? ''; }
 function get_post_type( $id ) { return isset( $GLOBALS['mimes'][$id] ) ? 'attachment' : false; }
+function wp_get_post_parent_id( $id ) { return 0; }
 function wp_get_upload_dir() { return array( 'basedir' => $GLOBALS['directory'], 'baseurl' => 'https://ultralove.ca/wp-content/uploads', 'error' => false ); }
 function wp_doing_cron() { return false; }
 function is_admin() { return $GLOBALS['admin']; }
@@ -53,6 +54,10 @@ class WP_CLI {
 	public static function add_command( $name, $callback ) {}
 	public static function log( $message ) {}
 	public static function error( $message ) { throw new RuntimeException( $message ); }
+}
+class WC_Product {
+	public function get_image_id() { return 10; }
+	public function get_gallery_image_ids() { return array( 11, 12 ); }
 }
 class FixtureImagesDatabase {
 	public string $posts = 'wp_posts';
@@ -127,6 +132,12 @@ try {
 	$options['ul_product_cdn'] = 'cloudflare-images';
 	$options['ub_banner_cdn'] = 'cloudflare-images';
 	$assert( ! ul_pcdn_active(), 'WP-CLI and retailer-feed contexts retain their existing source behavior.' );
+	$assert( ! ul_pcdn_is_product_image( 11 ), 'Unattached image is not assumed to be a product image without context.' );
+	$product = new WC_Product();
+	$assert( ul_pcdn_is_product_image( 10 ) && ul_pcdn_is_product_image( 11 ) && ul_pcdn_is_product_image( 12 ),
+		'Current product featured and gallery images support hosted zoom even without attachment parents or after an earlier negative lookup.' );
+	$assert( ! ul_pcdn_is_product_image( 13 ), 'Current product context does not rewrite unrelated full-size images.' );
+	$product = null;
 	$card = ul_pcdn_candidates( 1, ul_pcdn_profile_for_size( 'woocommerce_thumbnail' ) );
 	$assert( array_keys( $card ) === array( 300, 450, 600, 'src' ) && $card['src']['w'] === 450 && $card['src']['h'] === 450, 'Hosted card widths and square geometry match existing profiles.' );
 	$assert( ul_cf_images_is_url( $card['src']['url'] ), 'Product candidates use stored originals.' );

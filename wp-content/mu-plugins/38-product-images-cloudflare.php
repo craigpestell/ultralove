@@ -7,7 +7,7 @@
  *              Back to Cloudinary:            wp option update ul_product_cdn cloudinary
  *              An editor (edit_others_posts) can preview either one on any page with
  *              ?ul_product_cdn=cloudflare-images (or =cloudflare / =cloudinary); logged-in pages are not cached.
- * Version: 1.1.0
+ * Version: 1.1.1
  *
  * How it works: the local file (_wp_attached_file) is always the source. The Cloudinary plugin in
  * dual_full mode keeps it, and WordPress's own resized copies may not exist, so every size is cut from
@@ -127,6 +127,12 @@ function ul_pcdn_profile_for_size( $size ) {
  * Attachment belongs to a product or variation.
  */
 function ul_pcdn_is_product_image( $attachment_id ) {
+	global $product;
+	if ( $product instanceof WC_Product
+		&& ( (int) $attachment_id === $product->get_image_id()
+			|| in_array( (int) $attachment_id, $product->get_gallery_image_ids(), true ) ) ) {
+		return true;
+	}
 	static $cache = array();
 	if ( ! isset( $cache[ $attachment_id ] ) ) {
 		$parent                  = (int) wp_get_post_parent_id( $attachment_id );
