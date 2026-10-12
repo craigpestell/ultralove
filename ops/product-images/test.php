@@ -132,6 +132,13 @@ try {
 	$options['ul_product_cdn'] = 'cloudflare-images';
 	$options['ub_banner_cdn'] = 'cloudflare-images';
 	$assert( ! ul_pcdn_active(), 'WP-CLI and retailer-feed contexts retain their existing source behavior.' );
+	$gallery_size_filter = $hooks['woocommerce_gallery_thumbnail_size'][20][0] ?? null;
+	$assert( is_callable( $gallery_size_filter ) && $gallery_size_filter( array( 100, 100 ) ) === array( 100, 100 ),
+		'Gallery navigation size hook is registered without changing CLI/feed image requests.' );
+	$gallery_profile = ul_pcdn_profile_for_size( 'woocommerce_gallery_thumbnail' );
+	$assert( $gallery_profile['name'] === 'thumb' && $gallery_profile['widths'] === array( 100, 200 )
+		&& $gallery_profile['src'] === 100 && $gallery_profile['square'],
+		'Named gallery navigation requests use the existing bounded square thumbnail profile.' );
 	$assert( ! ul_pcdn_is_product_image( 11 ), 'Unattached image is not assumed to be a product image without context.' );
 	$product = new WC_Product();
 	$assert( ul_pcdn_is_product_image( 10 ) && ul_pcdn_is_product_image( 11 ) && ul_pcdn_is_product_image( 12 ),

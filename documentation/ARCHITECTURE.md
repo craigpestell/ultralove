@@ -1473,6 +1473,22 @@ Retain disabled automatic sync and purge only the HTML/cache layers required
 to remove stale hosted URLs. No image deletion or database restore is needed
 for delivery rollback. The code backup is a separate recovery path.
 
+#### Gallery navigation correction
+
+After the initial cutover, the user identified Cloudinary URLs in the gallery
+navigation strip. Main/gallery/zoom checks had not covered that separate path:
+both WooCommerce's primary gallery image and Martfury's secondary-image
+template request the navigation source with an explicit `[100, 100]` size,
+which bypasses named CDN profiles and supplies FlexSlider's `data-thumb`.
+
+The shared MU plugin now filters `woocommerce_gallery_thumbnail_size` to the
+existing `woocommerce_gallery_thumbnail` profile only for active frontend
+Cloudflare delivery. It retains the existing square 100/200-pixel profile and
+does not change Cloudinary rollback, admin, CLI, REST or cron requests.
+No vendor template or JavaScript edit is required. Navigation `data-thumb`
+and generated `.flex-control-thumbs img` URLs must be checked independently
+from the main image and zoom source.
+
 ## 6.5 Mail Transport
 
 ### 6.5.1 WordPress Outbound Mail
