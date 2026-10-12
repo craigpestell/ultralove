@@ -1,11 +1,13 @@
 # Pending production release
 
-## Hosted image delivery cutover (dev approved; production deployment pending)
+## Hosted image delivery cutover (live on production)
 
 **2026-10-12:** production's source-copy scan finished with 20,543 accepted
 attachment copies and 58 unique unresolved attachments in its failure ledger.
-Production delivery options remain `cloudflare`; automatic hosted-image sync
-is disabled. Copying sources did not authorize the delivery cutover.
+After the user approved dev, PR #159 was merged and revision `370b30f624`
+passed the merge-revision dev gate and guarded production deployment.
+Production delivery options are now `cloudflare-images`; automatic hosted-image
+sync remains disabled.
 
 Dev is now using `cloudflare-images` for product and banner delivery, with
 automatic synchronization disabled. Review the dev-only generated fixtures:
@@ -32,11 +34,15 @@ retains the 1000x1000 source size. Parentless gallery images are recognized
 through their current WooCommerce product rather than assumed unrelated.
 The user reviewed dev and approved production deployment on 2026-10-12.
 
-Production cutover will retain fallback for the 58 unresolved exceptions.
+Production cutover retains fallback for the 58 unresolved exceptions.
 Automatic synchronization must remain disabled until unsupported animated
 sources in its separate maintenance path are addressed.
-Apply only these delivery settings after approval; do not bundle unrelated
-pending-release operations. See [the image runbook](ARCHITECTURE.md#63-hosted-cloudflare-images-copies)
+Normal public home/shop pages, mobile thumbnails, all four gallery/zoom images
+on the sampled product, and authenticated gallery delivery passed verification.
+Origin HTML cache and Cloudflare zone cache were purged for the sitewide URL
+change. Original uploads, source URLs for CLI consumers and backup storage
+remain unchanged; no unrelated pending-release operations were applied.
+See [the image runbook](ARCHITECTURE.md#63-hosted-cloudflare-images-copies)
 for evidence, rollback and test-data recovery details.
 
 ## Dropshipping production rollout (disabled)
