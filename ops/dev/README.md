@@ -216,6 +216,36 @@ Do not roll back feed checkpoints, mappings or completed in-flight work; do not
 restart the old worker alongside current app inventory without reviewing overlap.
 Rolling back code alone must leave the disabled settings and absent cron intact.
 
+Live retirement verification (2026-10-12):
+
+- Guards deployed as `306d5419a02221d285f3054988976bd270ae7037`;
+  origin smoke tests returned `200` and Nginx/PHP-FPM remained active.
+- Retirement applied at `02:06:51 UTC`. Original configuration and cron are
+  protected in
+  `/root/.ultralove-shopify-dev/retirement-20261012T020651Z-24698506`
+  (directory `0700`, files `0600`).
+- A fresh WP-CLI process confirmed the persistent guard, disabled settings,
+  absent cron and explicit retired/no-requests sync response.
+  Four legacy mapping metadata rows, three fixture product identities, the
+  approved fixture retailer, other configuration fields, feed state and both
+  legacy/current proxy feed credentials were unchanged.
+- From `02:06:58` through `02:11:13 UTC`, spanning the next five-minute cron
+  boundary, Nginx recorded **zero** legacy WordPress-user-agent feed reads and
+  **79** current proxy reads.
+- Under the actual Shopify worker service account, five currently syncing
+  products passed one supplier batch operation and one Shopify inventory batch
+  query. Stock already matched: zero proposed corrections, zero mutations and
+  zero enrollment changes. Both Shopify services remained active without new
+  worker error entries. Temporary remote verification code was removed.
+- The existing missing-listing warnings for `W626100` / supplier `71955` and
+  `ID4016` / supplier `19969` were separately checked read-only: Shopify returned
+  `null` for their saved product IDs. Inventory uses stable product IDs, not
+  titles; the feed already strips HTML from product names. Their paused
+  mappings were not reset or recreated as part of retirement.
+- Local regressions passed: 48 supplier policy assertions, 977 inventory feed
+  assertions, 53 feed consumer assertions and 205 catalog-import checks.
+  Production was not deployed or otherwise changed.
+
 The historical CLI command `wp ultralove shopify sync` ran under the root-only system
 worker, not as a browser callback or public webhook. Credentials and logs live
 in `/root/.ultralove-shopify-dev/` with permissions `0600`; credentials are never
