@@ -69,6 +69,19 @@ $record = $source( 1 );
 $input = $payload( $record );
 $assert( $input['status'] === 'DRAFT' && $input['handle'] === 'ultralove-catalog-1', 'New supplier copies are drafts with stable handles.' );
 $assert( $input['title'] === $record['name'] && $input['descriptionHtml'] === $record['description'], 'Public content copied verbatim.' );
+$named = $record;
+$named['name'] = 'Supplier product 1 DISCOUNTS DO NOT APPLY';
+$named['retail_name'] = 'Supplier product 1';
+$clean = $payload( $named );
+$assert( $clean['title'] === 'Supplier product 1', 'New imports and reviewed updates use the customer-facing export name.' );
+$assert( $named['name'] === 'Supplier product 1 DISCOUNTS DO NOT APPLY', 'Export does not erase retailer-facing source notes.' );
+$unchanged = $clean;
+$unchanged['title'] = $input['title'];
+$assert( $unchanged === $input, 'Title cleanup preserves SKU, identities, stock, price, descriptions, media and ownership.' );
+foreach ( array( '', ' ', null, false, 123, array( 'unexpected' ) ) as $invalid_name ) {
+    $named['retail_name'] = $invalid_name;
+    $reject( fn() => $payload( $named ), 'Invalid/empty export names fail explicitly instead of restoring retailer instructions.' );
+}
 $assert( $input['variants'][0]['sku'] === 'SKU-1' && $input['variants'][0]['barcode'] === '123456789', 'SKU and barcode retained.' );
 $assert( $input['variants'][0]['price'] === '12.50' && $input['variants'][0]['inventoryQuantities'][0]['quantity'] === 4, 'Source price and own available stock copied.' );
 $assert( $input['variants'][0]['inventoryItem']['requiresShipping'] === true, 'Absent physical flag retains legacy shipping behavior.' );

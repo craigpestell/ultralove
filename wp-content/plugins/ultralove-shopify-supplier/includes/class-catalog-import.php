@@ -344,14 +344,14 @@ final class UltraLove_Shopify_Catalog_Import {
                 'values' => array_map( static fn( $value ) => array( 'name' => $value ), array_values( $option ) ) );
         }
         $input = array(
-            'title' => (string) ( $record['name'] ?? '' ),
+            'title' => array_key_exists( 'retail_name', $record ) ? $record['retail_name'] : (string) ( $record['name'] ?? '' ),
             'descriptionHtml' => str_replace( 'https://dev.ultralove.ca/wp-content/uploads/', 'https://ultralove.ca/wp-content/uploads/', (string) ( $record['description'] ?? '' ) ),
             'handle' => 'ultralove-catalog-' . $id, 'status' => 'DRAFT', 'vendor' => 'UltraLove',
             'tags' => array_values( array_unique( $tags ) ), 'productOptions' => $options, 'variants' => $variants,
             'metafields' => array( array( 'namespace' => 'ultralove_catalog', 'key' => 'supplier_id',
                 'type' => 'single_line_text_field', 'value' => (string) $id ) ),
         );
-        if ( $input['title'] === '' ) {
+        if ( ! is_string( $input['title'] ) || trim( $input['title'] ) === '' ) {
             throw new RuntimeException( 'Supplier product has no title.' );
         }
         if ( $files ) {
