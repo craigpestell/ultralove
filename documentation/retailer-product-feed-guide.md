@@ -35,6 +35,14 @@ available, but the initial connector does **not** automatically import it all.
 - Product browsing requests **50 parent products per page**. The feed rejects
   requests above **100 records**; this is a per-request limit, not a total-catalog
   ceiling. Follow `next_after_id` while `has_more` is true.
+  The Shopify feed client normalizes leading-decimal prices such as `.44` to
+  `0.44` without rounding or changing the supplier record. These valid prices
+  do not interrupt browsing or selected-product reads; malformed and negative
+  prices remain rejected.
+  On 2026-10-12, the patched client was verified in memory against all 129 live
+  dev catalog pages (6,429 parents), including page seven's product `18844`.
+  Its selected-product read and read-only import plan preserved CAD `0.44` and
+  zero stock. This validation did not deploy the fix or change Shopify products.
 - `/categories` provides authenticated category navigation, also defaulting to
   50 records with a maximum of 100.
 - `/products` accepts `category_id` (including descendants), `search` (literal

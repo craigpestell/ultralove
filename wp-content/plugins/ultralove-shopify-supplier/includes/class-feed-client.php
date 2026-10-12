@@ -121,6 +121,9 @@ final class UltraLove_Shopify_Feed_Client {
         if ( ! isset( $product['id'] ) || ! is_int( $product['id'] ) || $product['id'] < 1 || $product['currency'] !== 'CAD' ) {
             throw new RuntimeException( 'Invalid supplier product identity/currency.' );
         }
+        if ( preg_match( '/^\.\d+$/D', $product['price'] ) ) {
+            $product['price'] = '0' . $product['price'];
+        }
         if ( $full_catalog ) {
             if ( $product['type'] === '' || ! is_bool( $product['manage_stock'] ?? null )
                 || ! array_key_exists( 'stock_quantity', $product )

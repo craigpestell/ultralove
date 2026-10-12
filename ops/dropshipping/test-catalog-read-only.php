@@ -99,6 +99,22 @@ $client = new UltraLove_Shopify_Feed_Client( array( 'username' => 'test', 'passw
 $catalog = $client->all_products();
 $assert( $pages === 65 && count( $catalog['products'] ) === 6430 && isset( $catalog['products'][6430] ), 'All 6,430 records traversed, no 25/100/2,000-product import cap.' );
 $assert( $catalog['cursor'] === 42 && $catalog['products'][6430]['description'] === $record['description'], 'Feed checkpoint and supplier content preserved.' );
+foreach ( array( '.44' => '0.44', '.0044' => '0.0044', '.4400' => '0.4400', '0.44' => '0.44', '12.34' => '12.34' ) as $price => $expected ) {
+    $changed = array_replace( $record, array( 'price' => $price ) );
+    foreach ( array( false, true ) as $full_catalog ) {
+        $assert( UltraLove_Shopify_Feed_Client::product( $changed, $full_catalog ) === array_replace( $changed, array( 'price' => $expected ) ),
+            'Leading decimal prices retain exact value and precision in selected and full catalog reads.' );
+    }
+}
+$zero = array_replace( $record, array( 'price' => '.00' ) );
+$assert( UltraLove_Shopify_Feed_Client::product( $zero, true )['price'] === '0.00', 'Full catalog retains zero prices.' );
+$reject( static fn() => UltraLove_Shopify_Feed_Client::product( $zero ), 'Legacy selected contract still requires positive prices.' );
+foreach ( array( '.', '.4.4', '-.44', '+.44', ' .44', '.44 ', '.44e2', 'NaN', 'INF' ) as $price ) {
+    foreach ( array( false, true ) as $full_catalog ) {
+        $bad = array_replace( $record, array( 'price' => $price ) );
+        $reject( static fn() => UltraLove_Shopify_Feed_Client::product( $bad, $full_catalog ), 'Malformed/negative prices still fail explicitly.' );
+    }
+}
 foreach ( array( 'price' => '', 'stock_quantity' => null, 'manage_stock' => false, 'stock_owner_id' => 99 ) as $key => $value ) {
     $changed = array_replace( $record, array( $key => $value ) );
     $assert( UltraLove_Shopify_Feed_Client::product( $changed, true ) === $changed, 'Full discovery includes ' . $key . ' without inventing sellable values.' );
@@ -113,6 +129,30 @@ $bad_page = static function ( array $items, int $next, bool $more = true, string
         'body' => json_encode( array( 'generation' => $generation, 'change_cursor' => 1, 'next_after_id' => $next,
             'has_more' => $more, 'products' => $items ) ) );
 };
+$client = new UltraLove_Shopify_Feed_Client( array( 'username' => 'test', 'password' => 'test' ),
+    static function ( string $url ) use ( $record, $bad_page ): array {
+        parse_str( parse_url( $url, PHP_URL_QUERY ), $query );
+        if ( $query['per_page'] !== '50' || $query['parents_only'] !== '1' ) {
+            throw new RuntimeException( 'Catalog browsing must retain its 50-parent page bounds.' );
+        }
+        $after = (int) $query['after_id'];
+        $last = min( $after + 50, 375 );
+        $items = array();
+        for ( $id = $after + 1; $id <= $last; ++$id ) {
+            $items[] = array_replace( $record, array( 'id' => $id, 'stock_owner_id' => $id, 'price' => $id === 301 ? '.44' : '12.34' ) );
+        }
+        return $bad_page( $items, $last, $last < 375 );
+    } );
+$after = 0;
+for ( $number = 1; $number <= 8; ++$number ) {
+    $page = $client->products_page( array( 'after_id' => $after ) );
+    $assert( count( $page['products'] ) === ( $number === 8 ? 25 : 50 ), 'Every complete bounded page is retained past page seven.' );
+    $assert( $page['next_after_id'] === min( $number * 50, 375 ) && $page['has_more'] === ( $number < 8 ), 'Page cursor and terminal state remain exact.' );
+    if ( $number === 7 ) {
+        $assert( $page['products'][0]['price'] === '0.44', 'Page seven accepts a leading-decimal supplier price without skipping its product.' );
+    }
+    $after = $page['next_after_id'];
+}
 $client = new UltraLove_Shopify_Feed_Client( array( 'username' => 'test', 'password' => 'test' ), static fn() => $bad_page( array(), 0 ) );
 $reject( static fn() => $client->all_products(), 'Stalled pagination cannot silently truncate catalog.' );
 $client = new UltraLove_Shopify_Feed_Client( array( 'username' => 'test', 'password' => 'test' ), static fn() => $bad_page( array( $record, $record ), 1 ) );
