@@ -1,6 +1,6 @@
 # Pending production release
 
-## Product-card thumbnail sizes (pending deployment)
+## Product-card thumbnail sizes (live on dev and production)
 
 Product cards now offer exactly 200x200 and 400x400 responsive image variants,
 with a 200x200 default source. The shared profile applies to shop grids, home
@@ -9,9 +9,21 @@ remote-source Cloudflare modes. Existing layout hints, lazy loading, source
 clamping and square crops are preserved. Gallery navigation remains 100/200px;
 main gallery and zoom sizes are unchanged.
 
-Deploy the code through the normal dev/production gates, restart PHP-FPM and
-purge cached HTML before checking the new `200w, 400w` sources on public pages.
-No attachment regeneration, upload changes or delivery-option changes are needed.
+PR #164 merged as `89e65e1c4b` on 2026-10-12 after CI and branch-dev validation.
+The exact merge revision passed the automatic dev gate and guarded production
+deployment. PHP-FPM restarted and the origin HTML cache was cleared by the
+deployment; the configured WordPress Cloudflare integration confirmed a zone
+cache purge for this sitewide markup change. Nginx, PHP-FPM and Redis are active,
+and all four production smoke checks passed.
+
+All 40 shop card tags and 42 home card tags passed verification on each
+environment. Sampled physical downloads confirmed 200x200 and 400x400 variants.
+Smaller source images retain the no-upscaling rule (for example, a sampled
+production home image supplies 200x200 and 366x366 instead of enlarging to 400).
+All 110 offline regression assertions and PHP lint passed. No attachment
+regeneration, upload changes or delivery-option changes were made.
+Production rollback archive:
+`/var/lib/ultralove-deploy/backups/20261012T211609Z-0ae4c313b2.tgz`.
 
 ## Hosted image delivery cutover (live on production)
 
