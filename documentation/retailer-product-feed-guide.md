@@ -118,6 +118,26 @@ It makes no Shopify requests and does not create or edit products.
   still require an explicitly reviewed update; old immutable feed checkpoints
   retain their previous title behavior.
 
+##### Verified stock-notice expansion (2026-10-11)
+
+- Rule expansion `bc10748` is deployed to dev. **376 feed assertions** and
+  **214 import-planner checks** passed, including exact bold matches with
+  surrounding asterisks and preservation of unwrapped, partial and `<strong>`
+  matches. Staging PHP lint, origin smoke checks and dev services passed.
+- The guarded verifier audited **6,429 published parents**: **858 cleaned**,
+  **5,570 other bold titles preserved**, and **20 feed/import-plan checks**
+  passed with all source titles unchanged.
+- The real app's restricted import planner returned supplier product `17188`
+  as `2455 The Ultimate Kiss Oral Lovemaking Book`, without its bold
+  `WHILE STOCK LASTS` notice. No Shopify mutation was made. Create a fresh
+  preview to use the new rule; existing frozen previews and listings retain
+  their previous titles until explicitly reviewed.
+- The first guarded verifier request rejected WordPress application-password
+  `last_used` bookkeeping. One normal authenticated feed read completed that
+  standard bookkeeping; the strict guarded verifier then passed unchanged.
+  Never weaken the database-write guard to accommodate authentication logging.
+- Production remains at `f3f9a5c`; this expansion has not been deployed there.
+
 This operator-backed development connection is distinct from the embedded
 product-picker UI described below. Implementation and isolated tests do not
 establish live deployment or import success; record those results separately.
