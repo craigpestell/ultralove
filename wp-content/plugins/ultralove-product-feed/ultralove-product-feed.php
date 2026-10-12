@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UltraLove Product Feed
  * Description: Read-only, authenticated supplier catalog and inventory API for development.
- * Version: 0.1.0
+ * Version: 0.1.1
  * Author: UltraLove
  * Requires Plugins: woocommerce
  * Text Domain: ultralove-product-feed
@@ -339,6 +339,7 @@ final class UltraLove_Product_Feed {
         $modified = $product->get_date_modified();
         return array_merge( self::inventory( $id ), array(
             'name' => wp_strip_all_tags( str_replace( array( '<br>', '<br/>', '<br />' ), ' ', $product->get_name() ) ),
+            'retail_name' => self::retail_name( $product->get_name() ),
             'type' => $product->get_type(), 'permalink' => $product->get_permalink(),
             'description' => wp_kses_post( $product->get_description() ),
             'short_description' => wp_kses_post( $product->get_short_description() ),
@@ -353,6 +354,40 @@ final class UltraLove_Product_Feed {
             'variations' => $product->is_type( 'variable' )
                 ? array_values( array_filter( array_map( 'intval', $product->get_children() ), array( __CLASS__, 'visible' ) ) ) : array(),
         ) );
+    }
+
+    public static function retail_name( string $name ): string {
+        $removed = false;
+        $result = preg_replace_callback( '/<b\b[^>]*>(.*?)<\/b\s*>/is', static function ( array $match ) use ( &$removed ): string {
+            $text = html_entity_decode( wp_strip_all_tags( str_replace( array( '<br>', '<br/>', '<br />' ), ' ', $match[1] ) ),
+                ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+            $text = preg_replace( '/[\s\x{00a0}]+/u', ' ', $text );
+            if ( $text === null ) {
+                throw new RuntimeException( 'Cannot classify invalid supplier title text.' );
+            }
+            $text = trim( $text, " \t\n\r\0\x0B*" );
+            if ( ! in_array( strtoupper( $text ), array(
+                'DISCOUNTS DO NOT APPLY',
+                'TESTER ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT',
+                'ESTER ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT',
+            ), true ) ) {
+                return $match[0];
+            }
+            $removed = true;
+            return ' ';
+        }, $name );
+        if ( $result === null ) {
+            throw new RuntimeException( 'Cannot normalize supplier title markup.' );
+        }
+        $result = wp_strip_all_tags( str_replace( array( '<br>', '<br/>', '<br />' ), ' ', $result ) );
+        if ( ! $removed ) {
+            return $result;
+        }
+        $result = preg_replace( '/[\s\x{00a0}]+/u', ' ', $result );
+        if ( $result === null ) {
+            throw new RuntimeException( 'Cannot normalize invalid supplier title text.' );
+        }
+        return trim( $result );
     }
 
     private static function terms( int $id, string $taxonomy ): array {

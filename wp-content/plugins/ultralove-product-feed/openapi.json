@@ -141,6 +141,7 @@
             "required": ["name", "type", "permalink", "description", "short_description", "price", "regular_price", "sale_price", "currency", "prices_include_tax", "date_modified_gmt", "global_unique_id", "images", "data_warnings", "categories", "brands", "attributes", "variations"],
             "properties": {
               "name": {"type": "string"},
+              "retail_name": {"type": "string", "description": "Optional customer-facing export name. Removes only allowlisted retailer instructions that occupy a complete b element in the source title; preserves other bold text and unmarked instructions. Original retailer-facing name and stored product title remain unchanged. May be empty; consumers must reject an empty customer-facing title rather than restore excluded instructions."},
               "type": {"type": "string", "description": "WooCommerce product type, including variation. All published types remain visible."},
               "permalink": {"type": "string", "format": "uri"},
               "description": {"type": "string", "description": "Sanitized HTML."},

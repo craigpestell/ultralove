@@ -50,7 +50,7 @@ class WC_Product {
     public function get_gallery_image_ids() { return array( 102 ); }
     public function get_attributes() { return $this->parent ? array( 'colour' => 'black' ) : array(); }
     public function get_date_modified() { return new DateTimeImmutable( '2026-10-08T00:00:00Z' ); }
-    public function get_name() { return 'Existing<br>catalog product'; }
+    public function get_name() { return $GLOBALS['product_names'][$this->id] ?? 'Existing<br>catalog product'; }
     public function get_type() { return $this->parent ? 'variation' : 'simple'; }
     public function get_permalink() { return 'https://example.invalid/product/' . $this->id; }
     public function get_description() { return '<p>Existing description</p>'; }
@@ -142,6 +142,40 @@ $assert( $rejected, 'Missing product is explicitly rejected, not a success-shape
 $simple = UltraLove_Product_Feed::product( 1 );
 $variation = UltraLove_Product_Feed::product( 3 );
 $assert( $simple['name'] === 'Existing catalog product' && $simple['short_description'] === 'Existing short description', 'Standard product text is normalized without copying legacy CSV Excerpt bug.' );
+$assert( $simple['retail_name'] === $simple['name'], 'Ordinary export names preserve existing text.' );
+foreach ( array(
+    array( 'SKU Product <b>DISCOUNTS DO NOT APPLY</b>', 'SKU Product' ),
+    array( 'SKU <b>**TESTER ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT**</b> Product', 'SKU Product' ),
+    array( '<b>**ESTER ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT**</b> SKU Product', 'SKU Product' ),
+    array( 'SKU <B class="notice"> discounts&nbsp; do not apply </B>', 'SKU' ),
+    array( "SKU<b>** discounts\r\n do not apply **</b>Product", 'SKU Product' ),
+    array( 'SKU <b>TESTER<br>ONE PER STORE ONLY<br />FREE WITH 3 UNITS BOUGHT</b>', 'SKU' ),
+    array( 'SKU <b>DISCOUNTS&#32;DO&#32;NOT&#32;APPLY</b>', 'SKU' ),
+    array( 'SKU <b><em>DISCOUNTS DO NOT APPLY</em></b> <b>Brand</b>', 'SKU Brand' ),
+    array( 'SKU <b>DISCOUNTS DO NOT APPLY</b> <b>TESTER ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT</b>', 'SKU' ),
+    array( 'SKU  <b>Brand</b> product', 'SKU  Brand product' ),
+    array( 'SKU <b>Limited edition</b> product', 'SKU Limited edition product' ),
+    array( 'SKU <b>DISCOUNTS DO NOT APPLY special product</b>', 'SKU DISCOUNTS DO NOT APPLY special product' ),
+    array( 'SKU DISCOUNTS DO NOT APPLY', 'SKU DISCOUNTS DO NOT APPLY' ),
+    array( 'SKU <strong>DISCOUNTS DO NOT APPLY</strong>', 'SKU DISCOUNTS DO NOT APPLY' ),
+    array( 'SKU <b>ONE PER STORE ONLY FREE WITH 2 UNITS BOUGHT</b>', 'SKU ONE PER STORE ONLY FREE WITH 2 UNITS BOUGHT' ),
+    array( 'SKU <b>TESTER</b> product', 'SKU TESTER product' ),
+    array( 'SKU <b>unconfirmed retailer instruction</b>', 'SKU unconfirmed retailer instruction' ),
+    array( 'SKU <b>DISCOUNTS DO NOT APPLY', 'SKU DISCOUNTS DO NOT APPLY' ),
+    array( '<b>DISCOUNTS DO NOT APPLY</b>', '' ),
+) as [ $original, $expected ] ) {
+    $assert( UltraLove_Product_Feed::retail_name( $original ) === $expected, 'Only confirmed, complete bold retailer annotations are removed.' );
+}
+$product_names[1] = 'SKU Product <b>DISCOUNTS DO NOT APPLY</b>';
+$annotated = UltraLove_Product_Feed::product( 1 );
+$assert( $annotated['name'] === 'SKU Product DISCOUNTS DO NOT APPLY' && $annotated['retail_name'] === 'SKU Product',
+    'Feed keeps retailer information while separating the Shopify export name.' );
+$assert( $product_names[1] === 'SKU Product <b>DISCOUNTS DO NOT APPLY</b>', 'Reading export names does not mutate source product titles.' );
+$original_fields = $simple;
+$annotated_fields = $annotated;
+unset( $original_fields['name'], $original_fields['retail_name'], $annotated_fields['name'], $annotated_fields['retail_name'] );
+$assert( $original_fields === $annotated_fields, 'Title cleanup leaves all other feed fields unchanged.' );
+unset( $product_names[1] );
 $assert( $simple['global_unique_id'] === '00012345678905' && $simple['price'] === '17.65', 'Identifiers retain leading zeros and monetary values remain strings.' );
 $assert( $simple['data_warnings'] === array( array( 'code' => 'missing_image', 'attachment_id' => 102 ) ) && count( $simple['images'] ) === 1, 'Missing attachment explicitly warned while valid image and product remain available.' );
 $assert( $variation['type'] === 'variation' && $variation['parent_id'] === 1 && $variation['images'] === $simple['images'], 'Variation representation inherits parent images without a live synthetic product.' );

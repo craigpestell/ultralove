@@ -63,6 +63,34 @@ new account is created. A request requiring a database write fails explicitly
 rather than applying it. Normal feed clients and the selected-product/order
 worker retain their existing behavior.
 
+#### Customer-facing import titles
+
+The feed keeps its existing retailer-facing `name` and adds `retail_name` for
+customer-facing Shopify titles. Only a complete `<b>...</b>` element whose text
+matches one of these confirmed instructions is removed:
+
+- `DISCOUNTS DO NOT APPLY`
+- `TESTER ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT`
+- `ESTER ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT` (existing source typo)
+
+Matching ignores case, repeated whitespace, HTML entities, and surrounding
+asterisks. Other bold text, partial matches, unmarked instructions and notices
+wrapped in `<strong>` remain. The stored WooCommerce title, descriptions,
+SKUs, prices, stock, media, manual CSV exports and retailer-facing catalog names
+are unchanged.
+
+The shared catalog import planner used by the embedded lab app uses
+`retail_name` for new draft imports and explicitly reviewed listing updates.
+Older feed checkpoints without the field keep their previous `name` behavior.
+An empty or invalid `retail_name` fails explicitly instead of restoring the
+excluded instruction. Deploying this code does not rewrite existing Shopify
+products or change the retired legacy connector.
+
+Run [the read-only dev verifier](../ops/dropshipping/verify-retail-names.php)
+through dev WP-CLI to audit all published parent titles and check authenticated,
+database-write-guarded feed responses plus import plans for existing products.
+It makes no Shopify requests and does not create or edit products.
+
 This operator-backed development connection is distinct from the embedded
 product-picker UI described below. Implementation and isolated tests do not
 establish live deployment or import success; record those results separately.
