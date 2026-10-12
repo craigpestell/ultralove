@@ -1104,6 +1104,41 @@ sources (about 2.5 GiB) and two already-missing originals (20595, 20597). The 62
 animated GIF attachments remain on their original delivery path; ten exceed the
 hosted 10 MB limit. They are not silently flattened, resized or removed to fit.
 
+#### Dev pilot verified (2026-10-12)
+
+Implementation revision `e8b0cefd3bce787c14ca62650c8a1a4d08539749` was pushed
+on `feat/cloudflare-hosted-images` and deployed through the guarded pipeline.
+There was no server drift; server PHP lint, the deployment backup, all four HTTP
+smoke checks and GitHub CI passed. Offline coverage passed 57 hosted-image and
+398 existing catalog assertions.
+
+Dev intentionally has no readable local catalog originals (20,406 still-image
+attachment records were checked). The pilot therefore uses a generated
+1000×800 PNG, attachment 97164, retained exclusively on dev for repeatable checks.
+Its local original is 4,710 bytes; no production upload was copied to dev.
+Protected Images credentials were provisioned only on dev.
+
+The real batch upload accepted the content-addressed ID and source metadata.
+Removing only its mapping and retrying verified duplicate-ID recovery through
+the encoded details endpoint. A subsequent sync reported one unchanged image
+and zero uploads. Cloudflare still reported exactly one stored image out of
+100,000 allowed: responsive variants and recovery did not consume extra storage.
+
+Sixteen public delivery requests (eight profiles with WebP and AVIF Accept
+headers) returned HTTP 200 with exact expected dimensions: 300/450/600 square
+cards, a 600×480 gallery image, 100×100 thumbnail, 1000×800 zoom, 600×150 saved
+banner crop and 320×256 backdrop. Resized responses negotiated WebP/AVIF;
+Cloudflare retained the smaller original PNG for the full-size image.
+Banner markup retained its crop dimensions, responsive sources and rewrite
+protection marker. The generated local source remained unchanged.
+
+Both dev delivery options were restored to `cloudflare` after testing;
+automatic synchronization remains disabled. No system WP-cron trigger was
+found on dev, so automatic maintenance must not be claimed operational there.
+Production credentials, image copies, delivery options and Spaces backups were
+not modified. Production migration, system-cron verification and cutover are
+separate, approval-gated steps.
+
 ## 6.5 Mail Transport
 
 ### 6.5.1 WordPress Outbound Mail
