@@ -11,7 +11,7 @@
  *              "attached" to the pointer during a drag/swipe - matching RevSlider's own click-drag
  *              and touch-swipe navigation. A clone of the last slide is prepended and a clone of the
  *              first is appended so dragging past either end loops seamlessly.
- * Version: 2.1.3
+ * Version: 2.1.4
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -151,23 +151,24 @@ function ub_apply_transform( $html, $seg, $out_w, $out_h ) {
 }
 
 /**
- * Which service resizes and compresses banner images: 'cloudinary' (the default) or 'cloudflare'
- * (Cloudflare Images transformations, /cdn-cgi/image/, on the local upload). Set with the
+ * Banner delivery: 'cloudinary' (default), 'cloudflare' (/cdn-cgi/image/ on the local upload),
+ * or 'cloudflare-images' (verified hosted copies). Set with the
  * ub_banner_cdn option. A logged-in editor can preview the other one on any page with
- * ?ub_cdn=cloudflare (or =cloudinary); pages for logged-in users aren't cached, so visitors never see it.
+ * ?ub_cdn=cloudflare-images (or =cloudflare / =cloudinary); logged-in pages aren't cached.
  */
 function ub_banner_cdn() {
 	if ( isset( $_GET['ub_cdn'] ) && is_user_logged_in() && current_user_can( 'edit_others_posts' ) ) { // phpcs:ignore WordPress.Security.NonceVerification
 		$preview = sanitize_key( wp_unslash( $_GET['ub_cdn'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
-		if ( in_array( $preview, array( 'cloudinary', 'cloudflare' ), true ) ) {
+		if ( in_array( $preview, array( 'cloudinary', 'cloudflare', 'cloudflare-images' ), true ) ) {
 			return $preview;
 		}
 	}
-	return 'cloudflare' === get_option( 'ub_banner_cdn', 'cloudinary' ) ? 'cloudflare' : 'cloudinary';
+	$mode = get_option( 'ub_banner_cdn', 'cloudinary' );
+	return in_array( $mode, array( 'cloudflare', 'cloudflare-images' ), true ) ? $mode : 'cloudinary';
 }
 
 /**
- * Cloudflare transformation URL for an attachment's local file, as a path on this site (no host: the
+ * Hosted-copy URL, or a transformation URL for the local file as a path on this site (no host: the
  * Cloudinary plugin only rewrites full local upload URLs, so a /cdn-cgi/ path is left alone).
  * $trim is array( x, y, w, h ) in the file's pixels (a saved crop) or null. onerror=redirect serves the
  * original file if a transformation fails (for example once the monthly free quota is used up).
@@ -176,6 +177,22 @@ function ub_cf_image_url( $attachment_id, $width, $height = 0, $trim = null, $qu
 	$file = get_post_meta( $attachment_id, '_wp_attached_file', true );
 	if ( ! $file ) {
 		return '';
+	}
+	if ( 'cloudflare-images' === ub_banner_cdn() ) {
+		$options = array( 'quality' => (int) $quality, 'fit' => 'scale-down', 'width' => (int) $width );
+		if ( $height ) {
+			$options['height'] = (int) $height;
+		}
+		if ( $trim ) {
+			$options['trim.left'] = (int) $trim[0];
+			$options['trim.top'] = (int) $trim[1];
+			$options['trim.width'] = (int) $trim[2];
+			$options['trim.height'] = (int) $trim[3];
+		}
+		$hosted = ul_cf_images_url( (int) $attachment_id, $options );
+		if ( $hosted ) {
+			return $hosted;
+		}
 	}
 	$uploads = wp_get_upload_dir();
 	$opts    = array( 'format=auto', 'quality=' . (int) $quality, 'fit=scale-down', 'onerror=redirect', 'width=' . (int) $width );
@@ -855,7 +872,7 @@ add_shortcode(
 			$link     = ub_slide_link( $slide->ID );
 			$thumb_id = get_post_thumbnail_id( $slide->ID );
 			$bg_url   = '';
-			$use_cf   = 'cloudflare' === ub_banner_cdn() && ! is_admin();
+			$use_cf   = in_array( ub_banner_cdn(), array( 'cloudflare', 'cloudflare-images' ), true ) && ! is_admin();
 			if ( 'blur' === $bg_style && $use_cf ) {
 				// Small, low-quality copy for the blurred backdrop (see below).
 				$bg_url = ub_cf_image_url( $thumb_id, 320, 0, null, 40 );

@@ -2,17 +2,18 @@
 /**
  * Plugin Name: Product Images via Cloudflare
  * Description: Serves WooCommerce product images (cards, single-product gallery, thumbnails, zoom) through
- *              Cloudflare Images transformations (/cdn-cgi/image/) on the local upload instead of Cloudinary.
+ *              Cloudflare transformations or account-bound hosted Images copies instead of Cloudinary.
  *              Off by default. Turn on with:  wp option update ul_product_cdn cloudflare
  *              Back to Cloudinary:            wp option update ul_product_cdn cloudinary
  *              An editor (edit_others_posts) can preview either one on any page with
- *              ?ul_product_cdn=cloudflare (or =cloudinary); logged-in pages are not cached.
- * Version: 1.0.0
+ *              ?ul_product_cdn=cloudflare-images (or =cloudflare / =cloudinary); logged-in pages are not cached.
+ * Version: 1.1.0
  *
  * How it works: the local file (_wp_attached_file) is always the source. The Cloudinary plugin in
  * dual_full mode keeps it, and WordPress's own resized copies may not exist, so every size is cut from
- * the original. Only a handful of widths per size are used on purpose: Cloudflare bills each unique
- * (image, parameters) pair once a month, so more widths cost more. Edit ul_pcdn_profiles() (or filter
+ * the original or its verified hosted copy. Widths are deliberately bounded: remote-source
+ * transformations bill unique (image, parameters) pairs; hosted copies bill storage and delivery.
+ * Edit ul_pcdn_profiles() (or filter
  * 'ul_pcdn_profiles') to change them.
  *
  * Cutover (do these when switching production, see documentation/ARCHITECTURE.md 6.2):
@@ -29,16 +30,17 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * 'cloudflare' or 'cloudinary' (the default: this file does nothing).
+ * 'cloudflare-images', 'cloudflare', or 'cloudinary' (the default: this file does nothing).
  */
 function ul_pcdn_mode() {
 	if ( isset( $_GET['ul_product_cdn'] ) && is_user_logged_in() && current_user_can( 'edit_others_posts' ) ) { // phpcs:ignore WordPress.Security.NonceVerification
 		$preview = sanitize_key( wp_unslash( $_GET['ul_product_cdn'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
-		if ( in_array( $preview, array( 'cloudinary', 'cloudflare' ), true ) ) {
+		if ( in_array( $preview, array( 'cloudinary', 'cloudflare', 'cloudflare-images' ), true ) ) {
 			return $preview;
 		}
 	}
-	return 'cloudflare' === get_option( 'ul_product_cdn', 'cloudinary' ) ? 'cloudflare' : 'cloudinary';
+	$mode = get_option( 'ul_product_cdn', 'cloudinary' );
+	return in_array( $mode, array( 'cloudflare', 'cloudflare-images' ), true ) ? $mode : 'cloudinary';
 }
 
 /**
@@ -48,7 +50,7 @@ function ul_pcdn_active() {
 	if ( ( defined( 'REST_REQUEST' ) && REST_REQUEST ) || ( defined( 'WP_CLI' ) && WP_CLI ) || wp_doing_cron() ) {
 		return false;
 	}
-	return 'cloudflare' === ul_pcdn_mode();
+	return in_array( ul_pcdn_mode(), array( 'cloudflare', 'cloudflare-images' ), true );
 }
 
 /**
@@ -134,7 +136,7 @@ function ul_pcdn_is_product_image( $attachment_id ) {
 }
 
 /**
- * A /cdn-cgi/image/ URL for the attachment's local file. $height is only used for a square (fit=cover).
+ * A hosted-copy URL, or a /cdn-cgi/image/ URL for the local file. $height is only used for a square (fit=cover).
  * Absolute, so it also works in feeds, structured data and emails; on the same host as the upload, so
  * Cloudflare reads the file from this zone. onerror=redirect serves the original if a transformation
  * fails (for example the monthly free quota is used up).
@@ -143,6 +145,17 @@ function ul_pcdn_url( $attachment_id, $width, $height = 0 ) {
 	$file = get_post_meta( $attachment_id, '_wp_attached_file', true );
 	if ( ! $file ) {
 		return '';
+	}
+	if ( 'cloudflare-images' === ul_pcdn_mode() ) {
+		$options = array( 'quality' => 80, 'fit' => $height ? 'cover' : 'scale-down', 'width' => (int) $width );
+		if ( $height ) {
+			$options['gravity'] = 'auto';
+			$options['height'] = (int) $height;
+		}
+		$hosted = ul_cf_images_url( (int) $attachment_id, $options );
+		if ( $hosted ) {
+			return $hosted;
+		}
 	}
 	$uploads = wp_get_upload_dir();
 	$opts    = array( 'format=auto', 'quality=80', $height ? 'fit=cover' : 'fit=scale-down' );
@@ -237,7 +250,8 @@ add_filter(
 add_filter(
 	'wp_get_attachment_image_attributes',
 	static function ( $attr, $attachment, $size ) {
-		if ( ! ul_pcdn_active() || empty( $attr['src'] ) || false === strpos( $attr['src'], '/cdn-cgi/image/' ) ) {
+		if ( ! ul_pcdn_active() || empty( $attr['src'] )
+			|| ( false === strpos( $attr['src'], '/cdn-cgi/image/' ) && ! ul_cf_images_is_url( $attr['src'] ) ) ) {
 			return $attr;
 		}
 		$profile = ul_pcdn_profile_for_size( $size );
