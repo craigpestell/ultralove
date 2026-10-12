@@ -45,19 +45,25 @@ remain unchanged; no unrelated pending-release operations were applied.
 See [the image runbook](ARCHITECTURE.md#63-hosted-cloudflare-images-copies)
 for evidence, rollback and test-data recovery details.
 
-### Gallery navigation follow-up (pending)
+### Gallery navigation follow-up (live on production)
 
 The first production checks covered main images and zoom, but missed the
 navigation strip's separate `data-thumb` URLs. WooCommerce and Martfury request
 those as numeric dimensions, bypassing the shared named CDN profiles.
 The follow-up uses the existing square gallery thumbnail profile through
-WooCommerce's gallery-size hook. Validate both primary and secondary navigation
-thumbnails and slide selection on dev before releasing it to production.
+WooCommerce's gallery-size hook. Both primary and secondary navigation
+thumbnails and slide selection passed dev verification before production.
 Automatic synchronization remains disabled.
 Dev verification passed on 2026-10-12: all four navigation thumbnails on the
 sampled real product download from Cloudflare as 100x100 images on desktop
 and mobile; slide selection works and main/zoom sources remain hosted.
-PR #161 passes CI. The production correction awaits approval.
+PR #161 passed CI and merged as `0ae4c313b2`; its exact merge revision passed
+the automatic dev gate and guarded production deployment. After a confirmed
+Cloudflare cache purge, the normal production product URL passed the same
+desktop/mobile navigation-size and slide-selection checks, with no Cloudinary
+images remaining in the inspected gallery. All four main/zoom sources remain
+hosted. Service checks, four smoke tests and the live inline critical CSS
+verification passed; original uploads and delivery flags are unchanged.
 
 ## Dropshipping production rollout (disabled)
 

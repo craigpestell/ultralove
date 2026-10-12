@@ -1496,8 +1496,26 @@ checks passed, including the normal URL without a cache-busting query.
 No Cloudinary images remained in the inspected gallery, while all four main
 and zoom sources remained hosted. The offline migration/delivery suite passes
 83 assertions, and `php ops/product-images/test-gallery-navigation.php` passes
-seven frontend/rollback/context assertions. Production correction awaits
-approval.
+seven frontend/rollback/context assertions. These checks preceded the guarded
+production correction.
+
+Production correction: PR #161 merged as `0ae4c313b2` and passed that exact
+revision's automatic dev deployment. The guarded production deployment
+completed at 20:31 UTC on 2026-10-12 with no drift, server PHP lint, backup
+`/var/lib/ultralove-deploy/backups/20261012T203054Z-370b30f624.tgz`,
+PHP-FPM restart and four passing smoke tests. The release also carries the
+previously merged regenerated critical CSS from PR #158.
+
+After a confirmed Cloudflare zone-cache purge, the normal public product URL
+passed desktop (1440px) and mobile (390px) browser verification: four hosted
+100x100 navigation downloads, working second/fourth slide selection, four
+hosted main/zoom sources and no Cloudinary images in the inspected gallery.
+The live critical CSS file matches the repository checksum and its guest
+inline CSS matches after Autoptimize's removal of the generator comment.
+Nginx, PHP-FPM and Redis remain active. Delivery flags remain hosted with
+automatic sync and dev preview disabled on production; originals were not
+modified. Root-only release/cache evidence is recorded at
+`/var/lib/ultralove-images/gallery-navigation-20261012/release.json`.
 
 ## 6.5 Mail Transport
 
