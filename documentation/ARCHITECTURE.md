@@ -1396,6 +1396,28 @@ without deleting any media. Restore its metadata from the saved `.before.json`
 if needed. Regression coverage includes production and wrong-host denial,
 account/source mismatch, dirty generations and newly present local originals.
 
+Dev imported 20,270 matching preview identities from the 20,543-record verified
+snapshot; 273 absent, changed, dirty or locally present sources were skipped.
+Root-only snapshot, prior state and import report are retained on dev as
+`/var/lib/ultralove-images/dev-preview-20261012T2000.json` and its `.before.json`
+and `.result.json` companions. The source export remains on production.
+
+After deploying revisions `2d713f1` and `9a687f5` through the dev gate, all 40
+thumbnail tags on the checked real shop page used `imagedelivery.net` with no
+transformation fallbacks. Four sampled real product downloads were physically
+300x300 at a 1440-pixel viewport; the first product also selected and downloaded
+300x300 at a 390-pixel viewport. The previously observed W637756 original no
+longer redirected through dev to a 1000x1000 production upload.
+
+Real-catalog verification also exposed parentless secondary gallery attachments:
+the zoom ownership check now recognizes the current WooCommerce product's
+featured/gallery IDs, while preserving parent-based checks and ignoring
+unrelated full-size images. All four images on the sampled product page now
+use hosted gallery and zoom URLs; zoom downloads are intentionally 1000x1000,
+not thumbnail downloads. All 81 offline assertions passed, and server PHP lint,
+drift checks, code backups and four dev HTTP smoke tests passed.
+The user approved production deployment after reviewing dev.
+
 ## 6.5 Mail Transport
 
 ### 6.5.1 WordPress Outbound Mail
