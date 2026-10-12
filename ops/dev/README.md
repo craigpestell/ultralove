@@ -175,7 +175,78 @@ The earlier lab's two synthetic Shopify products remain archived.
 Deselection stops forwarding; manually archive a Shopify draft if it is no
 longer needed.
 
-The CLI command `wp ultralove shopify sync` runs under the root-only system
+**Legacy connector retirement (2026-10-12):** the workflow below is historical,
+not the current app's import or inventory worker. The replacement is
+**UltraLove Dropshipping Lab** in Shopify. Its inventory worker uses shared
+supplier reads and cross-product Shopify batches; order forwarding and tracking
+for its imports are not yet released. Retirement does not provide that functionality.
+
+Deploy the retirement guards before running the committed operator script from
+outside the web root:
+
+```sh
+ssh ultralove-dev-app 'wp --allow-root --path=/var/www/html eval-file - dry-run' \
+  < ops/dropshipping/retire-shopify-dev.php
+ssh ultralove-dev-app 'wp --allow-root --path=/var/www/html eval-file -' \
+  < ops/dropshipping/retire-shopify-dev.php
+```
+
+This root/dev/hostname-guarded operation archives only the legacy cron in a
+root-only `retirement-<UTC>-<random>` directory under
+`/root/.ultralove-shopify-dev/`, saves its configuration and final drained feed
+state, disables its saved enable flag, sets
+`ultralove_shopify_supplier_retired`, and waits up to 150 seconds for the original
+bridge lock. A timeout is an explicit incomplete-drain error, not permission to
+kill a worker or discard state. Repeated execution preserves the disabled state,
+rechecks the lock and saves another protected snapshot.
+Admin configuration is read-only; CLI sync, direct dev bridge creation, tracking
+submissions and fixture setup cannot reactivate or execute it.
+
+Keep the shared supplier plugin active: the current catalog proxy directly uses
+its feed and payload helpers. Preserve the feed consumer/capability, current
+proxy credential, shared Shopify app credentials, fixture users/products,
+historical mappings, orders and logs. Do **not** blindly revoke an app credential.
+The separate historical `source=lab` harness is unchanged and remains paused.
+
+Rollback is a deliberate operator action, not an admin toggle: review the
+original pre-retirement `options.json` backup, restore only the original legacy settings and
+retirement option (delete that option if originally absent), and explicitly
+restore the archived cron to its original root-owned path with mode `0644`.
+Do not roll back feed checkpoints, mappings or completed in-flight work; do not
+restart the old worker alongside current app inventory without reviewing overlap.
+Rolling back code alone must leave the disabled settings and absent cron intact.
+
+Live retirement verification (2026-10-12):
+
+- Guards deployed as `306d5419a02221d285f3054988976bd270ae7037`;
+  origin smoke tests returned `200` and Nginx/PHP-FPM remained active.
+- Retirement applied at `02:06:51 UTC`. Original configuration and cron are
+  protected in
+  `/root/.ultralove-shopify-dev/retirement-20261012T020651Z-24698506`
+  (directory `0700`, files `0600`).
+- A fresh WP-CLI process confirmed the persistent guard, disabled settings,
+  absent cron and explicit retired/no-requests sync response.
+  Four legacy mapping metadata rows, three fixture product identities, the
+  approved fixture retailer, other configuration fields, feed state and both
+  legacy/current proxy feed credentials were unchanged.
+- From `02:06:58` through `02:11:13 UTC`, spanning the next five-minute cron
+  boundary, Nginx recorded **zero** legacy WordPress-user-agent feed reads and
+  **79** current proxy reads.
+- Under the actual Shopify worker service account, five currently syncing
+  products passed one supplier batch operation and one Shopify inventory batch
+  query. Stock already matched: zero proposed corrections, zero mutations and
+  zero enrollment changes. Both Shopify services remained active without new
+  worker error entries. Temporary remote verification code was removed.
+- The existing missing-listing warnings for `W626100` / supplier `71955` and
+  `ID4016` / supplier `19969` were separately checked read-only: Shopify returned
+  `null` for their saved product IDs. Inventory uses stable product IDs, not
+  titles; the feed already strips HTML from product names. Their paused
+  mappings were not reset or recreated as part of retirement.
+- Local regressions passed: 48 supplier policy assertions, 977 inventory feed
+  assertions, 53 feed consumer assertions and 205 catalog-import checks.
+  Production was not deployed or otherwise changed.
+
+The historical CLI command `wp ultralove shopify sync` ran under the root-only system
 worker, not as a browser callback or public webhook. Credentials and logs live
 in `/root/.ultralove-shopify-dev/` with permissions `0600`; credentials are never
 stored in WordPress options or displayed by the admin page. The five-minute cron
@@ -224,10 +295,10 @@ tracking. It does not create products, change production inventory, enable a
 payment gateway, or make a real supplier payment. Run it with at least two
 selected products and positive stock on the first product.
 
-Disable the connection on **WooCommerce > Shopify Supplier** to stop the worker
-without deleting mappings/orders. Remove only `/etc/cron.d/ultralove-shopify-dev`
-to pause scheduling. Revoke the app credential separately if retiring the
-connection. This is not independent-retailer OAuth or a production rollout.
+The former enable/disable control is no longer available after retirement.
+Use the protected retirement operation above, without deleting mappings/orders
+or revoking shared credentials. This is not independent-retailer OAuth or a
+production rollout.
 
 The feed credential belongs to the marked customer-role `shopify-feed-consumer`
 account, with only the additional `ultralove_read_product_feed` capability and no

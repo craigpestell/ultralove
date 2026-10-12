@@ -6,6 +6,9 @@ if ( ! defined( 'WP_CLI' ) || ! WP_CLI || ! class_exists( 'UltraLove_Shopify_Sup
     || ! UltraLove_Shopify_Supplier::supported() ) {
     exit( 1 );
 }
+if ( UltraLove_Shopify_Supplier::retired() ) {
+    WP_CLI::error( 'The legacy development Shopify connector is retired; setup cannot reactivate it.' );
+}
 $retailer = get_user_by( 'login', 'shopify-dev-retailer' );
 if ( $retailer && get_user_meta( $retailer->ID, '_ul_shopify_dev_fixture', true ) !== 'yes' ) {
     WP_CLI::error( 'The chosen test login belongs to an unrelated user; refusing to modify it.' );

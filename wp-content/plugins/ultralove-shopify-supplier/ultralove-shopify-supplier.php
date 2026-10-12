@@ -2,7 +2,7 @@
 /**
  * Plugin Name: UltraLove Shopify Supplier
  * Description: Development supplier controls for the Shopify integration test store.
- * Version: 0.2.0
+ * Version: 0.2.1
  * Author: UltraLove
  * Requires Plugins: woocommerce, ultralove-dropshipping
  * Text Domain: ultralove-shopify-supplier
@@ -13,6 +13,12 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 final class UltraLove_Shopify_Supplier {
     const OPTION = 'ultralove_shopify_supplier';
+    const RETIRED_OPTION = 'ultralove_shopify_supplier_retired';
+
+    public static function retired(): bool {
+        $retired = get_option( self::RETIRED_OPTION, false );
+        return $retired === true || $retired === '1';
+    }
 
     public static function supported(): bool {
         return wp_get_environment_type() === 'development'
@@ -26,7 +32,7 @@ final class UltraLove_Shopify_Supplier {
     }
 
     public static function enabled(): bool {
-        return self::supported() && self::settings()['enabled'] === true
+        return self::supported() && ! self::retired() && self::settings()['enabled'] === true
             && class_exists( 'UltraLove_Dropshipping' ) && UltraLove_Dropshipping::enabled();
     }
 
@@ -53,6 +59,9 @@ final class UltraLove_Shopify_Supplier {
     }
 
     public static function validate( array $settings, bool $check_products = true ): array {
+        if ( ! empty( $settings['enabled'] ) && self::retired() ) {
+            throw new InvalidArgumentException( 'The legacy development connector is retired. Use the UltraLove Dropshipping Lab app.' );
+        }
         foreach ( $settings['product_ids'] as $id ) {
             if ( ! ctype_digit( (string) $id ) || (int) $id < 1 ) {
                 throw new InvalidArgumentException( 'Product IDs must be positive integers.' );
@@ -87,6 +96,9 @@ final class UltraLove_Shopify_Supplier {
             wp_die( 'You cannot configure this development integration.', '', array( 'response' => 403 ) );
         }
         check_admin_referer( 'ultralove_shopify_supplier' );
+        if ( self::retired() ) {
+            wp_die( 'The legacy development connector is retired. Its saved configuration is read-only.', '', array( 'response' => 409 ) );
+        }
         foreach ( array( 'product_ids', 'retailer_id', 'markup' ) as $field ) {
             if ( ! isset( $_POST[ $field ] ) || ! is_string( $_POST[ $field ] ) ) {
                 wp_die( 'Invalid supplier settings.', '', array( 'response' => 400 ) );
@@ -114,6 +126,21 @@ final class UltraLove_Shopify_Supplier {
     public static function page(): void {
         if ( ! self::supported() || ! current_user_can( 'manage_options' ) ) {
             wp_die( 'You cannot view this development integration.', '', array( 'response' => 403 ) );
+        }
+        if ( self::retired() ) {
+            ?>
+            <div class="wrap">
+                <h1>Shopify Supplier - retired</h1>
+                <p>The legacy development connector no longer synchronizes products, forwards test orders or returns tracking.
+                    Its configuration, mappings and test records are retained for review.</p>
+                <p>Use <strong>UltraLove Dropshipping Lab</strong> in Shopify for catalog imports and inventory synchronization.
+                    Order forwarding and tracking for app-imported products are separate, unfinished work.</p>
+                <p><a href="https://admin.shopify.com/store/ultralove-integration-lab" target="_blank" rel="noopener noreferrer">Open the Shopify lab (new tab)</a>.</p>
+                <p>The shared catalog and inventory feed remains available to the current app.
+                    This page cannot reactivate the retired connector.</p>
+            </div>
+            <?php
+            return;
         }
         $settings = self::settings();
         $status = get_option( 'ul_dev_shopify_status', array() );
@@ -205,6 +232,10 @@ final class UltraLove_Shopify_Supplier {
      * : Synchronize product feed data without importing orders or returning tracking.
      */
     public static function sync( array $args = array(), array $options = array() ): void {
+        if ( self::retired() ) {
+            WP_CLI::log( 'Legacy development Shopify connector is retired; no external requests or mutations.' );
+            return;
+        }
         if ( ! self::enabled() ) {
             WP_CLI::log( 'Dev Shopify supplier is disabled; no external requests or mutations.' );
             return;
@@ -233,7 +264,7 @@ final class UltraLove_Shopify_Supplier {
     }
 
     public static function tracking_field( $order ): void {
-        if ( ! self::supported() || ! current_user_can( 'manage_woocommerce' ) || ! $order->get_meta( '_ul_dev_shopify_order' ) ) {
+        if ( self::retired() || ! self::supported() || ! current_user_can( 'manage_woocommerce' ) || ! $order->get_meta( '_ul_dev_shopify_order' ) ) {
             return;
         }
         wp_nonce_field( 'ul_shopify_tracking_' . $order->get_id(), 'ul_shopify_tracking_nonce' );
@@ -248,7 +279,7 @@ final class UltraLove_Shopify_Supplier {
         if ( ! isset( $_POST['ul_shopify_tracking_nonce'] ) ) {
             return;
         }
-        if ( ! self::supported() || ! current_user_can( 'manage_woocommerce' )
+        if ( self::retired() || ! self::supported() || ! current_user_can( 'manage_woocommerce' )
             || ! is_string( $_POST['ul_shopify_tracking_nonce'] )
             || ! wp_verify_nonce( wp_unslash( $_POST['ul_shopify_tracking_nonce'] ), 'ul_shopify_tracking_' . $id ) ) {
             wp_die( 'You cannot update test tracking.', '', array( 'response' => 403 ) );

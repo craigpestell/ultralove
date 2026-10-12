@@ -10,6 +10,7 @@ define( 'DB_NAME', 'wordpress_dev' );
 $environment = 'development';
 $home = 'https://dev.ultralove.ca';
 $option = array();
+$retired = false;
 $approved = 'yes';
 $dropshipping = true;
 $checks = 0;
@@ -30,7 +31,10 @@ function admin_url( $path ) { return 'https://dev.ultralove.ca/wp-admin/' . $pat
 function wp_safe_redirect( $url ) { throw new RuntimeException( $url, 302 ); }
 function wp_get_environment_type() { return $GLOBALS['environment']; }
 function home_url() { return $GLOBALS['home']; }
-function get_option( $key, $default = false ) { return $GLOBALS['option']; }
+function get_option( $key, $default = false ) {
+    return $key === 'ultralove_shopify_supplier_retired' ? $GLOBALS['retired'] : $GLOBALS['option'];
+}
+function get_woocommerce_currency() { return 'CAD'; }
 function wp_parse_args( $args, $defaults ) { return array_merge( $defaults, $args ); }
 function absint( $value ) { return abs( (int) $value ); }
 function get_user_by( $field, $id ) { return $id === 1 ? (object) array( 'ID' => 1 ) : false; }
@@ -128,4 +132,58 @@ $environment = 'production';
 $menu = null;
 $GLOBALS['actions']['admin_menu']();
 $assert( $menu === null, 'Supplier menu remains absent on production.' );
+$environment = 'development';
+$retired = true;
+$option = $valid;
+$assert( UltraLove_Shopify_Supplier::retired() && ! UltraLove_Shopify_Supplier::enabled(),
+    'Retirement overrides an old enabled configuration without deleting it.' );
+$retired = '1';
+$assert( UltraLove_Shopify_Supplier::retired(), 'Retirement survives WordPress scalar option storage and a fresh process.' );
+$retired = true;
+$before_retirement = $option;
+$rejected = false;
+try { UltraLove_Shopify_Supplier::validate( $valid ); }
+catch ( InvalidArgumentException $error ) { $rejected = str_contains( $error->getMessage(), 'retired' ); }
+$assert( $rejected && $option === $before_retirement, 'Validation cannot reactivate a retired bridge.' );
+$assert( UltraLove_Shopify_Supplier::validate( array_merge( $valid, array( 'enabled' => false ) ) )['enabled'] === false,
+    'Historical disabled configuration remains valid.' );
+$caps = array( 'manage_options' );
+$nonce_valid = true;
+$_POST = $post;
+$status = null;
+try { UltraLove_Shopify_Supplier::save(); }
+catch ( RuntimeException $error ) { $status = $error->getCode(); }
+$assert( $status === 409 && $option === $before_retirement, 'Administrator POST cannot change retired configuration.' );
+ob_start();
+UltraLove_Shopify_Supplier::page();
+$retired_page = ob_get_clean();
+$assert( str_contains( $retired_page, 'Shopify Supplier - retired' ) && ! str_contains( $retired_page, '<form' ),
+    'Retired administrator page explains the replacement without offering enable controls.' );
+$assert( str_contains( $retired_page, 'unfinished work' ), 'Retirement does not imply the new app forwards orders or tracking.' );
+$caps = array( 'manage_woocommerce' );
+UltraLove_Shopify_Supplier::tracking_field( new stdClass() );
+$assert( true, 'Retired tracking UI stops before reading or mutating an order.' );
+$_POST = array( 'ul_shopify_tracking_nonce' => 'nonce' );
+$status = null;
+try { UltraLove_Shopify_Supplier::save_tracking( 1 ); }
+catch ( RuntimeException $error ) { $status = $error->getCode(); }
+$assert( $status === 403, 'Retired tracking submissions are rejected before any order lookup.' );
+define( 'WP_CLI', true );
+class WP_CLI {
+    public static array $messages = array();
+    public static function log( $message ) { self::$messages[] = $message; }
+    public static function error( $message ) { throw new RuntimeException( $message ); }
+}
+UltraLove_Shopify_Supplier::sync();
+$assert( count( WP_CLI::$messages ) === 1 && str_contains( WP_CLI::$messages[0], 'retired' ),
+    'Retired CLI sync explicitly skips all feed and Shopify requests.' );
+require __DIR__ . '/../../wp-content/plugins/ultralove-shopify-supplier/includes/class-test-bridge.php';
+$rejected = false;
+try { new UltraLove_Shopify_Test_Bridge( 'dev' ); }
+catch ( RuntimeException $error ) { $rejected = str_contains( $error->getMessage(), 'retired' ); }
+$assert( $rejected, 'Direct development bridge construction is blocked before credentials, locks or HTTP.' );
+$rejected = false;
+try { include __DIR__ . '/setup-shopify-dev.php'; }
+catch ( RuntimeException $error ) { $rejected = str_contains( $error->getMessage(), 'retired' ); }
+$assert( $rejected && $option === $before_retirement, 'Fixture setup cannot recreate accounts or reactivate retired settings.' );
 echo $checks . " supplier policy assertions passed.\n";

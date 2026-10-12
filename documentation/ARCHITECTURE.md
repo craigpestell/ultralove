@@ -451,6 +451,23 @@ shipment occurred. Independent-retailer OAuth and production order handling
 remain outside this test workflow; see
 [the dev workflow](../ops/dev/README.md#shopify-supplier-test-workflow).
 
+**Legacy development bridge retirement, 2026-10-12:** the old five-minute
+WordPress bridge is superseded for catalog imports and inventory by the
+UltraLove Dropshipping Lab Shopify app. Duplicate reads with the WordPress
+user-agent and unchanged journal cursor came from its constructor plus its
+catalog cycle, not pagination by the new app. The guarded retirement operation
+archives only `/etc/cron.d/ultralove-shopify-dev`, disables the legacy settings
+and persists `ultralove_shopify_supplier_retired`. It waits for the original
+bridge lock, preserving completed work; protected backups remain under
+`/root/.ultralove-shopify-dev/retirement-*`.
+The legacy admin page is read-only and legacy dev CLI/setup/tracking paths
+cannot reactivate it. Shared feed/payload code, fixture identities, mappings,
+orders, logs and credentials remain intact. The plugin must stay active for the
+current restricted catalog proxy; never revoke shared app/feed credentials
+as part of this retirement. The earlier paused `source=lab` harness is unchanged.
+The current app does not yet replace legacy synthetic order forwarding/tracking.
+See the dev workflow for scoped rollback and live verification evidence.
+
 The droplet is billable until explicitly destroyed. Teardown must target only
 droplet `607169886`, its lab firewall, tag, and VPC after confirming they have no
 other members; never use production/dev cleanup scripts.

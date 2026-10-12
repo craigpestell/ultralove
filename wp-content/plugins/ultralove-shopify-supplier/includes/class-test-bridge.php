@@ -31,6 +31,9 @@ final class UltraLove_Shopify_Test_Bridge {
         if ( wp_get_environment_type() !== 'development' || get_woocommerce_currency() !== 'CAD' ) {
             throw new RuntimeException( 'Refusing to run outside a CAD development supplier.' );
         }
+        if ( $source === 'dev' && class_exists( 'UltraLove_Shopify_Supplier' ) && UltraLove_Shopify_Supplier::retired() ) {
+            throw new RuntimeException( 'The legacy development Shopify bridge is retired. Use the current Shopify app.' );
+        }
         if ( $source === 'lab' ) {
             if ( ! is_readable( '/etc/ultralove-integration-lab' )
                 || trim( file_get_contents( '/etc/ultralove-integration-lab' ) ) !== 'ultralove-integration-lab'
