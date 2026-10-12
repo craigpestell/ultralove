@@ -1055,6 +1055,55 @@ Cloudinary can be dropped. It does nothing until `ul_product_cdn` is `cloudflare
 - Not yet verified on a live server: the `/cdn-cgi/` URLs for product images, dev (behind Cloudflare
   Access) and the `cloudinary_pre_image_tag` safety net.
 
+### 6.3 Hosted Cloudflare Images copies
+
+Production was confirmed on 2026-10-12 to use `cloudflare` for both
+`ul_product_cdn` and `ub_banner_cdn`. This is remote-source transformation delivery,
+not Cloudflare Images storage.
+
+The `cloudflare-images` mode instead delivers account-bound copies uploaded to
+Cloudflare Images. Its flexible variants retain existing product widths, square
+cropping, automatic gravity, banner crop coordinates and responsive sources.
+Hosted delivery incurs Images Stored/Delivered billing, not the remote-source
+Images Transformed metric. CDN caching is not a guarantee that a derived variant
+will never be regenerated.
+
+`37-cloudflare-images.php` provides shared delivery and a resumable CLI command:
+
+```sh
+wp ultralove-images sync --after-id=0 --limit=100 --dry-run
+wp ultralove-images sync --after-id=0 --limit=500
+wp ultralove-images sync --pending --limit=50
+```
+
+Repeat bounded batches using each JSON result's `next_after_id` until
+`processed` is zero. Nonzero exit status and `failed` identify exceptions; never
+count those attachments as uploaded. IDs derive from the source SHA-256, so retries
+and identical files reuse one stored image. Mappings are accepted only after
+verifying account, content identity, public delivery URLs and unchanged source
+bytes. Uploads use the Images batch API with four concurrent requests.
+
+Credentials are provisioned outside the webroot in
+`/etc/ultralove/cloudflare-images.json` (root:www-data, 0640; parent 0750), with
+`account_id`, `account_hash` and a dedicated Images-edit `token`. The public
+`ul_cf_images_account_hash` option must match; neither API token nor credentials
+belong in git or attachment metadata. Existing IP-allowlisting credentials are
+not reused or broadened.
+
+After migration verification, set `ul_product_cdn` and `ub_banner_cdn` to
+`cloudflare-images`, and enable `ul_cf_images_sync_enabled`. WordPress media
+updates queue copies; the existing system-driven WP cron runs the bounded hourly
+`ul_cf_images_sync` event. Pending, missing or replaced sources are logged and
+retain the previous working transformation delivery until synchronized.
+REST/feed URLs, admin screens, local uploads and DigitalOcean Spaces backups are
+unchanged. Roll back both delivery options to `cloudflare` and disable the sync
+option; do not delete local files, Spaces objects, or hosted copies.
+
+The initial inventory contains 20,601 JPEG/PNG/WebP attachments: 20,599 readable
+sources (about 2.5 GiB) and two already-missing originals (20595, 20597). The 62
+animated GIF attachments remain on their original delivery path; ten exceed the
+hosted 10 MB limit. They are not silently flattened, resized or removed to fit.
+
 ## 6.5 Mail Transport
 
 ### 6.5.1 WordPress Outbound Mail

@@ -42,6 +42,9 @@ jobs:
           php ops/dropshipping/test-product-feed.php
           php ops/dropshipping/test-catalog-import.php
 
+      - name: Hosted image migration and delivery regression tests
+        run: php ops/product-images/test.php
+
       - name: No DB dumps, invoices, archives, backups or oversized files
         run: |
           bad=$(git ls-files | grep -Ei '\.(sql|sql\.gz|zip|tgz|tar|bak|xlsx)$|\.bak-|(^|/)invoice|(^|/)statement-' || true)
