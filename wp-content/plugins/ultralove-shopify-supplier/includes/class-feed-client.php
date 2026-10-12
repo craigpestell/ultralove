@@ -341,42 +341,82 @@ final class UltraLove_Shopify_Feed_Client {
     }
 
     public function inventory_state( int $parent_id, ?array $checkpoint = null ): array {
-        if ( $parent_id < 1 || ( $checkpoint !== null && (
-            array_diff( array_keys( $checkpoint ), array( 'generation', 'cursor' ) )
-            || ! is_string( $checkpoint['generation'] ?? null )
-            || ! preg_match( '/^[a-f0-9-]{36}$/i', $checkpoint['generation'] )
-            || ! is_int( $checkpoint['cursor'] ?? null ) || $checkpoint['cursor'] < 0
-        ) ) ) {
-            throw new InvalidArgumentException( 'Invalid inventory synchronization checkpoint.' );
+        return $this->inventory_states( array( $parent_id ), array( $parent_id => $checkpoint ) )['results'][0];
+    }
+
+    /**
+     * Read current stock for a bounded set of parents with one shared journal replay.
+     * Missing parents/sources stay absent; consumers must zero their saved mappings.
+     */
+    public function inventory_states( array $parent_ids, array $checkpoints = array() ): array {
+        if ( ! array_is_list( $parent_ids ) || ! $parent_ids || count( $parent_ids ) > 50 ) {
+            throw new InvalidArgumentException( 'Select between 1 and 50 distinct inventory parent IDs.' );
         }
-        $page = $this->request( '/products', array( 'ids' => array( $parent_id ), 'per_page' => 100 ) );
+        $requested = array();
+        foreach ( $parent_ids as $id ) {
+            if ( ! is_int( $id ) || $id < 1 || isset( $requested[$id] ) ) {
+                throw new InvalidArgumentException( 'Inventory parent IDs must be distinct positive integers.' );
+            }
+            $requested[$id] = true;
+        }
+        foreach ( $checkpoints as $id => $checkpoint ) {
+            if ( ! is_int( $id ) || ! isset( $requested[$id] ) || ( $checkpoint !== null && (
+                ! is_array( $checkpoint )
+                || array_diff( array_keys( $checkpoint ), array( 'generation', 'cursor' ) )
+                || ! is_string( $checkpoint['generation'] ?? null )
+                || ! preg_match( '/^[a-f0-9-]{36}$/i', $checkpoint['generation'] )
+                || ! is_int( $checkpoint['cursor'] ?? null ) || $checkpoint['cursor'] < 0
+            ) ) ) {
+                throw new InvalidArgumentException( 'Invalid inventory synchronization checkpoint.' );
+            }
+        }
+        $page = $this->request( '/products', array( 'ids' => $parent_ids, 'per_page' => 100 ) );
         self::snapshot_page( $page, 'products' );
-        if ( $page['has_more'] || count( $page['products'] ) > 1 ) {
+        if ( $page['has_more'] || ! array_is_list( $page['products'] ) || count( $page['products'] ) > count( $parent_ids ) ) {
             throw new RuntimeException( 'Inventory parent lookup exceeded its bounds.' );
         }
-        $ids = array();
-        if ( $page['products'] ) {
-            $parent = $page['products'][0];
-            if ( ! is_array( $parent ) || ( $parent['id'] ?? null ) !== $parent_id
+        $parents = array();
+        $sources = array();
+        $total = 0;
+        foreach ( $page['products'] as $parent ) {
+            if ( ! is_array( $parent ) || ! is_int( $parent['id'] ?? null )
+                || ! isset( $requested[$parent['id']] ) || isset( $parents[$parent['id']] )
                 || ( $parent['parent_id'] ?? null ) !== 0 || ( $parent['currency'] ?? null ) !== 'CAD'
                 || ! in_array( $parent['type'] ?? null, array( 'simple', 'variable' ), true )
-                || ! is_array( $parent['variations'] ?? null ) ) {
+                || ! is_array( $parent['variations'] ?? null ) || ! array_is_list( $parent['variations'] ) ) {
                 throw new RuntimeException( 'Supplier parent identity/type changed; review required.' );
             }
-            $ids = $parent['type'] === 'simple' ? array( $parent_id ) : $parent['variations'];
-            if ( count( $ids ) > 2048 || count( array_unique( $ids ) ) !== count( $ids ) ) {
+            if ( count( $parent['variations'] ) > 2048 ) {
                 throw new RuntimeException( 'Supplier variants exceeded their distinct inventory bounds.' );
             }
-            foreach ( $ids as $id ) {
-                if ( ! is_int( $id ) || $id < 1 || ( $parent['type'] === 'variable' && $id === $parent_id ) ) {
+            $variants = array();
+            foreach ( $parent['variations'] as $id ) {
+                if ( ! is_int( $id ) || $id < 1 || $id === $parent['id'] || isset( $variants[$id] ) ) {
                     throw new RuntimeException( 'Invalid supplier inventory source ID.' );
                 }
+                $variants[$id] = true;
+            }
+            $ids = $parent['type'] === 'simple' ? array( $parent['id'] ) : $parent['variations'];
+            $total += count( $ids );
+            if ( $total > 10240 ) {
+                throw new RuntimeException( 'Supplier batch exceeded its total inventory bounds.' );
+            }
+            $parents[$parent['id']] = $ids;
+            foreach ( $ids as $id ) {
+                $sources[$id] = true;
             }
         }
-        $resynced = $checkpoint !== null && $checkpoint['generation'] !== $page['generation'];
-        $state = array( 'generation' => $page['generation'],
-            'cursor' => $checkpoint !== null && ! $resynced ? $checkpoint['cursor'] : $page['change_cursor'],
-            'products' => array() );
+        $resynced = array();
+        $cursor = $page['change_cursor'];
+        foreach ( $parent_ids as $id ) {
+            $checkpoint = $checkpoints[$id] ?? null;
+            $resynced[$id] = $checkpoint !== null && ( $checkpoint['generation'] !== $page['generation']
+                || $checkpoint['cursor'] > $page['change_cursor'] );
+            if ( $checkpoint !== null && ! $resynced[$id] ) {
+                $cursor = min( $cursor, $checkpoint['cursor'] );
+            }
+        }
+        $state = array( 'generation' => $page['generation'], 'cursor' => $cursor, 'products' => array() );
         try {
             $state = $this->changes( array(), $state );
         } catch ( RuntimeException $error ) {
@@ -385,14 +425,19 @@ final class UltraLove_Shopify_Feed_Client {
             }
             $state['cursor'] = $page['change_cursor'];
             $state = $this->changes( array(), $state );
-            $resynced = true;
+            foreach ( $parent_ids as $id ) {
+                $checkpoint = $checkpoints[$id] ?? null;
+                if ( $checkpoint !== null && $checkpoint['cursor'] < $page['change_cursor'] ) {
+                    $resynced[$id] = true;
+                }
+            }
         }
         $inventory = array();
-        foreach ( array_chunk( $ids, 100 ) as $batch ) {
+        foreach ( array_chunk( array_keys( $sources ), 100 ) as $batch ) {
             $stock = $this->request( '/inventory', array( 'ids' => $batch, 'per_page' => 100 ) );
             self::snapshot_page( $stock, 'inventory' );
             if ( $stock['generation'] !== $state['generation'] || $stock['change_cursor'] < $state['cursor'] || $stock['has_more']
-                || count( $stock['inventory'] ) > count( $batch ) ) {
+                || ! array_is_list( $stock['inventory'] ) || count( $stock['inventory'] ) > count( $batch ) ) {
                 throw new RuntimeException( 'Inventory generation/pagination changed; retry without advancing the checkpoint.' );
             }
             foreach ( $stock['inventory'] as $record ) {
@@ -400,12 +445,30 @@ final class UltraLove_Shopify_Feed_Client {
                     || ! in_array( $record['id'], $batch, true ) || isset( $inventory[$record['id']] ) ) {
                     throw new RuntimeException( 'Unexpected or duplicate inventory source.' );
                 }
+                if ( ! is_string( $record['sku'] ?? null ) || ! is_bool( $record['manage_stock'] ?? null )
+                    || ! array_key_exists( 'stock_quantity', $record )
+                    || ( $record['stock_quantity'] !== null && ! is_int( $record['stock_quantity'] ) )
+                    || ! is_int( $record['stock_owner_id'] ?? null ) || $record['stock_owner_id'] < 1
+                    || ! in_array( $record['stock_status'] ?? null, array( 'instock', 'outofstock', 'onbackorder' ), true ) ) {
+                    throw new RuntimeException( 'Invalid supplier inventory fields; review required.' );
+                }
                 $inventory[$record['id']] = $record;
             }
         }
-        return array( 'generation' => $state['generation'], 'cursor' => $state['cursor'],
-            'parent_id' => $parent_id, 'published' => (bool) $page['products'], 'source_ids' => $ids,
-            'inventory' => array_values( $inventory ), 'resynced' => $resynced );
+        $results = array();
+        foreach ( $parent_ids as $id ) {
+            $ids = $parents[$id] ?? array();
+            $rows = array();
+            foreach ( $ids as $source_id ) {
+                if ( isset( $inventory[$source_id] ) ) {
+                    $rows[] = $inventory[$source_id];
+                }
+            }
+            $results[] = array( 'generation' => $state['generation'], 'cursor' => $state['cursor'],
+                'parent_id' => $id, 'published' => isset( $parents[$id] ), 'source_ids' => $ids,
+                'inventory' => $rows, 'resynced' => $resynced[$id] );
+        }
+        return array( 'results' => $results );
     }
 
     public function read( array $ids, array $state = array() ): array {
@@ -513,7 +576,8 @@ final class UltraLove_Shopify_Feed_Client {
             if ( ( $page['generation'] ?? null ) !== $state['generation']
                 || ! is_int( $page['cursor'] ?? null ) || ! is_int( $page['latest_cursor'] ?? null )
                 || $page['cursor'] < $state['cursor'] || $page['latest_cursor'] < $page['cursor']
-                || ! is_bool( $page['has_more'] ?? null ) || ! is_array( $page['changes'] ?? null ) ) {
+                || ! is_bool( $page['has_more'] ?? null ) || ! is_array( $page['changes'] ?? null )
+                || ! array_is_list( $page['changes'] ) || count( $page['changes'] ) > 100 ) {
                 throw new RuntimeException( 'Invalid feed change envelope.' );
             }
             $cursor = $state['cursor'];
