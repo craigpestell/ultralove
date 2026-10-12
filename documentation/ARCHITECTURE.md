@@ -1489,6 +1489,16 @@ No vendor template or JavaScript edit is required. Navigation `data-thumb`
 and generated `.flex-control-thumbs img` URLs must be checked independently
 from the main image and zoom source.
 
+Dev verification on 2026-10-12: all four navigation sources on
+`/product/w637756-womanizer-beauty-lilac/` use hosted delivery and physically
+download as 100x100 images. Desktop and 390-pixel mobile slide-selection
+checks passed, including the normal URL without a cache-busting query.
+No Cloudinary images remained in the inspected gallery, while all four main
+and zoom sources remained hosted. The offline migration/delivery suite passes
+83 assertions, and `php ops/product-images/test-gallery-navigation.php` passes
+seven frontend/rollback/context assertions. Production correction awaits
+approval.
+
 ## 6.5 Mail Transport
 
 ### 6.5.1 WordPress Outbound Mail

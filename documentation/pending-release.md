@@ -54,6 +54,10 @@ The follow-up uses the existing square gallery thumbnail profile through
 WooCommerce's gallery-size hook. Validate both primary and secondary navigation
 thumbnails and slide selection on dev before releasing it to production.
 Automatic synchronization remains disabled.
+Dev verification passed on 2026-10-12: all four navigation thumbnails on the
+sampled real product download from Cloudflare as 100x100 images on desktop
+and mobile; slide selection works and main/zoom sources remain hosted.
+PR #161 passes CI. The production correction awaits approval.
 
 ## Dropshipping production rollout (disabled)
 
