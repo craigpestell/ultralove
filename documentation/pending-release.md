@@ -1,5 +1,44 @@
 # Pending production release
 
+## Hosted image delivery cutover (dev approved; production deployment pending)
+
+**2026-10-12:** production's source-copy scan finished with 20,543 accepted
+attachment copies and 58 unique unresolved attachments in its failure ledger.
+Production delivery options remain `cloudflare`; automatic hosted-image sync
+is disabled. Copying sources did not authorize the delivery cutover.
+
+Dev is now using `cloudflare-images` for product and banner delivery, with
+automatic synchronization disabled. Review the dev-only generated fixtures:
+
+- [Card and cropped-banner preview](https://dev.ultralove.ca/hosted-images-dev-check/)
+- [Product gallery and zoom](https://dev.ultralove.ca/product/hosted-images-dev-test/)
+- [Deliberately unsynchronized fallback](https://dev.ultralove.ca/product/hosted-images-dev-fallback/)
+
+These hidden, non-purchasable products are test data only; do not export them to
+production. Dev has no readable catalog originals, and no production uploads
+were copied to it. Real guest/logged-in origin requests, responsive and crop
+geometry, public hosted WebP/AVIF delivery, REST source preservation, dirty
+generation recovery and delivery rollback passed. Browser checks after Access login verified the mapped fixture's physical
+600x600 desktop and 300x300 mobile downloads, plus the hosted cropped banner.
+Ordinary dev catalog thumbnails still fall back through HTTP 307/302 to
+production originals (1000x1000 in the observed example); they have no dev
+hosted mappings or readable local originals in the initial test. The guarded
+dev-only remote preview now supplies 20,270 matching verified identities,
+without copying production uploads or relaxing production source checks.
+All 40 real shop thumbnail tags on the checked page use hosted delivery, with
+300x300 physical downloads confirmed on desktop and mobile. All four gallery
+zoom sources on the sampled real product page are hosted; zoom intentionally
+retains the 1000x1000 source size. Parentless gallery images are recognized
+through their current WooCommerce product rather than assumed unrelated.
+The user reviewed dev and approved production deployment on 2026-10-12.
+
+Production cutover will retain fallback for the 58 unresolved exceptions.
+Automatic synchronization must remain disabled until unsupported animated
+sources in its separate maintenance path are addressed.
+Apply only these delivery settings after approval; do not bundle unrelated
+pending-release operations. See [the image runbook](ARCHITECTURE.md#63-hosted-cloudflare-images-copies)
+for evidence, rollback and test-data recovery details.
+
 ## Dropshipping production rollout (disabled)
 
 **Production status, 2026-10-08:** release `5e920b0` is deployed and verified.

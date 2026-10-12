@@ -2,10 +2,16 @@
 /**
  * Plugin Name: UltraLove Hosted Images
  * Description: Account-bound Cloudflare Images copies; original uploads and backups remain intact.
- * Version: 1.0.0
+ * Version: 1.0.1
  */
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
+}
+
+function ul_cf_images_dev_preview_enabled(): bool {
+	return (bool) get_option( 'ul_cf_images_dev_remote_preview', false )
+		&& wp_get_environment_type() === 'development'
+		&& wp_parse_url( home_url(), PHP_URL_HOST ) === 'dev.ultralove.ca';
 }
 
 function ul_cf_images_url( int $attachment_id, array $options ): string {
@@ -13,14 +19,27 @@ function ul_cf_images_url( int $attachment_id, array $options ): string {
 	$mapping = get_post_meta( $attachment_id, '_ul_cf_images', true );
 	$file = get_post_meta( $attachment_id, '_wp_attached_file', true );
 	$path = get_attached_file( $attachment_id, true );
+	$local = is_string( $path ) && is_file( $path );
+	$preview = ! $local && ul_cf_images_dev_preview_enabled();
+	if ( $preview ) {
+		$mapping = get_post_meta( $attachment_id, '_ul_cf_images_dev_preview', true );
+	}
+	$metadata = $preview ? wp_get_attachment_metadata( $attachment_id ) : array();
+	$source_valid = is_array( $mapping ) && ( $local
+		? ( ( $mapping['source_mtime'] ?? null ) === filemtime( $path )
+			&& ( $mapping['source_size'] ?? null ) === filesize( $path ) )
+		: ( $preview && is_string( $mapping['source_sha256'] ?? null )
+			&& ( $mapping['image_id'] ?? null ) === 'ultralove/' . $mapping['source_sha256']
+			&& ( $mapping['source_width'] ?? 0 ) > 0 && ( $mapping['source_height'] ?? 0 ) > 0
+			&& ( $mapping['source_width'] ?? null ) === (int) ( $metadata['width'] ?? 0 )
+			&& ( $mapping['source_height'] ?? null ) === (int) ( $metadata['height'] ?? 0 )
+			&& ( $mapping['source_mime'] ?? null ) === get_post_mime_type( $attachment_id ) ) );
 	if ( ! is_string( $hash ) || ! preg_match( '/^[A-Za-z0-9_-]{10,100}$/D', $hash )
 		|| ! is_array( $mapping ) || ( $mapping['account_hash'] ?? null ) !== $hash
 		|| ! is_string( $mapping['image_id'] ?? null ) || ! preg_match( '~^ultralove/[a-f0-9]{64}$~D', $mapping['image_id'] )
 		|| ( $mapping['source_file'] ?? null ) !== $file
 		|| get_post_meta( $attachment_id, '_ul_cf_images_dirty', true )
-		|| ! is_string( $path ) || ! is_file( $path )
-		|| ( $mapping['source_mtime'] ?? null ) !== filemtime( $path )
-		|| ( $mapping['source_size'] ?? null ) !== filesize( $path ) ) {
+		|| ! $source_valid ) {
 		static $reported = array();
 		if ( ! isset( $reported[$attachment_id] ) ) {
 			error_log( '[ultralove-hosted-images] Attachment ' . $attachment_id . ' is not synchronized; retaining existing image delivery.' );
@@ -54,6 +73,9 @@ function ul_cf_images_is_url( string $url ): bool {
 }
 
 function ul_cf_images_mark_dirty( int $attachment_id ): void {
+	if ( ul_cf_images_dev_preview_enabled() ) {
+		delete_post_meta( $attachment_id, '_ul_cf_images_dev_preview' );
+	}
 	if ( get_option( 'ul_cf_images_sync_enabled', false )
 		&& in_array( get_post_mime_type( $attachment_id ), array( 'image/jpeg', 'image/png', 'image/webp' ), true ) ) {
 		update_post_meta( $attachment_id, '_ul_cf_images_dirty', bin2hex( random_bytes( 16 ) ) );
