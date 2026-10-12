@@ -91,6 +91,32 @@ through dev WP-CLI to audit all published parent titles and check authenticated,
 database-write-guarded feed responses plus import plans for existing products.
 It makes no Shopify requests and does not create or edit products.
 
+##### Verified development result (2026-10-11)
+
+- Implementation `76230ec` deployed through `deploy/ship-dev.sh`: three owned
+  plugin files changed, staging PHP lint and all four origin smoke tests passed.
+  Nginx, PHP-FPM and Redis remained active. PR #151 holds the production-pending
+  change; no production deployment or plugin activation occurred.
+- The verifier audited **6,429 published parent titles**: **857** matched the
+  confirmed removal rules, while **5,571 other bold titles** were preserved.
+  **20 authenticated feed/import-plan checks passed**, including a real tester
+  title; all stored titles were unchanged.
+- Four plans through the embedded app's actual restricted catalog proxy verified
+  cleaned discount/tester names and unchanged ordinary/unconfirmed tester names.
+  For example, `T0116-61TC Ryder Black` and `WC90103-T Toy Love Gel` are the new
+  draft titles; their supplier-facing names retain the original notices.
+- **368 feed**, **214 import-planner**, **53 feed-consumer**, **977 inventory**,
+  **351 read-only/traversal** and **35 CSV** regression assertions passed;
+  OpenAPI JSON, PHP syntax and PR CI checks passed.
+- Run the WP-CLI verifier with the normal theme loaded, **not `--skip-themes`**.
+  Skipping the theme altered WooCommerce's stored post-type registration and
+  caused the next guarded HTTP request to reject its attempted option update.
+  Normal WordPress bootstrap restored the registration; the documented command
+  and the real app proxy then passed without weakening the write guard.
+- No Shopify products were created, rewritten or published. Existing listings
+  still require an explicitly reviewed update; old immutable feed checkpoints
+  retain their previous title behavior.
+
 This operator-backed development connection is distinct from the embedded
 product-picker UI described below. Implementation and isolated tests do not
 establish live deployment or import success; record those results separately.
