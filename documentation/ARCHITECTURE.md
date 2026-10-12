@@ -1418,6 +1418,61 @@ not thumbnail downloads. All 81 offline assertions passed, and server PHP lint,
 drift checks, code backups and four dev HTTP smoke tests passed.
 The user approved production deployment after reviewing dev.
 
+#### Production hosted-delivery cutover (2026-10-12)
+
+PR #159 passed CI and was merged as `370b30f624`. Its automatic dev deployment
+passed before the guarded production deployment. No drift or gate bypass was
+found; server PHP lint, service checks and all four deployment smoke tests
+passed. The previous code is backed up at
+`/var/lib/ultralove-deploy/backups/20261012T201443Z-562670c820.tgz`.
+
+At 20:16 UTC, production's product and banner delivery options were switched
+from `cloudflare` to `cloudflare-images` after a current source/account mapping
+check. Automatic synchronization and the dev preview remain disabled; the
+production environment/hostname cannot use the remote-preview exception.
+Delivery state before and after the change is retained root-only at
+`/var/lib/ultralove-images/production-cutover-20261012/`, alongside explicit
+cache-purge and verification reports.
+
+Three stale Nginx HTML-cache files were cleared after a scoped count.
+Cloudflare's active `ultralove.ca` zone cache was purged at 20:17 UTC for the
+sitewide HTML image-URL change. The MCP credential lacked purge permission;
+the configured production WordPress plugin credential confirmed the purge
+through the API instead. No Cloudflare settings or credentials were changed.
+
+Normal, non-cache-busted public shop/home pages were then checked in the
+browser. All 40 shop thumbnail tags, all 42 homepage product-card tags and all
+30 banner tags (including carousel clones) used `imagedelivery.net`. Sampled
+desktop and 390-pixel mobile thumbnails downloaded physical 300x300 images.
+The sampled banner downloaded at 1920x800. All four gallery images and their
+zoom sources on the W637756 product page used hosted delivery; intentional
+full-size zoom downloads remain 1000x1000.
+
+Six additional production runtime checks confirmed delivery flags, disabled
+automatic sync/dev preview, original CLI upload URLs, retained transformation
+fallback for excluded animated sources, unchanged SHA-256 for the previously
+rejected GIF, and real authenticated gallery delivery. The short-lived test
+session was revoked immediately after verification; no users, products,
+orders, payments or emails were created on production. The full offline suite
+passed 81 assertions before deployment.
+
+The 58 unresolved attachments remain recorded in the failure ledger and retain
+fallback; this cutover does not claim they were migrated. Original uploads and
+Spaces backups were not edited or deleted. Newly added media remains on
+fallback until manually synchronized while automatic sync is disabled.
+
+Delivery rollback:
+
+```sh
+cd /var/www/html
+wp option update ul_product_cdn cloudflare --allow-root
+wp option update ub_banner_cdn cloudflare --allow-root
+```
+
+Retain disabled automatic sync and purge only the HTML/cache layers required
+to remove stale hosted URLs. No image deletion or database restore is needed
+for delivery rollback. The code backup is a separate recovery path.
+
 ## 6.5 Mail Transport
 
 ### 6.5.1 WordPress Outbound Mail
