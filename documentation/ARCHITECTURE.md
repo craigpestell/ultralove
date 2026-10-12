@@ -1139,6 +1139,263 @@ Production credentials, image copies, delivery options and Spaces backups were
 not modified. Production migration, system-cron verification and cutover are
 separate, approval-gated steps.
 
+#### Production migration started (2026-10-12)
+
+Release `562670c820` (PR #157) was deployed to production through the guarded
+pipeline after the dev gate and drift check passed. Server PHP lint and all four
+HTTP smoke checks passed; the previous code is backed up at
+`/var/lib/ultralove-deploy/backups/20261012T165423Z-ada96ae130.tgz`.
+The public homepage's inline critical CSS matches the release after
+Autoptimize's removal of the generated-file comment.
+
+Protected production Images credentials and the matching public account-hash
+option were already provisioned; this run did not copy or change credentials.
+The first bounded batch processed 500 attachments through ID 19427, accepting
+497 verified hosted copies. Attachments 17567, 18655 and 19383 were rejected:
+their WordPress dimensions are absent, and `getimagesize()` could not establish
+dimensions from their local sources. The batch returned exit status 1 to expose
+these three exceptions; they were not counted as copied or silently repaired.
+This is an initial batch, not a completed catalog migration.
+
+All 497 original SHA-256 hashes, paths, modification times and sizes remained
+unchanged, and every saved account/source mapping was verified. Repeating those
+497 IDs reported 497 unchanged, zero uploads and no failures. Six public requests
+covering the first, middle and last copied images returned HTTP 200 at exactly
+300x300, negotiating WebP and AVIF (5,210-12,378 bytes). Account storage was
+498 images out of 100,000 allowed, including the retained dev fixture.
+
+Root-only run evidence (source manifest, batch result, original/mapping checks,
+delivery checks and storage count) is under
+`/var/lib/ultralove-images/20261012-production-first-batch/`.
+Resume the next bounded batch with:
+
+```sh
+wp ultralove-images sync --after-id=19427 --limit=500 --dry-run
+wp ultralove-images sync --after-id=19427 --limit=500
+```
+
+Run from `/var/www/html` as the site user, or add `--allow-root` when operating
+as root. Preserve each result and investigate its `failed` entries; advancing
+the cursor does not resolve earlier exceptions.
+
+Production's system WordPress maintenance trigger was verified in
+`/etc/cron.d/ultralove-wp-cron`: it runs due events as `www-data` every five
+minutes. Both delivery options remain `cloudflare`, automatic hosted-image sync
+remains disabled, and no hosted-image cron event is scheduled. Nginx, PHP-FPM and
+Redis were active after deployment. Local uploads and Spaces backups were not
+modified. Complete the remaining source batches and resolve or explicitly
+exclude invalid sources before the separate delivery cutover and hourly-sync
+enablement.
+
+#### Bulk production copy job (2026-10-12)
+
+At the user's request, the remaining source scan was started after ID 19427 as
+the transient systemd service `ultralove-images-migration.service`. It runs
+WP-CLI on the production host with a nonblocking
+`/var/lib/ultralove-images/migration.lock`, four concurrent uploads and
+100-attachment batches. The service continues independently of the SSH session;
+it is not a scheduled job and does not automatically resume after a reboot.
+No new site code, delivery option or automatic-sync setting was changed.
+
+The root-only `/var/lib/ultralove-images/migration.jsonl` contains the initial
+pilot result followed by timestamped `started`, `batch_started` and
+`batch_result` records. The runner records source exceptions and continues the
+ordered scan. Transient upload failures are logged and retried up to five times
+with 15/30/60/120-second delays, reusing already-confirmed copies. If uploads
+remain unconfirmed after the retry budget, the updated runner persists the
+identified failures to its separate ledger and advances the scan. Global
+failures without an attachment result, or inability to persist failure
+evidence, still stop the job. Terminal records distinguish `completed`,
+`completed_with_exceptions` and `stopped_with_error`; completion of the scan
+does not mean rejected attachments were copied.
+
+```sh
+ssh ultralove-prod-app 'tail -n 10 -F /var/lib/ultralove-images/migration.jsonl'
+ssh ultralove-prod-app 'systemctl is-active ultralove-images-migration.service'
+ssh ultralove-prod-app 'journalctl -u ultralove-images-migration.service -n 20 --no-pager'
+```
+
+The operational runner is passed as a literal `wp eval` argument.
+`systemd-run --expand-environment=no` is required: its default argument
+expansion otherwise interprets PHP dollar-prefixed variables, preventing
+startup. An initial failed launch was diagnosed and corrected before any
+additional attachments were processed. The first upload batch then encountered
+an HTTP 520 after 99 accepted copies; the stopped job was resumed at the same
+cursor with bounded retries rather than skipping the unconfirmed attachment.
+Do not start manual copy batches
+alongside this service; the lock protects other invocations using the same
+lock, not standalone `wp ultralove-images sync` commands.
+
+At 17:27 UTC, five retries were exhausted on attachment 23086 with HTTP 413.
+Its original is a 2,757,318-byte animated GIF
+(`2021/04/products-PD3651-23_09.gif`, 1932x2500), despite its WordPress
+`image/jpeg` MIME record. Increasing the retry budget cannot fix this permanent
+rejection. The bulk runner now checks the actual local MIME using
+`mime_content_type()` before upload, explicitly logs unsupported file formats
+as `source_excluded`, and keeps their files and existing delivery unchanged.
+It resumes from the stopped cursor 22897, reusing the 99 accepted copies in that
+batch. Cursor and processed counts cover all scanned IDs, including a batch
+containing only excluded sources.
+
+This is an operational bulk-runner guard, not a correction of WordPress
+attachment metadata or a change to the deployed synchronization helper.
+Before enabling the separate hourly synchronization, account for unsupported
+files whose WordPress MIME records incorrectly classify them as still images.
+
+At 18:30 UTC, the job stopped after five HTTP 413 retries on animated WebP
+attachments 78414, 78416 and 78417. Their 1600x925 canvases contain 112, 128
+and 258 frames. A diagnostic request for 78414 confirmed Cloudflare error 5443:
+at this resolution, at most 67 frames fit the 100-million aggregate-pixel
+animation limit. Attachments 78415 and 78418 are already zero-byte sources,
+not oversized images. No source was resized, flattened, repaired or deleted.
+
+At the user's request, the operational runner now logs failures separately and
+continues the scan. It checks extended WebP's animation flag and excludes
+animated WebP from this still-image migration, preserves HTTP 413 rejections
+without pointless retries, and defers identified upload failures after five
+transient attempts. Each failure records the attachment ID, error, reason,
+timestamp and `copied: false` in the root-only
+`/var/lib/ultralove-images/failures.jsonl`. Forty-three unresolved historical
+attachment failures were imported from the progress log, excluding failures
+whose source/account mapping was subsequently verified. Ledger entries may
+repeat across restarts; use attachment IDs when counting unique exceptions.
+
+The job resumed after ID 77877, reusing the 95 accepted copies from its blocked
+batch. Failed attachments are not counted as uploads, and completed scanning
+with exceptions is not full migration success. The ledger is the follow-up
+worklist; it does not automatically repair or retry excluded sources.
+
+```sh
+ssh ultralove-prod-app 'tail -n 20 -F /var/lib/ultralove-images/failures.jsonl'
+```
+
+#### Dev HTTP flow verification and review preview (2026-10-12)
+
+After the production source scan completed at 18:57 UTC, the user requested
+dev verification before any production delivery cutover. Dev and production
+both run release `562670c820`; no code deployment was needed.
+
+Dev delivery options were changed to `cloudflare-images` and remain enabled
+for review. Automatic synchronization remains disabled and its hourly event
+was cleared after the controlled test. Production options were rechecked and
+remain `cloudflare`, with automatic synchronization disabled.
+
+Dev still has no readable catalog originals. Existing generated attachment
+97164 (1000x800 PNG) was reused; no production media was copied. The following
+dev-only records were created:
+
+- 97165: hidden, non-purchasable product using the verified hosted fixture;
+- 97166: unsynchronized attachment referencing the same local generated file;
+- 97167: hidden, non-purchasable fallback product;
+- 97168: banner slide in the isolated `hosted-flow-test` group, with saved crop
+  coordinates 100,100,800,200;
+- 97169: `/hosted-images-dev-check/`, rendering the two explicit hidden-product
+  cards and test banner.
+
+Gallery preview: `/product/hosted-images-dev-test/`; fallback preview:
+`/product/hosted-images-dev-fallback/`. Fixture products have no price and
+cannot be purchased. The banner is not added to normal home/header groups.
+
+Sixteen assertions against actual guest origin HTTP responses passed: hosted
+card and gallery URLs, responsive candidates, exact markup dimensions,
+original-width clamping, hosted zoom, saved banner crop and rewrite marker,
+and unmapped card/gallery fallback routing. Forty additional checks passed:
+sixteen public image requests across eight profiles with WebP/AVIF Accept
+headers, exact delivered dimensions and format negotiation; real authenticated
+product-page delivery; original REST media URLs and CLI/feed source behavior;
+dirty-generation creation through the real metadata-update hook; HTTP
+fallback while dirty; unchanged-source sync clearing that generation without
+an upload; HTTP rollback; original byte integrity; and non-purchasability.
+The full-size 1000x800 response retains the smaller 4,710-byte original PNG
+instead of converting it. All 57 offline hosted-image regression assertions
+also passed.
+
+The previous flags and attachment-parent state, fixture IDs and 40-check
+verification report are retained under the dev host's root-only
+`/var/lib/ultralove-images/dev-flow-20261012/`. To restore dev delivery, use the
+saved `before.json` values (both were `cloudflare`), keep automatic sync off,
+and restore attachment 97164's saved parent if retiring the test products.
+Attachment 97166 shares 97164's file: do not delete its media files during
+cleanup. No source bytes were changed.
+
+Browser navigation reached Cloudflare Access login, so interactive visual,
+carousel and zoom behavior at desktop/mobile viewports still requires an
+authorized reviewer. The origin checks exercised real WordPress templates,
+not a simulated CLI frontend. Unmapped fallback URLs remain directed to the
+Access-protected dev zone; successful edge retrieval of those originals was
+not verified. Existing missing catalog images and vendor PHP deprecation
+notices are dev baseline limitations, not successful catalog-migration tests.
+Production cutover and automatic-sync activation remain separate approvals.
+
+#### Browser-confirmed dev catalog fallback (2026-10-12)
+
+After the user authenticated the browser through Cloudflare Access, ordinary
+dev shop thumbnails were confirmed to follow the fallback path. For attachment
+96655 (`2026/09/W637756.jpg`), dev has neither a readable original nor a hosted
+mapping; its recorded source dimensions are 1000x1000. The browser requested a
+600x600 `/cdn-cgi/image/` URL, received HTTP 307 to the dev original, then HTTP
+302 to the production original, which returned HTTP 200. Thus a 1000x1000
+production-hosted original in the browser is not proof of hosted-image delivery,
+and ordinary dev catalog thumbnails remain outside the generated-fixture test.
+
+The isolated preview was also verified in that browser: the mapped fixture
+loaded a physical 600x600 image from `imagedelivery.net` on desktop and selected
+a physical 300x300 image at a 390-pixel viewport. The deliberately unmapped card
+loaded its 1000x800 generated original through the fallback. The hosted cropped
+banner loaded successfully. Physical dimensions were measured using a separate
+image without `srcset`, since the DOM's `naturalWidth` for a responsive image
+can be density-corrected rather than the downloaded file's pixel width.
+
+Do not describe the complete dev catalog as migrated or visually verified:
+the real catalog lacks the local sources and verified mappings required by
+the deployed hosted-delivery helper. Enabling the official Cloudflare WordPress
+plugin does not supply either. No production delivery settings were changed.
+
+#### Real-catalog remote preview on dev
+
+To test the real catalog without copying production uploads into dev,
+`37-cloudflare-images.php` now supports separate `_ul_cf_images_dev_preview`
+records. This path requires all three guards: the explicit
+`ul_cf_images_dev_remote_preview` option, WordPress's `development` environment
+type, and the exact `dev.ultralove.ca` hostname. It cannot operate on production,
+even if the option is accidentally enabled. Normal `_ul_cf_images` mappings
+and their local modification-time/size checks remain unchanged.
+
+Remote previews are used only when the dev source file is absent. Account,
+content-addressed SHA-256 identity, attachment filename, dimensions, MIME and
+dirty state must match. Media-update hooks remove a preview record even with
+automatic synchronization disabled. A newly present local file must pass the
+normal local synchronization checks instead. Preview metadata is not considered
+a successfully synchronized local source by the copy worker.
+
+The CLI operational helper `ops/product-images/dev-preview.php` exports only
+currently verified production image identities and imports them separately on
+dev. Export rehashes each local source and checks its current account mapping;
+the snapshot contains no image bytes, credentials, titles or customer data.
+Import requires a trusted production snapshot for the configured account and
+matching dev attachment ID, path, MIME and geometry; mismatches are recorded
+and retain fallback. It saves prior preview metadata and its enable flag before
+writing. Store snapshots root-only outside the webroot and transfer through the
+trusted operator, never by allowing dev to connect to production.
+
+Run through WordPress CLI with the helper available outside the webroot:
+
+```sh
+wp eval-file /root/ultralove-images-dev-preview.php export /var/lib/ultralove-images/snapshot.json
+# Transfer only snapshot.json to dev through the operator, then:
+wp eval-file /root/ultralove-images-dev-preview.php import /var/lib/ultralove-images/snapshot.json
+```
+
+Use `/var/www/html` and add `--allow-root` only when operating as root.
+The helper's source is versioned under `ops/`; it is not a site plugin and must
+not be placed in the webroot. The import preserves normal hosted-copy mappings
+and leaves automatic synchronization and both delivery options unchanged.
+Delivery mode must already be `cloudflare-images` to exercise the preview.
+Disable `ul_cf_images_dev_remote_preview` to roll back the remote preview
+without deleting any media. Restore its metadata from the saved `.before.json`
+if needed. Regression coverage includes production and wrong-host denial,
+account/source mismatch, dirty generations and newly present local originals.
+
 ## 6.5 Mail Transport
 
 ### 6.5.1 WordPress Outbound Mail

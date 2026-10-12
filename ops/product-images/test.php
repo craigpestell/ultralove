@@ -16,11 +16,14 @@ $mimes = array();
 $writes = 0;
 $logged_in = false;
 $admin = false;
+$home = 'https://ultralove.ca';
+$environment = 'production';
 function add_filter( $name, $callback, $priority = 10, $args = 1 ) { $GLOBALS['hooks'][$name][$priority][] = $callback; }
 function add_action( $name, $callback, $priority = 10, $args = 1 ) { add_filter( $name, $callback, $priority, $args ); }
 function add_shortcode( $name, $callback ) {}
 function apply_filters( $name, $value ) { return $value; }
 function get_option( $name, $default = false ) { return $GLOBALS['options'][$name] ?? $default; }
+function update_option( $name, $value ) { $GLOBALS['options'][$name] = $value; return true; }
 function get_post_meta( $id, $name, $single = false ) { return $GLOBALS['meta'][$id][$name] ?? ''; }
 function update_post_meta( $id, $name, $value ) { $GLOBALS['meta'][$id][$name] = $value; ++$GLOBALS['writes']; return true; }
 function delete_post_meta( $id, $name, $value = '' ) {
@@ -30,6 +33,7 @@ function delete_post_meta( $id, $name, $value = '' ) {
 function get_attached_file( $id, $unfiltered = false ) { return $GLOBALS['files'][$id] ?? false; }
 function wp_get_attachment_metadata( $id ) { return $GLOBALS['dimensions'][$id] ?? array(); }
 function get_post_mime_type( $id ) { return $GLOBALS['mimes'][$id] ?? ''; }
+function get_post_type( $id ) { return isset( $GLOBALS['mimes'][$id] ) ? 'attachment' : false; }
 function wp_get_upload_dir() { return array( 'basedir' => $GLOBALS['directory'], 'baseurl' => 'https://ultralove.ca/wp-content/uploads', 'error' => false ); }
 function wp_doing_cron() { return false; }
 function is_admin() { return $GLOBALS['admin']; }
@@ -38,13 +42,18 @@ function current_user_can( $permission ) { return $GLOBALS['logged_in']; }
 function sanitize_key( $value ) { return preg_replace( '/[^a-z0-9_-]/', '', strtolower( $value ) ); }
 function wp_unslash( $value ) { return $value; }
 function wp_parse_url( $url, $component ) { return parse_url( $url, $component ); }
-function home_url( $path = '' ) { return 'https://ultralove.ca' . $path; }
+function home_url( $path = '' ) { return $GLOBALS['home'] . $path; }
+function wp_get_environment_type() { return $GLOBALS['environment']; }
 function wp_json_encode( $value ) { return json_encode( $value, JSON_THROW_ON_ERROR ); }
 function plugin_dir_url( $path ) { return 'https://ultralove.ca/wp-content/plugins/ultralove-banners/'; }
 function plugin_dir_path( $path ) { return dirname( $path ) . '/'; }
 function esc_url( $value ) { return htmlspecialchars( $value, ENT_QUOTES ); }
 function esc_attr( $value ) { return htmlspecialchars( $value, ENT_QUOTES ); }
-class WP_CLI { public static function add_command( $name, $callback ) {} }
+class WP_CLI {
+	public static function add_command( $name, $callback ) {}
+	public static function log( $message ) {}
+	public static function error( $message ) { throw new RuntimeException( $message ); }
+}
 class FixtureImagesDatabase {
 	public string $posts = 'wp_posts';
 	public string $postmeta = 'wp_postmeta';
@@ -148,6 +157,77 @@ try {
 	$meta[1]['_ul_cf_images']['image_id'] = array( 'malformed' );
 	$assert( ul_cf_images_url( 1, array( 'width' => 450 ) ) === '', 'Corrupt mapping types use the logged fallback instead of crashing the page.' );
 	$meta[1]['_ul_cf_images'] = $valid_mapping;
+	$preview_id = 3;
+	$files[$preview_id] = $directory . '/absent-preview.jpg';
+	$meta[$preview_id]['_wp_attached_file'] = 'preview.jpg';
+	$dimensions[$preview_id] = array( 'width' => 1000, 'height' => 800 );
+	$mimes[$preview_id] = 'image/jpeg';
+	$preview_mapping = array_replace( $valid_mapping, array( 'source_file' => 'preview.jpg',
+		'source_width' => 1000, 'source_height' => 800, 'source_mime' => 'image/jpeg' ) );
+	$meta[$preview_id]['_ul_cf_images_dev_preview'] = $preview_mapping;
+	$assert( ul_cf_images_url( $preview_id, array( 'width' => 450 ) ) === '', 'Remote preview is disabled by default.' );
+	$options['ul_cf_images_dev_remote_preview'] = true;
+	$assert( ul_cf_images_url( $preview_id, array( 'width' => 450 ) ) === '', 'Production cannot use remote preview even when its option is enabled.' );
+	$environment = 'development';
+	$assert( ul_cf_images_url( $preview_id, array( 'width' => 450 ) ) === '', 'Remote preview is restricted to the exact dev hostname.' );
+	$home = 'https://dev.ultralove.ca';
+	$assert( ul_cf_images_is_url( ul_cf_images_url( $preview_id, array( 'width' => 450 ) ) ), 'Opted-in dev can deliver a source-identity-matched preview without copying originals.' );
+	foreach ( array( 'account_hash' => 'other-account-hash', 'source_file' => 'different.jpg',
+		'source_sha256' => str_repeat( '0', 64 ), 'source_width' => 999, 'source_height' => 799,
+		'source_mime' => 'image/png' ) as $key => $value ) {
+		$meta[$preview_id]['_ul_cf_images_dev_preview'] = array_replace( $preview_mapping, array( $key => $value ) );
+		$assert( ul_cf_images_url( $preview_id, array( 'width' => 450 ) ) === '', 'Foreign or stale preview ' . $key . ' cannot deliver.' );
+	}
+	$meta[$preview_id]['_ul_cf_images_dev_preview'] = $preview_mapping;
+	$meta[$preview_id]['_ul_cf_images_dirty'] = 'new-generation';
+	$assert( ul_cf_images_url( $preview_id, array( 'width' => 450 ) ) === '', 'Dirty preview sources retain fallback.' );
+	unset( $meta[$preview_id]['_ul_cf_images_dirty'] );
+	$files[$preview_id] = $files[1];
+	$assert( ul_cf_images_url( $preview_id, array( 'width' => 450 ) ) === '', 'A newly present local source cannot bypass normal local synchronization checks.' );
+	$files[$preview_id] = $directory . '/absent-preview.jpg';
+	$options['ul_cf_images_sync_enabled'] = false;
+	ul_cf_images_mark_dirty( $preview_id );
+	$assert( ! isset( $meta[$preview_id]['_ul_cf_images_dev_preview'] ), 'Media updates invalidate remote previews even when automatic uploads are disabled.' );
+	$snapshot_path = $directory . '/preview-snapshot.json';
+	$snapshot = array( 'version' => 1, 'source_host' => 'ultralove.ca', 'created_at' => 'fixture-time',
+		'account_hash' => 'fixture-account-hash', 'records' => array( array_replace( $preview_mapping, array( 'id' => $preview_id ) ) ) );
+	$import = static function ( $path ): void {
+		$args = array( 'import', $path );
+		require __DIR__ . '/dev-preview.php';
+	};
+	try {
+		file_put_contents( $snapshot_path, wp_json_encode( $snapshot ) );
+		$environment = 'production';
+		$before = $meta;
+		$reject( static fn() => $import( $snapshot_path ), 'Preview import is denied on production before any metadata changes.' );
+		$assert( $meta === $before, 'Denied import preserves all attachment mappings.' );
+		$environment = 'development';
+		$import( $snapshot_path );
+		$assert( ul_cf_images_is_url( ul_cf_images_url( $preview_id, array( 'width' => 450 ) ) )
+			&& file_exists( $snapshot_path . '.before.json' ) && file_exists( $snapshot_path . '.result.json' ),
+			'Matching preview import enables real delivery and persists rollback/report evidence.' );
+		$before = $meta;
+		$reject( static fn() => $import( $snapshot_path ), 'Repeat import cannot overwrite its recovery snapshot.' );
+		$assert( $meta === $before, 'Refused repeat import does not overwrite metadata.' );
+		$invalid_path = $directory . '/invalid-preview.json';
+		$invalid_snapshot = $snapshot;
+		$invalid_snapshot['records'][] = $snapshot['records'][0];
+		file_put_contents( $invalid_path, wp_json_encode( $invalid_snapshot ) );
+		$reject( static fn() => $import( $invalid_path ), 'Duplicate snapshot IDs fail before import.' );
+		$invalid_snapshot = $snapshot;
+		$invalid_snapshot['records'][0]['source_file'] = 'wrong-source.jpg';
+		file_put_contents( $invalid_path, wp_json_encode( $invalid_snapshot ) );
+		$reject( static fn() => $import( $invalid_path ), 'Unmatched dev filenames cannot enable an empty preview import.' );
+		$assert( ! file_exists( $invalid_path . '.before.json' ) && $meta === $before,
+			'Malformed or unmatched snapshots make no mapping writes.' );
+	} finally {
+		foreach ( array( $snapshot_path, $snapshot_path . '.before.json', $snapshot_path . '.result.json', $directory . '/invalid-preview.json' ) as $temporary ) {
+			if ( is_file( $temporary ) ) { unlink( $temporary ); }
+		}
+	}
+	unset( $options['ul_cf_images_dev_remote_preview'] );
+	$home = 'https://ultralove.ca';
+	$environment = 'production';
 	foreach ( array( 'id' => 'another-image', 'requireSignedURLs' => true,
 		'variants' => array( 'https://imagedelivery.net/another-account/' . $source['image_id'] . '/public' ),
 		'meta' => array( 'source_sha256' => str_repeat( '0', 64 ) ) ) as $key => $value ) {
