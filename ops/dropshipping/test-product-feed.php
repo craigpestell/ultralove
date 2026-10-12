@@ -145,6 +145,14 @@ $assert( $simple['name'] === 'Existing catalog product' && $simple['short_descri
 $assert( $simple['retail_name'] === $simple['name'], 'Ordinary export names preserve existing text.' );
 foreach ( array(
     array( 'SKU Product <b>DISCOUNTS DO NOT APPLY</b>', 'SKU Product' ),
+    array( 'SKU Product <b>**WHILE STOCK LASTS**</b>', 'SKU Product' ),
+    array( 'SKU <b>WHILE STOCK LASTS</b> Product', 'SKU Product' ),
+    array( 'SKU <B class="notice"> **while&nbsp; stock&#32; lasts** </B>', 'SKU' ),
+    array( "SKU<b>**WHILE\r\n STOCK LASTS**</b>Product", 'SKU Product' ),
+    array( 'SKU <b>WHILE STOCK LASTS special product</b>', 'SKU WHILE STOCK LASTS special product' ),
+    array( 'SKU **WHILE STOCK LASTS**', 'SKU **WHILE STOCK LASTS**' ),
+    array( 'SKU <strong>**WHILE STOCK LASTS**</strong>', 'SKU **WHILE STOCK LASTS**' ),
+    array( 'SKU <b>**WHILE STOCK LASTS**', 'SKU **WHILE STOCK LASTS**' ),
     array( 'SKU <b>**TESTER ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT**</b> Product', 'SKU Product' ),
     array( '<b>**ESTER ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT**</b> SKU Product', 'SKU Product' ),
     array( 'SKU <B class="notice"> discounts&nbsp; do not apply </B>', 'SKU' ),

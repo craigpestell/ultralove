@@ -368,6 +368,7 @@ final class UltraLove_Product_Feed {
             $text = trim( $text, " \t\n\r\0\x0B*" );
             if ( ! in_array( strtoupper( $text ), array(
                 'DISCOUNTS DO NOT APPLY',
+                'WHILE STOCK LASTS',
                 'TESTER ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT',
                 'ESTER ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT',
             ), true ) ) {

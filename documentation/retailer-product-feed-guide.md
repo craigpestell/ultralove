@@ -70,6 +70,7 @@ customer-facing Shopify titles. Only a complete `<b>...</b>` element whose text
 matches one of these confirmed instructions is removed:
 
 - `DISCOUNTS DO NOT APPLY`
+- `WHILE STOCK LASTS` (including `<b>**WHILE STOCK LASTS**</b>`)
 - `TESTER ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT`
 - `ESTER ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT` (existing source typo)
 
