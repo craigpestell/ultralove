@@ -1044,7 +1044,8 @@ Cloudinary can be dropped. It does nothing until `ul_product_cdn` is `cloudflare
 - Switch: `wp option update ul_product_cdn cloudflare` (back: `cloudinary`). An editor can preview either
   on any page with `?ul_product_cdn=cloudflare|cloudinary` (separate from the banners' `?ub_cdn=`).
 - Source is always the local original (`dual_full` keeps it). Cards are cut square with `gravity=auto`
-  (as Cloudinary's `c_fill,g_auto` was) at 300/450/600 px; single 600/900/1200; thumbnails 100/200; the
+  (as Cloudinary's `c_fill,g_auto` was) at 200/400 px (200px default `src`); single 600/900/1200;
+  gallery navigation thumbnails 100/200; the
   zoom image 1600. Few widths on purpose: Cloudflare bills each unique (image, parameters) pair once a
   month (5,000 free, then $0.50 per 1,000), and `onerror=redirect` serves the full-size original if the
   quota runs out. Change the widths in `ul_pcdn_profiles()`.

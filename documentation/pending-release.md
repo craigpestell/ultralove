@@ -1,5 +1,18 @@
 # Pending production release
 
+## Product-card thumbnail sizes (pending deployment)
+
+Product cards now offer exactly 200x200 and 400x400 responsive image variants,
+with a 200x200 default source. The shared profile applies to shop grids, home
+grids, carousels and other WooCommerce product loops in both hosted Images and
+remote-source Cloudflare modes. Existing layout hints, lazy loading, source
+clamping and square crops are preserved. Gallery navigation remains 100/200px;
+main gallery and zoom sizes are unchanged.
+
+Deploy the code through the normal dev/production gates, restart PHP-FPM and
+purge cached HTML before checking the new `200w, 400w` sources on public pages.
+No attachment regeneration, upload changes or delivery-option changes are needed.
+
 ## Hosted image delivery cutover (live on production)
 
 **2026-10-12:** production's source-copy scan finished with 20,543 accepted
