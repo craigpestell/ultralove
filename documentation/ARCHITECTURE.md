@@ -1565,7 +1565,8 @@ modified. Root-only release/cache evidence is recorded at
 - Downloads go through `admin-post.php` (login + per-link nonce), never public URLs:
   single original images (streamed from the local upload, path checked to be inside uploads; there is no
   resized or web-size option) and ZIP of the originals (selected products; max 50 products, 300 files,
-  300 MB of source files).
+  300 MB of source files). Each card also has a small download-icon button (top right of the image) that
+  ZIPs all images of that one product (same caps; limit 20 per 10 minutes per user).
   Files are named `SKU-n.ext`.
 - Limits: 60 single downloads per minute and 5 ZIPs per 10 minutes per user (transients), and each download
   is logged with `error_log`. No nginx rule yet: `admin-post.php` is not in the zones file

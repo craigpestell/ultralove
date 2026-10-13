@@ -29,6 +29,7 @@ final class UltraLove_Media_Library {
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue' ) );
 		add_action( 'admin_post_ultralove_ml_download', array( __CLASS__, 'download' ) );
 		add_action( 'admin_post_ultralove_ml_zip', array( __CLASS__, 'zip' ) );
+		add_action( 'admin_post_ultralove_ml_zip_product', array( __CLASS__, 'zip_product' ) );
 		// Deploys rsync files and do not run activation hooks, so refresh rewrite rules once per version.
 		add_action( 'init', array( __CLASS__, 'maybe_flush_rewrites' ), 99 );
 	}
@@ -112,6 +113,22 @@ final class UltraLove_Media_Library {
 			return;
 		}
 
+		$links = paginate_links(
+			array(
+				'base'      => add_query_arg( 'ml_page', '%#%', $base ),
+				'format'    => '',
+				'current'   => $paged,
+				'total'     => (int) $query->max_num_pages,
+				'add_args'  => array_filter( array( 'ml_search' => $search, 'ml_cat' => $cat ) ),
+				'prev_text' => '&laquo;',
+				'next_text' => '&raquo;',
+			)
+		);
+		// Page links appear above and below the grid so users need not scroll to change page.
+		if ( $links ) {
+			echo '<nav class="ul-ml__pages ul-ml__pages--top">' . wp_kses_post( $links ) . '</nav>';
+		}
+
 		echo '<form class="ul-ml__zipform" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		echo '<input type="hidden" name="action" value="ultralove_ml_zip">';
 		wp_nonce_field( 'ultralove_ml_zip', 'ul_ml_nonce' );
@@ -127,17 +144,6 @@ final class UltraLove_Media_Library {
 		wp_reset_postdata();
 		echo '</ul></form>';
 
-		$links = paginate_links(
-			array(
-				'base'      => add_query_arg( 'ml_page', '%#%', $base ),
-				'format'    => '',
-				'current'   => $paged,
-				'total'     => (int) $query->max_num_pages,
-				'add_args'  => array_filter( array( 'ml_search' => $search, 'ml_cat' => $cat ) ),
-				'prev_text' => '&laquo;',
-				'next_text' => '&raquo;',
-			)
-		);
 		if ( $links ) {
 			echo '<nav class="ul-ml__pages">' . wp_kses_post( $links ) . '</nav>';
 		}
@@ -191,6 +197,8 @@ final class UltraLove_Media_Library {
 
 		echo '<li class="ul-ml__card">';
 		echo '<label class="ul-ml__select"><input type="checkbox" name="product_ids[]" value="' . esc_attr( $product_id ) . '" class="ul-ml__pick"><span class="screen-reader-text">' . esc_html( sprintf( /* translators: %s: product */ __( 'Select %s', 'ultralove-media-library' ), $name ) ) . '</span></label>';
+		$zip_label = sprintf( /* translators: %s: product */ __( 'Download all images for %s (ZIP)', 'ultralove-media-library' ), $name );
+		echo '<a class="ul-ml__zip1" href="' . esc_url( self::zip_url( $product_id ) ) . '" title="' . esc_attr( $zip_label ) . '"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M4.5 7 8 10.5 11.5 7M2.5 13.5h11"/></svg><span class="screen-reader-text">' . esc_html( $zip_label ) . '</span></a>';
 		echo wp_get_attachment_image( $images[0], 'woocommerce_thumbnail', false, array( 'loading' => 'lazy', 'alt' => $name ) ); // phpcs:ignore WordPress.Security.EscapeOutput
 		echo '<div class="ul-ml__info">';
 		echo '<div class="ul-ml__name">' . $name_html . '</div>'; // Filtered through wp_kses above.
@@ -199,10 +207,23 @@ final class UltraLove_Media_Library {
 		}
 		echo '<ul class="ul-ml__files">';
 		foreach ( $images as $i => $attachment_id ) {
-			echo '<li><span class="ul-ml__label">' . esc_html( sprintf( /* translators: %d: position */ __( 'Image %d', 'ultralove-media-library' ), $i + 1 ) ) . '</span>';
-			echo '<a href="' . esc_url( self::download_url( $product_id, $attachment_id ) ) . '">' . esc_html__( 'Original', 'ultralove-media-library' ) . '</a></li>';
+			echo '<li><a href="' . esc_url( self::download_url( $product_id, $attachment_id ) ) . '">' . esc_html( sprintf( /* translators: %d: position */ __( 'Image %d', 'ultralove-media-library' ), $i + 1 ) ) . '</a></li>';
 		}
 		echo '</ul></div></li>';
+	}
+
+	private static function zip_url( $product_id ) {
+		return wp_nonce_url(
+			add_query_arg(
+				array(
+					'action'  => 'ultralove_ml_zip_product',
+					'product' => $product_id,
+				),
+				admin_url( 'admin-post.php' )
+			),
+			'ultralove_ml_zip_product_' . $product_id,
+			'ul_ml_nonce'
+		);
 	}
 
 	private static function download_url( $product_id, $attachment_id ) {
@@ -361,6 +382,31 @@ final class UltraLove_Media_Library {
 			wp_die( esc_html( sprintf( /* translators: %d: max products */ __( 'Please choose at most %d products per ZIP (select fewer).', 'ultralove-media-library' ), self::ZIP_MAX_PRODUCTS ) ), '', array( 'response' => 400 ) );
 		}
 
+		self::send_zip( $ids, 'ultralove-images-' . gmdate( 'Ymd-His' ) . '.zip' );
+	}
+
+	/**
+	 * ZIP of every image of one product, from the per-product button on its card.
+	 */
+	public static function zip_product() {
+		$product_id = isset( $_GET['product'] ) ? absint( $_GET['product'] ) : 0; // phpcs:ignore WordPress.Security.NonceVerification -- verified in guard().
+		self::guard( 'ultralove_ml_zip_product_' . $product_id, 'ul_ml_nonce', $_GET ); // phpcs:ignore WordPress.Security.NonceVerification
+		self::throttle( 'zip1', 20, 10 * MINUTE_IN_SECONDS );
+		if ( ! class_exists( 'ZipArchive' ) ) {
+			wp_die( esc_html__( 'ZIP downloads are not available on this server.', 'ultralove-media-library' ), '', array( 'response' => 500 ) );
+		}
+		$product = wc_get_product( $product_id );
+		if ( ! $product || 'publish' !== get_post_status( $product_id ) ) {
+			wp_die( esc_html__( 'Product not found.', 'ultralove-media-library' ), '', array( 'response' => 404 ) );
+		}
+		$stem = $product->get_sku() ? $product->get_sku() : $product->get_slug();
+		self::send_zip( array( $product_id ), sanitize_file_name( $stem . '-images.zip' ) );
+	}
+
+	/**
+	 * Build a ZIP of the original images of the given products, stream it and exit.
+	 */
+	private static function send_zip( array $ids, $filename ) {
 		$entries = array();
 		$bytes   = 0;
 		foreach ( $ids as $product_id ) {
@@ -392,7 +438,7 @@ final class UltraLove_Media_Library {
 		}
 		$zip->close();
 		error_log( sprintf( '[ultralove-media-library] user %d downloaded ZIP of %d products, %d files', get_current_user_id(), count( $ids ), count( $entries ) ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions
-		self::stream( $zip_path, 'ultralove-images-' . gmdate( 'Ymd-His' ) . '.zip', 'application/zip' );
+		self::stream( $zip_path, $filename, 'application/zip' );
 		wp_delete_file( $zip_path );
 		exit;
 	}

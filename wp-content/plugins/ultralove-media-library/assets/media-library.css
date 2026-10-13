@@ -1,6 +1,8 @@
 .ul-ml__filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
 .ul-ml__bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-bottom: 16px; }
 .ul-ml__grid { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+.ul-ml__zip1 { position: absolute; top: 12px; right: 12px; z-index: 1; display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: #fff; color: #333; border: 1px solid #ccc; border-radius: 6px; line-height: 1; text-decoration: none; }
+.ul-ml__zip1:hover, .ul-ml__zip1:focus { background: #333; color: #fff; border-color: #333; }
 .ul-ml__card { position: relative; border: 1px solid #e5e5e5; border-radius: 6px; padding: 8px; background: #fff; }
 .ul-ml__card img { display: block; width: 100%; height: auto; cursor: pointer; }
 .ul-ml__select { position: absolute; top: 12px; left: 12px; background: #fff; border-radius: 4px; padding: 2px 4px; line-height: 1; }
@@ -10,7 +12,7 @@
 .ul-ml__sku { font-size: 12px; color: #777; }
 .ul-ml__files { list-style: none; margin: 6px 0 0; padding: 0; font-size: 13px; }
 .ul-ml__files li { margin-bottom: 6px; white-space: nowrap; }
-.ul-ml__label { display: block; }
 .ul-ml__pages { margin-top: 20px; }
+.ul-ml__pages--top { margin: 0 0 16px; }
 .ul-ml__pages .page-numbers { display: inline-block; padding: 4px 10px; margin-right: 4px; border: 1px solid #e5e5e5; border-radius: 4px; }
 .ul-ml__pages .current { background: #333; color: #fff; }
