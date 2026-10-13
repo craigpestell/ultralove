@@ -638,16 +638,58 @@ add_filter( 'woocommerce_order_item_name', function( $name ) {
 
 add_action( 'woocommerce_account_dashboard', function() {
     $upload_dir = wp_upload_dir();
+	$uploads    = trailingslashit( $upload_dir['baseurl'] );
 
 	ob_start();
 ?>
-<p>Thank you for choosing Ultra Love as your adult product supplier. We truly appreciate your business.</p>
-<p><a class="button" target="_blank" href="https://ultralove.ca/export-stock">Download the Latest Stock level export file</a></p>
-<p><?= do_shortcode( '[am-collect-media]' ) ?></p>
-<p><a class="button" href="<?= esc_url( trailingslashit( $upload_dir['baseurl'] ) . 'ultralove-product-export.csv' ) ?>" download>Download Product Inventory CSV</a></p>
-<p><a class="button" href="<?= esc_url( trailingslashit( $upload_dir['baseurl'] ) . 'ultralove-product-export-shopify.csv' ) ?>" download>Download Product Inventory CSV (Shopify)</a></p>
+<div class="ul-dash">
+	<p class="ul-dash__thanks">Thank you for choosing Ultra Love as your adult product supplier. We truly appreciate your business.</p>
+
+	<?php if ( class_exists( 'UltraLove_Media_Library' ) ) : ?>
+	<section class="ul-dash__feature">
+		<div class="ul-dash__feature-text">
+			<h3>Product Image Library</h3>
+			<p>Browse our catalog and download original product images: one image at a time, or every image for a product as a ZIP.</p>
+		</div>
+		<a class="button" href="<?= esc_url( wc_get_account_endpoint_url( 'media-library' ) ) ?>">Open the Media Library</a>
+	</section>
+	<?php endif; ?>
+
+	<h3 class="ul-dash__heading">Stock &amp; product data</h3>
+	<div class="ul-dash__cards">
+		<div class="ul-dash__card">
+			<h4>Latest stock levels</h4>
+			<p>The most recent stock level export file.</p>
+			<a class="button" target="_blank" rel="noopener" href="https://ultralove.ca/export-stock">Download</a>
+		</div>
+		<div class="ul-dash__card">
+			<h4>Product inventory (CSV)</h4>
+			<p>Our product inventory as a CSV spreadsheet.</p>
+			<a class="button" href="<?= esc_url( $uploads . 'ultralove-product-export.csv' ) ?>" download>Download CSV</a>
+		</div>
+		<div class="ul-dash__card">
+			<h4>Product inventory (Shopify)</h4>
+			<p>The same inventory in the format Shopify imports.</p>
+			<a class="button" href="<?= esc_url( $uploads . 'ultralove-product-export-shopify.csv' ) ?>" download>Download CSV</a>
+		</div>
+	</div>
+</div>
 <?php
 	echo ob_get_clean();
+} );
+
+// My Account "Downloads" (WooCommerce downloadable products) is not used on this site: hide the menu
+// item and send anyone who opens /my-account/downloads/ to the dashboard.
+add_filter( 'woocommerce_account_menu_items', function( $items ) {
+	unset( $items['downloads'] );
+	return $items;
+}, 30 );
+
+add_action( 'template_redirect', function() {
+	if ( function_exists( 'is_account_page' ) && is_account_page() && is_wc_endpoint_url( 'downloads' ) ) {
+		wp_safe_redirect( wc_get_page_permalink( 'myaccount' ) );
+		exit;
+	}
 } );
 
 
