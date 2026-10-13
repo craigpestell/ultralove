@@ -78,7 +78,7 @@
 			return;
 		}
 		var card = target.closest( '.ul-ml__card' );
-		if ( ! card || target.closest( '.ul-ml__info, a, input, label, button, select, textarea' ) ) {
+		if ( ! card || target.closest( '.ul-ml__info, .ul-ml__name, a, input, label, button, select, textarea' ) ) {
 			return;
 		}
 		var pick = card.querySelector( '.ul-ml__pick' );

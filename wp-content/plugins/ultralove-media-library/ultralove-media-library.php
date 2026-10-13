@@ -209,9 +209,10 @@ final class UltraLove_Media_Library {
 		echo '<label class="ul-ml__select"><input type="checkbox" name="product_ids[]" value="' . esc_attr( $product_id ) . '" class="ul-ml__pick"><span class="screen-reader-text">' . esc_html( sprintf( /* translators: %s: product */ __( 'Select %s', 'ultralove-media-library' ), $name ) ) . '</span></label>';
 		$zip_label = sprintf( /* translators: %s: product */ __( 'Download all images for %s (ZIP)', 'ultralove-media-library' ), $name );
 		echo '<a class="ul-ml__zip1" href="' . esc_url( self::zip_url( $product_id ) ) . '" title="' . esc_attr( $zip_label ) . '"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M4.5 7 8 10.5 11.5 7M2.5 13.5h11"/></svg><span class="screen-reader-text">' . esc_html( $zip_label ) . '</span></a>';
+		echo '<div class="ul-ml__name">' . $name_html . '</div>'; // Filtered through wp_kses above.
+		echo '<div class="ul-ml__body">';
 		echo wp_get_attachment_image( $images[0], 'woocommerce_thumbnail', false, array( 'loading' => 'lazy', 'alt' => $name ) ); // phpcs:ignore WordPress.Security.EscapeOutput
 		echo '<div class="ul-ml__info">';
-		echo '<div class="ul-ml__name">' . $name_html . '</div>'; // Filtered through wp_kses above.
 		if ( $sku ) {
 			echo '<div class="ul-ml__sku">' . esc_html( $sku ) . '</div>';
 		}
@@ -219,7 +220,7 @@ final class UltraLove_Media_Library {
 		foreach ( $images as $i => $attachment_id ) {
 			echo '<li><a href="' . esc_url( self::download_url( $product_id, $attachment_id ) ) . '">' . esc_html( sprintf( /* translators: %d: position */ __( 'Image %d', 'ultralove-media-library' ), $i + 1 ) ) . '</a></li>';
 		}
-		echo '</ul></div></li>';
+		echo '</ul></div></div></li>';
 	}
 
 	private static function zip_url( $product_id ) {
