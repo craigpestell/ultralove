@@ -1466,6 +1466,15 @@ fallback; this cutover does not claim they were migrated. Original uploads and
 Spaces backups were not edited or deleted. Newly added media remains on
 fallback until manually synchronized while automatic sync is disabled.
 
+On 2026-10-13, a bounded pending-queue scan inspected 172 attachments. The 114
+new physically verified JPEG originals were synchronized with no failures,
+including attachment 97577 (`2026/10/SE5550-20-5T.jpg`). All 114 saved mappings
+passed the normal account/source checks. The 58 prior exceptions were left
+untouched, and automatic synchronization remains disabled. Prior mapping state
+and results are retained root-only outside the webroot under
+`/var/lib/ultralove-images/responsive-followup-20261013/`. Normal public homepage
+HTML then contained hosted URLs for all 42 product cards; no purge was needed.
+
 Delivery rollback:
 
 ```sh

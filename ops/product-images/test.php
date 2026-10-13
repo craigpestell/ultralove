@@ -164,6 +164,22 @@ try {
 		array( 'x' => 0, 'y' => 12, 'w' => 800, 'h' => 200 ), 1000, 800 );
 	$assert( str_contains( $banner, 'imagedelivery.net' ) && str_contains( $banner, 'width="800" height="200"' )
 		&& str_contains( $banner, 'data-ub-cdn="cloudflare"' ) && str_contains( $banner, 'srcset=' ), 'Banner markup, output-pass marker, geometry and responsive sources survive hosted delivery.' );
+	foreach ( array( 'cloudflare-images', 'cloudflare', 'cloudinary' ) as $banner_mode ) {
+		$options['ub_banner_cdn'] = $banner_mode;
+		$html = '<img src="https://res.cloudinary.com/fixture/images/v1/banner.jpg" width="1536" height="640" sizes="(min-width: 768px) 50vw, 100vw">';
+		$responsive = $banner_mode === 'cloudinary' ? ub_apply_transform( $html, '', 1536, 640 )
+			: ub_apply_cloudflare( $html, 1, null, 1536, 640 );
+		preg_match( '/\ssrcset="([^"]*)"/', $responsive, $sources );
+		preg_match_all( '/ (\d+)w/', $sources[1] ?? '', $widths );
+		$assert( array_map( 'intval', $widths[1] ) === array( 370, 400, 600, 768, 1024, 1200, 1536 ),
+			'Every banner delivery mode must offer close mobile and retina candidates without exceeding the source.' );
+		$assert( str_contains( $responsive, 'sizes="(min-width: 768px) 50vw, 100vw"' ),
+			'Banner candidate changes must preserve the layout hint used by responsive preloads.' );
+	}
+	preg_match( '/\ssrcset="([^"]*)"/', $banner, $crop_sources );
+	preg_match_all( '/ (\d+)w/', $crop_sources[1] ?? '', $crop_widths );
+	$assert( array_map( 'intval', $crop_widths[1] ) === array( 370, 400, 600, 768, 800 ),
+		'Cropped banner candidates remain capped to the saved crop without upscaling.' );
 	$options['ul_product_cdn'] = 'cloudflare';
 	$options['ub_banner_cdn'] = 'cloudflare';
 	$assert( str_contains( ul_pcdn_url( 1, 450, 450 ), '/cdn-cgi/image/' ) && str_starts_with( ub_cf_image_url( 1, 600 ), '/cdn-cgi/image/' ), 'Existing transformation mode remains unchanged and is the rollback path.' );

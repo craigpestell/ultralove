@@ -7,7 +7,7 @@
  *              Back to Cloudinary:            wp option update ul_product_cdn cloudinary
  *              An editor (edit_others_posts) can preview either one on any page with
  *              ?ul_product_cdn=cloudflare-images (or =cloudflare / =cloudinary); logged-in pages are not cached.
- * Version: 1.1.3
+ * Version: 1.1.4
  *
  * How it works: the local file (_wp_attached_file) is always the source. The Cloudinary plugin in
  * dual_full mode keeps it, and WordPress's own resized copies may not exist, so every size is cut from
@@ -70,8 +70,8 @@ add_filter(
  *           did for cards); false: keep the image's shape.
  *   srcset  false: a single URL, no srcset.
  *   attr    The sizes attribute to send with the srcset ('' leaves WordPress's).
- * Cards offer the requested 200 / 400px square variants. Keep the rendered-width hint in step with
- * 30-woocommerce-loop-image-sizes.php so browsers choose between them for the actual layout.
+ * Cards offer the requested 200 / 400px square variants. Lazy cards use native auto sizing for their
+ * actual container width; eager cards and older browsers retain the conservative layout hint.
  */
 function ul_pcdn_profiles() {
 	return apply_filters(
@@ -283,8 +283,8 @@ add_filter(
 		}
 		$attr['srcset'] = implode( ', ', $parts );
 		if ( $profile['attr'] ) {
-			// Keep the 'auto, ' WordPress puts in front of a lazy-loaded image's sizes.
-			$auto          = ( isset( $attr['sizes'] ) && 0 === strpos( $attr['sizes'], 'auto,' ) ) ? 'auto, ' : '';
+			// Home cards become lazy after core builds sizes, so core may not have added auto.
+			$auto          = ( $attr['loading'] ?? '' ) === 'lazy' ? 'auto, ' : '';
 			$attr['sizes'] = $auto . $profile['attr'];
 		}
 		return $attr;
@@ -339,7 +339,7 @@ add_filter(
 		$tag_element['atts']['width']  = $src['w'];
 		$tag_element['atts']['height'] = $src['h'];
 		if ( $profile['attr'] ) {
-			$auto                         = ( isset( $atts['sizes'] ) && 0 === strpos( $atts['sizes'], 'auto,' ) ) ? 'auto, ' : '';
+			$auto                         = ( $atts['loading'] ?? '' ) === 'lazy' ? 'auto, ' : '';
 			$tag_element['atts']['sizes'] = $auto . $profile['attr'];
 		}
 		return $tag_element;

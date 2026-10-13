@@ -43,7 +43,9 @@ jobs:
           php ops/dropshipping/test-catalog-import.php
 
       - name: Hosted image migration and delivery regression tests
-        run: php ops/product-images/test.php
+        run: |
+          php ops/product-images/test.php
+          php ops/product-images/test-gallery-navigation.php
 
       - name: No DB dumps, invoices, archives, backups or oversized files
         run: |

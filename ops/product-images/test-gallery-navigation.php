@@ -47,7 +47,24 @@ foreach ( array( 'cloudflare', 'cloudflare-images' ) as $delivery_mode ) {
 		$expected_srcset = $candidates[200]['url'] . ' 200w, ' . $candidates[400]['url'] . ' 400w';
 		$assert( $attributes['srcset'] === $expected_srcset, 'Rendered card srcset must contain exactly the 200w and 400w variants.' );
 		$assert( $attributes['sizes'] === 'auto, (max-width: 575px) calc(50vw - 50px), 250px'
-			&& $attributes['loading'] === 'lazy', 'Responsive layout hint and native lazy loading must remain unchanged.' );
+			&& $attributes['loading'] === 'lazy', 'Lazy cards must use their rendered width and retain the older-browser layout hint.' );
+		foreach ( array( 'lazy', 'eager', '' ) as $loading ) {
+			$expected_sizes = ( $loading === 'lazy' ? 'auto, ' : '' ) . ul_pcdn_profile_for_size( $size )['attr'];
+			foreach ( array( '', '100vw', 'auto, 100vw' ) as $incoming_sizes ) {
+				$attributes = $hooks['wp_get_attachment_image_attributes'][20][0](
+					array( 'src' => $src[0], 'sizes' => $incoming_sizes, 'loading' => $loading ),
+					(object) array( 'ID' => 1 ), $size
+				);
+				$assert( $attributes['sizes'] === $expected_sizes && $attributes['loading'] === $loading,
+					'Auto sizing must depend on native lazy loading, not on whether core previously added auto.' );
+			}
+			$lazy_tag = $hooks['cloudinary_pre_image_tag'][30][0]( array( 'atts' => array(
+				'src' => 'https://res.cloudinary.com/fixture/image.jpg', 'width' => 1000, 'height' => 1000,
+				'loading' => $loading,
+			) ), 1 );
+			$assert( $lazy_tag['atts']['sizes'] === $expected_sizes,
+				'Cloudinary safety-net cards must share the native lazy sizing rule.' );
+		}
 		$tag = $hooks['cloudinary_pre_image_tag'][30][0]( array( 'atts' => array(
 			'src' => 'https://res.cloudinary.com/fixture/image.jpg', 'width' => 1000, 'height' => 1000,
 		) ), 1 );

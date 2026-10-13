@@ -11,7 +11,7 @@
  *              "attached" to the pointer during a drag/swipe - matching RevSlider's own click-drag
  *              and touch-swipe navigation. A clone of the last slide is prepended and a clone of the
  *              first is appended so dragging past either end loops seamlessly.
- * Version: 2.1.4
+ * Version: 2.1.5
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -126,7 +126,7 @@ function ub_apply_transform( $html, $seg, $out_w, $out_h ) {
 	// large original (see ub_original_scale()) would otherwise offer, say, a 4164w candidate.
 	$max_w  = min( $out_w, 1920 );
 	$widths = array();
-	foreach ( array( 370, 600, 768, 1024, 1536 ) as $n ) {
+	foreach ( array( 370, 400, 600, 768, 1024, 1200, 1536 ) as $n ) {
 		if ( $n < $max_w ) {
 			$widths[] = $n;
 		}
@@ -224,7 +224,7 @@ function ub_apply_cloudflare( $html, $attachment_id, $crop, $out_w, $out_h ) {
 	$trim   = $crop ? array( $crop['x'], $crop['y'], $crop['w'], $crop['h'] ) : null;
 	$max_w  = min( $out_w, 1920 );
 	$widths = array();
-	foreach ( array( 370, 600, 768, 1024, 1536 ) as $n ) {
+	foreach ( array( 370, 400, 600, 768, 1024, 1200, 1536 ) as $n ) {
 		if ( $n < $max_w ) {
 			$widths[] = $n;
 		}

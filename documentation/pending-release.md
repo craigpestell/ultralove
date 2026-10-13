@@ -1,5 +1,36 @@
 # Pending production release
 
+## Responsive hosted-image selection (pending production code deployment)
+
+Lazy product cards now receive `sizes="auto, ..."` based on their actual loading
+attribute, including homepage cards made lazy after WordPress calculates sizes.
+Modern browsers select from the existing 200/400px variants using the rendered
+container width. Eager images retain their existing loading behavior and
+conservative sizing hint; older browsers retain the fallback hint. The Cloudinary
+safety-net path follows the same rule. Gallery and zoom profiles are unchanged;
+there is no arbitrary 1000px source cap.
+
+Banner srcsets add 400px and 1200px candidates in both Cloudflare modes and the
+Cloudinary rollback path. Crop geometry, actual-source limits, responsive preload
+generation and existing display sizes are unchanged. No CSS regeneration,
+attachment regeneration or delivery-option changes are required.
+
+Validation: 165 offline assertions, PHP lint and whitespace checks passed.
+Browser-local response overrides using production markup and styles verified
+195px lazy cards fetching 200px at 1x, 576px banners fetching 1200px at 2x, and
+390px mobile banners fetching 400px at 1x. These overrides did not deploy code
+to production. Both image regression runners now run in CI.
+
+Production media maintenance completed separately on 2026-10-13: a bounded
+172-attachment dry run identified 114 new eligible JPEG originals and the
+58 existing exceptions. All 114 copies were synchronized and their mappings
+source-verified, including attachment 97577 (`SE5550-20-5T.jpg`). Automatic
+synchronization remains disabled. The ordinary public homepage subsequently
+rendered all 42 card images with hosted URLs without a cache purge.
+Prior mappings and result reports are retained root-only outside the webroot at
+`/var/lib/ultralove-images/responsive-followup-20261013/`.
+Do not repeat this maintenance batch as a production deployment requirement.
+
 ## Persistent plugin-header cache (pending deployment)
 
 `wp-content/mu-plugins/39-persistent-plugins-cache.php` allows the Redis object-cache
