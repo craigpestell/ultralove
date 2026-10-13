@@ -7,12 +7,18 @@ $hooks = array();
 $mode = 'cloudflare-images';
 $admin = false;
 $cron = false;
+$grid_context = 'shop';
 function add_filter( $name, $callback, $priority = 10, $arguments = 1 ) { $GLOBALS['hooks'][$name][$priority][] = $callback; }
 function add_action( $name, $callback, $priority = 10, $arguments = 1 ) { add_filter( $name, $callback, $priority, $arguments ); }
 function get_option( $name, $default = false ) { return $name === 'ul_product_cdn' ? $GLOBALS['mode'] : $default; }
 function is_admin() { return $GLOBALS['admin']; }
 function is_user_logged_in() { return false; }
 function wp_doing_cron() { return $GLOBALS['cron']; }
+function is_shop() { return $GLOBALS['grid_context'] === 'shop'; }
+function is_product_taxonomy() { return $GLOBALS['grid_context'] === 'taxonomy'; }
+function is_search() { return $GLOBALS['grid_context'] === 'search'; }
+function is_front_page() { return $GLOBALS['grid_context'] === 'front'; }
+function is_home() { return $GLOBALS['grid_context'] === 'home'; }
 function apply_filters( $name, $value ) { return $value; }
 function get_post_meta( $id, $key, $single = false ) { return $key === '_wp_attached_file' ? 'fixture.jpg' : ''; }
 function wp_get_attachment_metadata( $id ) { return array( 'width' => 1000, 'height' => 800 ); }
@@ -23,6 +29,7 @@ function home_url( $path ) { return 'https://ultralove.ca' . $path; }
 function ul_cf_images_url( $id, $options ) { return 'https://imagedelivery.net/fixture/account/width=' . $options['width'] . ',height=' . ( $options['height'] ?? 0 ); }
 function ul_cf_images_is_url( $url ) { return str_starts_with( $url, 'https://imagedelivery.net/fixture/' ); }
 require __DIR__ . '/../../wp-content/mu-plugins/38-product-images-cloudflare.php';
+require __DIR__ . '/../../wp-content/mu-plugins/30-woocommerce-loop-image-sizes.php';
 $checks = 0;
 $assert = static function ( bool $condition, string $message ) use ( &$checks ): void {
 	if ( ! $condition ) { throw new RuntimeException( $message ); }
@@ -46,7 +53,7 @@ foreach ( array( 'cloudflare', 'cloudflare-images' ) as $delivery_mode ) {
 		);
 		$expected_srcset = $candidates[200]['url'] . ' 200w, ' . $candidates[400]['url'] . ' 400w';
 		$assert( $attributes['srcset'] === $expected_srcset, 'Rendered card srcset must contain exactly the 200w and 400w variants.' );
-		$assert( $attributes['sizes'] === 'auto, (max-width: 575px) calc(50vw - 50px), 250px'
+		$assert( $attributes['sizes'] === 'auto, (max-width: 575px) min(200px, calc(50vw - 50px)), 200px'
 				&& $attributes['loading'] === 'lazy', 'Lazy cards must use their rendered width and retain the older-browser layout hint.' );
 		foreach ( array( 'lazy', 'eager', '' ) as $loading ) {
 			$expected_sizes = ( $loading === 'lazy' ? 'auto, ' : '' ) . ul_pcdn_profile_for_size( $size )['attr'];
@@ -86,6 +93,28 @@ $admin = false;
 $cron = true;
 $assert( $filter( $requested ) === $requested, 'Cron must retain its original size request.' );
 $cron = false;
+$sizes_filter = $hooks['wp_calculate_image_sizes'][10][0];
+$cloudinary_filter = $hooks['cloudinary_pre_image_tag'][10][0];
+$fallback_sizes = ul_pcdn_profile_for_size( 'shop_catalog' )['attr'];
+foreach ( array( 'shop', 'taxonomy', 'search', 'front', 'home' ) as $context ) {
+	$grid_context = $context;
+	$assert( $sizes_filter( '100vw', array( 1000, 1000 ) ) === $fallback_sizes,
+		'Core card hints must match the capped Cloudflare profile in every grid context.' );
+	foreach ( array( 'lazy', 'eager' ) as $loading ) {
+		$tag = $cloudinary_filter( array( 'atts' => array(
+			'width' => 1000, 'height' => 1000, 'srcset' => 'fixture.jpg 1000w', 'loading' => $loading,
+		) ) );
+		$assert( $tag['atts']['sizes'] === ( $loading === 'lazy' ? 'auto, ' : '' ) . $fallback_sizes,
+			'Cloudinary rollback must share the cap and preserve native lazy auto sizing.' );
+	}
+}
+$grid_context = '';
+$assert( $sizes_filter( '100vw', array( 1000, 1000 ) ) === '100vw',
+	'Non-grid core image hints must remain unchanged.' );
+$non_card = array( 'atts' => array( 'width' => 1000, 'height' => 800, 'srcset' => 'fixture.jpg 1000w' ) );
+$grid_context = 'shop';
+$assert( $cloudinary_filter( $non_card ) === $non_card,
+	'Non-square Cloudinary images must retain their original attributes.' );
 define( 'REST_REQUEST', true );
 $assert( $filter( $requested ) === $requested, 'REST must retain its original size request.' );
 echo $checks . " product-card, gallery-navigation frontend and context assertions passed.\n";

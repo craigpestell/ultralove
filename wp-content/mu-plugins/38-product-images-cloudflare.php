@@ -7,7 +7,7 @@
  *              Back to Cloudinary:            wp option update ul_product_cdn cloudinary
  *              An editor (edit_others_posts) can preview either one on any page with
  *              ?ul_product_cdn=cloudflare-images (or =cloudflare / =cloudinary); logged-in pages are not cached.
- * Version: 1.1.4
+ * Version: 1.1.5
  *
  * How it works: the local file (_wp_attached_file) is always the source. The Cloudinary plugin in
  * dual_full mode keeps it, and WordPress's own resized copies may not exist, so every size is cut from
@@ -70,8 +70,8 @@ add_filter(
  *           did for cards); false: keep the image's shape.
  *   srcset  false: a single URL, no srcset.
  *   attr    The sizes attribute to send with the srcset ('' leaves WordPress's).
- * Cards offer the requested 200 / 400px square variants. Lazy cards use native auto sizing for their
- * actual container width; eager cards and older browsers retain the conservative layout hint.
+ * Cards offer 200 / 400px square variants for thumbnails capped at 200 CSS pixels. Lazy cards use
+ * native auto sizing; eager cards and older browsers retain the capped mobile/desktop layout hint.
  */
 function ul_pcdn_profiles() {
 	return apply_filters(
@@ -83,7 +83,7 @@ function ul_pcdn_profiles() {
 				'src'    => 200,
 				'square' => true,
 				'srcset' => true,
-				'attr'   => '(max-width: 575px) calc(50vw - 50px), 250px',
+				'attr'   => '(max-width: 575px) min(200px, calc(50vw - 50px)), 200px',
 			),
 			'single' => array(
 				'sizes'  => array( 'shop_single', 'woocommerce_single' ),

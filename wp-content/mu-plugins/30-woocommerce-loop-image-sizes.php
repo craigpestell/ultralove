@@ -2,7 +2,7 @@
 /**
  * Plugin Name: WooCommerce Loop Image Sizes Correction
  * Description: Corrects the responsive "sizes" attribute on WooCommerce product loop thumbnails (shop, category/tag archives, search results, and the homepage product grids) to match the Martfury theme's actual grid column widths, instead of WordPress core's default full-viewport-width assumption. Reduces oversized image fetches on Cloudinary-delivered srcset images.
- * Version: 1.1.0
+ * Version: 1.1.1
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -12,11 +12,10 @@ if ( ! defined( 'ABSPATH' ) ) {
 /**
  * Product card widths (see "Product grids and carousels - one sizing rule" in the child theme's
  * style.css): every grid and carousel shows as many cards as fit its container at 215px or more, never
- * fewer than 2 or more than 5, in a page container of at most 1440px. The card has 20px of padding each
- * side, so the IMAGE is the card less ~42px. Measured on the live shop and home page: 129-138px on a 375px
- * phone (2-up: half the window less the gutters and padding, ~50px), 173-191px at 768px, 212-222px at
- * 1100px and at most ~246px at 1600px. The rule below is that, rounded up: the browser picks the srcset
- * candidate from it, so it has to be close to the rendered width, not the card's.
+ * fewer than 2 or more than 5, in a page container of at most 1440px. Thumbnail images are centered
+ * and capped at 200px independently of the card width. Smaller phone images remain fluid (roughly
+ * half the window less the gutters and padding, ~50px). Keep these fallback hints aligned with the
+ * Cloudflare card profile; lazy images use native auto sizing where supported.
  */
 add_filter(
 	'wp_calculate_image_sizes',
@@ -35,7 +34,7 @@ add_filter(
 			return $sizes;
 		}
 
-		return '(max-width: 575px) calc(50vw - 50px), 250px';
+		return '(max-width: 575px) min(200px, calc(50vw - 50px)), 200px';
 	},
 	10,
 	2
@@ -60,7 +59,7 @@ add_filter(
 		if ( empty( $atts['srcset'] ) || $width < 700 || $width !== (int) ( $atts['height'] ?? 0 ) ) {
 			return $tag_element;
 		}
-		$sizes = '(max-width: 575px) calc(50vw - 50px), 250px';
+		$sizes = '(max-width: 575px) min(200px, calc(50vw - 50px)), 200px';
 		if ( isset( $atts['loading'] ) && 'lazy' === $atts['loading'] ) {
 			$sizes = 'auto, ' . $sizes;
 		}
