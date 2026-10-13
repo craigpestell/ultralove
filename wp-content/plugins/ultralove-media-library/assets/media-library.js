@@ -68,7 +68,7 @@
 		all.focus( { preventScroll: true } );
 	} );
 
-	// Clicking the product image or the card padding around it toggles the checkbox. The text box
+	// Clicking the product image or the card padding around it toggles the checkbox. The details box
 	// below the image (name, SKU, download links) does not, and links, the checkbox itself and
 	// form controls keep their normal behaviour.
 	// Capture phase, so theme scripts that stop propagation on images cannot swallow the click.
@@ -78,7 +78,7 @@
 			return;
 		}
 		var card = target.closest( '.ul-ml__card' );
-		if ( ! card || target.closest( '.ul-ml__info, .ul-ml__name, a, input, label, button, select, textarea' ) ) {
+		if ( ! card || target.closest( '.ul-ml__info, a, input, label, button, select, textarea' ) ) {
 			return;
 		}
 		var pick = card.querySelector( '.ul-ml__pick' );
