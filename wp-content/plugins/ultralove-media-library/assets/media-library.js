@@ -29,6 +29,7 @@
 	} );
 
 	// Clicking a product image toggles that product's checkbox.
+	// Capture phase, so theme scripts that stop propagation on images cannot swallow the click.
 	root.addEventListener( 'click', function ( event ) {
 		var img = event.target.closest ? event.target.closest( '.ul-ml__card img' ) : null;
 		if ( ! img ) {
@@ -36,9 +37,10 @@
 		}
 		var pick = img.closest( '.ul-ml__card' ).querySelector( '.ul-ml__pick' );
 		if ( pick ) {
+			event.preventDefault();
 			pick.checked = ! pick.checked;
 			update();
 		}
-	} );
+	}, true );
 	update();
 }() );
