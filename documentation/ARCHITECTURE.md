@@ -1563,9 +1563,9 @@ modified. Root-only release/cache evidence is recorded at
   Thumbnails use the normal WooCommerce `woocommerce_thumbnail` size, so they follow the Cloudflare
   delivery in 6.2/6.3 automatically.
 - Downloads go through `admin-post.php` (login + per-link nonce), never public URLs:
-  original (streamed from the local upload, path checked to be inside uploads), web-size (longest side
-  1200 px, never enlarged, made on the fly with the WordPress image editor into a temp file, nothing stored),
-  and ZIP (selected products; max 50 products, 300 files, 300 MB of source files).
+  single original images (streamed from the local upload, path checked to be inside uploads; there is no
+  resized or web-size option) and ZIP of the originals (selected products; max 50 products, 300 files,
+  300 MB of source files).
   Files are named `SKU-n.ext`.
 - Limits: 60 single downloads per minute and 5 ZIPs per 10 minutes per user (transients), and each download
   is logged with `error_log`. No nginx rule yet: `admin-post.php` is not in the zones file
