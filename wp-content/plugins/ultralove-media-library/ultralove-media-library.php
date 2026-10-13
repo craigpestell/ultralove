@@ -134,6 +134,7 @@ final class UltraLove_Media_Library {
 		wp_nonce_field( 'ultralove_ml_zip', 'ul_ml_nonce' );
 		echo '<div class="ul-ml__bar">';
 		echo '<label><input type="checkbox" class="ul-ml__all"> ' . esc_html__( 'Select all on this page', 'ultralove-media-library' ) . '</label> ';
+		echo '<span class="ul-ml__limit">' . esc_html( sprintf( /* translators: %d: max products */ __( 'You can download the images for up to %d products (one page) at a time.', 'ultralove-media-library' ), self::ZIP_MAX_PRODUCTS ) ) . '</span>';
 		echo '</div><ul class="ul-ml__grid">';
 
 		while ( $query->have_posts() ) {
