@@ -4258,3 +4258,71 @@ body .cwginstock-subscribe-form :is(.row, [class*="col-"]) {
 .mf-brand-images .image-item .b-title a:focus-visible {
     color: #b3094b!important
 }
+
+/* My Account dashboard (see woocommerce_account_dashboard in functions.php) */
+.ul-dash__thanks {
+    margin: 0 0 20px
+}
+
+.ul-dash__feature {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px 24px;
+    margin: 0 0 32px;
+    padding: 20px 24px;
+    background: #fdf1f6;
+    border: 1px solid #f0c3d6;
+    border-left: 4px solid #b3094b;
+    border-radius: 8px
+}
+
+.ul-dash__feature-text {
+    flex: 1 1 320px
+}
+
+.ul-dash__feature h3 {
+    margin: 0 0 6px;
+    font-size: 20px;
+    color: #b3094b
+}
+
+.ul-dash__feature p {
+    margin: 0
+}
+
+.ul-dash__heading {
+    margin: 0 0 12px;
+    font-size: 18px
+}
+
+.ul-dash__cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px
+}
+
+.ul-dash__card {
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 8px
+}
+
+.ul-dash__card h4 {
+    margin: 0 0 6px;
+    font-size: 16px;
+    color: #333
+}
+
+.ul-dash__card p {
+    flex: 1;
+    margin: 0 0 14px
+}
+
+.ul-dash__card .button {
+    align-self: flex-start
+}

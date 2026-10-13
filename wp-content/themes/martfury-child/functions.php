@@ -638,19 +638,42 @@ add_filter( 'woocommerce_order_item_name', function( $name ) {
 
 add_action( 'woocommerce_account_dashboard', function() {
     $upload_dir = wp_upload_dir();
+	$uploads    = trailingslashit( $upload_dir['baseurl'] );
 
 	ob_start();
 ?>
-<p>Thank you for choosing Ultra Love as your adult product supplier. We truly appreciate your business.</p>
-<?php if ( class_exists( 'UltraLove_Media_Library' ) ) : ?>
-<div class="ul-media-library-callout" style="background:#eef6ff;border:1px solid #b6d4fe;border-left:4px solid #0d6efd;border-radius:6px;padding:16px 20px;margin:0 0 20px;">
-	<p style="margin:0 0 10px;"><strong>Product images are now in our Media Library.</strong> Browse the catalog and download original product images one at a time, or as a ZIP for a single product or a selection of products.</p>
-	<p style="margin:0;"><a class="button" href="<?= esc_url( wc_get_account_endpoint_url( 'media-library' ) ) ?>">Open the Media Library</a></p>
+<div class="ul-dash">
+	<p class="ul-dash__thanks">Thank you for choosing Ultra Love as your adult product supplier. We truly appreciate your business.</p>
+
+	<?php if ( class_exists( 'UltraLove_Media_Library' ) ) : ?>
+	<section class="ul-dash__feature">
+		<div class="ul-dash__feature-text">
+			<h3>Product Image Library</h3>
+			<p>Browse our catalog and download original product images: one image at a time, or every image for a product as a ZIP.</p>
+		</div>
+		<a class="button" href="<?= esc_url( wc_get_account_endpoint_url( 'media-library' ) ) ?>">Open the Media Library</a>
+	</section>
+	<?php endif; ?>
+
+	<h3 class="ul-dash__heading">Stock &amp; product data</h3>
+	<div class="ul-dash__cards">
+		<div class="ul-dash__card">
+			<h4>Latest stock levels</h4>
+			<p>The most recent stock level export file.</p>
+			<a class="button" target="_blank" rel="noopener" href="https://ultralove.ca/export-stock">Download</a>
+		</div>
+		<div class="ul-dash__card">
+			<h4>Product inventory (CSV)</h4>
+			<p>Our product inventory as a CSV spreadsheet.</p>
+			<a class="button" href="<?= esc_url( $uploads . 'ultralove-product-export.csv' ) ?>" download>Download CSV</a>
+		</div>
+		<div class="ul-dash__card">
+			<h4>Product inventory (Shopify)</h4>
+			<p>The same inventory in the format Shopify imports.</p>
+			<a class="button" href="<?= esc_url( $uploads . 'ultralove-product-export-shopify.csv' ) ?>" download>Download CSV</a>
+		</div>
+	</div>
 </div>
-<?php endif; ?>
-<p><a class="button" target="_blank" href="https://ultralove.ca/export-stock">Download the Latest Stock level export file</a></p>
-<p><a class="button" href="<?= esc_url( trailingslashit( $upload_dir['baseurl'] ) . 'ultralove-product-export.csv' ) ?>" download>Download Product Inventory CSV</a></p>
-<p><a class="button" href="<?= esc_url( trailingslashit( $upload_dir['baseurl'] ) . 'ultralove-product-export-shopify.csv' ) ?>" download>Download Product Inventory CSV (Shopify)</a></p>
 <?php
 	echo ob_get_clean();
 } );
