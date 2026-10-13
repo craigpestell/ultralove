@@ -1,62 +1,105 @@
-/*
- * Product card wishlist hearts: the page leaves each card's image bar (.mf-product-thumbnail .footer-button)
- * empty, and this adds YITH's wishlist placeholder to it once the page has loaded, then has YITH fill the
- * placeholders in one load_fragments request (the server renders each heart from the product id and type, and
- * knows which products are already in the visitor's list). That keeps a heart's markup (about 2 KB a card)
- * out of the page's HTML, and out of the cache when pages are cached for logged-out visitors.
- */
+/* Cards contain cache-safe hearts; only the current visitor's saved product IDs arrive over AJAX. */
 ( function ( $ ) {
 	'use strict';
 
-	function placeholder( id, type ) {
-		var options = { product_id: id, parent_product_id: 0, product_type: type, item: 'add_to_wishlist' };
+	var saved = new Set(), request = null, reload = false, hasState = false;
 
-		return $( '<div>', {
-			'class': 'yith-wcwl-add-to-wishlist add-to-wishlist-' + id + ' yith-wcwl-add-to-wishlist--link-style wishlist-fragment on-first-load',
-			'data-fragment-ref': id,
-			'data-fragment-options': JSON.stringify( options )
-		} );
-	}
+	function renderHearts( root ) {
+		$( root ).find( '.ultralove-wishlist-heart' ).addBack( '.ultralove-wishlist-heart' ).each( function () {
+			var heart = $( this ), template = heart.data( 'ul-heart-template' ),
+				button = heart.children().first(), id = Number( heart.attr( 'data-product-id' ) ),
+				exists = saved.has( id ), link;
 
-	function addHearts( root ) {
-		var added = $();
-
-		$( root ).find( '.mf-product-thumbnail' ).addBack( '.mf-product-thumbnail' ).each( function () {
-			var card = $( this ).closest( 'ul.products li.product' ),
-				id = /(?:^|\s)post-(\d+)(?:\s|$)/.exec( card.attr( 'class' ) || '' ),
-				type = /(?:^|\s)product-type-([\w-]+)(?:\s|$)/.exec( card.attr( 'class' ) || '' ),
-				bar = $( this ).children( '.footer-button' );
-
-			if ( ! id || bar.find( '.wishlist-fragment' ).length ) {
+			if ( ! template ) {
+				template = button.clone();
+				heart.data( 'ul-heart-template', template );
+			}
+			// YITH removes the add-button after a successful addition; restore our shared renderer.
+			if ( ! button.length ) {
+				button = template.clone().appendTo( heart );
+			}
+			link = button.find( 'a' );
+			if ( link.hasClass( 'disabled_item' ) ) {
 				return;
 			}
 
-			if ( ! bar.length ) {
-				bar = $( '<div class="footer-button"></div>' ).appendTo( this );
-			}
-
-			added = added.add( placeholder( id[ 1 ], type ? type[ 1 ] : 'simple' ).appendTo( bar ) );
+			heart.toggleClass( 'exists', exists );
+			button.toggleClass( 'yith-wcwl-add-button', ! exists ).toggleClass( 'yith-wcwl-wishlistaddedbrowse', exists );
+			link.toggleClass( 'add_to_wishlist single_add_to_wishlist', ! exists )
+				.attr( 'href', exists ? ulWishlistHearts.wishlistUrl : link.attr( 'data-ul-add-url' ) )
+				.attr( 'title', exists ? ulWishlistHearts.browseLabel : ulWishlistHearts.addLabel )
+				.attr( 'aria-label', exists ? ulWishlistHearts.browseLabel : ulWishlistHearts.addLabel );
+			link.find( 'span' ).text( exists ? ulWishlistHearts.browseLabel : ulWishlistHearts.addLabel );
 		} );
+	}
 
-		if ( added.length ) {
-			$( document ).trigger( 'yith_wcwl_reload_fragments', { fragments: added } );
+	function stateError( detail ) {
+		console.error( 'UltraLove wishlist state failed:', detail );
+		$( '.ultralove-wishlist-heart a' ).attr( 'title', ulWishlistHearts.errorLabel );
+		$( document ).trigger( 'ultralove_wishlist_state_error', [ detail ] );
+	}
+
+	function loadState() {
+		if ( request ) {
+			reload = true;
+			return;
 		}
+		request = $.ajax( {
+			url: yith_wcwl_l10n.ajax_url,
+			method: 'POST',
+			dataType: 'json',
+			data: { action: ulWishlistHearts.action, nonce: yith_wcwl_l10n.nonce.load_fragments_nonce }
+		} ).done( function ( response ) {
+			if ( ! response || response.success !== true || ! response.data || ! Array.isArray( response.data.product_ids )
+				|| ! response.data.product_ids.every( function ( id ) { return Number.isInteger( id ) && id > 0; } ) ) {
+				stateError( response );
+				return;
+			}
+			saved = new Set( response.data.product_ids );
+			hasState = true;
+			renderHearts( document.body );
+		} ).fail( function ( xhr, status, error ) {
+			stateError( error || status );
+		} ).always( function () {
+			request = null;
+			if ( reload ) {
+				reload = false;
+				loadState();
+			}
+		} );
 	}
 
 	$( function () {
-		addHearts( document.body );
+		renderHearts( document.body );
+		if ( $( '.ultralove-wishlist-heart' ).length ) {
+			loadState();
+		}
 
-		// Cards added later (filters, "load more", carousels).
+		$( document.body ).on( 'added_to_wishlist removed_from_wishlist', function () {
+			loadState();
+		} );
+		$( document ).on( 'yith_wcwl_reload_after_ajax', function () {
+			renderHearts( document.body );
+		} );
+
 		if ( 'MutationObserver' in window ) {
 			new MutationObserver( function ( mutations ) {
 				mutations.forEach( function ( mutation ) {
 					$( mutation.addedNodes ).filter( function () {
 						return this.nodeType === 1;
 					} ).each( function () {
-						addHearts( this );
+						renderHearts( this );
 					} );
 				} );
+				if ( ! hasState && ! request && $( '.ultralove-wishlist-heart' ).length ) {
+					loadState();
+				}
 			} ).observe( document.body, { childList: true, subtree: true } );
 		}
+		window.addEventListener( 'pageshow', function ( event ) {
+			if ( event.persisted && $( '.ultralove-wishlist-heart' ).length ) {
+				loadState();
+			}
+		} );
 	} );
 } )( jQuery );

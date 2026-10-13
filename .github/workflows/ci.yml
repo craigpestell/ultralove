@@ -47,6 +47,9 @@ jobs:
           php ops/product-images/test.php
           php ops/product-images/test-gallery-navigation.php
 
+      - name: Wishlist card regression tests
+        run: php ops/wishlist/test.php
+
       - name: No DB dumps, invoices, archives, backups or oversized files
         run: |
           bad=$(git ls-files | grep -Ei '\.(sql|sql\.gz|zip|tgz|tar|bak|xlsx)$|\.bak-|(^|/)invoice|(^|/)statement-' || true)

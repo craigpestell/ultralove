@@ -129,9 +129,8 @@
         }
     }
 
-    // YITH Wishlist renders each card's Add to favourites button as an empty placeholder
-    // (.wishlist-fragment) and fills them all in one request at page load - before these cards
-    // arrive. Ask it to fill the ones in the recently viewed block too.
+    // Shared card hearts pick up client-side state through their MutationObserver.
+    // Refresh any remaining vendor wishlist placeholders in the new block.
     function loadWishlistButtons() {
         $('#footer-recently-viewed, #footer-bot-recently-viewed').each(function () {
             if ($(this).find('.wishlist-fragment').length) {
