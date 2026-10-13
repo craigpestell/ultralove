@@ -15,8 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class UltraLove_Media_Library {
 	const VERSION      = '1.0.0';
 	const ENDPOINT     = 'media-library';
-	const PER_PAGE     = 96; // Default page size; see PER_PAGE_OPTIONS.
-	const PER_PAGE_OPTIONS = array( 48, 96, 192, 480 );
+	const PER_PAGE     = 50;
 	const WEB_WIDTH    = 1200;
 	const ZIP_MAX_PRODUCTS = 50;
 	const ZIP_MAX_FILES    = 300;
@@ -97,15 +96,13 @@ final class UltraLove_Media_Library {
 		$search = isset( $_GET['ml_search'] ) ? sanitize_text_field( wp_unslash( $_GET['ml_search'] ) ) : '';
 		$cat    = isset( $_GET['ml_cat'] ) ? absint( $_GET['ml_cat'] ) : 0;
 		$paged  = isset( $_GET['ml_page'] ) ? max( 1, absint( $_GET['ml_page'] ) ) : 1;
-		$per    = isset( $_GET['ml_per'] ) ? absint( $_GET['ml_per'] ) : self::PER_PAGE;
-		$per    = in_array( $per, self::PER_PAGE_OPTIONS, true ) ? $per : self::PER_PAGE;
 		// phpcs:enable
 
-		$query = self::product_query( $search, $cat, $paged, $per );
+		$query = self::product_query( $search, $cat, $paged, self::PER_PAGE );
 		$base  = wc_get_endpoint_url( self::ENDPOINT, '', wc_get_page_permalink( 'myaccount' ) );
 
 		echo '<div class="ul-ml">';
-		self::render_filters( $base, $search, $cat, $per );
+		self::render_filters( $base, $search, $cat );
 
 		if ( ! $query->have_posts() ) {
 			echo '<p class="ul-ml__empty">' . esc_html__( 'No products with images matched.', 'ultralove-media-library' ) . '</p></div>';
@@ -137,7 +134,7 @@ final class UltraLove_Media_Library {
 				'format'    => '',
 				'current'   => $paged,
 				'total'     => (int) $query->max_num_pages,
-				'add_args'  => array_filter( array( 'ml_search' => $search, 'ml_cat' => $cat, 'ml_per' => $per ) ),
+				'add_args'  => array_filter( array( 'ml_search' => $search, 'ml_cat' => $cat ) ),
 				'prev_text' => '&laquo;',
 				'next_text' => '&raquo;',
 			)
@@ -148,7 +145,7 @@ final class UltraLove_Media_Library {
 		echo '</div>';
 	}
 
-	private static function render_filters( $base, $search, $cat, $per ) {
+	private static function render_filters( $base, $search, $cat ) {
 		echo '<form class="ul-ml__filters" method="get" action="' . esc_url( $base ) . '">';
 		echo '<input type="search" name="ml_search" value="' . esc_attr( $search ) . '" placeholder="' . esc_attr__( 'Search name or SKU', 'ultralove-media-library' ) . '"> ';
 		wp_dropdown_categories(
@@ -162,11 +159,6 @@ final class UltraLove_Media_Library {
 				'orderby'         => 'name',
 			)
 		);
-		echo ' <select name="ml_per" aria-label="' . esc_attr__( 'Products per page', 'ultralove-media-library' ) . '">';
-		foreach ( self::PER_PAGE_OPTIONS as $option ) {
-			echo '<option value="' . esc_attr( $option ) . '"' . selected( $per, $option, false ) . '>' . esc_html( sprintf( /* translators: %d: products per page */ __( '%d per page', 'ultralove-media-library' ), $option ) ) . '</option>';
-		}
-		echo '</select>';
 		echo ' <button type="submit" class="button">' . esc_html__( 'Filter', 'ultralove-media-library' ) . '</button></form>';
 	}
 

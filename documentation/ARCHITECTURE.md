@@ -1558,7 +1558,7 @@ modified. Root-only release/cache evidence is recorded at
 `wp-content/plugins/ultralove-media-library/` adds a **Media Library** tab to WooCommerce My Account
 (`/my-account/media-library/`) where logged-in accounts browse product images and download them.
 
-- Browse: product grid (96 per page by default; 48/96/192/480 selectable), search by name/SKU (WooCommerce's own product search), category filter.
+- Browse: product grid (50 per page, matching the ZIP cap), search by name/SKU (WooCommerce's own product search), category filter.
   Only published products with a featured image appear; featured image plus gallery images are listed.
   Thumbnails use the normal WooCommerce `woocommerce_thumbnail` size, so they follow the Cloudflare
   delivery in 6.2/6.3 automatically.
