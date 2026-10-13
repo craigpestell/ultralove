@@ -29,15 +29,23 @@
 	} );
 
 	// Clicking a product image toggles that product's checkbox.
+	// Clicking anywhere on a card (image, name, SKU, empty space in the text box) toggles its
+	// checkbox. Download links, the checkbox itself and form controls keep their normal behaviour.
 	// Capture phase, so theme scripts that stop propagation on images cannot swallow the click.
 	root.addEventListener( 'click', function ( event ) {
-		var img = event.target.closest ? event.target.closest( '.ul-ml__card img' ) : null;
-		if ( ! img ) {
+		var target = event.target;
+		if ( ! target.closest ) {
 			return;
 		}
-		var pick = img.closest( '.ul-ml__card' ).querySelector( '.ul-ml__pick' );
+		var card = target.closest( '.ul-ml__card' );
+		if ( ! card || target.closest( 'a, input, label, button, select, textarea' ) ) {
+			return;
+		}
+		var pick = card.querySelector( '.ul-ml__pick' );
 		if ( pick ) {
-			event.preventDefault();
+			if ( target.closest( 'img' ) ) {
+				event.preventDefault();
+			}
 			pick.checked = ! pick.checked;
 			update();
 		}
