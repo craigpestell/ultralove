@@ -96,6 +96,18 @@ function martfury_child_enqueue_scripts() {
         $card_cart_path = get_stylesheet_directory() . '/js/product-card-cart.js';
         wp_enqueue_script( 'ultralove-product-card-cart', get_stylesheet_directory_uri() . '/js/product-card-cart.js', array( 'jquery' ), (string) filemtime( $card_cart_path ), true );
 
+        // Product cards: wishlist hearts are added after the page loads (js/product-card-wishlist.js) and filled
+        // by YITH. YITH only enqueues its script and styles when a wishlist button is in the page's HTML, which
+        // the cards no longer have, so enqueue them here (cart, checkout and account pages have no cards).
+        if ( function_exists( 'YITH_WCWL_Frontend' ) && ! is_cart() && ! is_checkout() && ! is_account_page() ) {
+            YITH_WCWL_Frontend()->enqueue_scripts();
+            YITH_WCWL_Frontend()->enqueue_styles_and_stuffs();
+
+            $card_wishlist_path = get_stylesheet_directory() . '/js/product-card-wishlist.js';
+            $yith_handle        = wp_script_is( 'jquery-yith-wcwl-user', 'registered' ) ? 'jquery-yith-wcwl-user' : 'jquery-yith-wcwl';
+            wp_enqueue_script( 'ultralove-product-card-wishlist', get_stylesheet_directory_uri() . '/js/product-card-wishlist.js', array( 'jquery', $yith_handle ), (string) filemtime( $card_wishlist_path ), true );
+        }
+
         // Checkout: the customer chooses the payment method (none chosen in advance).
         if ( is_checkout() ) {
             $payment_choice_path = get_stylesheet_directory() . '/js/checkout-payment-choice.js';
@@ -385,10 +397,24 @@ function ultralove_capture_instock_notifier_catalog_button() {
  * (logged-in users); otherwise the same quantity + button row as in-stock ones (see the Quantity
  * Field on Shop Page plugin), but disabled, with the button reading "Out of stock".
  */
+/**
+ * The card's price box (Martfury's product_loop_footer_buttons(), on woocommerce_after_shop_loop_item_title)
+ * holds a second copy of the cart form, and style.css hides it. Flag that hook
+ * so woocommerce_template_loop_add_to_cart() below skips building the copy.
+ */
+add_action( 'woocommerce_after_shop_loop_item_title', function () {
+	$GLOBALS['ultralove_in_card_price_box'] = true;
+}, 9 );
+add_action( 'woocommerce_after_shop_loop_item_title', function () {
+	$GLOBALS['ultralove_in_card_price_box'] = false;
+}, 11 );
+
 if (!function_exists('woocommerce_template_loop_add_to_cart')) {
 	function woocommerce_template_loop_add_to_cart() {
 		global $product;
 		if ( ! $product->is_purchasable() ) return;
+		// In-stock items give the price box a cart form that is always hidden; only the notify row can show there.
+		if ( ! empty( $GLOBALS['ultralove_in_card_price_box'] ) && $product->is_in_stock() ) return;
 		if ( ! $product->is_in_stock() ) {
 			$notify = '';
 			if ( ! empty( $GLOBALS['ultralove_instock_notifier_catalog_button'] ) ) {
@@ -612,16 +638,58 @@ add_filter( 'woocommerce_order_item_name', function( $name ) {
 
 add_action( 'woocommerce_account_dashboard', function() {
     $upload_dir = wp_upload_dir();
+	$uploads    = trailingslashit( $upload_dir['baseurl'] );
 
 	ob_start();
 ?>
-<p>Thank you for choosing Ultra Love as your adult product supplier. We truly appreciate your business.</p>
-<p><a class="button" target="_blank" href="https://ultralove.ca/export-stock">Download the Latest Stock level export file</a></p>
-<p><?= do_shortcode( '[am-collect-media]' ) ?></p>
-<p><a class="button" href="<?= esc_url( trailingslashit( $upload_dir['baseurl'] ) . 'ultralove-product-export.csv' ) ?>" download>Download Product Inventory CSV</a></p>
-<p><a class="button" href="<?= esc_url( trailingslashit( $upload_dir['baseurl'] ) . 'ultralove-product-export-shopify.csv' ) ?>" download>Download Product Inventory CSV (Shopify)</a></p>
+<div class="ul-dash">
+	<p class="ul-dash__thanks">Thank you for choosing Ultra Love as your adult product supplier. We truly appreciate your business.</p>
+
+	<?php if ( class_exists( 'UltraLove_Media_Library' ) ) : ?>
+	<section class="ul-dash__feature">
+		<div class="ul-dash__feature-text">
+			<h3>Product Image Library</h3>
+			<p>Browse our catalog and download original product images: one image at a time, or every image for a product as a ZIP.</p>
+		</div>
+		<a class="button" href="<?= esc_url( wc_get_account_endpoint_url( 'media-library' ) ) ?>">Open the Media Library</a>
+	</section>
+	<?php endif; ?>
+
+	<h3 class="ul-dash__heading">Stock &amp; product data</h3>
+	<div class="ul-dash__cards">
+		<div class="ul-dash__card">
+			<h4>Latest stock levels</h4>
+			<p>The most recent stock level export file.</p>
+			<a class="button" target="_blank" rel="noopener" href="https://ultralove.ca/export-stock">Download</a>
+		</div>
+		<div class="ul-dash__card">
+			<h4>Product inventory (CSV)</h4>
+			<p>Our product inventory as a CSV spreadsheet.</p>
+			<a class="button" href="<?= esc_url( $uploads . 'ultralove-product-export.csv' ) ?>" download>Download CSV</a>
+		</div>
+		<div class="ul-dash__card">
+			<h4>Product inventory (Shopify)</h4>
+			<p>The same inventory in the format Shopify imports.</p>
+			<a class="button" href="<?= esc_url( $uploads . 'ultralove-product-export-shopify.csv' ) ?>" download>Download CSV</a>
+		</div>
+	</div>
+</div>
 <?php
 	echo ob_get_clean();
+} );
+
+// My Account "Downloads" (WooCommerce downloadable products) is not used on this site: hide the menu
+// item and send anyone who opens /my-account/downloads/ to the dashboard.
+add_filter( 'woocommerce_account_menu_items', function( $items ) {
+	unset( $items['downloads'] );
+	return $items;
+}, 30 );
+
+add_action( 'template_redirect', function() {
+	if ( function_exists( 'is_account_page' ) && is_account_page() && is_wc_endpoint_url( 'downloads' ) ) {
+		wp_safe_redirect( wc_get_page_permalink( 'myaccount' ) );
+		exit;
+	}
 } );
 
 
@@ -633,180 +701,6 @@ add_action( 'woocommerce_account_dashboard', function() {
 
 
 
-
-function ultralove_export_products_to_csv( $format = 'default' ) {
-    if ( ! class_exists( 'WooCommerce' ) ) return;
-
-    $args = [
-        'status' => 'publish',
-        'limit'  => -1,
-    ];
-
-    $products   = wc_get_products( $args );
-    $upload_dir = wp_upload_dir();
-    
-	// Set a dynamic filename based on the format
-    $filename = ( $format === 'shopify' ) ? 'ultralove-product-export-shopify.csv' : 'ultralove-product-export.csv';
-    $csv_file   = fopen( $upload_dir['basedir'] . '/' . $filename, 'w' );
-	
-    $default_columns = [
-		'SKU',
-		'Title',
-		'Content',
-		'Excerpt',
-		'Regular Price',
-		'Sale Price',
-		'Stock',
-		'Image URL',
-		'Image Filename',
-		'Categories',
-		'Brands',
-		'UPC', // hwp_product_gtin
-	];
-    
-    // Shopify headers
-    $shopify_columns = [
-        'Handle',
-		'Title',
-		'Body (HTML)',
-		'Variant SKU', // replaced Excerpt
-		'Variant Price',
-		'Variant Compare At Price',
-		'Variant Inventory Qty',
-		'Image Src',
-		'Image Alt Text',
-		'Product Category',
-		'Vendor',
-		'Variant Barcode', // hwp_product_gtin
-		'Status',
-    ];
-
-    $columns = ( $format === 'shopify' ) ? $shopify_columns : $default_columns;	
-	
-    fputcsv( $csv_file, $columns );
-
-    foreach ( $products as $i => $product ) {
-        if ( $product->is_type( 'variable' ) ) {
-            $variations = $product->get_children();
-            
-			foreach ( $variations as $variation_id ) {
-                $variation = new WC_Product_Variation( $variation_id );
-				$line = [
-					$variation->get_sku(), // SKU
-					($format === 'shopify') ? ultralove_extract_shopify_title($variation->get_name()) : strip_tags($variation->get_name()), // Title
-					$variation->get_description(), // Content
-					$variation->get_sku(), // SKU // $variation->get_short_description(), // Excerpt
-					$variation->get_regular_price(), // Regular Price
-					$variation->get_sale_price(), // Sale Price
-					$variation->get_stock_quantity(), // Stock
-                    $variation->get_image_id() ? wp_get_attachment_url($variation->get_image_id()) : '', // Image URL
-                    $variation->get_image_id() ? basename(wp_get_attachment_url($variation->get_image_id())) : '', // Image Filename
-					implode(', ', wp_get_post_terms($product->get_id(), 'product_cat', ['fields' => 'names'])), // Categories
-					implode(', ', wp_get_post_terms($product->get_id(), 'product_brand', ['fields' => 'names'])), // Brands
-					get_post_meta( $variation->get_id(), 'hwp_product_gtin', true ), // UPC
-				];
-
-				if ( $format === 'shopify') array_push($line, "draft");
-				else array_splice($line, 4, 1, [ $variation->get_regular_price() ]); // Replace active Price with Regular Price
-
-                fputcsv( $csv_file, $line );
-
-				// TODO: include shopify gallery rows. Skipped because there are no variation products
-            }
-        } else {
-			$line = [
-                $product->get_sku(), // SKU
-				($format === 'shopify') ? ultralove_extract_shopify_title($product->get_name()) : strip_tags($product->get_name()), // Title
-                $product->get_description(), // Content
-                $product->get_sku(), // SKU // $product->get_short_description(), // Excerpt
-                $product->get_regular_price(), // Regular Price
-                $product->get_sale_price(), // Sale Price
-                $product->get_stock_quantity(), // Stock
-                $product->get_image_id() ? wp_get_attachment_url($product->get_image_id()) : '', // Image URL
-                $product->get_image_id() ? basename(wp_get_attachment_url($product->get_image_id())) : '', // Image Filename
-                implode(', ', wp_get_post_terms($product->get_id(), 'product_cat', ['fields' => 'names'])), // Categories
-                implode(', ', wp_get_post_terms($product->get_id(), 'product_brand', ['fields' => 'names'])), // Brands
-                get_post_meta( $product->get_id(), 'hwp_product_gtin', true ), // UPC
-            ];
-			
-			if ( $format === 'shopify') array_push($line, "draft");
-			else array_splice($line, 4, 1, [ $product->get_regular_price() ]); // Replace active Price with Regular Price
-
-            fputcsv( $csv_file, $line );
-
-            if ($format === 'shopify') {
-                $gallery_image_ids = $product->get_gallery_image_ids();
-
-                if (!empty($gallery_image_ids)) {
-                    // Loop through each gallery image ID
-                    foreach ($gallery_image_ids as $image_id) {
-                        $gallery_line = array_fill(0, count($shopify_columns), '');
-						
-						$sku_column_index = 0;
-						$image_column_index = 7;
-						
-                        $gallery_line[$sku_column_index] = $product->get_sku();
-                        $gallery_line[$image_column_index] = wp_get_attachment_url($image_id);
-						
-                        fputcsv($csv_file, $gallery_line);
-                    }
-                }
-            }
-        }
-    }
-
-    fclose( $csv_file );
-}
-
-function ultralove_extract_shopify_title( $product_title ) {
-	$parts = array_slice(explode('<br>', $product_title), 1);
-	$cleaned_parts = array_map('trim', $parts);
-	$extracted_title = implode(' ', $cleaned_parts);
-
-	return strip_tags($extracted_title);
-}
-
-function ultralove_generate_all_exports() {
-    ultralove_export_products_to_csv( 'default' );
-    ultralove_export_products_to_csv( 'shopify' );
-}
-
-function am_add_export_page() {
-    add_submenu_page(
-        'woocommerce',
-        'Update Product CSV',
-        'Update Product CSV',
-        'manage_woocommerce',
-        'am-export-products',
-        'ultralove_export_page_callback'
-    );
-}
-
-add_action( 'admin_menu', 'am_add_export_page' );
-
-function ultralove_export_page_callback() {
-    if ( isset( $_POST['export_products'] ) ) {
-		ultralove_generate_all_exports();
-        echo '<div class="notice notice-success is-dismissible"><p>Export completed.</p></div>';
-    }
-
-    $upload_dir = wp_upload_dir();
-
-    ?>
-    <div class="wrap">
-        <h1>Export Products</h1>
-        <p>Manually run the product export.</p>
-        <p>Current file location: <?= $upload_dir['basedir'] . '/ultralove-product-export.csv' ?></p>
-		<p>Current URL of the CSV is <a href="https://ultralove.ca/wp-content/uploads/ultralove-product-export.csv">https://ultralove.ca/wp-content/uploads/ultralove-product-export.csv</a></p>
-
-        <form method="post">
-            <input type="submit" name="export_products" value="Export Products" class="button button-primary" />
-        </form>
-    </div>
-    <?php
-}
-
-// Update CSV files when an order is placed
 
 /**
  * Cloudinary URL overrides are opt-in.

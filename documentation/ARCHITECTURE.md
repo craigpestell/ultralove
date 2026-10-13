@@ -93,6 +93,450 @@ lists 11 entries, some stale (section 8).
 
 A droplet built for production must carry the `Production` tag to be monitored (`provision-droplet.sh` sets it).
 
+### 1.6 Shopify/WooCommerce integration lab (2026-10-08 UTC)
+
+Dedicated synthetic-data supplier backend, created with approval at USD 12/month
+under DigitalOcean team `ultralove`. This is separate from production and the
+existing development environment; no database, credentials, or uploads were copied.
+
+| Resource | Value |
+|---|---|
+| Droplet | `ultralove-integration-lab`, ID `607169886`, SFO2, `s-1vcpu-2gb` |
+| Public / private IPv4 | `104.248.211.144` / `10.150.0.2` |
+| VPC | `ultralove-integration-lab-vpc`, `455858af-fe9d-4c22-806a-77508a14bd4c`, `10.150.0.0/20` |
+| Cloud firewall | `ultralove-integration-lab-fw`, `ed6e74c4-90b5-4b5e-89c7-a8d1704876c9`, lab tag only |
+| Supplier URL | `https://ultralove-lab.104-248-211-144.sslip.io` (temporary IP-derived hostname; no UltraLove DNS changes) |
+| Shopify retailer | `https://admin.shopify.com/store/ultralove-integration-lab`, development store, test gateway listed |
+| Stack | Ubuntu 24.04.5, nginx 1.24, PHP 8.5.11 FPM/CLI (Ondrej PHP PPA), MariaDB (loopback only), WordPress 7.1.3, WooCommerce 11.2.0 |
+| WordPress root | `/var/www/integration-lab` |
+| Admin | `lab-admin`; password stored only in root-readable `/root/.ultralove-integration-lab/admin-password` |
+
+Cloud firewall and UFW restrict SSH to administrator IPv4 `154.20.223.24`.
+Nginx restricts `/wp-admin/` and `/wp-login.php` to that address and loopback.
+HTTP/HTTPS are public for integration callbacks; HTTPS uses a Let's Encrypt
+certificate with automatic renewal. Update both firewalls and Nginx if the
+administrator IP changes. MySQL is not exposed.
+
+Outbound RFC1918 traffic is denied. Public DNS (`1.1.1.1`, `1.0.0.1`, global
+`~.` route) avoids the otherwise blocked private VPC DNS resolver. The lab
+MU plugin suppresses and logs all attempted email. Search indexing and customer
+registration are disabled; no payment gateway is enabled. Two synthetic products
+have SKU `LAB-SIMPLE-001` (stock 10) and `LAB-SIMPLE-002` (stock 5).
+
+Provisioning sources: [cloud-init](../ops/integration-lab/cloud-init.yaml) and
+[bootstrap](../ops/integration-lab/bootstrap.sh). The bootstrap refuses an existing
+WordPress configuration and requires the lab-only host marker. It is not a
+production deployment target. WordPress is extracted with system tar because
+WP-CLI's extractor truncated long paths in this release; core and WooCommerce
+checksums were verified after correcting that extraction.
+
+Baseline verification: run [verify.php](../ops/integration-lab/verify.php) using
+`wp eval-file` on this host. System cron runs WordPress jobs every five minutes,
+explicitly with `/usr/bin/php8.5`. Nginx uses `/run/php/php8.5-fpm.sock`; FPM and
+CLI share the lab's memory/upload limits and error-display restrictions.
+PHP 8.3 packages remain installed for rollback, but its FPM service is stopped
+and disabled. Pre-upgrade Nginx, cron, and lab PHP configuration are saved in
+root-only `/root/.ultralove-integration-lab/php85-before-20261008T051303Z`.
+Production connector installation and full production-plugin compatibility
+have **not** been validated; custom lab-only flow results are recorded below.
+Keep real data, payment
+credentials, and warehouse/carrier automation out of this lab. No paid backups
+were enabled; recreate synthetic data rather than treating this as durable commerce.
+
+**Syncerize evaluation (2026-10-08 UTC): rejected as shipped.** Its
+[WooCommerce overview](https://syncerize.tawk.help/article/syncerize-overview-for-woocommerce)
+documents cross-platform order forwarding and fulfillment, but excludes partial
+fulfillment on WooCommerce. The official live package and update manifest both
+identified version `1.2.50`. Package SHA-256:
+`900f7a1f742f2f48e90e5a1373dc0c6a882876d76c8a23725964cab1b9e99892`.
+
+Before activation, only the vendor's helper functions and order controller were
+loaded in a private WP-CLI process, with the current user explicitly set to zero.
+A REST dispatch with no Authorization header returned HTTP 200 and changed a
+new synthetic order from pending to cancelled. This confirmed an access-control
+failure, not just a suspicious route declaration. The synthetic order was
+deleted in a finally block; the baseline checks passed afterward. No plugin
+activation, public vendor routes, store connection, paid plan, or live orders
+were involved. Catalog sync, mixed-cart routing, wholesale accounting, and
+tracking tests were not run after this failed prerequisite. Do not install
+this package on production or expose its routes on the public lab.
+
+**Syncee preparation (2026-10-08 UTC): both apps installed, stores not connected.** Official
+`syncee-for-suppliers` version `1.0.26` is active only on the supplier lab, with
+WordPress.org package checksums verified. All seven installer endpoints reject
+anonymous requests; actual HTTPS requests to the installer data endpoint and an
+unsolicited token callback returned HTTP 401. Its WooCommerce, WordPress,
+permalink, administrator email, store-name, and cURL prerequisites passed on
+PHP 8.5.11. The full lab baseline still passes with synthetic inventory unchanged,
+no orders, no enabled gateways, and email suppression intact.
+
+Run [verify-syncee.php](../ops/integration-lab/verify-syncee.php) through
+`wp eval-file` on this host to repeat the **unconnected** installer checks.
+The plugin's administrator setup is at
+`/wp-admin/admin.php?page=syncee-for-suppliers`. No WooCommerce API authorization,
+supplier account registration, or supplier access tokens have been created.
+
+The user restored the authenticated Shopify session. **Syncee AI Dropship**
+was then authorized on `ultralove-integration-lab` and verified in Shopify's
+installed-app list and installation details. Its permissions cover customer data,
+store-owner data, products, orders, and other store data; no production store was
+authorized. Shopify warned that the app does not yet support ship-and-pickup
+in one order. This is a compatibility warning, not proof about ordinary
+mixed-supplier shipped carts.
+
+Retailer onboarding did not complete: "Skip all steps" repeatedly returned to
+step 3, including after reopening the app. Browser resource timing recorded
+HTTP 404 for the default retailer catalog and HTTP 500 for
+`entry.syncee.com/syncee-product-service/api/v3/suppliers/search`.
+The cause of the onboarding loop is not established. No suggested marketplace
+products were deliberately imported and no paid plan or trial was approved.
+
+The [Shopify app listing](https://apps.shopify.com/syncee-1) advertises 25 imports
+on Free, but lists **Private suppliers** and **Suppliers with Retailer Approval**
+under Basic at **US$39.99/month** (with a trial/promotion). A free development-store
+exception has not been established; installing the app alone does not demonstrate
+access to a private supplier. Supplier onboarding should proceed only if an
+explicitly synthetic/private test catalog is allowed without a paid charge or
+live payment provider. Syncee's documented order process requires the retailer
+to pay before forwarding. Test payment support and supplier approval remain
+unresolved; do not submit this synthetic lab as a real public marketplace supplier
+or claim end-to-end automation is verified.
+Product import, inventory synchronization, mixed-cart routing, wholesale order
+accounting, and tracking return remain untested **for Syncee**.
+
+**Legacy plugin cleanup (2026-10-09 UTC):** the unconnected
+`syncee-for-suppliers` plugin was deactivated on the isolated supplier lab after
+the custom dev product-feed/Shopify workflow superseded this evaluation.
+All three installer/token options were still absent, and the old lab bridge
+cron was absent. The active-plugin list was backed up root-only at
+`/root/.ultralove-integration-lab/plugin-cleanup/active-plugins-before-20261009.json`.
+At the user's subsequent request, all 18 plugin files were deleted with
+`wp plugin delete syncee-for-suppliers`; the plugin directory is confirmed
+absent. A root-only recovery archive outside the webroot is retained at
+`/root/.ultralove-integration-lab/plugin-cleanup/syncee-for-suppliers-1.0.26-before-delete-20261009T1042Z.tgz`.
+Deletion did not run the plugin's database uninstall routine.
+Nginx and PHP 8.5 FPM remained active and the lab origin returned HTTP 200.
+Rollback: on the lab only, extract that archive into
+`/var/www/integration-lab/wp-content/plugins`, restore ownership to `www-data`,
+then run
+`wp plugin activate syncee-for-suppliers --allow-root` from
+`/var/www/integration-lab`. This does not uninstall the separate Shopify
+Syncee app, change billing, destroy the lab, or change dev/production plugins.
+The earlier Syncee verification results above describe the historical active
+evaluation; file restoration and reactivation are required to repeat its
+installer checks.
+
+**Custom test connector (2026-10-08 UTC): connected and verified.**
+
+The free, own-organization Shopify app **UltraLove Dropshipping Lab**
+(Dev Dashboard app `433204330497`, organization `239653376`) is installed only
+on `ultralove-integration-lab.myshopify.com`. It uses Admin GraphQL API `2026-10`
+with `write_products`, `write_inventory`, `read_locations`, `write_orders`,
+`write_merchant_managed_fulfillment_orders`, and `write_fulfillments`.
+Client credentials are in separate root-only files
+`/root/.ultralove-integration-lab/shopify-client-id` and
+`/root/.ultralove-integration-lab/shopify-client-secret`, outside the web root
+and repository. An initial secret surfaced in the browser's accessibility
+snapshot despite the field being masked; it was rotated and revoked before
+use. The replacement was transferred through the clipboard and SSH without
+displaying its contents, and the clipboard was cleared. The worker exchanges
+credentials for an ephemeral token each invocation; it does not persist tokens.
+This own-organization grant is **not** authentication for independent retailers.
+
+[shopify-bridge.php](../ops/integration-lab/shopify-bridge.php) is a root-only
+WP-CLI worker, not a public WordPress plugin or webhook endpoint. It refuses
+other hosts, databases, currencies, and environment types. It targets exactly
+the two lab SKUs and Shopify's merchant-owned **Shop location**; the development
+store also has sample locations that must not be selected automatically.
+Stable product handles and saved variant IDs keep reimports idempotent.
+Initial retail prices use a synthetic 50% markup; subsequent synchronization
+preserves retailer-edited prices. Inventory uses compare-and-swap
+`changeFromQuantity` and the required `@idempotent` directive.
+
+The worker polls paid **test** Shopify orders tagged
+`ultralove-integration-lab`, forwards only mapped variants, and attributes them
+to the synthetic WooCommerce customer `shopify-lab-retailer`.
+The recipient must be `Synthetic Recipient` at `123 Synthetic Street` with a
+complete Canadian delivery address. Billing and notification metadata use
+`retailer@example.invalid`. Supplier lines use WooCommerce prices rather than
+retail prices. Orders begin **on hold**, with no supplier payment recorded;
+Shopify test payment is not wholesale payment. The worker's exclusive process
+lock, source-order metadata, and import-completion marker prevent duplicate
+creation; incomplete imports stop with an explicit reconciliation error.
+For completed synthetic supplier orders, setting `_ul_lab_tracking_number`
+to a `LAB-` number returns tracking for mapped lines only, with
+`notifyCustomer: false`. It never completes unrelated retailer lines.
+
+The deployed worker and verifier are in `/root/.ultralove-integration-lab/`.
+[shopify-bridge.cron](../ops/integration-lab/shopify-bridge.cron) is installed as
+`/etc/cron.d/integration-lab-shopify-bridge` and runs every five minutes under
+PHP 8.5. Logs are root-only at
+`/root/.ultralove-integration-lab/shopify-bridge.log`; the WordPress option
+`ul_lab_shopify_last_success` records a successful cycle. To pause the bridge,
+remove only that cron file; catalog products and mappings are retained.
+The existing system-managed WordPress cron and safety MU plugin are unchanged.
+An actual scheduler-triggered successful cycle was verified at
+`2026-10-08T16:20:07+00:00`, not just a manual invocation. Nginx, PHP 8.5 FPM,
+MariaDB, and cron were active; credential and log permissions were `0600`.
+Shopify's browser product list also showed the two synthetic imports with
+restored stock quantities of 10 and 5.
+
+Run the live test through WP-CLI on the lab:
+
+```sh
+cd /var/www/integration-lab
+wp --allow-root eval-file /root/.ultralove-integration-lab/verify-shopify-bridge.php
+wp --allow-root eval-file /root/.ultralove-integration-lab/verify.php
+```
+
+[verify-shopify-bridge.php](../ops/integration-lab/verify-shopify-bridge.php)
+verified actual API effects: catalog reimport identity, retailer-price
+preservation, inventory change and restoration, mixed-line isolation,
+retailer attribution and recipient address, wholesale totals, unpaid supplier
+status, once-only stock reduction, duplicate polling, unpaid/unmapped/non-test
+order rejection, invalid stock/address rejection, tracking return, partial
+fulfillment, duplicate tracking and lost-acknowledgement replay,
+disabled gateways, and suppressed email. It creates explicitly synthetic
+Shopify orders through `orderCreate(test: true)`, then deletes only its own
+orders on both platforms and restores stock. The imported catalog and synthetic
+retailer account remain. No real funds, emails, parcels, or production data
+are used.
+
+**Scope:** this is a working single-store API-flow test environment, not the
+production dropshipping service. It does not publish products to the Online
+Store channel or prove a browser checkout. Independent-retailer OAuth,
+merchant approval, configurable catalogs/pricing, production wholesale taxes
+and shipping, supplier settlement, cancellations/refunds, variants,
+multi-location allocation, robust queue recovery/monitoring, and real warehouse
+integration still need a separately scoped production implementation.
+Do not remove the test-only guards to deploy this worker to production.
+
+**Dev supplier connected (2026-10-08 UTC): existing products only.**
+
+**Embedded Shopify interface (2026-10-09 UTC): catalog, pricing and draft jobs live.**
+
+The same **UltraLove Dropshipping Lab** installation now opens
+`https://shopify-lab.104-248-211-144.sslip.io` inside Shopify admin.
+Active app version is `ultralove-lab-embedded-foundation`; its API version and
+six existing access scopes are unchanged. The only redirect allowlisted is
+`https://shopify-lab.104-248-211-144.sslip.io/auth/callback`.
+Real authenticated embedded rendering passed, and a subsequent dev product-only
+worker cycle synced the original three SKUs while preserving retailer prices.
+No new app, production change, order, payment, email or shipment was created.
+
+The interface has a separate private source repository,
+`craigpestell/ultralove-shopify-app`, and local workspace
+`/Users/craig/work/ultralove-shopify-app`. Its source is published privately:
+`main` contains the deployed foundation and `feat/embedded-catalog` contains the
+catalog/hosting increment for review. Runtime deployment used git archives and
+does not imply that the review branch has been merged.
+Pricing/import release `13306ab` is hosted on the existing isolated integration-lab
+droplet as non-root systemd service `ultralove-shopify`, using checksum-verified
+Node 24.21.0, a loopback-only listener on port 3097, a separate Nginx HTTPS vhost,
+and a Let's Encrypt certificate with automatic renewal. No firewall or UltraLove
+DNS policy changed. The existing WordPress lab vhost is unchanged.
+
+Code is under `/srv/ultralove-shopify/releases`, selected by `current`.
+Mode-0600 persistent SQLite sessions are under `/var/lib/ultralove-shopify`;
+the root-only environment is `/etc/ultralove-shopify/app.env`.
+The service reuses the installed app identity without reading the root worker's
+credential files itself. Its access logging excludes request query parameters.
+The deployed UI browses 50 published parents per page, searches names/SKUs,
+filters categories and saves at most 50 explicitly selected parent IDs in the
+app-owned SQLite database. Saving does not import, publish, synchronize inventory
+or approve order forwarding.
+
+The live transport uses a separate SSH key, pinned host key and forced PHP
+command on verified dev host `138.68.43.251` (`ultralove-dev-managed`), not the
+historical dev IP in the topology table. SSH account `ultralove-catalog-proxy`
+is restricted to source `104.248.211.144` and command `catalog-read`; an attempted
+`id` was rejected. The proxy uses the existing authenticated loopback HTTP feed
+with a separate revocable password on the catalog-only customer account.
+It grants no shell, forwarding or administrator access and changes no firewall
+or Cloudflare Access policy.
+Routine authentication/feed database bookkeeping is allowed, as confirmed by
+the user on 2026-10-09. This connection does not request the optional strict
+database-read mode. No WordPress plugin/MU-plugin runtime changes were deployed;
+the earlier local strict-read bookkeeping fix was removed before deployment.
+
+Live browser checks verified paging, SKU `1513`, combined category/SKU filtering,
+selection persistence after reload, saving exactly 50 parents, disabled
+checkboxes at that limit and visible rejection of a forged 51-parent selection.
+Release `05f1160` additionally passed exact category-label access, readable entity
+decoding and clearing the unsaved selection. Existing saved selections were
+restored after import verification. Twenty-three offline tests, type-check, lint, app/worker build and
+migrations passed; npm audit reported zero vulnerabilities. Final app, Nginx and
+lab PHP-FPM checks were healthy, the listener remained loopback-only, foreign-shop
+requests returned 403 and invalid-signature webhooks returned 401.
+The embedded UI now previews immutable CAD pricing for 1-50 saved parents and
+queues confirmed draft-import jobs. The source branch `feat/draft-import-jobs`
+is based on the catalog review branch. A separate non-root
+`ultralove-shopify-imports` service processes persistent jobs/items and cross-job
+creation claims in the app database. The provisioner takes protected SQLite
+backups under `/srv/ultralove-shopify/backups` before additive migrations.
+The source-restricted proxy's read-only `import-plan` operation reuses the
+unchanged Shopify Supplier plugin's payload builder; Shopify mutations happen
+only in the app worker, never through the root PHP importer behind HTTP.
+The plugin remains required for this planning code and the original dev sync.
+
+Live checks reused the original five listings with prices, content, publication
+state and inventory unchanged. Source `17539` (SKU `SE1414-50 BX`) created draft
+`8424579366975`: CAD 7.95 at 25% markup became CAD 9.94, stock 2, barcode
+`716770016270`, and one READY media item. Native Shopify admin confirmed it was
+not published anywhere. A second 30% preview reused it without repricing or
+duplication. An interrupted-job simulation preserved its creation claim and
+worker restart recovered the same draft through read-only reconciliation;
+exactly one listing existed. All three jobs completed, and the original five
+saved selections were restored. The draft and job history are retained for review.
+The original three-product sync still passed with retailer prices preserved.
+New imports do not enable ongoing selection sync, publication or order forwarding.
+
+Before any pre-jobs code rollback or return to the old app version, run
+`systemctl disable --now ultralove-shopify-imports` on the lab host. Preserve the
+database, creation claims, backups and additive migrations. Catalog release
+`05f1160` is the verified pre-jobs code rollback.
+App configuration rollback: restore existing version `ultralove-dropshipping-lab-2` in the
+Dev Dashboard, returning to the previous lab URL and `embedded=false`.
+Do not uninstall/recreate the app or rotate the worker's credentials.
+Hosting release `a419640` failed service read permissions and must not be used
+as a code rollback. The verified `a271a77` foundation remains an earlier rollback
+without catalog browsing; changing code does not undo persistent migrations.
+
+Following the user's request to use dev's catalog instead of synthetic products,
+the old lab cron entry was removed and only its two verified Shopify fixtures
+(`LAB-SIMPLE-001`, `LAB-SIMPLE-002`) were archived. Other Shopify products were
+not changed. The earlier lab cycle results above are historical; that worker
+is now paused.
+
+The new `ultralove-shopify-supplier` plugin is deployed and active on dev, with shared
+bridge code extracted to its `includes/class-test-bridge.php`; the old lab
+entry point retains a compatibility wrapper in git. The dev pilot uses
+existing product IDs `17186`, `17188`, `17192` (SKUs `1513`, `2455`, `70072`),
+selected from the existing dev catalog. No synthetic products were created.
+Its administrator controls select existing products, an approved retailer and
+initial markup, show status/mappings, and expose nonce-protected test tracking
+on bridge-created WooCommerce orders. The plugin defaults off and refuses
+production even if its options are copied.
+
+The client confirmed that resellers may add **any UltraLove catalog product**
+to their own catalog. No per-product dropshipping listing flag or supplier
+listing approval is required. Keep reseller product selection separate from
+stock/order availability. The three-product selection, 25-product cap, and
+simple-product checks are technical pilot limits only; the test connector is
+not yet a full-catalog reseller browsing/import interface.
+
+Feature branch `feat/dev-shopify-supplier` / draft PR #138 deployed through the
+normal drift-safe pipeline; the first deployment was commit `0a43a88` and added
+only the two new supplier PHP files. CI and origin smoke tests passed.
+Twenty isolated configuration-policy assertions, PHP syntax checks, and
+28 live dev assertions pass, including administrator controls/tracking,
+catalog identity, stock changes, mixed-line routing, wholesale attribution,
+duplicate protection, tracking return and lost-acknowledgement replay.
+All three genuine Shopify imports are drafts with ready images. Verification
+removed its own test orders and restored stock to `327`, `125`, and `414`;
+retailer-edited prices remain preserved.
+
+A dedicated approved test retailer, `shopify-dev-retailer`, owns forwarded
+orders; no existing customer profile was changed. App credentials and logs
+are root-only under `/root/.ultralove-shopify-dev/` (directory `0700`,
+credential/log files `0600`). `WP_HTTP_BLOCK_EXTERNAL` remains enabled; only
+`ultralove-integration-lab.myshopify.com` was appended to the existing allowed
+hosts, and an unrelated outbound host was verified blocked. The five-minute
+worker is installed at `/etc/cron.d/ultralove-shopify-dev`; an actual
+scheduler-triggered cycle succeeded at `2026-10-08T17:05:07+00:00`, confirmed
+by its root-only log and `ul_dev_shopify_last_success`.
+Email remains suppressed, gateway settings unchanged, and Access/network
+isolation intact. No main merge, production deployment, real payment or
+shipment occurred. Independent-retailer OAuth and production order handling
+remain outside this test workflow; see
+[the dev workflow](../ops/dev/README.md#shopify-supplier-test-workflow).
+
+**Legacy development bridge retirement, 2026-10-12:** the old five-minute
+WordPress bridge is superseded for catalog imports and inventory by the
+UltraLove Dropshipping Lab Shopify app. Duplicate reads with the WordPress
+user-agent and unchanged journal cursor came from its constructor plus its
+catalog cycle, not pagination by the new app. The guarded retirement operation
+archives only `/etc/cron.d/ultralove-shopify-dev`, disables the legacy settings
+and persists `ultralove_shopify_supplier_retired`. It waits for the original
+bridge lock, preserving completed work; protected backups remain under
+`/root/.ultralove-shopify-dev/retirement-*`.
+The legacy admin page is read-only and legacy dev CLI/setup/tracking paths
+cannot reactivate it. Shared feed/payload code, fixture identities, mappings,
+orders, logs and credentials remain intact. The plugin must stay active for the
+current restricted catalog proxy; never revoke shared app/feed credentials
+as part of this retirement. The earlier paused `source=lab` harness is unchanged.
+The current app does not yet replace legacy synthetic order forwarding/tracking.
+See the dev workflow for scoped rollback and live verification evidence.
+
+The droplet is billable until explicitly destroyed. Teardown must target only
+droplet `607169886`, its lab firewall, tag, and VPC after confirming they have no
+other members; never use production/dev cleanup scripts.
+
+### 1.7 Supplier product and inventory feed (dev)
+
+The feed-first milestone adds the separate `ultralove-product-feed` plugin to
+dev; implementation revision `ff51422` was deployed through the normal
+drift-safe pipeline on `2026-10-08`. It is hard-guarded by the development
+environment, exact dev home URL and `wordpress_dev` database. Production is
+unchanged. The existing CSV exporter and three-product Shopify test connector
+remain separate and their source was not changed by this milestone.
+
+The authenticated read-only namespace is `/wp-json/ultralove-feed/v1`:
+`/products`, `/products/{id}`, `/inventory`, `/changes`, and `/openapi`.
+The OpenAPI 3.1 contract uses WooCommerce-compatible operational field names
+with explicit supplier extensions; it is not a drop-in `wc/v3` replacement.
+All published products, including out-of-stock products, can be listed;
+there is no per-product eligibility flag or Shopify-pilot catalog cap.
+Published variations require published parents and expose shared stock identity.
+
+Native WordPress application passwords authenticate scoped customer accounts
+over HTTPS; `ultralove_read_product_feed` grants catalog access independently
+of dropshipping approval. Staff grant/revoke access from a nonce-protected
+user-profile control. Dev Cloudflare Access still applies. Responses are
+`private, no-store`, with a 300-request/account/minute quota and `Retry-After`.
+Only whitelisted product data is exposed; unknown stock is null, prices remain
+decimal strings, and missing images produce explicit warnings rather than
+discarding products.
+
+Three dedicated tables hold feed bookkeeping: `ultralove_feed_changes`,
+`ultralove_feed_state`, and `ultralove_feed_rates`. Producers enqueue within
+their transactions; a database-locked publisher assigns delivery sequence
+numbers only after commit. Clients save the first catalog page's generation
+and cursor, finish the initial import, then replay current-state upserts and
+removals idempotently. Seven-day contiguous-prefix retention and generation
+checks require a full resync when a cursor expires or the journal is rebuilt.
+After database restoration, operators explicitly rotate generation and reset
+the reconciliation checkpoint.
+
+`/etc/cron.d/ultralove-product-feed` runs a 500-record reconciliation batch
+every minute, refreshing product caches to detect changes that bypass hooks.
+A completed scan also detects removals. The initial full scan covered all
+6,430 published products in 13 batches/105.257 seconds and completed at
+`2026-10-08T18:24:33+00:00`, with 6,430 fingerprint records and checkpoint zero.
+The scheduler was installed at `2026-10-08T18:24:34Z`; its root-only log is
+bounded by `/etc/logrotate.d/ultralove-product-feed` (daily, seven rotations,
+5 MB maximum-size trigger). Runtime credentials and evidence are under
+`/root/.ultralove-product-feed/`, directory `0700`, private files `0600`.
+Actual cron launches at `18:25:01` and `18:26:01` each successfully processed
+500 records; the checkpoint advanced to product ID 22460 without manual runs.
+
+Verification passed 335 isolated feed assertions, 20 existing supplier-policy
+assertions, schema validation and 33 live HTTP checks against the full genuine
+catalog. Dev has zero published variations; isolated tests cover their DTOs
+and stock inheritance. Six benchmark checks under five concurrent clients
+measured cold catalog/inventory pages at 0.572/0.380 seconds and warm p95 at
+1.176/0.779 seconds, below the two-second target. Thirty-five products have
+pre-existing missing attachment references; these remain importable with
+`data_warnings`, without modifying source media. Read-only traversal preserved
+CSV bytes; mutation tests restored stock/status and account scope. The existing
+Shopify scheduler continued succeeding at `2026-10-08T18:25:06+00:00`.
+
+No synthetic products, orders, real payment, email, shipment, main merge or
+production deployment was introduced by this feed milestone. Shopify adaptation
+and transactional dropshipping remain future phases. See the
+[feed runbook](../ops/dev/README.md#supplier-product-and-inventory-feed) and
+[OpenAPI contract](../wp-content/plugins/ultralove-product-feed/openapi.json).
+
 ## 2) Prod App Droplet (PRODUCTION-WEB-ultralove.ca)
 
 ### 2.1 OS / Platform
@@ -143,6 +587,7 @@ droplet; 8 concurrent clients -> 3.5 req/s, p95 3.2 s, no errors, at most 9 work
 |---|---|---|
 | nginx site | /etc/nginx/sites-available/ultralove.ca.conf | `ops/nginx/ultralove.ca.conf` |
 | nginx http tuning (keepalive, 100M uploads, gzip) | /etc/nginx/conf.d/10-ultralove-http.conf | `ops/nginx/10-ultralove-http.conf` |
+| nginx FastCGI page cache (anonymous HTML, 5 min; needs `mkdir -p /var/cache/nginx`) | /etc/nginx/conf.d/11-ultralove-page-cache.conf | `ops/nginx/11-ultralove-page-cache.conf` |
 | Cloudflare client IPs | /etc/nginx/conf.d/20-cloudflare-real-ip.conf | generated by the bootstrap |
 | Rate-limit zones | /etc/nginx/conf.d/99-ultralove-rate-limit-zones.conf | `ops/nginx/99-ultralove-rate-limit-zones.conf` |
 | FPM status page (127.0.0.1 only) | /etc/nginx/sites-available/localhost-admin.conf | `ops/nginx/localhost-admin.conf` |
@@ -242,7 +687,10 @@ Layers, outside in (current):
 
 1. **Cloudflare edge:** APO caches anonymous HTML; static assets cached with the origin's headers (Browser Cache TTL
    is *Respect Existing Headers* since 2026-09-14 - it had been cutting the origin's 1-year header to 4 hours).
-2. **nginx:** gzip and long-lived static-asset headers; no page cache (section 2.4, `ops/nginx/`).
+2. **nginx:** gzip and long-lived static-asset headers, plus a 5-minute FastCGI cache of anonymous HTML that Cloudflare APO
+   skips (query-string URLs such as `?orderby=`, crawlers, APO misses). Logged-in, cart, wishlist-session and comment
+   cookies, POSTs, ajax, wp-json and cart/checkout/my-account bypass it; `X-Cache` shows HIT/MISS/BYPASS; `deploy.sh`
+   empties it (section 2.4, `ops/nginx/`).
 3. **WordPress / PHP:** Redis object cache (4.1) and OPcache (4.2).
 4. **Front-end assets:**
    - **Autoptimize:** CSS aggregated with inline CSS included (`autoptimize_css_aggregate`,
@@ -387,6 +835,37 @@ Evidence used to confirm these were safe to deactivate:
 Action taken: deactivated (not deleted) all four WebToffee plugins via `wp plugin deactivate`. Active plugin count dropped from 48 to 44. Verified live: homepage/shop return 200, wp-admin login redirect (302) unaffected, WP All Import/Export plugins remain active, and nginx error log shows only pre-existing unrelated WooCommerce core deprecation notices (`wc_enqueue_js`), not new errors from the deactivation.
 
 Not yet done: deleting the plugin files themselves. Deactivation is fully reversible from the WordPress admin at any time; deletion should wait for a monitoring period.
+
+#### Catalog CSV consolidation (2026-10-09)
+
+The standard retailer and Shopify product CSVs have one owner:
+`ultralove-product-export-sync`, displayed as **UltraLove Product CSV Export**
+version 1.1.0. Its installation path, option keys and job hooks are preserved.
+**WooCommerce > Product CSV Export** provides generation status, both downloads,
+and a nonce-protected **Queue Export Now** action. The old WooCommerce
+**Update Product CSV** and Tools **Product Export Generations** pages redirect
+to this page without adding visible duplicate menu entries.
+
+The child theme's separate full-catalog writers and manual export form were
+removed. The plugin remains responsible for debounced product/stock-change
+updates and the 15-minute fallback; it clears obsolete
+`ultralove_refresh_product_exports_hourly` events, including events with
+arguments. Customer-account download links, CSV filenames, column order,
+pagination, gallery rows, and Shopify draft status are preserved.
+
+This does **not** merge or disable the distinct stock-only plugin,
+`[exportstock]` shortcode, WP All Import/Export suite, authenticated product
+feed, manual dropshipping, or Shopify supplier connector. CSV downloads still
+serve customers independently of the API feed, which is inactive on production.
+The four legacy WebToffee plugins remain inactive on dev and absent on production.
+No active dev/production plugin was made redundant by the menu/code consolidation.
+
+Verification: `php ops/product-export/test.php` (also run in CI), followed by
+`wp eval-file - --allow-root < ops/product-export/verify.php` on dev.
+Keep the existing export-sync plugin active when deploying the cleaned-up
+theme. Rollback restores the preceding plugin/theme release through the normal
+deployment pipeline; no plugin activation migration or source product edits
+are required.
 
 ### 4.8 CSS/JS Optimization Plugin — Autoptimize (2026-09-14)
 
@@ -556,6 +1035,489 @@ crawlers walking every brand combination.
 - Only part of the media library has synced so far (sync is ongoing).
 - Credentials live in the `cloudinary_connect` option and are not recorded here.
 
+### 6.2 Product images via Cloudflare (built, not switched on)
+
+`wp-content/mu-plugins/38-product-images-cloudflare.php` serves product images (cards, single-product
+gallery, thumbnails, zoom image) from `/cdn-cgi/image/` on the local upload instead of Cloudinary, so
+Cloudinary can be dropped. It does nothing until `ul_product_cdn` is `cloudflare`.
+
+- Switch: `wp option update ul_product_cdn cloudflare` (back: `cloudinary`). An editor can preview either
+  on any page with `?ul_product_cdn=cloudflare|cloudinary` (separate from the banners' `?ub_cdn=`).
+- Source is always the local original (`dual_full` keeps it). Cards are cut square with `gravity=auto`
+  (as Cloudinary's `c_fill,g_auto` was) at 200/400 px (200px default `src`); single 600/900/1200;
+  gallery navigation thumbnails 100/200; the
+  zoom image 1600. Few widths on purpose: Cloudflare bills each unique (image, parameters) pair once a
+  month (5,000 free, then $0.50 per 1,000), and `onerror=redirect` serves the full-size original if the
+  quota runs out. Change the widths in `ul_pcdn_profiles()`.
+- Front end only: not wp-admin, REST (the retailer feed keeps original URLs), WP-CLI or cron. JPEG, PNG
+  and WebP only.
+- Cutover: (1) Cloudinary plugin: image delivery off and auto-sync off; (2) set the option; (3) purge
+  Cloudflare, restart PHP-FPM. Rollback: set the option back and purge.
+- Not yet verified on a live server: the `/cdn-cgi/` URLs for product images, dev (behind Cloudflare
+  Access) and the `cloudinary_pre_image_tag` safety net.
+
+### 6.3 Hosted Cloudflare Images copies
+
+Production was confirmed on 2026-10-12 to use `cloudflare` for both
+`ul_product_cdn` and `ub_banner_cdn`. This is remote-source transformation delivery,
+not Cloudflare Images storage.
+
+The `cloudflare-images` mode instead delivers account-bound copies uploaded to
+Cloudflare Images. Its flexible variants retain existing product widths, square
+cropping, automatic gravity, banner crop coordinates and responsive sources.
+Hosted delivery incurs Images Stored/Delivered billing, not the remote-source
+Images Transformed metric. CDN caching is not a guarantee that a derived variant
+will never be regenerated.
+
+`37-cloudflare-images.php` provides shared delivery and a resumable CLI command:
+
+```sh
+wp ultralove-images sync --after-id=0 --limit=100 --dry-run
+wp ultralove-images sync --after-id=0 --limit=500
+wp ultralove-images sync --pending --limit=50
+```
+
+Repeat bounded batches using each JSON result's `next_after_id` until
+`processed` is zero. Nonzero exit status and `failed` identify exceptions; never
+count those attachments as uploaded. IDs derive from the source SHA-256, so retries
+and identical files reuse one stored image. Mappings are accepted only after
+verifying account, content identity, public delivery URLs and unchanged source
+bytes. Uploads use the Images batch API with four concurrent requests.
+
+Credentials are provisioned outside the webroot in
+`/etc/ultralove/cloudflare-images.json` (root:www-data, 0640; parent 0750), with
+`account_id`, `account_hash` and a dedicated Images-edit `token`. The public
+`ul_cf_images_account_hash` option must match; neither API token nor credentials
+belong in git or attachment metadata. Existing IP-allowlisting credentials are
+not reused or broadened.
+
+After migration verification, set `ul_product_cdn` and `ub_banner_cdn` to
+`cloudflare-images`, and enable `ul_cf_images_sync_enabled`. WordPress media
+updates queue copies; the existing system-driven WP cron runs the bounded hourly
+`ul_cf_images_sync` event. Pending, missing or replaced sources are logged and
+retain the previous working transformation delivery until synchronized.
+REST/feed URLs, admin screens, local uploads and DigitalOcean Spaces backups are
+unchanged. Roll back both delivery options to `cloudflare` and disable the sync
+option; do not delete local files, Spaces objects, or hosted copies.
+
+The initial inventory contains 20,601 JPEG/PNG/WebP attachments: 20,599 readable
+sources (about 2.5 GiB) and two already-missing originals (20595, 20597). The 62
+animated GIF attachments remain on their original delivery path; ten exceed the
+hosted 10 MB limit. They are not silently flattened, resized or removed to fit.
+
+#### Dev pilot verified (2026-10-12)
+
+Implementation revision `e8b0cefd3bce787c14ca62650c8a1a4d08539749` was pushed
+on `feat/cloudflare-hosted-images` and deployed through the guarded pipeline.
+There was no server drift; server PHP lint, the deployment backup, all four HTTP
+smoke checks and GitHub CI passed. Offline coverage passed 57 hosted-image and
+398 existing catalog assertions.
+
+Dev intentionally has no readable local catalog originals (20,406 still-image
+attachment records were checked). The pilot therefore uses a generated
+1000×800 PNG, attachment 97164, retained exclusively on dev for repeatable checks.
+Its local original is 4,710 bytes; no production upload was copied to dev.
+Protected Images credentials were provisioned only on dev.
+
+The real batch upload accepted the content-addressed ID and source metadata.
+Removing only its mapping and retrying verified duplicate-ID recovery through
+the encoded details endpoint. A subsequent sync reported one unchanged image
+and zero uploads. Cloudflare still reported exactly one stored image out of
+100,000 allowed: responsive variants and recovery did not consume extra storage.
+
+Sixteen public delivery requests (eight profiles with WebP and AVIF Accept
+headers) returned HTTP 200 with exact expected dimensions: 300/450/600 square
+cards, a 600×480 gallery image, 100×100 thumbnail, 1000×800 zoom, 600×150 saved
+banner crop and 320×256 backdrop. Resized responses negotiated WebP/AVIF;
+Cloudflare retained the smaller original PNG for the full-size image.
+Banner markup retained its crop dimensions, responsive sources and rewrite
+protection marker. The generated local source remained unchanged.
+
+Both dev delivery options were restored to `cloudflare` after testing;
+automatic synchronization remains disabled. No system WP-cron trigger was
+found on dev, so automatic maintenance must not be claimed operational there.
+Production credentials, image copies, delivery options and Spaces backups were
+not modified. Production migration, system-cron verification and cutover are
+separate, approval-gated steps.
+
+#### Production migration started (2026-10-12)
+
+Release `562670c820` (PR #157) was deployed to production through the guarded
+pipeline after the dev gate and drift check passed. Server PHP lint and all four
+HTTP smoke checks passed; the previous code is backed up at
+`/var/lib/ultralove-deploy/backups/20261012T165423Z-ada96ae130.tgz`.
+The public homepage's inline critical CSS matches the release after
+Autoptimize's removal of the generated-file comment.
+
+Protected production Images credentials and the matching public account-hash
+option were already provisioned; this run did not copy or change credentials.
+The first bounded batch processed 500 attachments through ID 19427, accepting
+497 verified hosted copies. Attachments 17567, 18655 and 19383 were rejected:
+their WordPress dimensions are absent, and `getimagesize()` could not establish
+dimensions from their local sources. The batch returned exit status 1 to expose
+these three exceptions; they were not counted as copied or silently repaired.
+This is an initial batch, not a completed catalog migration.
+
+All 497 original SHA-256 hashes, paths, modification times and sizes remained
+unchanged, and every saved account/source mapping was verified. Repeating those
+497 IDs reported 497 unchanged, zero uploads and no failures. Six public requests
+covering the first, middle and last copied images returned HTTP 200 at exactly
+300x300, negotiating WebP and AVIF (5,210-12,378 bytes). Account storage was
+498 images out of 100,000 allowed, including the retained dev fixture.
+
+Root-only run evidence (source manifest, batch result, original/mapping checks,
+delivery checks and storage count) is under
+`/var/lib/ultralove-images/20261012-production-first-batch/`.
+Resume the next bounded batch with:
+
+```sh
+wp ultralove-images sync --after-id=19427 --limit=500 --dry-run
+wp ultralove-images sync --after-id=19427 --limit=500
+```
+
+Run from `/var/www/html` as the site user, or add `--allow-root` when operating
+as root. Preserve each result and investigate its `failed` entries; advancing
+the cursor does not resolve earlier exceptions.
+
+Production's system WordPress maintenance trigger was verified in
+`/etc/cron.d/ultralove-wp-cron`: it runs due events as `www-data` every five
+minutes. Both delivery options remain `cloudflare`, automatic hosted-image sync
+remains disabled, and no hosted-image cron event is scheduled. Nginx, PHP-FPM and
+Redis were active after deployment. Local uploads and Spaces backups were not
+modified. Complete the remaining source batches and resolve or explicitly
+exclude invalid sources before the separate delivery cutover and hourly-sync
+enablement.
+
+#### Bulk production copy job (2026-10-12)
+
+At the user's request, the remaining source scan was started after ID 19427 as
+the transient systemd service `ultralove-images-migration.service`. It runs
+WP-CLI on the production host with a nonblocking
+`/var/lib/ultralove-images/migration.lock`, four concurrent uploads and
+100-attachment batches. The service continues independently of the SSH session;
+it is not a scheduled job and does not automatically resume after a reboot.
+No new site code, delivery option or automatic-sync setting was changed.
+
+The root-only `/var/lib/ultralove-images/migration.jsonl` contains the initial
+pilot result followed by timestamped `started`, `batch_started` and
+`batch_result` records. The runner records source exceptions and continues the
+ordered scan. Transient upload failures are logged and retried up to five times
+with 15/30/60/120-second delays, reusing already-confirmed copies. If uploads
+remain unconfirmed after the retry budget, the updated runner persists the
+identified failures to its separate ledger and advances the scan. Global
+failures without an attachment result, or inability to persist failure
+evidence, still stop the job. Terminal records distinguish `completed`,
+`completed_with_exceptions` and `stopped_with_error`; completion of the scan
+does not mean rejected attachments were copied.
+
+```sh
+ssh ultralove-prod-app 'tail -n 10 -F /var/lib/ultralove-images/migration.jsonl'
+ssh ultralove-prod-app 'systemctl is-active ultralove-images-migration.service'
+ssh ultralove-prod-app 'journalctl -u ultralove-images-migration.service -n 20 --no-pager'
+```
+
+The operational runner is passed as a literal `wp eval` argument.
+`systemd-run --expand-environment=no` is required: its default argument
+expansion otherwise interprets PHP dollar-prefixed variables, preventing
+startup. An initial failed launch was diagnosed and corrected before any
+additional attachments were processed. The first upload batch then encountered
+an HTTP 520 after 99 accepted copies; the stopped job was resumed at the same
+cursor with bounded retries rather than skipping the unconfirmed attachment.
+Do not start manual copy batches
+alongside this service; the lock protects other invocations using the same
+lock, not standalone `wp ultralove-images sync` commands.
+
+At 17:27 UTC, five retries were exhausted on attachment 23086 with HTTP 413.
+Its original is a 2,757,318-byte animated GIF
+(`2021/04/products-PD3651-23_09.gif`, 1932x2500), despite its WordPress
+`image/jpeg` MIME record. Increasing the retry budget cannot fix this permanent
+rejection. The bulk runner now checks the actual local MIME using
+`mime_content_type()` before upload, explicitly logs unsupported file formats
+as `source_excluded`, and keeps their files and existing delivery unchanged.
+It resumes from the stopped cursor 22897, reusing the 99 accepted copies in that
+batch. Cursor and processed counts cover all scanned IDs, including a batch
+containing only excluded sources.
+
+This is an operational bulk-runner guard, not a correction of WordPress
+attachment metadata or a change to the deployed synchronization helper.
+Before enabling the separate hourly synchronization, account for unsupported
+files whose WordPress MIME records incorrectly classify them as still images.
+
+At 18:30 UTC, the job stopped after five HTTP 413 retries on animated WebP
+attachments 78414, 78416 and 78417. Their 1600x925 canvases contain 112, 128
+and 258 frames. A diagnostic request for 78414 confirmed Cloudflare error 5443:
+at this resolution, at most 67 frames fit the 100-million aggregate-pixel
+animation limit. Attachments 78415 and 78418 are already zero-byte sources,
+not oversized images. No source was resized, flattened, repaired or deleted.
+
+At the user's request, the operational runner now logs failures separately and
+continues the scan. It checks extended WebP's animation flag and excludes
+animated WebP from this still-image migration, preserves HTTP 413 rejections
+without pointless retries, and defers identified upload failures after five
+transient attempts. Each failure records the attachment ID, error, reason,
+timestamp and `copied: false` in the root-only
+`/var/lib/ultralove-images/failures.jsonl`. Forty-three unresolved historical
+attachment failures were imported from the progress log, excluding failures
+whose source/account mapping was subsequently verified. Ledger entries may
+repeat across restarts; use attachment IDs when counting unique exceptions.
+
+The job resumed after ID 77877, reusing the 95 accepted copies from its blocked
+batch. Failed attachments are not counted as uploads, and completed scanning
+with exceptions is not full migration success. The ledger is the follow-up
+worklist; it does not automatically repair or retry excluded sources.
+
+```sh
+ssh ultralove-prod-app 'tail -n 20 -F /var/lib/ultralove-images/failures.jsonl'
+```
+
+#### Dev HTTP flow verification and review preview (2026-10-12)
+
+After the production source scan completed at 18:57 UTC, the user requested
+dev verification before any production delivery cutover. Dev and production
+both run release `562670c820`; no code deployment was needed.
+
+Dev delivery options were changed to `cloudflare-images` and remain enabled
+for review. Automatic synchronization remains disabled and its hourly event
+was cleared after the controlled test. Production options were rechecked and
+remain `cloudflare`, with automatic synchronization disabled.
+
+Dev still has no readable catalog originals. Existing generated attachment
+97164 (1000x800 PNG) was reused; no production media was copied. The following
+dev-only records were created:
+
+- 97165: hidden, non-purchasable product using the verified hosted fixture;
+- 97166: unsynchronized attachment referencing the same local generated file;
+- 97167: hidden, non-purchasable fallback product;
+- 97168: banner slide in the isolated `hosted-flow-test` group, with saved crop
+  coordinates 100,100,800,200;
+- 97169: `/hosted-images-dev-check/`, rendering the two explicit hidden-product
+  cards and test banner.
+
+Gallery preview: `/product/hosted-images-dev-test/`; fallback preview:
+`/product/hosted-images-dev-fallback/`. Fixture products have no price and
+cannot be purchased. The banner is not added to normal home/header groups.
+
+Sixteen assertions against actual guest origin HTTP responses passed: hosted
+card and gallery URLs, responsive candidates, exact markup dimensions,
+original-width clamping, hosted zoom, saved banner crop and rewrite marker,
+and unmapped card/gallery fallback routing. Forty additional checks passed:
+sixteen public image requests across eight profiles with WebP/AVIF Accept
+headers, exact delivered dimensions and format negotiation; real authenticated
+product-page delivery; original REST media URLs and CLI/feed source behavior;
+dirty-generation creation through the real metadata-update hook; HTTP
+fallback while dirty; unchanged-source sync clearing that generation without
+an upload; HTTP rollback; original byte integrity; and non-purchasability.
+The full-size 1000x800 response retains the smaller 4,710-byte original PNG
+instead of converting it. All 57 offline hosted-image regression assertions
+also passed.
+
+The previous flags and attachment-parent state, fixture IDs and 40-check
+verification report are retained under the dev host's root-only
+`/var/lib/ultralove-images/dev-flow-20261012/`. To restore dev delivery, use the
+saved `before.json` values (both were `cloudflare`), keep automatic sync off,
+and restore attachment 97164's saved parent if retiring the test products.
+Attachment 97166 shares 97164's file: do not delete its media files during
+cleanup. No source bytes were changed.
+
+Browser navigation reached Cloudflare Access login, so interactive visual,
+carousel and zoom behavior at desktop/mobile viewports still requires an
+authorized reviewer. The origin checks exercised real WordPress templates,
+not a simulated CLI frontend. Unmapped fallback URLs remain directed to the
+Access-protected dev zone; successful edge retrieval of those originals was
+not verified. Existing missing catalog images and vendor PHP deprecation
+notices are dev baseline limitations, not successful catalog-migration tests.
+Production cutover and automatic-sync activation remain separate approvals.
+
+#### Browser-confirmed dev catalog fallback (2026-10-12)
+
+After the user authenticated the browser through Cloudflare Access, ordinary
+dev shop thumbnails were confirmed to follow the fallback path. For attachment
+96655 (`2026/09/W637756.jpg`), dev has neither a readable original nor a hosted
+mapping; its recorded source dimensions are 1000x1000. The browser requested a
+600x600 `/cdn-cgi/image/` URL, received HTTP 307 to the dev original, then HTTP
+302 to the production original, which returned HTTP 200. Thus a 1000x1000
+production-hosted original in the browser is not proof of hosted-image delivery,
+and ordinary dev catalog thumbnails remain outside the generated-fixture test.
+
+The isolated preview was also verified in that browser: the mapped fixture
+loaded a physical 600x600 image from `imagedelivery.net` on desktop and selected
+a physical 300x300 image at a 390-pixel viewport. The deliberately unmapped card
+loaded its 1000x800 generated original through the fallback. The hosted cropped
+banner loaded successfully. Physical dimensions were measured using a separate
+image without `srcset`, since the DOM's `naturalWidth` for a responsive image
+can be density-corrected rather than the downloaded file's pixel width.
+
+Do not describe the complete dev catalog as migrated or visually verified:
+the real catalog lacks the local sources and verified mappings required by
+the deployed hosted-delivery helper. Enabling the official Cloudflare WordPress
+plugin does not supply either. No production delivery settings were changed.
+
+#### Real-catalog remote preview on dev
+
+To test the real catalog without copying production uploads into dev,
+`37-cloudflare-images.php` now supports separate `_ul_cf_images_dev_preview`
+records. This path requires all three guards: the explicit
+`ul_cf_images_dev_remote_preview` option, WordPress's `development` environment
+type, and the exact `dev.ultralove.ca` hostname. It cannot operate on production,
+even if the option is accidentally enabled. Normal `_ul_cf_images` mappings
+and their local modification-time/size checks remain unchanged.
+
+Remote previews are used only when the dev source file is absent. Account,
+content-addressed SHA-256 identity, attachment filename, dimensions, MIME and
+dirty state must match. Media-update hooks remove a preview record even with
+automatic synchronization disabled. A newly present local file must pass the
+normal local synchronization checks instead. Preview metadata is not considered
+a successfully synchronized local source by the copy worker.
+
+The CLI operational helper `ops/product-images/dev-preview.php` exports only
+currently verified production image identities and imports them separately on
+dev. Export rehashes each local source and checks its current account mapping;
+the snapshot contains no image bytes, credentials, titles or customer data.
+Import requires a trusted production snapshot for the configured account and
+matching dev attachment ID, path, MIME and geometry; mismatches are recorded
+and retain fallback. It saves prior preview metadata and its enable flag before
+writing. Store snapshots root-only outside the webroot and transfer through the
+trusted operator, never by allowing dev to connect to production.
+
+Run through WordPress CLI with the helper available outside the webroot:
+
+```sh
+wp eval-file /root/ultralove-images-dev-preview.php export /var/lib/ultralove-images/snapshot.json
+# Transfer only snapshot.json to dev through the operator, then:
+wp eval-file /root/ultralove-images-dev-preview.php import /var/lib/ultralove-images/snapshot.json
+```
+
+Use `/var/www/html` and add `--allow-root` only when operating as root.
+The helper's source is versioned under `ops/`; it is not a site plugin and must
+not be placed in the webroot. The import preserves normal hosted-copy mappings
+and leaves automatic synchronization and both delivery options unchanged.
+Delivery mode must already be `cloudflare-images` to exercise the preview.
+Disable `ul_cf_images_dev_remote_preview` to roll back the remote preview
+without deleting any media. Restore its metadata from the saved `.before.json`
+if needed. Regression coverage includes production and wrong-host denial,
+account/source mismatch, dirty generations and newly present local originals.
+
+Dev imported 20,270 matching preview identities from the 20,543-record verified
+snapshot; 273 absent, changed, dirty or locally present sources were skipped.
+Root-only snapshot, prior state and import report are retained on dev as
+`/var/lib/ultralove-images/dev-preview-20261012T2000.json` and its `.before.json`
+and `.result.json` companions. The source export remains on production.
+
+After deploying revisions `2d713f1` and `9a687f5` through the dev gate, all 40
+thumbnail tags on the checked real shop page used `imagedelivery.net` with no
+transformation fallbacks. Four sampled real product downloads were physically
+300x300 at a 1440-pixel viewport; the first product also selected and downloaded
+300x300 at a 390-pixel viewport. The previously observed W637756 original no
+longer redirected through dev to a 1000x1000 production upload.
+
+Real-catalog verification also exposed parentless secondary gallery attachments:
+the zoom ownership check now recognizes the current WooCommerce product's
+featured/gallery IDs, while preserving parent-based checks and ignoring
+unrelated full-size images. All four images on the sampled product page now
+use hosted gallery and zoom URLs; zoom downloads are intentionally 1000x1000,
+not thumbnail downloads. All 81 offline assertions passed, and server PHP lint,
+drift checks, code backups and four dev HTTP smoke tests passed.
+The user approved production deployment after reviewing dev.
+
+#### Production hosted-delivery cutover (2026-10-12)
+
+PR #159 passed CI and was merged as `370b30f624`. Its automatic dev deployment
+passed before the guarded production deployment. No drift or gate bypass was
+found; server PHP lint, service checks and all four deployment smoke tests
+passed. The previous code is backed up at
+`/var/lib/ultralove-deploy/backups/20261012T201443Z-562670c820.tgz`.
+
+At 20:16 UTC, production's product and banner delivery options were switched
+from `cloudflare` to `cloudflare-images` after a current source/account mapping
+check. Automatic synchronization and the dev preview remain disabled; the
+production environment/hostname cannot use the remote-preview exception.
+Delivery state before and after the change is retained root-only at
+`/var/lib/ultralove-images/production-cutover-20261012/`, alongside explicit
+cache-purge and verification reports.
+
+Three stale Nginx HTML-cache files were cleared after a scoped count.
+Cloudflare's active `ultralove.ca` zone cache was purged at 20:17 UTC for the
+sitewide HTML image-URL change. The MCP credential lacked purge permission;
+the configured production WordPress plugin credential confirmed the purge
+through the API instead. No Cloudflare settings or credentials were changed.
+
+Normal, non-cache-busted public shop/home pages were then checked in the
+browser. All 40 shop thumbnail tags, all 42 homepage product-card tags and all
+30 banner tags (including carousel clones) used `imagedelivery.net`. Sampled
+desktop and 390-pixel mobile thumbnails downloaded physical 300x300 images.
+The sampled banner downloaded at 1920x800. All four gallery images and their
+zoom sources on the W637756 product page used hosted delivery; intentional
+full-size zoom downloads remain 1000x1000.
+
+Six additional production runtime checks confirmed delivery flags, disabled
+automatic sync/dev preview, original CLI upload URLs, retained transformation
+fallback for excluded animated sources, unchanged SHA-256 for the previously
+rejected GIF, and real authenticated gallery delivery. The short-lived test
+session was revoked immediately after verification; no users, products,
+orders, payments or emails were created on production. The full offline suite
+passed 81 assertions before deployment.
+
+The 58 unresolved attachments remain recorded in the failure ledger and retain
+fallback; this cutover does not claim they were migrated. Original uploads and
+Spaces backups were not edited or deleted. Newly added media remains on
+fallback until manually synchronized while automatic sync is disabled.
+
+Delivery rollback:
+
+```sh
+cd /var/www/html
+wp option update ul_product_cdn cloudflare --allow-root
+wp option update ub_banner_cdn cloudflare --allow-root
+```
+
+Retain disabled automatic sync and purge only the HTML/cache layers required
+to remove stale hosted URLs. No image deletion or database restore is needed
+for delivery rollback. The code backup is a separate recovery path.
+
+#### Gallery navigation correction
+
+After the initial cutover, the user identified Cloudinary URLs in the gallery
+navigation strip. Main/gallery/zoom checks had not covered that separate path:
+both WooCommerce's primary gallery image and Martfury's secondary-image
+template request the navigation source with an explicit `[100, 100]` size,
+which bypasses named CDN profiles and supplies FlexSlider's `data-thumb`.
+
+The shared MU plugin now filters `woocommerce_gallery_thumbnail_size` to the
+existing `woocommerce_gallery_thumbnail` profile only for active frontend
+Cloudflare delivery. It retains the existing square 100/200-pixel profile and
+does not change Cloudinary rollback, admin, CLI, REST or cron requests.
+No vendor template or JavaScript edit is required. Navigation `data-thumb`
+and generated `.flex-control-thumbs img` URLs must be checked independently
+from the main image and zoom source.
+
+Dev verification on 2026-10-12: all four navigation sources on
+`/product/w637756-womanizer-beauty-lilac/` use hosted delivery and physically
+download as 100x100 images. Desktop and 390-pixel mobile slide-selection
+checks passed, including the normal URL without a cache-busting query.
+No Cloudinary images remained in the inspected gallery, while all four main
+and zoom sources remained hosted. The offline migration/delivery suite passes
+83 assertions, and `php ops/product-images/test-gallery-navigation.php` passes
+seven frontend/rollback/context assertions. These checks preceded the guarded
+production correction.
+
+Production correction: PR #161 merged as `0ae4c313b2` and passed that exact
+revision's automatic dev deployment. The guarded production deployment
+completed at 20:31 UTC on 2026-10-12 with no drift, server PHP lint, backup
+`/var/lib/ultralove-deploy/backups/20261012T203054Z-370b30f624.tgz`,
+PHP-FPM restart and four passing smoke tests. The release also carries the
+previously merged regenerated critical CSS from PR #158.
+
+After a confirmed Cloudflare zone-cache purge, the normal public product URL
+passed desktop (1440px) and mobile (390px) browser verification: four hosted
+100x100 navigation downloads, working second/fourth slide selection, four
+hosted main/zoom sources and no Cloudinary images in the inspected gallery.
+The live critical CSS file matches the repository checksum and its guest
+inline CSS matches after Autoptimize's removal of the generator comment.
+Nginx, PHP-FPM and Redis remain active. Delivery flags remain hosted with
+automatic sync and dev preview disabled on production; originals were not
+modified. Root-only release/cache evidence is recorded at
+`/var/lib/ultralove-images/gallery-navigation-20261012/release.json`.
+
 ## 6.5 Mail Transport
 
 ### 6.5.1 WordPress Outbound Mail
@@ -590,6 +1552,36 @@ crawlers walking every brand combination.
 - If anything ever sends as @ultralove.ca *without* Mailgun, add it to the root SPF first.
 - Mail logs: `/var/log/mail.log` (all recent deliveries are inbound, to Dovecot LMTP).
 - Backups: DigitalOcean weekly droplet backups, enabled 2026-10-02.
+
+## 6.6 Customer Media Library (built 2026-10-12, not yet deployed)
+
+`wp-content/plugins/ultralove-media-library/` adds a **Media Library** tab to WooCommerce My Account
+(`/my-account/media-library/`) where logged-in accounts browse product images and download them.
+
+- Browse: product grid (50 per page, matching the ZIP cap), search by name/SKU (WooCommerce's own product search), category filter.
+  Only published products with a featured image appear; featured image plus gallery images are listed.
+  Thumbnails use the normal WooCommerce `woocommerce_thumbnail` size, so they follow the Cloudflare
+  delivery in 6.2/6.3 automatically.
+- Downloads go through `admin-post.php` (login + per-link nonce), never public URLs:
+  single original images (streamed from the local upload, path checked to be inside uploads; there is no
+  resized or web-size option) and ZIP of the originals (selected products; max 50 products, 300 files,
+  300 MB of source files). Each card also has a labeled "Download all images (ZIP)" link that
+  ZIPs all images of that one product (same caps; limit 20 per 10 minutes per user).
+  Files are named `SKU-n.ext`.
+- Limits: 60 single downloads per minute and 5 ZIPs per 10 minutes per user (transients), and each download
+  is logged with `error_log`. No nginx rule yet: `admin-post.php` is not in the zones file
+  (`ops/nginx/99-ultralove-rate-limit-zones.conf`).
+- Access: any logged-in account. Narrow it with the `ultralove_media_library_can_access` filter (for example
+  to approved retailers).
+- Rewrite rules refresh once per plugin version (`ultralove_ml_rewrite_version` option) because deploys do not
+  run activation hooks.
+- Rollback: `wp plugin deactivate ultralove-media-library`; it stores nothing but that option.
+- Presentation: labeled search/category controls, filter reset, page context, square contained previews,
+  image counts, product names and SKUs, and individual-original links. Page-local selection supports a
+  partial-select state and the sticky download dock. Unavailable originals have an explicit empty state.
+  Endpoint-only CSS is maintained in `assets/media-library.css` and emitted inline by the plugin;
+  it is not requested as a separate stylesheet or loaded on other account endpoints.
+  Offline presentation checks: `php ops/media-library/test.php`.
 
 ## 7) Backups and Retention Architecture
 

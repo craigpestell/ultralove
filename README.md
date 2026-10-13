@@ -24,6 +24,7 @@ Details (config locations, firewall, PHP-FPM sizing, backups): `documentation/AR
 | `wp-content/themes/martfury-child/` | Child theme customizations, incl. `css/critical.css` (generated - see `ops/critical-css/`) |
 | `wp-content/plugins/hide-price-until-login/` | Custom plugin |
 | `wp-content/plugins/ultralove-*/` | Custom plugins: Banners, Backdrops, product export sync, product stock export |
+| `wp-content/plugins/ultralove-dropshipping/` | Approved-retailer manual checkout, default off on each environment; see [dropshipping runbook](documentation/dropshipping-pilot.md) |
 | `wp-content/mu-plugins/` | Custom MU plugins (ManageWP's `0-worker.php` excluded) |
 | `wp-content/object-cache.php`, `cloudinary-*.php`, `run-cloudinary-workers.sh` | Redis drop-in and Cloudinary maintenance scripts |
 | `deploy/` | Deploy pipeline (see below) |
@@ -34,7 +35,7 @@ Details (config locations, firewall, PHP-FPM sizing, backups): `documentation/AR
 | `ops/critical-css/` | Critical CSS generator (run by the "Critical CSS" workflow; see its README) |
 | `ops/css/` | Builds the trimmed copies of Martfury's / WooCommerce's / icon fonts' CSS (see its README) |
 | `ops/gravityforms/`, `ops/content/` | One-off maintenance scripts (Turnstile switch, header menu cleanup) |
-| `documentation/` | Architecture runbook and pending-release checklist |
+| `documentation/` | Architecture runbook, pending-release checklist, and [client picture-review reports](documentation/reports/image-migration-2026-10-12/client-product-picture-review.md) ([CSV](documentation/reports/image-migration-2026-10-12/client-product-picture-review.csv)) |
 | `.claude/skills/` | Claude Code skills: deploy workflow, where everything on a page comes from |
 | `.github/skills/ultralove-infrastructure/` | Infrastructure operations runbook |
 
@@ -63,6 +64,7 @@ tarball backup, mirror of owned paths, php-fpm restart when PHP changed, smoke t
 | Script | Purpose |
 | --- | --- |
 | `deploy/deploy.sh <env>` | Deploy a commit (`--ref`, `--dry-run`, `--yes`, `--adopt`, `--skip-dev-gate`) |
+| `deploy/ship-dev.sh` | Push the current branch and deploy it to dev, printing one result line (full output in a temp log) |
 | `deploy/pull-live.sh <env>` | Copy live owned files into the working tree to commit server-side drift |
 | `deploy/rollback.sh <env> [backup]` | Restore the latest (or given) pre-deploy backup |
 | `deploy/smoke-test.sh <env>` | HTTP smoke test of key pages |

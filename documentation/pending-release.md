@@ -1,5 +1,148 @@
 # Pending production release
 
+## Customer Media Library design cleanup (pending production deployment)
+
+The media-library plugin now has labeled filters, a reset link, clearer original-image download
+actions, square contained previews, product/image counts, and accessible page-local selection.
+The existing authenticated original/ZIP handlers, nonces and download limits are unchanged.
+Endpoint-only styles are emitted inline; the CSS source remains in the plugin for maintenance.
+No activation, database migration, upload copying or shared theme/critical CSS changes are required.
+Preview and approve the design before deploying to production. Dev lacks most catalog originals,
+so validate populated layouts with fixtures as well as the unavailable-original state on dev.
+Presentation regressions run with `php ops/media-library/test.php`.
+Validation: 18 offline presentation assertions, PHP lint, JavaScript syntax and whitespace checks
+passed. A browser-only fixture preview using production theme styles passed selection, partial-select,
+clear/focus recovery, keyboard and live-announcement checks. Layouts at 1440, 768, 390 and 320 CSS
+pixels had no library overflow and download/filter/selection targets at least 44px tall.
+This preview did not change either server or exercise real download responses.
+
+## Product-card thumbnail sizes (live on dev and production)
+
+Product cards now offer exactly 200x200 and 400x400 responsive image variants,
+with a 200x200 default source. The shared profile applies to shop grids, home
+grids, carousels and other WooCommerce product loops in both hosted Images and
+remote-source Cloudflare modes. Existing layout hints, lazy loading, source
+clamping and square crops are preserved. Gallery navigation remains 100/200px;
+main gallery and zoom sizes are unchanged.
+
+PR #164 merged as `89e65e1c4b` on 2026-10-12 after CI and branch-dev validation.
+The exact merge revision passed the automatic dev gate and guarded production
+deployment. PHP-FPM restarted and the origin HTML cache was cleared by the
+deployment; the configured WordPress Cloudflare integration confirmed a zone
+cache purge for this sitewide markup change. Nginx, PHP-FPM and Redis are active,
+and all four production smoke checks passed.
+
+All 40 shop card tags and 42 home card tags passed verification on each
+environment. Sampled physical downloads confirmed 200x200 and 400x400 variants.
+Smaller source images retain the no-upscaling rule (for example, a sampled
+production home image supplies 200x200 and 366x366 instead of enlarging to 400).
+All 110 offline regression assertions and PHP lint passed. No attachment
+regeneration, upload changes or delivery-option changes were made.
+Production rollback archive:
+`/var/lib/ultralove-deploy/backups/20261012T211609Z-0ae4c313b2.tgz`.
+
+## Hosted image delivery cutover (live on production)
+
+**2026-10-12:** production's source-copy scan finished with 20,543 accepted
+attachment copies and 58 unique unresolved attachments in its failure ledger.
+After the user approved dev, PR #159 was merged and revision `370b30f624`
+passed the merge-revision dev gate and guarded production deployment.
+Production delivery options are now `cloudflare-images`; automatic hosted-image
+sync remains disabled.
+
+Dev is now using `cloudflare-images` for product and banner delivery, with
+automatic synchronization disabled. Review the dev-only generated fixtures:
+
+- [Card and cropped-banner preview](https://dev.ultralove.ca/hosted-images-dev-check/)
+- [Product gallery and zoom](https://dev.ultralove.ca/product/hosted-images-dev-test/)
+- [Deliberately unsynchronized fallback](https://dev.ultralove.ca/product/hosted-images-dev-fallback/)
+
+These hidden, non-purchasable products are test data only; do not export them to
+production. Dev has no readable catalog originals, and no production uploads
+were copied to it. Real guest/logged-in origin requests, responsive and crop
+geometry, public hosted WebP/AVIF delivery, REST source preservation, dirty
+generation recovery and delivery rollback passed. Browser checks after Access login verified the mapped fixture's physical
+600x600 desktop and 300x300 mobile downloads, plus the hosted cropped banner.
+Ordinary dev catalog thumbnails still fall back through HTTP 307/302 to
+production originals (1000x1000 in the observed example); they have no dev
+hosted mappings or readable local originals in the initial test. The guarded
+dev-only remote preview now supplies 20,270 matching verified identities,
+without copying production uploads or relaxing production source checks.
+All 40 real shop thumbnail tags on the checked page use hosted delivery, with
+300x300 physical downloads confirmed on desktop and mobile. All four gallery
+zoom sources on the sampled real product page are hosted; zoom intentionally
+retains the 1000x1000 source size. Parentless gallery images are recognized
+through their current WooCommerce product rather than assumed unrelated.
+The user reviewed dev and approved production deployment on 2026-10-12.
+
+Production cutover retains fallback for the 58 unresolved exceptions.
+Automatic synchronization must remain disabled until unsupported animated
+sources in its separate maintenance path are addressed.
+Normal public home/shop pages, mobile thumbnails, all four gallery/zoom images
+on the sampled product, and authenticated gallery delivery passed verification.
+Origin HTML cache and Cloudflare zone cache were purged for the sitewide URL
+change. Original uploads, source URLs for CLI consumers and backup storage
+remain unchanged; no unrelated pending-release operations were applied.
+See [the image runbook](ARCHITECTURE.md#63-hosted-cloudflare-images-copies)
+for evidence, rollback and test-data recovery details.
+
+### Gallery navigation follow-up (live on production)
+
+The first production checks covered main images and zoom, but missed the
+navigation strip's separate `data-thumb` URLs. WooCommerce and Martfury request
+those as numeric dimensions, bypassing the shared named CDN profiles.
+The follow-up uses the existing square gallery thumbnail profile through
+WooCommerce's gallery-size hook. Both primary and secondary navigation
+thumbnails and slide selection passed dev verification before production.
+Automatic synchronization remains disabled.
+Dev verification passed on 2026-10-12: all four navigation thumbnails on the
+sampled real product download from Cloudflare as 100x100 images on desktop
+and mobile; slide selection works and main/zoom sources remain hosted.
+PR #161 passed CI and merged as `0ae4c313b2`; its exact merge revision passed
+the automatic dev gate and guarded production deployment. After a confirmed
+Cloudflare cache purge, the normal production product URL passed the same
+desktop/mobile navigation-size and slide-selection checks, with no Cloudinary
+images remaining in the inspected gallery. All four main/zoom sources remain
+hosted. Service checks, four smoke tests and the live inline critical CSS
+verification passed; original uploads and delivery flags are unchanged.
+
+## Dropshipping production rollout (disabled)
+
+**Production status, 2026-10-08:** release `5e920b0` is deployed and verified.
+The existing Dropshipping plugin remains active with
+`ultralove_dropshipping_enabled=no`; the admin switch is unchecked, approval
+fields and the checkout opt-in are hidden, and the approval baseline is
+unchanged. The supplier feed and Shopify supplier code are installed but their
+plugins remain inactive. No production test users, products, orders, payments,
+emails, or shipments were created.
+
+This release includes the shared dropshipping checkbox markup and regenerated
+critical CSS. Staging PHP lint, service checks, and public smoke tests passed.
+Cloudflare cache was purged through the configured WordPress plugin after a
+normal home-page request was found to contain stale CSS; normal home and Sale
+Products requests then matched the released inline CSS. The previous revision
+was `f229e6b`, backed up at
+`/var/lib/ultralove-deploy/backups/20261009T011121Z-f229e6bc4b.tgz`.
+Feature enablement still requires separate approval.
+
+`ultralove-dropshipping` adds approved-retailer manual dropship checkout.
+The same code supports development and production; the feature defaults off
+independently on each environment.
+
+After CI, merge, and verification of the exact main SHA on dev, deploy that SHA
+to production through `deploy/deploy.sh`. Set
+`ultralove_dropshipping_enabled=no` **before** activating the plugin.
+Activate **UltraLove Dropshipping**, verify its admin page is available with
+the switch unchecked, and leave all production account approvals unchanged.
+User-profile approval fields stay hidden and access changes are rejected while
+the switch is off. Ordinary checkout remains unchanged.
+
+Feature enablement is a separate approval, not part of code deployment.
+Do not copy dev options/users or run synthetic integration tests on production.
+See [the runbook](dropshipping-pilot.md) for verification, packing, and rollback.
+This is a separate rollout; do not automatically apply the unrelated database
+or Cloudflare steps listed below.
+
 Everything below is on **dev.ultralove.ca** and waits for the client's approval, then ships to
 production as one release. Code goes through `deploy/deploy.sh` (see the `ultralove-deploy` skill);
 the database / plugin steps are **not code** and have to be repeated on the production server by hand,
@@ -7,8 +150,39 @@ in the order listed.
 
 ## Code
 
-Nothing pending: production runs `main` (`84ac3c8`, deployed 2026-10-02 04:58 UTC) on the new production droplet
-(Ubuntu 26.04, PHP 8.5 - see `documentation/ARCHITECTURE.md` 1.3). After a deploy that changes page HTML, purge
+**Product CSV admin consolidation** - standard retailer and Shopify CSV
+generation is owned only by **UltraLove Product CSV Export** (existing plugin
+slug `ultralove-product-export-sync`, version 1.1.0). One WooCommerce submenu
+replaces Product Export Sync, Update Product CSV and Product Export Generations;
+old page URLs redirect to the unified controls. The duplicate child-theme
+generator is removed and obsolete hourly export events are cleared.
+CSV schemas/URLs and customer-account links are unchanged. Keep this plugin
+active; stock-only exports, WP All Import/Export, the feed and dropshipping
+plugins are separate and unchanged. Production deployment awaits approval.
+The superseded, unconnected Syncee WordPress plugin was deactivated and its
+files deleted only on the isolated integration lab. A root-only recovery
+archive is retained outside the webroot; it was not installed on dev or production.
+
+**Update cart icon removal** - the child theme suppresses the parent theme's
+decorative `::before` icon on cart/checkout tables to avoid the reported Firefox
+artifact. The button label, shared spacing, and cart-update behavior are unchanged.
+Code-only change for dev preview; production awaits approval. No database or
+plugin-setting changes are required.
+
+**Checkout checkbox visibility** - dev preview, awaiting user testing and production approval.
+The child theme draws outlined unchecked boxes and pink checked boxes with white ticks
+without relying on the reduced icon font. This covers the terms agreement and other
+standard checkout checkbox labels, including checkout login's Remember me, account
+creation, and alternate shipping address where available. Hidden inputs remain
+keyboard-focusable with a visible focus ring. Native/plugin-specific checkbox markup
+and payment/shipping radios are unchanged. Targeted browser fixtures passed against
+trimmed desktop and original phone styles; full cart/checkout testing is left to the user.
+No database or plugin-setting changes are required.
+
+The pre-dropshipping production baseline is `708abcd` (verified 2026-10-07).
+The dropshipping release follows the disabled-rollout procedure above on the
+production droplet (Ubuntu 26.04, PHP 8.5 - see `documentation/ARCHITECTURE.md` 1.3).
+After a deploy that changes cacheable page HTML, purge
 Cloudflare (Caching > Purge Everything, or the changed URLs): APO serves cached HTML (`cf-cache-status: HIT`)
 until then.
 

@@ -1,0 +1,19 @@
+.woocommerce-checkout form.checkout .shipping_address.ultralove-dropship-delivery {
+    box-sizing: border-box;
+    margin-bottom: 24px;
+    padding: clamp(18px, 3vw, 28px);
+    border: 1px solid rgb(177, 101, 255);
+    border-radius: 10px;
+    background: rgba(177, 101, 255, .04);
+}
+
+.woocommerce-checkout form.checkout .shipping_address.ultralove-dropship-delivery::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+.woocommerce-checkout form.checkout #ultralove-dropship-delivery-title {
+    margin: 0 0 24px;
+    color: #3b1d4a;
+}

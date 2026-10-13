@@ -100,8 +100,7 @@ class Martfury_Dokan {
 	function body_classes( $classes ) {
 		// Adds a class of group-blog to blogs with more than 1 published author.
 		if ( martfury_is_vendor_page() ) {
-			$shop_view = isset( $_COOKIE['shop_view'] ) ? $_COOKIE['shop_view'] : martfury_get_option( 'catalog_view_12' );
-			$classes[] = 'shop-view-' . $shop_view;
+			$classes[] = 'shop-view-grid';
 			$classes[] = 'woocommerce';
 		}
 

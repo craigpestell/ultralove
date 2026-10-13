@@ -11,7 +11,7 @@
  *              "attached" to the pointer during a drag/swipe - matching RevSlider's own click-drag
  *              and touch-swipe navigation. A clone of the last slide is prepended and a clone of the
  *              first is appended so dragging past either end loops seamlessly.
- * Version: 2.1.3
+ * Version: 2.1.4
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -151,6 +151,110 @@ function ub_apply_transform( $html, $seg, $out_w, $out_h ) {
 }
 
 /**
+ * Banner delivery: 'cloudinary' (default), 'cloudflare' (/cdn-cgi/image/ on the local upload),
+ * or 'cloudflare-images' (verified hosted copies). Set with the
+ * ub_banner_cdn option. A logged-in editor can preview the other one on any page with
+ * ?ub_cdn=cloudflare-images (or =cloudflare / =cloudinary); logged-in pages aren't cached.
+ */
+function ub_banner_cdn() {
+	if ( isset( $_GET['ub_cdn'] ) && is_user_logged_in() && current_user_can( 'edit_others_posts' ) ) { // phpcs:ignore WordPress.Security.NonceVerification
+		$preview = sanitize_key( wp_unslash( $_GET['ub_cdn'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
+		if ( in_array( $preview, array( 'cloudinary', 'cloudflare', 'cloudflare-images' ), true ) ) {
+			return $preview;
+		}
+	}
+	$mode = get_option( 'ub_banner_cdn', 'cloudinary' );
+	return in_array( $mode, array( 'cloudflare', 'cloudflare-images' ), true ) ? $mode : 'cloudinary';
+}
+
+/**
+ * Hosted-copy URL, or a transformation URL for the local file as a path on this site (no host: the
+ * Cloudinary plugin only rewrites full local upload URLs, so a /cdn-cgi/ path is left alone).
+ * $trim is array( x, y, w, h ) in the file's pixels (a saved crop) or null. onerror=redirect serves the
+ * original file if a transformation fails (for example once the monthly free quota is used up).
+ */
+function ub_cf_image_url( $attachment_id, $width, $height = 0, $trim = null, $quality = 80 ) {
+	$file = get_post_meta( $attachment_id, '_wp_attached_file', true );
+	if ( ! $file ) {
+		return '';
+	}
+	if ( 'cloudflare-images' === ub_banner_cdn() ) {
+		$options = array( 'quality' => (int) $quality, 'fit' => 'scale-down', 'width' => (int) $width );
+		if ( $height ) {
+			$options['height'] = (int) $height;
+		}
+		if ( $trim ) {
+			$options['trim.left'] = (int) $trim[0];
+			$options['trim.top'] = (int) $trim[1];
+			$options['trim.width'] = (int) $trim[2];
+			$options['trim.height'] = (int) $trim[3];
+		}
+		$hosted = ul_cf_images_url( (int) $attachment_id, $options );
+		if ( $hosted ) {
+			return $hosted;
+		}
+	}
+	$uploads = wp_get_upload_dir();
+	$opts    = array( 'format=auto', 'quality=' . (int) $quality, 'fit=scale-down', 'onerror=redirect', 'width=' . (int) $width );
+	if ( $height ) {
+		$opts[] = 'height=' . (int) $height;
+	}
+	if ( $trim ) {
+		array_push( $opts, 'trim.left=' . (int) $trim[0], 'trim.top=' . (int) $trim[1], 'trim.width=' . (int) $trim[2], 'trim.height=' . (int) $trim[3] );
+	}
+	return '/cdn-cgi/image/' . implode( ',', $opts ) . wp_parse_url( $uploads['baseurl'], PHP_URL_PATH ) . '/' . ltrim( $file, '/' );
+}
+
+/**
+ * Cloudflare version of ub_apply_transform(): points a banner <img> at /cdn-cgi/image/ URLs for the
+ * attachment's local file. $crop is a saved crop array( x, y, w, h ) in that file's pixels (the
+ * pixels the admin cropper shows, so no scaling to an original upload is needed) or null; for a plain
+ * slide $out_w x $out_h is the size WordPress wrote on the tag. Same widths and aspect handling as
+ * the Cloudinary path, except candidates are never wider than the source region (fit=scale-down does
+ * not upscale, and the declared width and height must match what is served).
+ */
+function ub_apply_cloudflare( $html, $attachment_id, $crop, $out_w, $out_h ) {
+	if ( $crop ) {
+		$out_w = $crop['w'];
+		$out_h = $crop['h'];
+	}
+	if ( ! $out_w || ! $out_h ) {
+		return $html;
+	}
+	$trim   = $crop ? array( $crop['x'], $crop['y'], $crop['w'], $crop['h'] ) : null;
+	$max_w  = min( $out_w, 1920 );
+	$widths = array();
+	foreach ( array( 370, 600, 768, 1024, 1536 ) as $n ) {
+		if ( $n < $max_w ) {
+			$widths[] = $n;
+		}
+	}
+	$widths[] = $max_w;
+
+	$url_for = function ( $n ) use ( $attachment_id, $out_w, $out_h, $trim ) {
+		return ub_cf_image_url( $attachment_id, $n, $trim ? round( $n * $out_h / $out_w ) : 0, $trim );
+	};
+	if ( ! $url_for( $max_w ) ) {
+		return $html;
+	}
+	$srcset = array();
+	foreach ( $widths as $n ) {
+		$srcset[] = $url_for( $n ) . ' ' . $n . 'w';
+	}
+
+	$html = preg_replace( '/\ssrc="[^"]*"/', ' src="' . esc_url( $url_for( $max_w ) ) . '"', $html, 1 );
+	if ( preg_match( '/\ssrcset="/', $html ) ) {
+		$html = preg_replace( '/\ssrcset="[^"]*"/', ' srcset="' . esc_attr( implode( ', ', $srcset ) ) . '"', $html, 1 );
+	} else {
+		$html = preg_replace( '/<img/', '<img srcset="' . esc_attr( implode( ', ', $srcset ) ) . '"', $html, 1 );
+	}
+	$html = preg_replace( '/\swidth="\d+"/', ' width="' . $max_w . '"', $html, 1 );
+	$html = preg_replace( '/\sheight="\d+"/', ' height="' . round( $max_w * $out_h / $out_w ) . '"', $html, 1 );
+	// Marks the tag as done, so the output pass below leaves it alone.
+	return preg_replace( '/<img/', '<img data-ub-cdn="cloudflare"', $html, 1 );
+}
+
+/**
  * CSS version of a saved crop, for a slide image Cloudinary can't crop (dev has no Cloudinary; on
  * prod, an image not synced yet). Wraps the local <img> in a .ub-crop box of the crop's shape,
  * fitted into the $slot_ratio slide the way object-fit: contain fits a Cloudinary-cropped image,
@@ -210,6 +314,9 @@ add_action(
 					'/<img\b[^>]*\bub-banner-img\b[^>]*>/',
 					function ( $m ) {
 						$tag   = $m[0];
+						if ( false !== strpos( $tag, 'data-ub-cdn="cloudflare"' ) ) {
+							return $tag;
+						}
 						$out_w = null;
 						$out_h = null;
 						$seg   = '';
@@ -765,7 +872,11 @@ add_shortcode(
 			$link     = ub_slide_link( $slide->ID );
 			$thumb_id = get_post_thumbnail_id( $slide->ID );
 			$bg_url   = '';
-			if ( 'blur' === $bg_style ) {
+			$use_cf   = in_array( ub_banner_cdn(), array( 'cloudflare', 'cloudflare-images' ), true ) && ! is_admin();
+			if ( 'blur' === $bg_style && $use_cf ) {
+				// Small, low-quality copy for the blurred backdrop (see below).
+				$bg_url = ub_cf_image_url( $thumb_id, 320, 0, null, 40 );
+			} elseif ( 'blur' === $bg_style ) {
 				// wp_get_attachment_image_url() falls back to the full, unresized original when an
 				// attachment has no local 'medium' intermediate - serving the whole multi-MB original
 				// just to blur it into a backdrop. wp_get_attachment_image()'s own src, extracted the
@@ -798,7 +909,7 @@ add_shortcode(
 					$img_atts['data-ub-preload-media'] = $preload_media;
 				}
 				$full_meta = wp_get_attachment_metadata( $thumb_id );
-				if ( $crop ) {
+				if ( $crop && ! $use_cf ) {
 					$img_atts['data-ub-crop'] = implode( ',', $crop );
 					if ( ! empty( $full_meta['width'] ) && ! empty( $full_meta['height'] ) ) {
 						// The image's size and the slide's shape, for the CSS crop used when Cloudinary
@@ -820,7 +931,18 @@ add_shortcode(
 						$dy > 0 ? $crop['y'] / $dy * 100 : 0
 					);
 				} else {
-					echo wp_get_attachment_image( $thumb_id, 'ub_banner', false, $img_atts ); // phpcs:ignore WordPress.Security.EscapeOutput
+					$img_html = wp_get_attachment_image( $thumb_id, 'ub_banner', false, $img_atts );
+					if ( $use_cf ) {
+						// A saved crop is in the pixels of WordPress's 'full' image, which is the file Cloudflare reads.
+						$img_html = ub_apply_cloudflare(
+							$img_html,
+							$thumb_id,
+							$crop,
+							preg_match( '/\swidth="(\d+)"/', $img_html, $w_match ) ? (int) $w_match[1] : 0,
+							preg_match( '/\sheight="(\d+)"/', $img_html, $h_match ) ? (int) $h_match[1] : 0
+						);
+					}
+					echo $img_html; // phpcs:ignore WordPress.Security.EscapeOutput
 				}
 				?>
 			</a>

@@ -31,6 +31,20 @@ jobs:
       - name: Shellcheck deploy scripts
         run: shellcheck -x -S warning deploy/*.sh
 
+      - name: Product CSV regression tests
+        run: |
+          php -l ops/product-export/verify.php
+          php ops/product-export/test.php
+
+      - name: Product feed and import title regression tests
+        run: |
+          php -l ops/dropshipping/verify-retail-names.php
+          php ops/dropshipping/test-product-feed.php
+          php ops/dropshipping/test-catalog-import.php
+
+      - name: Hosted image migration and delivery regression tests
+        run: php ops/product-images/test.php
+
       - name: No DB dumps, invoices, archives, backups or oversized files
         run: |
           bad=$(git ls-files | grep -Ei '\.(sql|sql\.gz|zip|tgz|tar|bak|xlsx)$|\.bak-|(^|/)invoice|(^|/)statement-' || true)

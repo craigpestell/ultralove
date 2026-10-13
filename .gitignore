@@ -25,6 +25,7 @@
 /wp-content/plugins/*
 !/wp-content/plugins/hide-price-until-login/
 !/wp-content/plugins/ultralove-*/
+# Shopify supplier and product feed code are covered by the whitelist above.
 
 !/wp-content/themes/
 /wp-content/themes/*
@@ -51,3 +52,4 @@ desktop.ini
 /ops/**/.sync-staging/
 /ops/**/.dev-validation-passed
 /.claude/settings.local.json
+/.claude/worktrees/
