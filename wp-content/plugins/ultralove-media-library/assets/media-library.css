@@ -9,18 +9,42 @@
 .ul-ml__card { cursor: pointer; transition: border-color .15s, box-shadow .15s; }
 .ul-ml__card.is-selected { border-color: #b3094b; box-shadow: 0 0 0 2px #b3094b; }
 
-/* Floating action bar: stays at the bottom of the screen while the grid is in view. */
-.ul-ml__dock { position: sticky; bottom: 16px; z-index: 50; display: flex; justify-content: center; margin-top: 16px; padding: 0 8px; pointer-events: none; visibility: hidden; opacity: 0; transform: translateY(16px); transition: opacity .2s, transform .2s, visibility .2s; }
-.ul-ml__dock.is-visible { visibility: visible; opacity: 1; transform: none; }
-.ul-ml__dock-inner { pointer-events: auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 16px; max-width: 100%; padding: 10px 10px 10px 22px; color: #fff; background: #3b1d4a; border-radius: 999px; box-shadow: 0 10px 28px rgba(0, 0, 0, .28); }
-.ul-ml__dock-text { font-size: 15px; white-space: nowrap; }
-.ul-ml__dock-text strong { font-size: 18px; }
-.ul-ml__clear { padding: 0; color: rgba(255, 255, 255, .8); background: none; border: 0; font-size: 14px; text-decoration: underline; cursor: pointer; }
-.ul-ml__clear:hover, .ul-ml__clear:focus { color: #fff; background: none; }
-.ul-ml__dock .ul-ml__zipbtn { display: inline-flex; align-items: center; gap: 8px; margin: 0; padding: 10px 22px; color: #fff; background: #b3094b; border: 0; border-radius: 999px; font-weight: 600; }
-.ul-ml__dock .ul-ml__zipbtn:hover:not(:disabled), .ul-ml__dock .ul-ml__zipbtn:focus:not(:disabled) { background: #d10b59; }
+/* Floating action bar ("dock").
+   Sticks to the bottom of the viewport while the form is in view, and rests in normal flow under
+   the grid at the end of the form, so it never covers the last row or the page links below.
+   It always occupies its (hidden) space in the flow, so showing it causes no layout jump.
+   NOTE: sticky needs no ancestor with overflow hidden/auto between this and the scrolling page.
+   Contrast (WCAG AA): white on #3b1d4a ~13.7:1, white on #b3094b ~6.9:1, white on hover #c20a52
+   ~6.1:1, Clear link #efe6f4 on #3b1d4a ~11:1. */
+.ul-ml__dock { position: sticky; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 50; display: flex; justify-content: center; margin-top: 16px; padding: 0 8px; pointer-events: none; visibility: hidden; opacity: 0; transform: translateY(12px); transition: opacity .2s ease, transform .2s ease, visibility 0s linear .2s; }
+.ul-ml__dock.is-visible { visibility: visible; opacity: 1; transform: none; transition-delay: 0s; }
+.ul-ml__dock .ul-ml__dock-inner { box-sizing: border-box; pointer-events: auto; display: flex; flex-wrap: nowrap; align-items: center; justify-content: center; gap: 8px 16px; max-width: 100%; padding: 8px 8px 8px 24px; color: #fff; background: #3b1d4a; border-radius: 999px; box-shadow: 0 10px 28px rgba(0, 0, 0, .28), 0 0 0 1px rgba(255, 255, 255, .08); font-family: inherit; }
+.ul-ml__dock .ul-ml__dock-text { min-width: 0; font-size: 15px; line-height: 1.25; color: #fff; font-variant-numeric: tabular-nums; }
+.ul-ml__dock .ul-ml__dock-text strong { font-size: 18px; font-weight: 700; color: #fff; }
+/* Clear: a text-style button; padding gives a comfortable tap target without enlarging the bar. */
+.ul-ml__dock .ul-ml__clear { flex: 0 0 auto; margin: 0; padding: 10px 4px; min-height: 0; color: #efe6f4; background: none; border: 0; border-radius: 4px; box-shadow: none; font-family: inherit; font-size: 14px; font-weight: 400; line-height: 1.2; letter-spacing: 0; text-transform: none; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.ul-ml__dock .ul-ml__clear:hover { color: #fff; background: none; text-decoration-thickness: 2px; }
+.ul-ml__dock .ul-ml__zipbtn.ul-ml__zipbtn { flex: 0 0 auto; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-sizing: border-box; min-height: 44px; margin: 0; padding: 0 22px; color: #fff; background: #b3094b; border: 0; border-radius: 999px; box-shadow: none; font-family: inherit; font-size: 15px; font-weight: 600; line-height: 1; letter-spacing: 0; text-transform: none; white-space: nowrap; cursor: pointer; transition: background-color .15s ease, transform .1s ease; }
+.ul-ml__dock .ul-ml__zipbtn.ul-ml__zipbtn:hover:not(:disabled) { color: #fff; background: #c20a52; }
+.ul-ml__dock .ul-ml__zipbtn.ul-ml__zipbtn:active:not(:disabled) { background: #96073e; transform: translateY(1px); }
+.ul-ml__dock .ul-ml__zipbtn.ul-ml__zipbtn:disabled { opacity: .55; cursor: not-allowed; }
+.ul-ml__dock .ul-ml__zipbtn svg { flex: 0 0 auto; }
+/* Visible keyboard focus: white ring with an offset so it reads on both the purple and crimson. */
+.ul-ml__dock .ul-ml__clear:focus-visible, .ul-ml__dock .ul-ml__zipbtn.ul-ml__zipbtn:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+/* Screen-reader-only status text (the debounced live region, see media-library.js). */
+.ul-ml__sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; border: 0; }
+/* Narrow screens: full-width bar with rounded corners, safe-area aware, shorter and tighter. */
+@media (max-width: 600px) {
+	.ul-ml__dock { bottom: calc(8px + env(safe-area-inset-bottom, 0px)); padding: 0 calc(8px + env(safe-area-inset-right, 0px)) 0 calc(8px + env(safe-area-inset-left, 0px)); }
+	.ul-ml__dock .ul-ml__dock-inner { width: 100%; justify-content: space-between; gap: 4px 10px; padding: 8px 8px 8px 16px; border-radius: 18px; }
+	.ul-ml__dock .ul-ml__dock-text { flex: 1 1 auto; font-size: 14px; }
+	.ul-ml__dock .ul-ml__dock-text strong { font-size: 17px; }
+	.ul-ml__dock .ul-ml__zipbtn.ul-ml__zipbtn { padding: 0 16px; font-size: 14px; }
+}
 @media (prefers-reduced-motion: reduce) {
-	.ul-ml__dock, .ul-ml__card { transition: none; }
+	.ul-ml__dock, .ul-ml__card, .ul-ml__dock .ul-ml__zipbtn.ul-ml__zipbtn { transition: none; }
+	.ul-ml__dock { transform: none; }
+	.ul-ml__dock .ul-ml__zipbtn.ul-ml__zipbtn:active:not(:disabled) { transform: none; }
 }
 .ul-ml__info { cursor: auto; margin-top: 8px; padding: 8px; border: 1px solid #e5e5e5; border-radius: 8px; background: #fafafa; }
 .ul-ml__name { font-size: 14px; line-height: 1.3; }

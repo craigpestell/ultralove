@@ -144,11 +144,13 @@ final class UltraLove_Media_Library {
 		echo '</ul>';
 		// Floating action bar: sticks to the bottom of the screen while the grid is in view and
 		// slides in once something is selected (see assets/media-library.js).
-		echo '<div class="ul-ml__dock" role="region" aria-label="' . esc_attr__( 'Selected products', 'ultralove-media-library' ) . '" data-label-one="' . esc_attr__( 'product selected', 'ultralove-media-library' ) . '" data-label-many="' . esc_attr__( 'products selected', 'ultralove-media-library' ) . '"><div class="ul-ml__dock-inner">';
-		echo '<span class="ul-ml__dock-text" aria-live="polite"><strong class="ul-ml__count">0</strong> <span class="ul-ml__count-label">' . esc_html__( 'products selected', 'ultralove-media-library' ) . '</span></span>';
+		echo '<div class="ul-ml__dock" role="region" aria-label="' . esc_attr__( 'Selected products', 'ultralove-media-library' ) . '" data-label-one="' . esc_attr__( 'product selected', 'ultralove-media-library' ) . '" data-label-many="' . esc_attr__( 'products selected', 'ultralove-media-library' ) . '" data-label-none="' . esc_attr__( 'Selection cleared', 'ultralove-media-library' ) . '"><div class="ul-ml__dock-inner">';
+		echo '<span class="ul-ml__dock-text"><strong class="ul-ml__count">0</strong> <span class="ul-ml__count-label">' . esc_html__( 'products selected', 'ultralove-media-library' ) . '</span></span>';
 		echo '<button type="button" class="ul-ml__clear">' . esc_html__( 'Clear', 'ultralove-media-library' ) . '</button>';
 		echo '<button type="submit" class="button ul-ml__zipbtn" disabled><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M4.5 7 8 10.5 11.5 7M2.5 13.5h11"/></svg> ' . esc_html__( 'Download ZIP', 'ultralove-media-library' ) . '</button>';
 		echo '</div></div>';
+		// Debounced screen-reader announcement; the visible count above is deliberately not a live region.
+		echo '<span class="ul-ml__sr" role="status" aria-live="polite" aria-atomic="true"></span>';
 		echo '</form>';
 
 		if ( $links ) {

@@ -11,6 +11,25 @@
 	var count = root.querySelector( '.ul-ml__count' );
 	var label = root.querySelector( '.ul-ml__count-label' );
 	var clear = root.querySelector( '.ul-ml__clear' );
+	var status = root.querySelector( '.ul-ml__sr' );
+	var announceTimer = null;
+	var lastAnnounced = 0;
+
+	// Announce the selection to screen readers only after the user pauses (so ticking several
+	// products quickly gives one message, not one per click), and only when the count changed.
+	function announce( n ) {
+		if ( ! status ) {
+			return;
+		}
+		window.clearTimeout( announceTimer );
+		announceTimer = window.setTimeout( function () {
+			if ( n === lastAnnounced ) {
+				return;
+			}
+			lastAnnounced = n;
+			status.textContent = n === 0 ? dock.getAttribute( 'data-label-none' ) : n + ' ' + ( n === 1 ? dock.getAttribute( 'data-label-one' ) : dock.getAttribute( 'data-label-many' ) );
+		}, 700 );
+	}
 
 	function update() {
 		var n = 0;
@@ -28,6 +47,7 @@
 		button.disabled = n === 0;
 		dock.classList.toggle( 'is-visible', n > 0 );
 		all.checked = n > 0 && n === picks.length;
+		announce( n );
 	}
 
 	all.addEventListener( 'change', function () {
@@ -44,6 +64,8 @@
 			p.checked = false;
 		} );
 		update();
+		// The dock is about to be hidden; move focus to "Select all" so keyboard focus is not lost.
+		all.focus( { preventScroll: true } );
 	} );
 
 	// Clicking the product image or the card padding around it toggles the checkbox. The text box
