@@ -47,7 +47,7 @@ foreach ( array( 'cloudflare', 'cloudflare-images' ) as $delivery_mode ) {
 		$expected_srcset = $candidates[200]['url'] . ' 200w, ' . $candidates[400]['url'] . ' 400w';
 		$assert( $attributes['srcset'] === $expected_srcset, 'Rendered card srcset must contain exactly the 200w and 400w variants.' );
 		$assert( $attributes['sizes'] === 'auto, (max-width: 575px) calc(50vw - 50px), 250px'
-			&& $attributes['loading'] === 'lazy', 'Lazy cards must use their rendered width and retain the older-browser layout hint.' );
+				&& $attributes['loading'] === 'lazy', 'Lazy cards must use their rendered width and retain the older-browser layout hint.' );
 		foreach ( array( 'lazy', 'eager', '' ) as $loading ) {
 			$expected_sizes = ( $loading === 'lazy' ? 'auto, ' : '' ) . ul_pcdn_profile_for_size( $size )['attr'];
 			foreach ( array( '', '100vw', 'auto, 100vw' ) as $incoming_sizes ) {
