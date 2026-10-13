@@ -2699,7 +2699,7 @@ a.add_to_wishlist + a.view-wishlist {
     margin-left: 15px
 }
 
-/* Wishlist heart on the thumbnail (js/product-card-wishlist.js adds it after the page loads): a round,
+/* Server-rendered wishlist heart on the thumbnail (js/product-card-wishlist.js applies its saved state): a round,
    semi-transparent white button (with a light blur behind it, so the heart stays legible) in the image's
    bottom right corner, always showing at every width (touch screens can't hover). It turns the parent theme's
    white bar that slides up over the image on hover into that button, hence the #page weight to beat the
