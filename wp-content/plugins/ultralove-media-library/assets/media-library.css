@@ -56,3 +56,4 @@
 .ul-ml__pages--top { margin: 0 0 16px; }
 .ul-ml__pages .page-numbers { display: inline-block; padding: 4px 10px; margin-right: 4px; border: 1px solid #e5e5e5; border-radius: 4px; }
 .ul-ml__pages .current { background: #333; color: #fff; }
+.ul-ml__limit { font-size: 13px; color: #666; }
