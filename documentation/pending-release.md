@@ -1,5 +1,21 @@
 # Pending production release
 
+## Customer Media Library design cleanup (pending production deployment)
+
+The media-library plugin now has labeled filters, a reset link, clearer original-image download
+actions, square contained previews, product/image counts, and accessible page-local selection.
+The existing authenticated original/ZIP handlers, nonces and download limits are unchanged.
+Endpoint-only styles are emitted inline; the CSS source remains in the plugin for maintenance.
+No activation, database migration, upload copying or shared theme/critical CSS changes are required.
+Preview and approve the design before deploying to production. Dev lacks most catalog originals,
+so validate populated layouts with fixtures as well as the unavailable-original state on dev.
+Presentation regressions run with `php ops/media-library/test.php`.
+Validation: 18 offline presentation assertions, PHP lint, JavaScript syntax and whitespace checks
+passed. A browser-only fixture preview using production theme styles passed selection, partial-select,
+clear/focus recovery, keyboard and live-announcement checks. Layouts at 1440, 768, 390 and 320 CSS
+pixels had no library overflow and download/filter/selection targets at least 44px tall.
+This preview did not change either server or exercise real download responses.
+
 ## Product-card thumbnail sizes (live on dev and production)
 
 Product cards now offer exactly 200x200 and 400x400 responsive image variants,

@@ -47,6 +47,7 @@
 		button.disabled = n === 0;
 		dock.classList.toggle( 'is-visible', n > 0 );
 		all.checked = n > 0 && n === picks.length;
+		all.indeterminate = n > 0 && n < picks.length;
 		announce( n );
 	}
 
