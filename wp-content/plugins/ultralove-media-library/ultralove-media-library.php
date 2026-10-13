@@ -204,7 +204,7 @@ final class UltraLove_Media_Library {
 		}
 		echo '<ul class="ul-ml__files">';
 		foreach ( $images as $i => $attachment_id ) {
-			echo '<li>' . esc_html( sprintf( /* translators: %d: position */ __( 'Image %d', 'ultralove-media-library' ), $i + 1 ) ) . ' ';
+			echo '<li><span class="ul-ml__label">' . esc_html( sprintf( /* translators: %d: position */ __( 'Image %d', 'ultralove-media-library' ), $i + 1 ) ) . '</span>';
 			echo '<a href="' . esc_url( self::download_url( $product_id, $attachment_id, 'original' ) ) . '">' . esc_html__( 'Original', 'ultralove-media-library' ) . '</a> · ';
 			echo '<a href="' . esc_url( self::download_url( $product_id, $attachment_id, 'web' ) ) . '">' . esc_html( sprintf( /* translators: %d: pixels */ __( 'Web %d px', 'ultralove-media-library' ), self::WEB_WIDTH ) ) . '</a></li>';
 		}
