@@ -80,8 +80,12 @@ final class UltraLove_Media_Library {
 			return;
 		}
 		$url = plugin_dir_url( __FILE__ );
-		wp_enqueue_style( 'ultralove-media-library', $url . 'assets/media-library.css', array(), self::VERSION );
-		wp_enqueue_script( 'ultralove-media-library', $url . 'assets/media-library.js', array(), self::VERSION, true );
+		// Version by file time: static assets are served with a one-year immutable cache header.
+		$dir = plugin_dir_path( __FILE__ ) . 'assets/';
+		$css = (string) @filemtime( $dir . 'media-library.css' ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+		$js  = (string) @filemtime( $dir . 'media-library.js' ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
+		wp_enqueue_style( 'ultralove-media-library', $url . 'assets/media-library.css', array(), self::VERSION . '.' . $css );
+		wp_enqueue_script( 'ultralove-media-library', $url . 'assets/media-library.js', array(), self::VERSION . '.' . $js, true );
 	}
 
 	/* ---------- Browsing ---------- */
