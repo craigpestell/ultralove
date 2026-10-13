@@ -730,6 +730,10 @@ Rollbacks:
 - object-cache drop-in present:
   - /var/www/html/wp-content/object-cache.php
 - redis-cache plugin is active.
+- Pending deployment: `mu-plugins/39-persistent-plugins-cache.php` removes only the `plugins`
+  group from the Redis drop-in's non-persistent groups, allowing plugin headers to be reused
+  across requests. WordPress plugin lifecycle operations invalidate this cache; direct file
+  changes can remain cached until the configured `WP_REDIS_MAXTTL` (3600 seconds).
 
 ### 4.2 PHP Runtime Cache
 

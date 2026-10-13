@@ -1,5 +1,14 @@
 # Pending production release
 
+## Persistent plugin-header cache (pending deployment)
+
+`wp-content/mu-plugins/39-persistent-plugins-cache.php` allows the Redis object-cache
+drop-in to persist WordPress's `plugins` cache group, avoiding repeated plugin-header
+reads. Other ignored groups are unchanged. WordPress plugin lifecycle invalidation
+remains in place; direct file edits/deploys can take up to the configured one-hour
+maximum TTL to appear in cached headers. No database or configuration changes are needed.
+The file uses the unused `39-` prefix rather than sharing `37-` with Cloudflare Images.
+
 ## Customer Media Library design cleanup (pending production deployment)
 
 The media-library plugin now has labeled filters, a reset link, clearer original-image download
