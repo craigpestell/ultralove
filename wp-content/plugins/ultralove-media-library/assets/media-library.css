@@ -6,7 +6,22 @@
 .ul-ml__card { position: relative; border: 1px solid #e5e5e5; border-radius: 6px; padding: 8px; background: #fff; }
 .ul-ml__card img { display: block; width: 100%; height: auto; cursor: pointer; }
 .ul-ml__select { position: absolute; top: 12px; left: 12px; background: #fff; border-radius: 4px; padding: 2px 4px; line-height: 1; }
-.ul-ml__card { cursor: pointer; }
+.ul-ml__card { cursor: pointer; transition: border-color .15s, box-shadow .15s; }
+.ul-ml__card.is-selected { border-color: #b3094b; box-shadow: 0 0 0 2px #b3094b; }
+
+/* Floating action bar: stays at the bottom of the screen while the grid is in view. */
+.ul-ml__dock { position: sticky; bottom: 16px; z-index: 50; display: flex; justify-content: center; margin-top: 16px; padding: 0 8px; pointer-events: none; visibility: hidden; opacity: 0; transform: translateY(16px); transition: opacity .2s, transform .2s, visibility .2s; }
+.ul-ml__dock.is-visible { visibility: visible; opacity: 1; transform: none; }
+.ul-ml__dock-inner { pointer-events: auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 10px 16px; max-width: 100%; padding: 10px 10px 10px 22px; color: #fff; background: #3b1d4a; border-radius: 999px; box-shadow: 0 10px 28px rgba(0, 0, 0, .28); }
+.ul-ml__dock-text { font-size: 15px; white-space: nowrap; }
+.ul-ml__dock-text strong { font-size: 18px; }
+.ul-ml__clear { padding: 0; color: rgba(255, 255, 255, .8); background: none; border: 0; font-size: 14px; text-decoration: underline; cursor: pointer; }
+.ul-ml__clear:hover, .ul-ml__clear:focus { color: #fff; background: none; }
+.ul-ml__dock .ul-ml__zipbtn { display: inline-flex; align-items: center; gap: 8px; margin: 0; padding: 10px 22px; color: #fff; background: #b3094b; border: 0; border-radius: 999px; font-weight: 600; }
+.ul-ml__dock .ul-ml__zipbtn:hover:not(:disabled), .ul-ml__dock .ul-ml__zipbtn:focus:not(:disabled) { background: #d10b59; }
+@media (prefers-reduced-motion: reduce) {
+	.ul-ml__dock, .ul-ml__card { transition: none; }
+}
 .ul-ml__info { cursor: auto; margin-top: 8px; padding: 8px; border: 1px solid #e5e5e5; border-radius: 8px; background: #fafafa; }
 .ul-ml__name { font-size: 14px; line-height: 1.3; }
 .ul-ml__sku { font-size: 12px; color: #777; }
