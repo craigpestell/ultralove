@@ -187,9 +187,16 @@ final class UltraLove_Media_Library {
 			return;
 		}
 		$sku  = $product->get_sku();
+		// Names often hold line breaks and start with the SKU (shown separately below): flatten the
+		// breaks into spaces and drop a leading copy of the SKU from the displayed name.
+		$raw_name     = trim( preg_replace( '/\s+/', ' ', preg_replace( '#<br\s*/?>#i', ' ', $product->get_name() ) ) );
+		$display_name = $raw_name;
+		if ( $sku && preg_match( '/^' . preg_quote( $sku, '/' ) . '\s+(.+)$/s', $raw_name, $m ) ) {
+			$display_name = $m[1];
+		}
 		// Names can contain inline markup: render a safe subset for display, plain text for attributes.
 		$name_html = wp_kses(
-			$product->get_name(),
+			$display_name,
 			array(
 				'b'      => array(),
 				'strong' => array(),
@@ -203,7 +210,7 @@ final class UltraLove_Media_Library {
 				'br'     => array(),
 			)
 		);
-		$name      = trim( html_entity_decode( wp_strip_all_tags( $product->get_name() ), ENT_QUOTES, 'UTF-8' ) );
+		$name      = trim( html_entity_decode( wp_strip_all_tags( $raw_name ), ENT_QUOTES, 'UTF-8' ) );
 
 		echo '<li class="ul-ml__card">';
 		echo '<label class="ul-ml__select"><input type="checkbox" name="product_ids[]" value="' . esc_attr( $product_id ) . '" class="ul-ml__pick"><span class="screen-reader-text">' . esc_html( sprintf( /* translators: %s: product */ __( 'Select %s', 'ultralove-media-library' ), $name ) ) . '</span></label>';
