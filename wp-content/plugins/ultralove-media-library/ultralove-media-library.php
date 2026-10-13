@@ -112,6 +112,22 @@ final class UltraLove_Media_Library {
 			return;
 		}
 
+		$links = paginate_links(
+			array(
+				'base'      => add_query_arg( 'ml_page', '%#%', $base ),
+				'format'    => '',
+				'current'   => $paged,
+				'total'     => (int) $query->max_num_pages,
+				'add_args'  => array_filter( array( 'ml_search' => $search, 'ml_cat' => $cat ) ),
+				'prev_text' => '&laquo;',
+				'next_text' => '&raquo;',
+			)
+		);
+		// Page links appear above and below the grid so users need not scroll to change page.
+		if ( $links ) {
+			echo '<nav class="ul-ml__pages ul-ml__pages--top">' . wp_kses_post( $links ) . '</nav>';
+		}
+
 		echo '<form class="ul-ml__zipform" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		echo '<input type="hidden" name="action" value="ultralove_ml_zip">';
 		wp_nonce_field( 'ultralove_ml_zip', 'ul_ml_nonce' );
@@ -127,17 +143,6 @@ final class UltraLove_Media_Library {
 		wp_reset_postdata();
 		echo '</ul></form>';
 
-		$links = paginate_links(
-			array(
-				'base'      => add_query_arg( 'ml_page', '%#%', $base ),
-				'format'    => '',
-				'current'   => $paged,
-				'total'     => (int) $query->max_num_pages,
-				'add_args'  => array_filter( array( 'ml_search' => $search, 'ml_cat' => $cat ) ),
-				'prev_text' => '&laquo;',
-				'next_text' => '&raquo;',
-			)
-		);
 		if ( $links ) {
 			echo '<nav class="ul-ml__pages">' . wp_kses_post( $links ) . '</nav>';
 		}
