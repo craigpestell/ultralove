@@ -1553,6 +1553,29 @@ modified. Root-only release/cache evidence is recorded at
 - Mail logs: `/var/log/mail.log` (all recent deliveries are inbound, to Dovecot LMTP).
 - Backups: DigitalOcean weekly droplet backups, enabled 2026-10-02.
 
+## 6.6 Customer Media Library (built 2026-10-12, not yet deployed)
+
+`wp-content/plugins/ultralove-media-library/` adds a **Media Library** tab to WooCommerce My Account
+(`/my-account/media-library/`) where logged-in accounts browse product images and download them.
+
+- Browse: product grid (48 per page), search by name/SKU (WooCommerce's own product search), category filter.
+  Only published products with a featured image appear; featured image plus gallery images are listed.
+  Thumbnails use the normal WooCommerce `woocommerce_thumbnail` size, so they follow the Cloudflare
+  delivery in 6.2/6.3 automatically.
+- Downloads go through `admin-post.php` (login + per-link nonce), never public URLs:
+  original (streamed from the local upload, path checked to be inside uploads), web-size (longest side
+  1200 px, never enlarged, made on the fly with the WordPress image editor into a temp file, nothing stored),
+  and ZIP (selected products or a whole category; max 50 products, 300 files, 300 MB of source files).
+  Files are named `SKU-n.ext`.
+- Limits: 60 single downloads per minute and 5 ZIPs per 10 minutes per user (transients), and each download
+  is logged with `error_log`. No nginx rule yet: `admin-post.php` is not in the zones file
+  (`ops/nginx/99-ultralove-rate-limit-zones.conf`).
+- Access: any logged-in account. Narrow it with the `ultralove_media_library_can_access` filter (for example
+  to approved retailers).
+- Rewrite rules refresh once per plugin version (`ultralove_ml_rewrite_version` option) because deploys do not
+  run activation hooks.
+- Rollback: `wp plugin deactivate ultralove-media-library`; it stores nothing but that option.
+
 ## 7) Backups and Retention Architecture
 
 All off-site backups go to the DigitalOcean Spaces bucket `ultralove-web-backups` (sfo3). The scripts are in the
