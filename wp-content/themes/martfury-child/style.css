@@ -2595,6 +2595,15 @@ body:not(.shop-view-list) ul.products li.product .product-inner {
     transition: box-shadow .2s ease
 }
 
+/* Align the displayed thumbnail with the 200/400px sources at 1x/2x without shrinking the card. */
+body:not(.shop-view-list) ul.products li.product .mf-product-thumbnail > a > img {
+    display: block;
+    width: 100%;
+    max-width: 200px;
+    height: auto;
+    margin: 0 auto
+}
+
 /* Hover: the same even purple glow as the #topcta and footer pills (--ul-purple-shadow) - the only
    hover effect on the card (no growing card or zooming image). The parent theme's grey #c0c0c0 hover
    border (on the card and its hover details panel) is kept transparent, so the glow alone marks the

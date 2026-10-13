@@ -1,5 +1,21 @@
 # Trimmed stylesheets
 
+## Product-card thumbnail display size
+
+The child theme caps grid and carousel thumbnail images at 200 CSS pixels, centered inside
+their existing cards. Smaller images remain fluid; card widths, column counts, list view,
+single-product galleries and banners are unchanged. The 200/400px sources cover the capped
+image at 1x/2x density. Native lazy `sizes="auto, ..."` remains enabled, and the fallback
+hints in `30-woocommerce-loop-image-sizes.php` and `38-product-images-cloudflare.php` must
+stay aligned with the cap. Mobile fallback hints must not exceed 200px either.
+
+Validate actual rendered widths and fresh-session image selection at 1x/2x, including
+shop grids and home/product/footer carousels. Regenerate critical CSS after deployment
+to dev and before a production release; no trimmed-parent CSS regeneration is needed
+for this child-theme-only rule.
+
+## Trimmed copies
+
 The site's biggest stylesheets are mostly styles it never uses, so the child theme serves copies trimmed to
 what the site's pages and scripts use, under the same handles (`ultralove_use_trimmed_styles()` in the child
 `functions.php`; inline styles attached to a handle, like Martfury's header styles, stay attached):
