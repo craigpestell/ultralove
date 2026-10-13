@@ -35,7 +35,7 @@ Details (config locations, firewall, PHP-FPM sizing, backups): `documentation/AR
 | `ops/critical-css/` | Critical CSS generator (run by the "Critical CSS" workflow; see its README) |
 | `ops/css/` | Builds the trimmed copies of Martfury's / WooCommerce's / icon fonts' CSS (see its README) |
 | `ops/gravityforms/`, `ops/content/` | One-off maintenance scripts (Turnstile switch, header menu cleanup) |
-| `documentation/` | Architecture runbook, pending-release checklist, and [client picture-review reports](documentation/reports/image-migration-2026-10-12/client-product-picture-review.html) ([CSV](documentation/reports/image-migration-2026-10-12/client-product-picture-review.csv)) |
+| `documentation/` | Architecture runbook, pending-release checklist, and [client picture-review reports](documentation/reports/image-migration-2026-10-12/client-product-picture-review.md) ([CSV](documentation/reports/image-migration-2026-10-12/client-product-picture-review.csv)) |
 | `.claude/skills/` | Claude Code skills: deploy workflow, where everything on a page comes from |
 | `.github/skills/ultralove-infrastructure/` | Infrastructure operations runbook |
 
