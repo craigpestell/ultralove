@@ -1,6 +1,6 @@
 # Pending production release
 
-## Responsive hosted-image selection (live on dev; pending production code deployment)
+## Responsive hosted-image selection (live on dev and production)
 
 Lazy product cards now receive `sizes="auto, ..."` based on their actual loading
 attribute, including homepage cards made lazy after WordPress calculates sizes.
@@ -21,7 +21,11 @@ tests; Nginx, PHP-FPM and Redis are active. Fresh browser sessions against the
 actual dev deployment verified 195px lazy cards fetching 200px at 1x, 576px
 banners fetching 1200px at 2x, and 390px mobile banners fetching 400px at 1x.
 All 42 homepage cards use native auto sizing. Both image regression runners
-now run in CI. The sizing code has not been deployed to production.
+now run in CI. PR #194 merged as `53829137e2` on 2026-10-13; its merge-revision
+CI and automatic dev deployment passed. Production was subsequently observed
+at the same merge revision. Fresh browser checks on the ordinary public homepage
+passed the same 1x/2x/mobile selection assertions, including all 42 auto-sized
+cards. Production Nginx, PHP-FPM and Redis are active.
 
 Production media maintenance completed separately on 2026-10-13: a bounded
 172-attachment dry run identified 114 new eligible JPEG originals and the
