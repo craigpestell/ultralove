@@ -27,5 +27,18 @@
 	picks.forEach( function ( p ) {
 		p.addEventListener( 'change', update );
 	} );
+
+	// Clicking a product image toggles that product's checkbox.
+	root.addEventListener( 'click', function ( event ) {
+		var img = event.target.closest ? event.target.closest( '.ul-ml__card img' ) : null;
+		if ( ! img ) {
+			return;
+		}
+		var pick = img.closest( '.ul-ml__card' ).querySelector( '.ul-ml__pick' );
+		if ( pick ) {
+			pick.checked = ! pick.checked;
+			update();
+		}
+	} );
 	update();
 }() );
