@@ -120,9 +120,6 @@ final class UltraLove_Media_Library {
 		echo '<label><input type="checkbox" class="ul-ml__all"> ' . esc_html__( 'Select all on this page', 'ultralove-media-library' ) . '</label> ';
 		echo '<label>' . esc_html__( 'Size', 'ultralove-media-library' ) . ' <select name="size"><option value="original">' . esc_html__( 'Original', 'ultralove-media-library' ) . '</option><option value="web">' . esc_html( sprintf( /* translators: %d: pixels */ __( 'Web (%d px)', 'ultralove-media-library' ), self::WEB_WIDTH ) ) . '</option></select></label> ';
 		echo '<button type="submit" class="button ul-ml__zipbtn" disabled>' . esc_html__( 'Download selected as ZIP', 'ultralove-media-library' ) . ' <span class="ul-ml__count">(0)</span></button>';
-		if ( $cat ) {
-			echo ' <button type="submit" class="button" name="whole_category" value="' . esc_attr( $cat ) . '">' . esc_html( sprintf( /* translators: %d: max products */ __( 'Download whole category (max %d products)', 'ultralove-media-library' ), self::ZIP_MAX_PRODUCTS ) ) . '</button>';
-		}
 		echo '</div><ul class="ul-ml__grid">';
 
 		while ( $query->have_posts() ) {
@@ -371,13 +368,7 @@ final class UltraLove_Media_Library {
 
 		// phpcs:disable WordPress.Security.NonceVerification -- verified in guard().
 		$size = isset( $_POST['size'] ) && 'web' === $_POST['size'] ? 'web' : 'original';
-		$cat  = isset( $_POST['whole_category'] ) ? absint( $_POST['whole_category'] ) : 0;
-		if ( $cat ) {
-			$query = self::product_query( '', $cat, 1, self::ZIP_MAX_PRODUCTS + 1, 'ids' );
-			$ids   = array_map( 'absint', $query->posts );
-		} else {
-			$ids = isset( $_POST['product_ids'] ) && is_array( $_POST['product_ids'] ) ? array_map( 'absint', wp_unslash( $_POST['product_ids'] ) ) : array();
-		}
+		$ids  = isset( $_POST['product_ids'] ) && is_array( $_POST['product_ids'] ) ? array_map( 'absint', wp_unslash( $_POST['product_ids'] ) ) : array();
 		// phpcs:enable
 		$ids = array_values( array_unique( array_filter( $ids ) ) );
 
@@ -385,7 +376,7 @@ final class UltraLove_Media_Library {
 			wp_die( esc_html__( 'Select at least one product.', 'ultralove-media-library' ), '', array( 'response' => 400 ) );
 		}
 		if ( count( $ids ) > self::ZIP_MAX_PRODUCTS ) {
-			wp_die( esc_html( sprintf( /* translators: %d: max products */ __( 'Please choose at most %d products per ZIP (narrow the category or select fewer).', 'ultralove-media-library' ), self::ZIP_MAX_PRODUCTS ) ), '', array( 'response' => 400 ) );
+			wp_die( esc_html( sprintf( /* translators: %d: max products */ __( 'Please choose at most %d products per ZIP (select fewer).', 'ultralove-media-library' ), self::ZIP_MAX_PRODUCTS ) ), '', array( 'response' => 400 ) );
 		}
 
 		$entries = array();
