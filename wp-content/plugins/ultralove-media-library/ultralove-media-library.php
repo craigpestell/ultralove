@@ -172,12 +172,28 @@ final class UltraLove_Media_Library {
 			return;
 		}
 		$sku  = $product->get_sku();
-		$name = $product->get_name();
+		// Names can contain inline markup: render a safe subset for display, plain text for attributes.
+		$name_html = wp_kses(
+			$product->get_name(),
+			array(
+				'b'      => array(),
+				'strong' => array(),
+				'i'      => array(),
+				'em'     => array(),
+				'u'      => array(),
+				'small'  => array(),
+				'sub'    => array(),
+				'sup'    => array(),
+				'span'   => array(),
+				'br'     => array(),
+			)
+		);
+		$name      = trim( html_entity_decode( wp_strip_all_tags( $product->get_name() ), ENT_QUOTES, 'UTF-8' ) );
 
 		echo '<li class="ul-ml__card">';
 		echo '<label class="ul-ml__select"><input type="checkbox" name="product_ids[]" value="' . esc_attr( $product_id ) . '" class="ul-ml__pick"><span class="screen-reader-text">' . esc_html( sprintf( /* translators: %s: product */ __( 'Select %s', 'ultralove-media-library' ), $name ) ) . '</span></label>';
 		echo wp_get_attachment_image( $images[0], 'woocommerce_thumbnail', false, array( 'loading' => 'lazy', 'alt' => $name ) ); // phpcs:ignore WordPress.Security.EscapeOutput
-		echo '<div class="ul-ml__name">' . esc_html( $name ) . '</div>';
+		echo '<div class="ul-ml__name">' . $name_html . '</div>'; // Filtered through wp_kses above.
 		if ( $sku ) {
 			echo '<div class="ul-ml__sku">' . esc_html( $sku ) . '</div>';
 		}
