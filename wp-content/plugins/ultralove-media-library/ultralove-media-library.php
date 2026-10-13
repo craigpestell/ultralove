@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 final class UltraLove_Media_Library {
 	const VERSION      = '1.0.0';
 	const ENDPOINT     = 'media-library';
-	const PER_PAGE     = 48;
+	const PER_PAGE     = 50;
 	const WEB_WIDTH    = 1200;
 	const ZIP_MAX_PRODUCTS = 50;
 	const ZIP_MAX_FILES    = 300;
@@ -181,13 +181,13 @@ final class UltraLove_Media_Library {
 		if ( $sku ) {
 			echo '<div class="ul-ml__sku">' . esc_html( $sku ) . '</div>';
 		}
-		echo '<details class="ul-ml__files"><summary>' . esc_html( sprintf( /* translators: %d: image count */ _n( '%d image', '%d images', count( $images ), 'ultralove-media-library' ), count( $images ) ) ) . '</summary><ul>';
+		echo '<ul class="ul-ml__files">';
 		foreach ( $images as $i => $attachment_id ) {
 			echo '<li>' . esc_html( sprintf( /* translators: %d: position */ __( 'Image %d', 'ultralove-media-library' ), $i + 1 ) ) . ' ';
 			echo '<a href="' . esc_url( self::download_url( $product_id, $attachment_id, 'original' ) ) . '">' . esc_html__( 'Original', 'ultralove-media-library' ) . '</a> · ';
 			echo '<a href="' . esc_url( self::download_url( $product_id, $attachment_id, 'web' ) ) . '">' . esc_html( sprintf( /* translators: %d: pixels */ __( 'Web %d px', 'ultralove-media-library' ), self::WEB_WIDTH ) ) . '</a></li>';
 		}
-		echo '</ul></details></li>';
+		echo '</ul></li>';
 	}
 
 	private static function download_url( $product_id, $attachment_id, $size ) {
