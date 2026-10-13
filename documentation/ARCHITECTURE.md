@@ -1565,7 +1565,7 @@ modified. Root-only release/cache evidence is recorded at
 - Downloads go through `admin-post.php` (login + per-link nonce), never public URLs:
   single original images (streamed from the local upload, path checked to be inside uploads; there is no
   resized or web-size option) and ZIP of the originals (selected products; max 50 products, 300 files,
-  300 MB of source files). Each card also has a small download-icon button (top right of the image) that
+  300 MB of source files). Each card also has a labeled "Download all images (ZIP)" link that
   ZIPs all images of that one product (same caps; limit 20 per 10 minutes per user).
   Files are named `SKU-n.ext`.
 - Limits: 60 single downloads per minute and 5 ZIPs per 10 minutes per user (transients), and each download
@@ -1576,6 +1576,12 @@ modified. Root-only release/cache evidence is recorded at
 - Rewrite rules refresh once per plugin version (`ultralove_ml_rewrite_version` option) because deploys do not
   run activation hooks.
 - Rollback: `wp plugin deactivate ultralove-media-library`; it stores nothing but that option.
+- Presentation: labeled search/category controls, filter reset, page context, square contained previews,
+  image counts, product names and SKUs, and individual-original links. Page-local selection supports a
+  partial-select state and the sticky download dock. Unavailable originals have an explicit empty state.
+  Endpoint-only CSS is maintained in `assets/media-library.css` and emitted inline by the plugin;
+  it is not requested as a separate stylesheet or loaded on other account endpoints.
+  Offline presentation checks: `php ops/media-library/test.php`.
 
 ## 7) Backups and Retention Architecture
 

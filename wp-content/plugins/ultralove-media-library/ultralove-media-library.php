@@ -82,9 +82,15 @@ final class UltraLove_Media_Library {
 		$url = plugin_dir_url( __FILE__ );
 		// Version by file time: static assets are served with a one-year immutable cache header.
 		$dir = plugin_dir_path( __FILE__ ) . 'assets/';
-		$css = (string) @filemtime( $dir . 'media-library.css' ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
 		$js  = (string) @filemtime( $dir . 'media-library.js' ); // phpcs:ignore WordPress.PHP.NoSilencedErrors
-		wp_enqueue_style( 'ultralove-media-library', $url . 'assets/media-library.css', array(), self::VERSION . '.' . $css );
+		wp_register_style( 'ultralove-media-library', false, array(), self::VERSION );
+		wp_enqueue_style( 'ultralove-media-library' );
+		$css = file_get_contents( $dir . 'media-library.css' );
+		if ( false === $css ) {
+			error_log( '[UltraLove Media Library] Unable to read endpoint stylesheet.' );
+		} else {
+			wp_add_inline_style( 'ultralove-media-library', $css );
+		}
 		wp_enqueue_script( 'ultralove-media-library', $url . 'assets/media-library.js', array(), self::VERSION . '.' . $js, true );
 	}
 
@@ -106,11 +112,31 @@ final class UltraLove_Media_Library {
 		$base  = wc_get_endpoint_url( self::ENDPOINT, '', wc_get_page_permalink( 'myaccount' ) );
 
 		echo '<div class="ul-ml">';
+		echo '<header class="ul-ml__intro"><h2>' . esc_html__( 'Product images', 'ultralove-media-library' ) . '</h2>';
+		echo '<p>' . esc_html__( 'Download original product images for your store. Choose an individual image, download a product ZIP, or select several products to download together.', 'ultralove-media-library' ) . '</p></header>';
 		self::render_filters( $base, $search, $cat );
 
 		if ( ! $query->have_posts() ) {
-			echo '<p class="ul-ml__empty">' . esc_html__( 'No products with images matched.', 'ultralove-media-library' ) . '</p></div>';
+			echo '<div class="ul-ml__empty"><h3>' . esc_html__( 'No products found', 'ultralove-media-library' ) . '</h3><p>' . esc_html__( 'Try a different name, SKU or category.', 'ultralove-media-library' ) . '</p>';
+			if ( '' !== $search || $cat || $paged > 1 ) {
+				echo '<a href="' . esc_url( $base ) . '">' . esc_html__( 'Browse all products', 'ultralove-media-library' ) . '</a>';
+			}
+			echo '</div></div>';
 			return;
+		}
+
+		$card_count = 0;
+		ob_start();
+		while ( $query->have_posts() ) {
+			$query->the_post();
+			if ( self::render_card( get_the_ID() ) ) {
+				++$card_count;
+			}
+		}
+		wp_reset_postdata();
+		$cards = ob_get_clean();
+		if ( ! $card_count ) {
+			echo '<div class="ul-ml__empty"><h3>' . esc_html__( 'No downloadable images on this page', 'ultralove-media-library' ) . '</h3><p>' . esc_html__( 'Original files are not currently available for these products. Try another search or category.', 'ultralove-media-library' ) . '</p><a href="' . esc_url( $base ) . '">' . esc_html__( 'Browse all products', 'ultralove-media-library' ) . '</a></div>';
 		}
 
 		$links = paginate_links(
@@ -120,29 +146,29 @@ final class UltraLove_Media_Library {
 				'current'   => $paged,
 				'total'     => (int) $query->max_num_pages,
 				'add_args'  => array_filter( array( 'ml_search' => $search, 'ml_cat' => $cat ) ),
-				'prev_text' => '&laquo;',
-				'next_text' => '&raquo;',
+				'prev_text' => __( 'Previous', 'ultralove-media-library' ),
+				'next_text' => __( 'Next', 'ultralove-media-library' ),
 			)
 		);
 		// Page links appear above and below the grid so users need not scroll to change page.
+		echo '<div class="ul-ml__results"><p>' . esc_html( sprintf( /* translators: 1: current page, 2: total pages */ __( 'Page %1$d of %2$d', 'ultralove-media-library' ), $paged, $query->max_num_pages ) ) . '</p>';
 		if ( $links ) {
-			echo '<nav class="ul-ml__pages ul-ml__pages--top">' . wp_kses_post( $links ) . '</nav>';
+			echo '<nav class="ul-ml__pages ul-ml__pages--top" aria-label="' . esc_attr__( 'Product pages, top', 'ultralove-media-library' ) . '">' . wp_kses_post( $links ) . '</nav>';
+		}
+		echo '</div>';
+		if ( ! $card_count ) {
+			echo '</div>';
+			return;
 		}
 
 		echo '<form class="ul-ml__zipform" method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '">';
 		echo '<input type="hidden" name="action" value="ultralove_ml_zip">';
 		wp_nonce_field( 'ultralove_ml_zip', 'ul_ml_nonce' );
 		echo '<div class="ul-ml__bar">';
-		echo '<label><input type="checkbox" class="ul-ml__all"> ' . esc_html__( 'Select all on this page', 'ultralove-media-library' ) . '</label> ';
-		echo '<span class="ul-ml__limit">' . esc_html( sprintf( /* translators: %d: max products */ __( 'You can download the images for up to %d products (one page) at a time.', 'ultralove-media-library' ), self::ZIP_MAX_PRODUCTS ) ) . '</span>';
-		echo '</div><ul class="ul-ml__grid">';
-
-		while ( $query->have_posts() ) {
-			$query->the_post();
-			self::render_card( get_the_ID() );
-		}
-		wp_reset_postdata();
-		echo '</ul>';
+		echo '<label><input type="checkbox" class="ul-ml__all" aria-describedby="ul-ml-selection-help"> ' . esc_html__( 'Select all on this page', 'ultralove-media-library' ) . '</label> ';
+		echo '<span class="ul-ml__limit">' . esc_html( sprintf( /* translators: %d: number of products */ _n( '%d product on this page', '%d products on this page', $card_count, 'ultralove-media-library' ), $card_count ) ) . '</span>';
+		echo '</div><p class="ul-ml__help" id="ul-ml-selection-help">' . esc_html( sprintf( /* translators: %d: maximum products in a ZIP */ __( 'Select a checkbox or preview to build a ZIP of up to %d products. Selections apply to this page only and reset when you change pages or filters.', 'ultralove-media-library' ), self::ZIP_MAX_PRODUCTS ) );
+		echo '</p><ul class="ul-ml__grid">' . $cards . '</ul>'; // phpcs:ignore WordPress.Security.EscapeOutput -- Escaped in render_card().
 		// Floating action bar: sticks to the bottom of the screen while the grid is in view and
 		// slides in once something is selected (see assets/media-library.js).
 		echo '<div class="ul-ml__dock" role="region" aria-label="' . esc_attr__( 'Selected products', 'ultralove-media-library' ) . '" data-label-one="' . esc_attr__( 'product selected', 'ultralove-media-library' ) . '" data-label-many="' . esc_attr__( 'products selected', 'ultralove-media-library' ) . '" data-label-none="' . esc_attr__( 'Selection cleared', 'ultralove-media-library' ) . '"><div class="ul-ml__dock-inner">';
@@ -155,18 +181,20 @@ final class UltraLove_Media_Library {
 		echo '</form>';
 
 		if ( $links ) {
-			echo '<nav class="ul-ml__pages">' . wp_kses_post( $links ) . '</nav>';
+			echo '<nav class="ul-ml__pages" aria-label="' . esc_attr__( 'Product pages, bottom', 'ultralove-media-library' ) . '">' . wp_kses_post( $links ) . '</nav>';
 		}
 		echo '</div>';
 	}
 
 	private static function render_filters( $base, $search, $cat ) {
 		echo '<form class="ul-ml__filters" method="get" action="' . esc_url( $base ) . '">';
-		echo '<input type="search" name="ml_search" value="' . esc_attr( $search ) . '" placeholder="' . esc_attr__( 'Search name or SKU', 'ultralove-media-library' ) . '"> ';
+		echo '<div class="ul-ml__field ul-ml__field--search"><label for="ul-ml-search">' . esc_html__( 'Find a product', 'ultralove-media-library' ) . '</label><input id="ul-ml-search" type="search" name="ml_search" value="' . esc_attr( $search ) . '" placeholder="' . esc_attr__( 'Search name or SKU', 'ultralove-media-library' ) . '"></div>';
+		echo '<div class="ul-ml__field"><label for="ul-ml-category">' . esc_html__( 'Category', 'ultralove-media-library' ) . '</label>';
 		wp_dropdown_categories(
 			array(
 				'taxonomy'        => 'product_cat',
 				'name'            => 'ml_cat',
+				'id'              => 'ul-ml-category',
 				'selected'        => $cat,
 				'show_option_all' => __( 'All categories', 'ultralove-media-library' ),
 				'hide_empty'      => true,
@@ -174,17 +202,21 @@ final class UltraLove_Media_Library {
 				'orderby'         => 'name',
 			)
 		);
-		echo ' <button type="submit" class="button">' . esc_html__( 'Filter', 'ultralove-media-library' ) . '</button></form>';
+		echo '</div><button type="submit" class="button ul-btn--tertiary">' . esc_html__( 'Find images', 'ultralove-media-library' ) . '</button>';
+		if ( '' !== $search || $cat ) {
+			echo '<a class="ul-ml__reset" href="' . esc_url( $base ) . '">' . esc_html__( 'Reset filters', 'ultralove-media-library' ) . '</a>';
+		}
+		echo '</form>';
 	}
 
 	private static function render_card( $product_id ) {
 		$product = wc_get_product( $product_id );
 		if ( ! $product ) {
-			return;
+			return false;
 		}
 		$images = self::product_image_ids( $product_id );
 		if ( ! $images ) {
-			return;
+			return false;
 		}
 		$sku  = $product->get_sku();
 		// Names often hold line breaks and start with the SKU (shown separately below): flatten the
@@ -213,21 +245,25 @@ final class UltraLove_Media_Library {
 		$name      = trim( html_entity_decode( wp_strip_all_tags( $raw_name ), ENT_QUOTES, 'UTF-8' ) );
 
 		echo '<li class="ul-ml__card">';
-		echo '<label class="ul-ml__select"><input type="checkbox" name="product_ids[]" value="' . esc_attr( $product_id ) . '" class="ul-ml__pick"><span class="screen-reader-text">' . esc_html( sprintf( /* translators: %s: product */ __( 'Select %s', 'ultralove-media-library' ), $name ) ) . '</span></label>';
+		echo '<div class="ul-ml__card-top"><label class="ul-ml__select"><input type="checkbox" name="product_ids[]" value="' . esc_attr( $product_id ) . '" class="ul-ml__pick"><span aria-hidden="true">' . esc_html__( 'Select', 'ultralove-media-library' ) . '</span><span class="screen-reader-text">' . esc_html( sprintf( /* translators: %s: product */ __( 'Select %s', 'ultralove-media-library' ), $name ) ) . '</span></label>';
+		echo '<span class="ul-ml__image-count">' . esc_html( sprintf( /* translators: %d: image count */ _n( '%d image', '%d images', count( $images ), 'ultralove-media-library' ), count( $images ) ) ) . '</span></div>';
 		$zip_label = sprintf( /* translators: %s: product */ __( 'Download all images for %s (ZIP)', 'ultralove-media-library' ), $name );
-		echo '<a class="ul-ml__zip1" href="' . esc_url( self::zip_url( $product_id ) ) . '" title="' . esc_attr( $zip_label ) . '"><svg aria-hidden="true" focusable="false" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2v8M4.5 7 8 10.5 11.5 7M2.5 13.5h11"/></svg><span class="screen-reader-text">' . esc_html( $zip_label ) . '</span></a>';
-		echo '<div class="ul-ml__name">' . $name_html . '</div>'; // Filtered through wp_kses above.
-		echo '<div class="ul-ml__body">';
+		echo '<div class="ul-ml__preview">';
 		echo wp_get_attachment_image( $images[0], 'woocommerce_thumbnail', false, array( 'loading' => 'lazy', 'alt' => $name ) ); // phpcs:ignore WordPress.Security.EscapeOutput
-		echo '<div class="ul-ml__info">';
+		echo '</div><div class="ul-ml__info">';
+		echo '<h3 class="ul-ml__name">' . $name_html . '</h3>'; // Filtered through wp_kses above.
 		if ( $sku ) {
-			echo '<div class="ul-ml__sku">' . esc_html( $sku ) . '</div>';
+			echo '<p class="ul-ml__sku">' . esc_html( sprintf( /* translators: %s: product SKU */ __( 'SKU: %s', 'ultralove-media-library' ), $sku ) ) . '</p>';
 		}
+		echo '<a class="ul-ml__zip1" href="' . esc_url( self::zip_url( $product_id ) ) . '" aria-label="' . esc_attr( $zip_label ) . '">' . esc_html__( 'Download all images (ZIP)', 'ultralove-media-library' ) . '</a>';
+		echo '<p class="ul-ml__file-label">' . esc_html__( 'Or download an original:', 'ultralove-media-library' ) . '</p>';
 		echo '<ul class="ul-ml__files">';
 		foreach ( $images as $i => $attachment_id ) {
-			echo '<li><a href="' . esc_url( self::download_url( $product_id, $attachment_id ) ) . '">' . esc_html( sprintf( /* translators: %d: position */ __( 'Image %d', 'ultralove-media-library' ), $i + 1 ) ) . '</a></li>';
+			$image_label = sprintf( /* translators: 1: image position, 2: product name */ __( 'Download original image %1$d for %2$s', 'ultralove-media-library' ), $i + 1, $name );
+			echo '<li><a href="' . esc_url( self::download_url( $product_id, $attachment_id ) ) . '" aria-label="' . esc_attr( $image_label ) . '">' . esc_html( sprintf( /* translators: %d: position */ __( 'Image %d', 'ultralove-media-library' ), $i + 1 ) ) . '</a></li>';
 		}
-		echo '</ul></div></div></li>';
+		echo '</ul></div></li>';
+		return true;
 	}
 
 	private static function zip_url( $product_id ) {
