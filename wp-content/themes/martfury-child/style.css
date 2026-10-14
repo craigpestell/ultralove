@@ -4352,3 +4352,61 @@ body .cwginstock-subscribe-form :is(.row, [class*="col-"]) {
 .ul-dash__card .button {
     align-self: flex-start
 }
+
+/* Retailer notes - the "Important retailer info" / "Retailer info" fields (mu-plugins/41-product-retailer-notes.php).
+   Cards: compact, no labels; the important line is a tinted pill, the rest small grey text, both clamped so the
+   card heights stay level. Product page / quick view: labelled lines. */
+.ul-retailer-notes p {
+    margin: 0
+}
+
+.ul-retailer-notes--card {
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.3
+}
+
+.ul-retailer-notes--card .ul-retailer-notes__important {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    overflow: hidden;
+    padding: 3px 7px;
+    border-radius: 4px;
+    background: #fbe8ef;
+    color: #b3094b;
+    font-weight: 700
+}
+
+.ul-retailer-notes--card .ul-retailer-notes__info {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    margin-top: 4px;
+    color: #666
+}
+
+.ul-retailer-notes--single,
+.ul-retailer-notes--quickview {
+    margin: 0 0 14px;
+    font-size: 14px;
+    line-height: 1.4
+}
+
+.ul-retailer-notes--single .ul-retailer-notes__important,
+.ul-retailer-notes--quickview .ul-retailer-notes__important {
+    padding: 8px 12px;
+    border-left: 4px solid #b3094b;
+    border-radius: 4px;
+    background: #fbe8ef;
+    color: #7a0634
+}
+
+.ul-retailer-notes--single .ul-retailer-notes__info,
+.ul-retailer-notes--quickview .ul-retailer-notes__info {
+    margin-top: 6px;
+    color: #555
+}

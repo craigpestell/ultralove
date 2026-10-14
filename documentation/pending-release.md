@@ -287,3 +287,24 @@ on the previous production droplet (now in its snapshot, above).
 - Autoptimize combines CSS, inline CSS included: `autoptimize_css_aggregate` and
   `autoptimize_css_include_inline` = `on` (2026-09-30). Rollback: set both to `''`, `wp autoptimize clear`.
 - Home page call to action: "UltraLove" -> "Ultra Love" (2026-09-28); the text is in `front-page.php`.
+
+## Product retailer notes (dev code preview)
+
+`mu-plugins/41-product-retailer-notes.php` loads automatically, adding the
+WooCommerce General-tab fields "Retailer info" (`_ul_retailer_info`) and
+"Important retailer info" (`_ul_retailer_important`). Notes appear on product
+cards, product pages and quick view. WP All Import saves extract `<b>` / `<font>`
+notes automatically; existing products require a separate migration.
+
+On each environment, first run `wp ul-retailer-notes preview` from the
+WordPress root and review the extracted notes and flagged titles. Only after
+approval, run `wp ul-retailer-notes apply`; both commands support `--ids=<ids>`
+and `--limit=<n>`. Original titles are preserved in `_ul_original_title`.
+`wp ul-retailer-notes restore --ids=<ids>` restores those titles and deletes
+both note fields, including any later manual edits. Back up the database
+outside the webroot before applying or restoring.
+
+Code deployment alone does not migrate existing products. Production deployment
+and migration require separate approval after dev testing. Regenerate critical
+CSS before production because product-card styling changes. Offline checks:
+`php ops/retailer-notes/test-parser.php` (also run by CI).

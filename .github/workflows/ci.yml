@@ -50,6 +50,9 @@ jobs:
       - name: Wishlist card regression tests
         run: php ops/wishlist/test.php
 
+      - name: Retailer notes parser regression tests
+        run: php ops/retailer-notes/test-parser.php
+
       - name: No DB dumps, invoices, archives, backups or oversized files
         run: |
           bad=$(git ls-files | grep -Ei '\.(sql|sql\.gz|zip|tgz|tar|bak|xlsx)$|\.bak-|(^|/)invoice|(^|/)statement-' || true)
