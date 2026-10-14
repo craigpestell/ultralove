@@ -122,7 +122,7 @@ function ultralove_rn_admin_save( $post_id ) {
 
 /**
  * Cut the notes out of one product's name and store them in the two fields. Existing field text is kept
- * (new notes are added to it). Returns false when the name has no <b>/<font> markup or would end up empty.
+ * (new notes are added to it). Returns false when the name has no <b>/<font> markup, has an unpaired tag, or would end up empty.
  */
 function ultralove_rn_apply_to_product( int $product_id ): bool {
 	$product = wc_get_product( $product_id );
@@ -131,7 +131,7 @@ function ultralove_rn_apply_to_product( int $product_id ): bool {
 	}
 	$title  = (string) get_post_field( 'post_title', $product_id, 'raw' );
 	$result = ultralove_rn_split_title( $title );
-	if ( ! $result['changed'] || '' === $result['title'] ) {
+	if ( ! $result['changed'] || $result['malformed'] || '' === $result['title'] ) {
 		return false;
 	}
 	if ( '' === (string) get_post_meta( $product_id, ULTRALOVE_RN_ORIGINAL, true ) ) {

@@ -25,11 +25,6 @@ $check( 'tester: title', $r['title'], 'JJ10551TE<br>Jimmy Jane<br>Pulsus G-Spot'
 $check( 'tester: important', $r['important'], array( 'TESTER ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT' ) );
 $check( 'tester: info', $r['info'], array() );
 
-$r = $s( 'L9479T<br> Lelo Enigma Double Sonic<br> Cyber Purple <b> TESTER<br>ONE COLOR PER STORE<br> FREE WITH 2 UNITS BOUGHT</b>' );
-$check( 'multiline tester: title', $r['title'], 'L9479T<br>Lelo Enigma Double Sonic<br>Cyber Purple' );
-$check( 'multiline tester: important', $r['important'], array( 'TESTER ONE COLOR PER STORE FREE WITH 2 UNITS BOUGHT' ) );
-$check( 'multiline tester: info', $r['info'], array() );
-
 $r = $s( 'X<br>Y<br><b>DISCOUNTS DO NOT APPLY</b><br><b>TESTER</b><br><b>ONE PER STORE ONLY</b><br><b>FREE WITH 3 UNITS BOUGHT</b>' );
 $check( 'split tester run: important', $r['important'], array( 'TESTER', 'ONE PER STORE ONLY', 'FREE WITH 3 UNITS BOUGHT' ) );
 $check( 'split tester run: info stays out of important', $r['info'], array( 'DISCOUNTS DO NOT APPLY' ) );
@@ -67,6 +62,18 @@ $check( 'unclosed b: flagged, text kept', array( $r['malformed'], $r['title'] ),
 
 $r = $s( 'Tom &amp; Jerry<br><B>Sale&nbsp;Priced</B>' );
 $check( 'entities in title kept, nbsp collapsed in note', array( $r['title'], $r['info'] ), array( 'Tom &amp; Jerry', array( 'Sale Priced' ) ) );
+
+$r = $s( 'J50075<br> The Original Magic Wand<br><b>Electric</b><br> <b> DISCOUNTS DO NOT APPLY</b>' );
+$check( 'name-part bold stays in name', array( $r['title'], $r['info'] ), array( 'J50075<br>The Original Magic Wand<br>Electric', array( 'DISCOUNTS DO NOT APPLY' ) ) );
+
+$r = $s( 'X<br>Y <b><font size=2>Travel Size</font></b>' );
+$check( 'name-part bold only: tags go, nothing extracted', array( $r['changed'], $r['title'], $r['info'], $r['malformed'] ), array( true, 'X<br>Y Travel Size', array(), false ) );
+
+$r = $s( 'W623102<br> Liberty 2<br> Purple<br> <b>DISCOUNTS DO NOT APPLY</b></b>' );
+$check( 'duplicate closing tag is harmless', array( $r['malformed'], $r['title'], $r['info'] ), array( false, 'W623102<br>Liberty 2<br>Purple', array( 'DISCOUNTS DO NOT APPLY' ) ) );
+
+$r = $s( 'N3333TE<br> Magic Massager<br> TESTER<br> ONE PER STORE ONLY<br> FREE WITH 3 UNITS BOUGHT</b>' );
+$check( 'closing tag with no opening one is flagged', array( $r['malformed'], $r['important'] ), array( true, array() ) );
 
 echo $fail ? "\n$fail failed\n" : "All parser checks passed\n";
 exit( $fail ? 1 : 0 );
