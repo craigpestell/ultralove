@@ -51,7 +51,10 @@ jobs:
         run: php ops/wishlist/test.php
 
       - name: Retailer notes parser regression tests
-        run: php ops/retailer-notes/test-parser.php
+        run: |
+          php ops/retailer-notes/test-parser.php
+          php ops/retailer-notes/test-runtime.php
+          php -l ops/retailer-notes/repair-products.php
 
       - name: No DB dumps, invoices, archives, backups or oversized files
         run: |

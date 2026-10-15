@@ -122,7 +122,7 @@ function ultralove_rn_admin_save( $post_id ) {
 
 /**
  * Cut the notes out of one product's name and store them in the two fields. Existing field text is kept
- * (new notes are added to it). Returns false when the name has no <b>/<font> markup, has an unpaired tag, or would end up empty.
+ * (new notes are added to it). Returns false when no safe cleanup is available or the name would end up empty.
  */
 function ultralove_rn_apply_to_product( int $product_id ): bool {
 	$product = wc_get_product( $product_id );
@@ -145,7 +145,11 @@ function ultralove_rn_apply_to_product( int $product_id ): bool {
 				$merged[] = $text;
 			}
 		}
-		if ( $merged ) {
+		if ( 'info' === $field ) {
+			$promoted = array_map( 'mb_strtoupper', $result['important'] );
+			$merged = array_values( array_filter( $merged, static fn( $text ) => ! in_array( mb_strtoupper( $text ), $promoted, true ) ) );
+		}
+		if ( $merged !== $have[ $field ] ) {
 			update_post_meta( $product_id, $key, wp_slash( implode( "\n", $merged ) ) );
 		}
 	}
@@ -201,11 +205,11 @@ function ultralove_rn_plan_slug( int $product_id ): array {
 	// The old slug was made by sanitize_title() over the markup-carrying title, so do the same to both versions.
 	$was = sanitize_title( $original );
 	$now = sanitize_title( $split['residual'] );
-	if ( $was === $now ) { // only tags came out (e.g. a bold "Travel Size" that stays in the name): the words in the slug are unchanged
+	if ( $was === $now && ! $split['segments'] ) {
 		$plan['status'] = 'same';
 		return $plan;
 	}
-	$new = ultralove_rn_slug_remove( $plan['old'], $was, $now );
+	$new = $was === $now ? null : ultralove_rn_slug_remove( $plan['old'], $was, $now );
 	if ( null === $new ) {
 		$new = ultralove_rn_slug_remove_note_suffix(
 			$plan['old'],
@@ -214,7 +218,7 @@ function ultralove_rn_plan_slug( int $product_id ): array {
 		);
 	}
 	if ( null === $new ) {
-		$plan['status'] = 'no-match';
+		$plan['status'] = $was === $now ? 'same' : 'no-match';
 		return $plan;
 	}
 	if ( $new === $plan['old'] ) {
@@ -316,18 +320,18 @@ function ultralove_rn_plugin_ready(): bool {
 
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
 	/**
-	 * Move <b>/<font> notes out of product names into the retailer info fields.
+	 * Move marked-up or recognized terminal notes into the retailer info fields.
 	 */
 	class Ultralove_Retailer_Notes_CLI {
 
-		/** Products whose name still holds <b>/<font> markup (all statuses but trash). */
+		/** Products with a possible title cleanup (all statuses but trash). */
 		private function candidates( array $assoc ): array {
 			global $wpdb;
 			$rows = $wpdb->get_results(
 				"SELECT ID, post_title FROM {$wpdb->posts} WHERE post_type = 'product' AND post_status NOT IN ('trash','auto-draft')
-				 AND (post_title LIKE '%<b>%' OR post_title LIKE '%<b %' OR post_title LIKE '%<font%' OR post_title LIKE '%</b>%' OR post_title LIKE '%</font>%')
 				 ORDER BY ID", ARRAY_A
 			);
+			$rows = array_values( array_filter( $rows, static fn( $row ) => ultralove_rn_split_title( $row['post_title'] )['changed'] ) );
 			if ( ! empty( $assoc['ids'] ) ) {
 				$ids  = array_map( 'intval', explode( ',', $assoc['ids'] ) );
 				$rows = array_values( array_filter( $rows, static fn( $r ) => in_array( (int) $r['ID'], $ids, true ) ) );
@@ -411,7 +415,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 				}
 				$ok ? $done++ : $skipped++;
 			}
-			WP_CLI::success( "Cleaned $done products; skipped $skipped (empty name, no markup or error). Originals are kept in the _ul_original_title field - use 'restore' to undo." );
+			WP_CLI::success( "Cleaned $done products; skipped $skipped (empty name, unsafe cleanup or error). Originals are kept in the _ul_original_title field - use 'restore' to undo." );
 		}
 
 		/**
