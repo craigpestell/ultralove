@@ -58,7 +58,8 @@ function ultralove_rn_show_card() {
 	}
 }
 
-// Product page: above the main description in its tab.
+// Product page: before the price and above the main description in its tab.
+add_action( 'woocommerce_single_product_summary', 'ultralove_rn_show_single', 11 );
 add_filter( 'woocommerce_product_tabs', 'ultralove_rn_description_tab', 98 );
 function ultralove_rn_description_tab( array $tabs ): array {
 	global $product;

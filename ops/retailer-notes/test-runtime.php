@@ -82,10 +82,11 @@ if ( 1 !== substr_count( $editor, 'ul-retailer-notes--single' )
 	|| 'unchanged' !== $tabs['reviews']['callback'] ) {
 	throw new RuntimeException( 'Retailer notes are duplicated, misplaced, or changed other tabs.' );
 }
-foreach ( $GLOBALS['actions'] as $action ) {
-	if ( 'woocommerce_single_product_summary' === $action[0] && 'ultralove_rn_show_single' === $action[1] ) {
-		throw new RuntimeException( 'Retailer notes still appear above the price.' );
-	}
+$summary_hooks = array_values( array_filter( $GLOBALS['actions'], static fn( $action ) =>
+	'woocommerce_single_product_summary' === $action[0] && 'ultralove_rn_show_single' === $action[1]
+) );
+if ( 1 !== count( $summary_hooks ) || 11 !== $summary_hooks[0][2] ) {
+	throw new RuntimeException( 'Retailer notes must also appear once in the original above-price position.' );
 }
 $tabs = ultralove_rn_description_tab( array() );
 ob_start();

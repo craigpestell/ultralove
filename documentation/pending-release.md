@@ -689,8 +689,9 @@ does not authorize any production migration.
 - A fresh private dev database backup and the complete before/after plan are retained
   under `/var/lib/ultralove-deploy/description-cleanup-20261015/`. A three-product
   apply/verify/restore rehearsal passed before the full apply.
-- Storefront retailer notes now belong above the main Description tab content,
-  Important retailer info first, rather than above the price. Existing card and
+- Storefront retailer notes appear both in their original above-price position
+  and above the main Description tab content, Important retailer info first.
+  The original position was restored following user review. Existing card and
   Quick View output and wp-admin fields remain unchanged. Notes-only products
   retain a Description tab so their instructions are not lost.
 - Dev code `4920da3` deployed successfully. Browser checks confirmed both notes
