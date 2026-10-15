@@ -443,6 +443,8 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 		/**
 		 * Dry run for new URLs: show each migrated product's old and new slug. Changes nothing.
 		 *
+		 * @subcommand slug-preview
+		 *
 		 * ## OPTIONS
 		 * [--ids=<ids>]  Comma-separated product IDs only.
 		 * [--limit=<n>]  First n products only.
@@ -477,6 +479,8 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 
 		/**
 		 * Give migrated products their new slugs and redirect each old URL to the new one.
+		 *
+		 * @subcommand slug-apply
 		 *
 		 * ## OPTIONS
 		 * [--ids=<ids>]   Comma-separated product IDs only.
@@ -517,6 +521,8 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 		/**
 		 * Undo slug-apply: put the previous slugs back and delete the redirects made for them.
 		 *
+		 * @subcommand slug-restore
+		 *
 		 * ## OPTIONS
 		 * [--ids=<ids>]  Comma-separated product IDs only.
 		 */
@@ -552,6 +558,8 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 		/**
 		 * Put a space after every <br> in the names of migrated products ("SKU<br>Name" -> "SKU<br> Name"), so SKU and
 		 * name don't run together where tags are stripped (page titles, search, order emails). Safe to repeat.
+		 *
+		 * @subcommand tidy-titles
 		 *
 		 * ## OPTIONS
 		 * [--apply]  Do it. Without this only reports.
