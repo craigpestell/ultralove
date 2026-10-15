@@ -23,6 +23,36 @@ if ( ! function_exists( 'ultralove_rn_clean_text' ) ) {
 	}
 
 	/**
+	 * Historical URLs can predate the saved title (different SKU, spelling or note wording).
+	 * Remove only an explicit retailer-instruction suffix, never regenerate the product-name prefix.
+	 */
+	function ultralove_rn_slug_remove_note_suffix( string $old_slug, string $kept, string $notes ): ?string {
+		$free = 'free-with-(?:[0-9]+-units-bought|purchase-of-[0-9]+-essential-bullets)';
+		$store = '(?:one|1)(?:-(?:colou?r|bottle))?-per-store(?:-only)?(?:-?' . $free . ')?';
+		$instruction = '(?:discounts-do-not-apply|no-(?:further-)?discounts-apply|special-order-only|while-stock-lasts|sale-priced|seasonal-limited-supply|' . $store . '|' . $free . ')';
+		$remove_tester = str_contains( $notes, 'tester' ) && ! str_contains( $kept, 'tester' );
+		$tester = $remove_tester ? '(?:tester(?:-only)?-?)?' : '';
+		$pattern = '/(' . $tester . $instruction . '(?:-?' . $instruction . ')*)(-[0-9]+)?$/';
+		if ( ! preg_match( $pattern, $old_slug, $match, PREG_OFFSET_CAPTURE ) ) {
+			if ( ! $remove_tester || ! preg_match( '/(?<=-)(tester)(-[0-9]+)?$/', $old_slug, $match, PREG_OFFSET_CAPTURE ) ) {
+				return null;
+			}
+		}
+		$removed = $match[1][0];
+		preg_match_all( '/' . $instruction . '|tester/', $removed, $parts );
+		foreach ( $parts[0] as $part ) {
+			if ( str_contains( str_replace( '-', '', $kept ), str_replace( '-', '', $part ) ) ) {
+				return null;
+			}
+		}
+		$prefix = rtrim( substr( $old_slug, 0, $match[1][1] ), '-' );
+		if ( strlen( $prefix ) < 4 || ! preg_match( '/[a-z]/', $prefix ) || 1 !== substr_count( $old_slug, $removed ) ) {
+			return null;
+		}
+		return $prefix . ( $match[2][0] ?? '' );
+	}
+
+	/**
 	 * Bold words that are part of the product's name (a variant or edition), not a retailer note. Their tags
 	 * are removed but the words stay in the name. Whole-text match, case-insensitive.
 	 */

@@ -207,6 +207,13 @@ function ultralove_rn_plan_slug( int $product_id ): array {
 	}
 	$new = ultralove_rn_slug_remove( $plan['old'], $was, $now );
 	if ( null === $new ) {
+		$new = ultralove_rn_slug_remove_note_suffix(
+			$plan['old'],
+			sanitize_title( $split['title'] ),
+			sanitize_title( implode( ' ', $split['segments'] ) )
+		);
+	}
+	if ( null === $new ) {
 		$plan['status'] = 'no-match';
 		return $plan;
 	}
@@ -215,6 +222,11 @@ function ultralove_rn_plan_slug( int $product_id ): array {
 		return $plan;
 	}
 	$unique = wp_unique_post_slug( $new, $product_id, $post->post_status, $post->post_type, $post->post_parent );
+	if ( $unique !== $new && str_contains( $plan['old'], 'tester' ) && ! str_contains( $new, 'tester' ) ) {
+		// Tester units can share a name with the retail product; keep that meaningful distinction.
+		$new .= '-tester';
+		$unique = wp_unique_post_slug( $new, $product_id, $post->post_status, $post->post_type, $post->post_parent );
+	}
 	$plan['new'] = $new;
 	if ( $unique !== $new ) {
 		$plan['status'] = 'collision';

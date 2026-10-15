@@ -97,5 +97,23 @@ $check( 'slug: removed text appears twice -> null', $remove( 'SKU<br> Name<br><b
 $check( 'slug: old slug lacks the words -> null', $remove( 'SKU<br> Name<br><b>SALE PRICED</b>', 'sku-name' ), null );
 $check( 'slug: note glued to a word inside the line', $remove( 'SKU<br> Name Aqua<b>TESTER</b>', 'sku-brand-name-aquatester' ), 'sku-brand-name-aqua' );
 
+$suffix = 'ultralove_rn_slug_remove_note_suffix';
+$check( 'historical: optional only in old note', $suffix( 'l9486t-lelo-enigma-double-sonic-black-testerone-color-per-store-only-free-with-2-units-bought', 'l9486t-lelo-enigma-double-sonic-black', 'tester-one-color-per-store-free-with-2-units-bought' ), 'l9486t-lelo-enigma-double-sonic-black' );
+$check( 'historical: glued note and renamed product', $suffix( 'int039-t-intimate-earth-naughty-nectarines-flavored-lubricanttesterone-bottle-per-store-only-free-with-3-units-bought', 'int039t-naughty-peaches-flavored-lubricant', 'tester-one-bottle-per-store-only-free-with-3-units-bought' ), 'int039-t-intimate-earth-naughty-nectarines-flavored-lubricant' );
+$check( 'historical: discount synonym and numeric suffix', $suffix( 'sku-brand-name-no-further-discounts-apply-2', 'sku-new-name', 'discounts-do-not-apply' ), 'sku-brand-name-2' );
+$check( 'historical: combined instructions', $suffix( 'sku-name-discounts-do-not-apply-seasonal-limited-supply', 'sku-name', 'discounts-do-not-apply' ), 'sku-name' );
+$check( 'historical: tester only variant', $suffix( 'sku-name-tester-onlyone-per-store-only-free-with-3-units-bought', 'sku-name', 'tester-one-per-store-only-free-with-3-units-bought' ), 'sku-name' );
+$check( 'historical: tester is part of the name', $suffix( 'sku-display-testerone-per-store-only-free-with-3-units-bought', 'sku-display-tester', 'one-per-store-only-free-with-3-units-bought' ), 'sku-display-tester' );
+$check( 'historical: standalone extracted tester', $suffix( 'sku-name-tester', 'sku-name', 'tester-free-with-3-units-bought' ), 'sku-name' );
+$check( 'historical: standalone retained tester', $suffix( 'sku-display-with-tester', 'sku-display-with-tester', 'discounts-do-not-apply' ), null );
+$check( 'historical: meaningful tester accessory', $suffix( 'sku-tester-w-base-pos', 'sku-tester-w-base-pos', 'discounts-do-not-apply' ), null );
+$check( 'historical: unknown instruction is not guessed', $suffix( 'sku-name-tester-special-promotion', 'sku-name', 'tester' ), null );
+$check( 'historical: no product prefix', $suffix( 'testerone-per-store-only-free-with-3-units-bought', 'sku-name', 'tester' ), null );
+$check( 'historical: repeated instruction is ambiguous', $suffix( 'sku-discounts-do-not-apply-name-discounts-do-not-apply', 'sku-name', 'discounts-do-not-apply' ), null );
+$check( 'historical: retained sale-priced phrase', $suffix( 'sku-name-sale-priced', 'sku-name-sale-priced', 'while-stock-lasts' ), null );
+$check( 'historical: retained phrase after other instructions', $suffix( 'sku-name-discounts-do-not-apply-sale-priced', 'sku-name-sale-priced', 'discounts-do-not-apply' ), null );
+$check( 'historical: tester inside a legitimate word', $suffix( 'sku-name-protester', 'sku-name', 'tester' ), null );
+$check( 'historical: alternate discount wording', $suffix( 'ls599728-lush-3-bluetooth-wearable-vibrating-egg-pink-no-discounts-apply', 'ls599728-lush-3-pink-egg-vibrating-bluetooth-wearable', 'no-discounts-apply' ), 'ls599728-lush-3-bluetooth-wearable-vibrating-egg-pink' );
+
 echo $fail ? "\n$fail failed\n" : "All parser checks passed\n";
 exit( $fail ? 1 : 0 );
