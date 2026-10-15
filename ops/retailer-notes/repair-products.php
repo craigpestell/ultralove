@@ -19,6 +19,7 @@ if ( ! is_dir( dirname( $path ) ) || str_starts_with( realpath( dirname( $path )
 $snapshot = static function ( int $id ): array {
 	return array(
 		'title' => (string) get_post_field( 'post_title', $id, 'raw' ),
+		'slug' => (string) get_post_field( 'post_name', $id, 'raw' ),
 		'original' => (string) get_post_meta( $id, ULTRALOVE_RN_ORIGINAL, true ),
 		'info' => (string) get_post_meta( $id, ULTRALOVE_RN_INFO, true ),
 		'important' => (string) get_post_meta( $id, ULTRALOVE_RN_IMPORTANT, true ),
@@ -43,7 +44,7 @@ if ( 'preview' === $mode ) {
 		$id = (int) $id;
 		$before = $after = $snapshot( $id );
 		$split = ultralove_rn_split_title( $before['title'] );
-		if ( $split['malformed'] || '' === $split['title'] || $split['other_tags'] ) {
+		if ( $split['malformed'] || $split['review'] || '' === $split['title'] || $split['other_tags'] ) {
 			$flagged[] = $id;
 			continue;
 		}
@@ -58,7 +59,7 @@ if ( 'preview' === $mode ) {
 		}
 		if ( '' !== $before['original'] ) {
 			$original = ultralove_rn_split_title( $before['original'] );
-			if ( ! $original['malformed'] && '' !== $original['title'] ) {
+			if ( ! $original['malformed'] && ! $original['review'] && ! $original['other_tags'] && '' !== $original['title'] ) {
 				if ( 47748 === $id && $before['title'] === $original['title'] . '<' ) {
 					$after['title'] = $original['title'];
 				}
@@ -75,6 +76,33 @@ if ( 'preview' === $mode ) {
 						$notes['important'] = $merge( $notes['important'], $original['important'] );
 					}
 				}
+				// Restore only an identity whose exact removal explains the current name,
+				// with a matching old note proven to occur in the saved supplier title.
+				$original_text = ultralove_rn_clean_text( $before['original'] );
+				$original_text = preg_replace( '/\bESTER(?=\s+(?:ONE|1)\b)/i', 'TESTER', $original_text );
+				foreach ( array( 'info', 'important' ) as $field ) {
+					foreach ( $notes[ $field ] as $key => $note ) {
+						$tester = ultralove_rn_split_tester_identity( $note );
+						if ( null === $tester || ! str_contains( $original_text, $note ) ) {
+							continue;
+						}
+						$pattern = '/(?<![\pL\pN])' . preg_quote( $tester['identity'], '/' ) . '(?![\pL\pN])/u';
+						$without_identity = preg_replace( $pattern, '', ultralove_rn_clean_text( $original['title'] ), -1, $count );
+						if ( 1 !== $count || ultralove_rn_clean_text( $without_identity ) !== ultralove_rn_clean_text( $before['title'] ) ) {
+							continue;
+						}
+						$after['title'] = $original['title'];
+						unset( $notes[ $field ][ $key ] );
+						if ( '' !== $tester['note'] ) {
+							$notes['important'] = $merge( $notes['important'], array( $tester['note'] ) );
+						}
+					}
+				}
+				if ( $before['title'] === $after['title']
+					&& preg_match( '/\bTESTERS?\b/i', $original_text )
+					&& ultralove_rn_clean_text( $before['title'] ) !== ultralove_rn_clean_text( $original['title'] ) ) {
+					$flagged[] = $id;
+				}
 				// Only move whole known offers also present in the saved supplier title.
 				foreach ( $notes['info'] as $key => $note ) {
 					if ( ultralove_rn_is_tester_offer( $after['title'], $note ) && in_array( mb_strtoupper( $note ), array_map( 'mb_strtoupper', $original['segments'] ), true ) ) {
@@ -82,6 +110,8 @@ if ( 'preview' === $mode ) {
 						unset( $notes['info'][ $key ] );
 					}
 				}
+			} elseif ( $original['review'] ) {
+				$flagged[] = $id;
 			}
 		}
 		foreach ( array( 'info', 'important' ) as $field ) {
@@ -97,7 +127,7 @@ if ( 'preview' === $mode ) {
 	if ( false === file_put_contents( $path, wp_json_encode( $plan, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR ), LOCK_EX ) || ! chmod( $path, 0600 ) ) {
 		WP_CLI::error( 'Could not save private plan.' );
 	}
-	WP_CLI::success( count( $rows ) . ' planned repairs; ' . count( $flagged ) . ' unsafe titles excluded. Review ' . $path );
+	WP_CLI::success( count( $rows ) . ' planned repairs; ' . count( $flagged ) . ' unsafe or unmatched titles flagged for review. Review ' . $path );
 	return;
 }
 $plan = json_decode( file_get_contents( $path ), true, 512, JSON_THROW_ON_ERROR );
@@ -111,7 +141,7 @@ foreach ( $plan['rows'] as $row ) {
 	}
 }
 if ( 'verify' === $mode ) {
-	WP_CLI::success( 'Verified every title and note field for ' . count( $plan['rows'] ) . ' products.' );
+	WP_CLI::success( 'Verified every title, slug and note field for ' . count( $plan['rows'] ) . ' products.' );
 	return;
 }
 foreach ( $plan['rows'] as $row ) {

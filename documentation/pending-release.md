@@ -689,18 +689,45 @@ does not authorize any production migration.
 - A fresh private dev database backup and the complete before/after plan are retained
   under `/var/lib/ultralove-deploy/description-cleanup-20261015/`. A three-product
   apply/verify/restore rehearsal passed before the full apply.
-- Storefront retailer notes appear both in their original above-price position
+- Storefront retailer notes appear both in their original product-summary position
   and above the main Description tab content, Important retailer info first.
   The original position was restored following user review. Existing card and
   Quick View output and wp-admin fields remain unchanged. Notes-only products
   retain a Description tab so their instructions are not lost.
-- Dev code `4920da3` deployed successfully. Browser checks confirmed both notes
+- Initial dev code `4920da3` deployed successfully. Browser checks confirmed both notes
   appear once, Important first, before the Nova 2 Retail Kit description, with no
   notes remaining above its price. Desktop and 390px mobile checks passed without
   description overflow; logged-out origin HTML confirmed the same placement.
+- Follow-up dev code `49f0c99` restored the original summary hook at priority 11,
+  while retaining notes above Description. Browser checks on Marilyn Monroe
+  confirmed one identical regular note in each location. The theme renders the
+  summary notes after its price/status block and before the short description.
 - Marilyn Monroe's migrated marketing callout rendered with the shared accent
   style and no legacy red font elements in the main description. Runtime,
   description and title-parser regressions and PHP lint passed, including
   notes-only and notes-free product cases.
 - Production description migration remains pending approval. Follow the critical
   CSS release gate before production since the first-screen markup has changed.
+
+### Preserving tester product identities
+
+- Keep tester identities in product names, including Leopard Tester, Tester Only,
+  Tester Kit, RETAIL TESTER and display kits marked NO TESTER. Extract only whole
+  recognized store/purchase instructions into Important retailer info. Ambiguous
+  mixed tester instructions are retained and flagged for review, not auto-applied.
+- The importer shares this parser, retains unrelated retailer notes and the saved
+  original supplier name, and is repeat-safe.
+- `ops/retailer-notes/repair-products.php` supports private `preview`, `apply` and
+  `verify` plans via `wp eval-file`. Generic restoration requires a matching old
+  note in the saved supplier title and exactly one identity whose removal explains
+  the current title. Substantive manual title edits and unmatched notes are skipped.
+- Fresh plans snapshot titles, original supplier titles, both retailer fields and
+  slugs. Apply preflights every snapshot, rechecks before each write and verifies
+  readback. Retain the reviewed plan and take a fresh DB backup before dev writes.
+  Existing slugs and redirects must remain unchanged; do not run slug migration.
+- Offline coverage: `test-parser.php`, `test-runtime.php`, `test-descriptions.php`
+  and `test-repairs.php` under `ops/retailer-notes/`. The repair suite covers exact
+  restoration, unrelated notes, manual-edit/provenance guards, stale slug rejection
+  before any writes, readback and repeat safety; it also runs in CI.
+- Tester restoration is a dev-only follow-up. Production remains unchanged pending
+  explicit approval.

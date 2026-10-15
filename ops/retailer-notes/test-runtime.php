@@ -52,6 +52,27 @@ ultralove_rn_apply_to_product( 1 );
 if ( '' !== $meta[ ULTRALOVE_RN_INFO ] || $meta[ ULTRALOVE_RN_IMPORTANT ] !== $offer || $meta[ ULTRALOVE_RN_ORIGINAL ] !== $supplier ) {
 	throw new RuntimeException( 'Last regular note was not cleared or original was not saved.' );
 }
+$supplier = 'W637718<br> Womanizer Liberty <b> Leopard Tester<br>' . $offer . '</b>';
+$title = $supplier;
+$meta = array( ULTRALOVE_RN_INFO => 'Manual retailer note' );
+ultralove_rn_apply_to_product( 1 );
+if ( 'W637718<br> Womanizer Liberty Leopard Tester' !== $title
+	|| $offer !== $meta[ ULTRALOVE_RN_IMPORTANT ]
+	|| 'Manual retailer note' !== $meta[ ULTRALOVE_RN_INFO ]
+	|| $supplier !== $meta[ ULTRALOVE_RN_ORIGINAL ] ) {
+	throw new RuntimeException( 'Importer lost the tester variant or existing retailer notes.' );
+}
+$expected = $meta;
+$title = $supplier;
+ultralove_rn_apply_to_product( 1 );
+if ( $meta !== $expected || ultralove_rn_apply_to_product( 1 ) ) {
+	throw new RuntimeException( 'Tester variant import was not idempotent.' );
+}
+$title = 'SKU<br> Product<br><b>Tester FREE WITH MYSTERY OFFER</b>';
+$before_ambiguous = $title;
+if ( ultralove_rn_apply_to_product( 1 ) || $title !== $before_ambiguous || $meta !== $expected ) {
+	throw new RuntimeException( 'Importer must skip ambiguous tester wording without modifying data.' );
+}
 $meta = array(
 	ULTRALOVE_RN_INFO => "Manual <note>\nSecond line",
 	ULTRALOVE_RN_IMPORTANT => 'Limit "one" & only',
@@ -86,7 +107,15 @@ $summary_hooks = array_values( array_filter( $GLOBALS['actions'], static fn( $ac
 	'woocommerce_single_product_summary' === $action[0] && 'ultralove_rn_show_single' === $action[1]
 ) );
 if ( 1 !== count( $summary_hooks ) || 11 !== $summary_hooks[0][2] ) {
-	throw new RuntimeException( 'Retailer notes must also appear once in the original above-price position.' );
+	throw new RuntimeException( 'Retailer notes must also appear once in the original summary position.' );
+}
+ob_start();
+ultralove_rn_show_single();
+$summary = ob_get_clean();
+if ( 1 !== substr_count( $summary, 'ul-retailer-notes--single' )
+	|| ! str_contains( $summary, esc_html( $meta[ ULTRALOVE_RN_IMPORTANT ] ) )
+	|| ! str_contains( $summary, esc_html( 'Manual <note>' ) ) ) {
+	throw new RuntimeException( 'Original summary position lost retailer notes.' );
 }
 $tabs = ultralove_rn_description_tab( array() );
 ob_start();

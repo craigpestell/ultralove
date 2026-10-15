@@ -21,16 +21,17 @@ $check( 'two notes: title', $r['title'], 'F1<br> Fantasy Doll: Carmen' );
 $check( 'two notes: info', $r['info'], array( 'DISCOUNTS DO NOT APPLY', 'SPECIAL ORDER ONLY' ) );
 
 $r = $s( 'JJ10551TE<br> Jimmy Jane<br> Pulsus G-Spot<br> <b>TESTER ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT</b>' );
-$check( 'tester: title', $r['title'], 'JJ10551TE<br> Jimmy Jane<br> Pulsus G-Spot' );
-$check( 'tester: important', $r['important'], array( 'TESTER ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT' ) );
+$check( 'tester: title', $r['title'], 'JJ10551TE<br> Jimmy Jane<br> Pulsus G-Spot<br> TESTER' );
+$check( 'tester: important', $r['important'], array( 'ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT' ) );
 $check( 'tester: info', $r['info'], array() );
 
 $r = $s( 'X<br>Y<br><b>DISCOUNTS DO NOT APPLY</b><br><b>TESTER</b><br><b>ONE PER STORE ONLY</b><br><b>FREE WITH 3 UNITS BOUGHT</b>' );
-$check( 'split tester run: important', $r['important'], array( 'TESTER', 'ONE PER STORE ONLY', 'FREE WITH 3 UNITS BOUGHT' ) );
+$check( 'split tester run: title', $r['title'], 'X<br> Y<br> TESTER' );
+$check( 'split tester run: important', $r['important'], array( 'ONE PER STORE ONLY', 'FREE WITH 3 UNITS BOUGHT' ) );
 $check( 'split tester run: info stays out of important', $r['info'], array( 'DISCOUNTS DO NOT APPLY' ) );
 
 $r = $s( 'X<br>Y<br><b>**ESTER ONE PER STORE&#32;ONLY**</b>' );
-$check( 'typo + asterisks + entity', $r['important'], array( 'TESTER ONE PER STORE ONLY' ) );
+$check( 'typo + asterisks + entity', array( $r['title'], $r['important'] ), array( 'X<br> Y<br> TESTER', array( 'ONE PER STORE ONLY' ) ) );
 
 $r = $s( 'SKU<br>Name<br><font color=red>CLEARANCE</font>' );
 $check( 'font outside b: title', $r['title'], 'SKU<br> Name' );
@@ -73,10 +74,10 @@ $r = $s( 'W623102<br> Liberty 2<br> Purple<br> <b>DISCOUNTS DO NOT APPLY</b></b>
 $check( 'duplicate closing tag is harmless', array( $r['malformed'], $r['title'], $r['info'] ), array( false, 'W623102<br> Liberty 2<br> Purple', array( 'DISCOUNTS DO NOT APPLY' ) ) );
 
 $r = $s( 'N3333TE<br> Magic Massager<br> TESTER<br> ONE PER STORE ONLY<br> FREE WITH 3 UNITS BOUGHT</b>' );
-$check( 'recognized unwrapped tester run', array( $r['malformed'], $r['title'], $r['important'] ), array( false, 'N3333TE<br> Magic Massager', array( 'TESTER ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT' ) ) );
+$check( 'recognized unwrapped tester run', array( $r['malformed'], $r['title'], $r['important'] ), array( false, 'N3333TE<br> Magic Massager<br> TESTER', array( 'ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT' ) ) );
 
 $r = $s( 'N3328TE<br> Mini Tickler Bullet TESTER<br> ONE PER STORE ONLY<br> FREE WITH 3 UNITS BOUGHT</b>' );
-$check( 'real inline tester without opening tag', array( $r['title'], $r['important'], $r['malformed'] ), array( 'N3328TE<br> Mini Tickler Bullet', array( 'TESTER ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT' ), false ) );
+$check( 'real inline tester without opening tag', array( $r['title'], $r['important'], $r['malformed'] ), array( 'N3328TE<br> Mini Tickler Bullet TESTER', array( 'ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT' ), false ) );
 $check( 'unwrapped cleanup is idempotent', $s( $r['title'] )['changed'], false );
 
 $r = $s( 'J50051<br> Magic Wand Mini<br> Demo and Display<br>ONE  PER STORE ONLY<br> FREE WITH 3 UNITS BOUGHT</b>' );
@@ -86,10 +87,10 @@ $r = $s( 'J50091<br> Magic Wand Power Adapter HV265<br> NO FURTHER DISCOUNTS APP
 $check( 'no wrappers at all', array( $r['title'], $r['info'], $r['changed'] ), array( 'J50091<br> Magic Wand Power Adapter HV265', array( 'NO FURTHER DISCOUNTS APPLY' ), true ) );
 
 $r = $s( 'L9035T<br> Lelo Dot Cruise<br> Peach Please TESTER<br>FREE WITH 2 UNITS BOUGHT</b>' );
-$check( 'variant retained before tester', array( $r['title'], $r['important'], $r['malformed'] ), array( 'L9035T<br> Lelo Dot Cruise<br> Peach Please', array( 'TESTER FREE WITH 2 UNITS BOUGHT' ), false ) );
+$check( 'variant retained before tester', array( $r['title'], $r['important'], $r['malformed'] ), array( 'L9035T<br> Lelo Dot Cruise<br> Peach Please TESTER', array( 'FREE WITH 2 UNITS BOUGHT' ), false ) );
 
 $r = $s( 'R2096<BR> Romp Pleasure Air Lipstick<br> Tester Only<br>ONE PER STORE ONLY<br> FREE WITH 3 UNITS BOUGHT</b>' );
-$check( 'tester-only note with mixed-case breaks', array( $r['title'], $r['important'], $r['malformed'] ), array( 'R2096<br> Romp Pleasure Air Lipstick', array( 'Tester Only ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT' ), false ) );
+$check( 'tester-only note with mixed-case breaks', array( $r['title'], $r['important'], $r['malformed'] ), array( 'R2096<br> Romp Pleasure Air Lipstick<br> Tester Only', array( 'ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT' ), false ) );
 
 $r = $s( 'SKU<br> Product<br> <b>WHILE STOCK LASTS</b><br> NO FURTHER DISCOUNTS APPLY' );
 $check( 'mixed wrapped and unwrapped notes', array( $r['title'], $r['info'], $r['malformed'] ), array( 'SKU<br> Product', array( 'WHILE STOCK LASTS', 'NO FURTHER DISCOUNTS APPLY' ), false ) );
@@ -145,6 +146,35 @@ $check( 'tester substring is not identity', ultralove_rn_is_tester_offer( 'Prote
 $r = $s( 'W600160<br> Womanizer Duo 2<br><b>Display For Tester ONE PER STORE ONLY<br> FREE WITH 2 UNITS BOUGHT</b>' );
 $check( 'display identity beside offer in one wrapper', array( $r['title'], $r['important'] ), array( 'W600160<br> Womanizer Duo 2<br> Display For Tester', array( 'ONE PER STORE ONLY FREE WITH 2 UNITS BOUGHT' ) ) );
 
+foreach ( array( 'Tester', 'Testers', 'Tester Kit', 'Tester Only', 'Leopard Tester', 'RETAIL TESTER', 'Display ONLY Kit (NO TESTER)', 'Display ONLY(NO TESTER)' ) as $identity ) {
+	foreach ( array(
+		'<b>%s</b>',
+		'<b><font color="red"><font size="3">%s</font></font></b>',
+		'<font color="red"><b>%s</b></font>',
+		'<font color="red"><font size="3">%s</font></font>',
+	) as $wrapper ) {
+		$source = 'SKU<br> Product ' . sprintf( $wrapper, $identity . '<br>ONE PER STORE ONLY<br> FREE WITH 2 UNITS BOUGHT' );
+		$r = $s( $source );
+		$check( 'identity and offer: ' . $source, array( $r['title'], $r['important'], $r['info'], $r['malformed'] ), array( 'SKU<br> Product ' . $identity, array( 'ONE PER STORE ONLY FREE WITH 2 UNITS BOUGHT' ), array(), false ) );
+		$check( 'identity in residual: ' . $source, str_contains( $r['residual'], $identity ), true );
+		$check( 'retained identity is idempotent: ' . $source, $s( $r['title'] )['changed'], false );
+		$r = $s( 'SKU<br> Product ' . sprintf( $wrapper, $identity ) );
+		$check( 'standalone identity: ' . $identity, array( $r['title'], $r['important'], $r['changed'] ), array( 'SKU<br> Product ' . $identity, array(), true ) );
+	}
+}
+$r = $s( 'W637718<br> Womanizer Liberty <b> Leopard Tester<br>ONE PER STORE ONLY<br> FREE WITH 2 UNITS BOUGHT</b>' );
+$check( 'Liberty keeps full variant', $r['title'], 'W637718<br> Womanizer Liberty Leopard Tester' );
+$r = $s( 'SKU<br> Product<br><b>TESTER: 1 PER STORE ONLY FREE WITH 3 UNITS BOUGHT</b>' );
+$check( 'tester colon separates offer', array( $r['title'], $r['important'] ), array( 'SKU<br> Product<br> TESTER', array( '1 PER STORE ONLY FREE WITH 3 UNITS BOUGHT' ) ) );
+$r = $s( 'SKU<br> Product<br><b>ONE PER STORE ONLY FREE WITH TESTER &amp; 3 UNITS BOUGHT</b>' );
+$check( 'tester mentioned only in offer is not identity', array( $r['title'], $r['important'] ), array( 'SKU<br> Product', array( 'ONE PER STORE ONLY FREE WITH TESTER & 3 UNITS BOUGHT' ) ) );
+$r = $s( 'SKU<br> Product<br><b>TESTER FREE WITH MYSTERY OFFER</b>' );
+$check( 'unknown mixed offer retained and flagged', array( $r['title'], $r['important'], $r['review'] ), array( 'SKU<br> Product<br> TESTER FREE WITH MYSTERY OFFER', array(), true ) );
+$r = $s( 'SKU<br> Product Tester<br>LIMIT 1 PER STORE ONLY' );
+$check( 'unwrapped LIMIT offer retains tester', array( $r['title'], $r['important'] ), array( 'SKU<br> Product Tester', array( 'LIMIT 1 PER STORE ONLY' ) ) );
+$r = $s( 'SKU<br> Product TESTER: 1 PER STORE ONLY FREE WITH 3 UNITS BOUGHT' );
+$check( 'unwrapped colon preserves tester identity', array( $r['title'], $r['important'] ), array( 'SKU<br> Product TESTER:', array( '1 PER STORE ONLY FREE WITH 3 UNITS BOUGHT' ) ) );
+
 $r = $s( 'J50075<br> The Original Magic Wand<br><b>Electric</b><br> <b> DISCOUNTS DO NOT APPLY</b>' );
 $check( 'residual', $r['residual'], "J50075<br> The Original Magic Wand<br>Electric<br> " );
 $r = $s( 'SKU Name' );
@@ -156,7 +186,7 @@ $remove = static function ( string $original, string $old_slug ) use ( $s, $slug
 	$r = $s( $original );
 	return ultralove_rn_slug_remove( $old_slug, $slug( $original ), $slug( $r['residual'] ) );
 };
-$check( 'slug: tester note at the end', $remove( 'L1640<br> Siri 2<br> Black <b>TESTER<br>ONE COLOR PER STORE ONLY<br> FREE WITH 2 UNITS BOUGHT</b>', 'l1640-lelo-siri-2-black-testerone-color-per-store-only-free-with-2-units-bought' ), 'l1640-lelo-siri-2-black' );
+$check( 'slug: tester identity retained', $remove( 'L1640<br> Siri 2<br> Black <b>TESTER<br>ONE COLOR PER STORE ONLY<br> FREE WITH 2 UNITS BOUGHT</b>', 'l1640-lelo-siri-2-black-testerone-color-per-store-only-free-with-2-units-bought' ), 'l1640-lelo-siri-2-black-tester' );
 $check( 'slug: discount note', $remove( 'T0998-30TC<br> Realdoe<br> Slim<br><b> DISCOUNTS DO NOT APPLY</b>', 't0998-30tc-toy-love-realdoe-slim-discounts-do-not-apply' ), 't0998-30tc-toy-love-realdoe-slim' );
 $check( 'slug: name-part word stays', $remove( 'J50075<br> The Original Magic Wand<br><b>Electric</b><br> <b> DISCOUNTS DO NOT APPLY</b>', 'j50075-doc-johnson-the-original-magic-wandelectric-discounts-do-not-apply' ), 'j50075-doc-johnson-the-original-magic-wandelectric' );
 $check( 'slug: note in the middle', $remove( 'SKU <b>Brand</b> Product', 'sku-brand-product' ), 'sku-product' );
@@ -164,16 +194,16 @@ $check( 'slug: note glued to the last word, numeric suffix kept', $remove( 'SKU<
 $check( 'slug: real glued example', $remove( '2455<br> The Ultimate Kiss<br> Oral Lovemaking Book<br><b><font color=black><font size="2">WHILE STOCK LASTS</font></FONT></b>', '2455-acme-the-ultimate-kiss-oral-lovemaking-bookwhile-stock-lasts' ), '2455-acme-the-ultimate-kiss-oral-lovemaking-book' );
 $check( 'slug: removed text appears twice -> null', $remove( 'SKU<br> Name<br><b>SALE</b>', 'sku-sale-name-namesale' ), null );
 $check( 'slug: old slug lacks the words -> null', $remove( 'SKU<br> Name<br><b>SALE PRICED</b>', 'sku-name' ), null );
-$check( 'slug: note glued to a word inside the line', $remove( 'SKU<br> Name Aqua<b>TESTER</b>', 'sku-brand-name-aquatester' ), 'sku-brand-name-aqua' );
+$check( 'slug: identity glued to a word is not removed', $remove( 'SKU<br> Name Aqua<b>TESTER</b>', 'sku-brand-name-aquatester' ), null );
 
 $suffix = 'ultralove_rn_slug_remove_note_suffix';
-$check( 'historical: optional only in old note', $suffix( 'l9486t-lelo-enigma-double-sonic-black-testerone-color-per-store-only-free-with-2-units-bought', 'l9486t-lelo-enigma-double-sonic-black', 'tester-one-color-per-store-free-with-2-units-bought' ), 'l9486t-lelo-enigma-double-sonic-black' );
-$check( 'historical: glued note and renamed product', $suffix( 'int039-t-intimate-earth-naughty-nectarines-flavored-lubricanttesterone-bottle-per-store-only-free-with-3-units-bought', 'int039t-naughty-peaches-flavored-lubricant', 'tester-one-bottle-per-store-only-free-with-3-units-bought' ), 'int039-t-intimate-earth-naughty-nectarines-flavored-lubricant' );
+$check( 'historical: optional only in old note', $suffix( 'l9486t-lelo-enigma-double-sonic-black-testerone-color-per-store-only-free-with-2-units-bought', 'l9486t-lelo-enigma-double-sonic-black', 'tester-one-color-per-store-free-with-2-units-bought' ), 'l9486t-lelo-enigma-double-sonic-black-tester' );
+$check( 'historical: glued note and renamed product', $suffix( 'int039-t-intimate-earth-naughty-nectarines-flavored-lubricanttesterone-bottle-per-store-only-free-with-3-units-bought', 'int039t-naughty-peaches-flavored-lubricant', 'tester-one-bottle-per-store-only-free-with-3-units-bought' ), 'int039-t-intimate-earth-naughty-nectarines-flavored-lubricanttester' );
 $check( 'historical: discount synonym and numeric suffix', $suffix( 'sku-brand-name-no-further-discounts-apply-2', 'sku-new-name', 'discounts-do-not-apply' ), 'sku-brand-name-2' );
 $check( 'historical: combined instructions', $suffix( 'sku-name-discounts-do-not-apply-seasonal-limited-supply', 'sku-name', 'discounts-do-not-apply' ), 'sku-name' );
-$check( 'historical: tester only variant', $suffix( 'sku-name-tester-onlyone-per-store-only-free-with-3-units-bought', 'sku-name', 'tester-one-per-store-only-free-with-3-units-bought' ), 'sku-name' );
+$check( 'historical: tester only variant', $suffix( 'sku-name-tester-onlyone-per-store-only-free-with-3-units-bought', 'sku-name', 'tester-one-per-store-only-free-with-3-units-bought' ), 'sku-name-tester-only' );
 $check( 'historical: tester is part of the name', $suffix( 'sku-display-testerone-per-store-only-free-with-3-units-bought', 'sku-display-tester', 'one-per-store-only-free-with-3-units-bought' ), 'sku-display-tester' );
-$check( 'historical: standalone extracted tester', $suffix( 'sku-name-tester', 'sku-name', 'tester-free-with-3-units-bought' ), 'sku-name' );
+$check( 'historical: standalone tester is never stripped', $suffix( 'sku-name-tester', 'sku-name', 'tester-free-with-3-units-bought' ), null );
 $check( 'historical: standalone retained tester', $suffix( 'sku-display-with-tester', 'sku-display-with-tester', 'discounts-do-not-apply' ), null );
 $check( 'historical: meaningful tester accessory', $suffix( 'sku-tester-w-base-pos', 'sku-tester-w-base-pos', 'discounts-do-not-apply' ), null );
 $check( 'historical: unknown instruction is not guessed', $suffix( 'sku-name-tester-special-promotion', 'sku-name', 'tester' ), null );

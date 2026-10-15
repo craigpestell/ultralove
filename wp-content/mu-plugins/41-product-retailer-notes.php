@@ -58,7 +58,7 @@ function ultralove_rn_show_card() {
 	}
 }
 
-// Product page: before the price and above the main description in its tab.
+// Product page: original summary position and above the main description in its tab.
 add_action( 'woocommerce_single_product_summary', 'ultralove_rn_show_single', 11 );
 add_filter( 'woocommerce_product_tabs', 'ultralove_rn_description_tab', 98 );
 function ultralove_rn_description_tab( array $tabs ): array {
@@ -153,7 +153,7 @@ function ultralove_rn_apply_to_product( int $product_id ): bool {
 	}
 	$title  = (string) get_post_field( 'post_title', $product_id, 'raw' );
 	$result = ultralove_rn_split_title( $title );
-	if ( ! $result['changed'] || $result['malformed'] || '' === $result['title'] ) {
+	if ( ! $result['changed'] || $result['malformed'] || $result['review'] || '' === $result['title'] ) {
 		return false;
 	}
 	if ( '' === (string) get_post_meta( $product_id, ULTRALOVE_RN_ORIGINAL, true ) ) {
@@ -221,7 +221,7 @@ function ultralove_rn_plan_slug( int $product_id ): array {
 		return $plan;
 	}
 	$split = ultralove_rn_split_title( $original );
-	if ( ! $split['changed'] || $split['malformed'] ) {
+	if ( ! $split['changed'] || $split['malformed'] || $split['review'] ) {
 		return $plan;
 	}
 	// The old slug was made by sanitize_title() over the markup-carrying title, so do the same to both versions.
@@ -372,7 +372,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 		public function preview( $args, $assoc ) {
 			$rows    = $this->candidates( $assoc );
 			$counts  = array();
-			$stats   = array( 'products' => count( $rows ), 'with_important' => 0, 'with_info' => 0, 'empty_title' => 0, 'malformed' => 0, 'other_tags_left' => 0 );
+			$stats   = array( 'products' => count( $rows ), 'with_important' => 0, 'with_info' => 0, 'empty_title' => 0, 'malformed' => 0, 'other_tags_left' => 0, 'tester_review' => 0 );
 			$samples = array();
 			$flagged = array();
 			foreach ( $rows as $row ) {
@@ -388,7 +388,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 					$kind = in_array( $text, $r['important'], true ) || in_array( preg_replace( '/^ESTER\b/i', 'TESTER', $text ), $r['important'], true ) ? 'IMPORTANT' : 'info';
 					$counts[ $kind . "\t" . mb_strtoupper( $text ) ] = ( $counts[ $kind . "\t" . mb_strtoupper( $text ) ] ?? 0 ) + 1;
 				}
-				foreach ( array( 'empty_title' => '' === $r['title'], 'malformed' => $r['malformed'], 'other_tags_left' => $r['other_tags'] ) as $flag => $on ) {
+				foreach ( array( 'empty_title' => '' === $r['title'], 'malformed' => $r['malformed'], 'other_tags_left' => $r['other_tags'], 'tester_review' => $r['review'] ) as $flag => $on ) {
 					if ( $on ) {
 						$stats[ $flag ]++;
 						$flagged[] = array( 'ID' => $row['ID'], 'problem' => $flag, 'title' => $row['post_title'] );
