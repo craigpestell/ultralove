@@ -498,6 +498,41 @@ titles are excluded and counted for review. It does not touch descriptions or
 slugs: follow with scoped `slug-preview` / `slug-apply`, then verify every
 redirect and idempotence. Descriptive-name repairs preserve current URLs.
 
+### Dev repair verification (2026-10-15, PR #202)
+
+Deployed `6ab7aa6ddd4c4ed78940fde7f759e1aa408f19d9` to dev and took a
+901,103,879-byte database backup before applying the reviewed private plan.
+Evidence is under `/root/ultralove-retailer-repair-20261015/` on dev:
+`before-repairs.sql`, `repairs.json`, `slug-plans.json`, `slug-results.csv`,
+and the apply/verification logs. Keep these root-private and outside the webroot.
+
+- Applied and verified all 63 title/note repairs: 34 existing tester offers moved
+  to Important, 26 unwrapped/orphan-tag instruction titles cleaned, the trailing
+  angle repaired on 47748, and descriptive tester wording restored on 24256 and
+  51896. A fresh preview found zero further repairs.
+- Reviewed and migrated exactly 27 slugs (the 26 instruction-title repairs plus
+  47748), with zero collisions, conflicting redirects or migration problems.
+  The 34 reclassifications and two descriptive-name repairs preserved their URLs.
+- Independently verified all 27 stored slugs, previous-slug metadata, exact enabled
+  301 rules and repeat-planner `done` status. Controls 24533 and 67001 remain
+  legitimate `same` records.
+- Purged the dev Nginx page cache. Every old path returned its exact 301 target;
+  every new path returned 200 with the correct canonical and guest product title.
+  All 63 repaired products rendered the expected regular/Important fields.
+- Dev indexing remains disabled: `/wp-sitemap.xml` correctly returns 404.
+  Verified all 27 new URLs, and absence of the old URLs, directly through the
+  WordPress product sitemap provider without enabling indexing.
+- Home, shop, account and login smoke paths passed; Nginx, PHP-FPM and Redis
+  remained active. Parser tests passed. Offline importer regressions additionally
+  cover duplicate removal, emptying regular info, preserving manual notes and
+  originals, and repeat-import idempotence; CI runs both test scripts and lints
+  the repair script.
+
+Production has not received this repair. Wait for user verification on dev before
+merging/deploying and creating a fresh production-specific backup and repair plan.
+Product 26625's unsupported multi-line offer remains unchanged for manual review.
+Description cleanup remains separate and deferred.
+
 ### Deferred: retailer instructions in descriptions
 
 After title cleanup, audit both long and short product descriptions for retailer
