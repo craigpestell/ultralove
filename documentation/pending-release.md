@@ -323,6 +323,8 @@ preserves the historical SKU/name prefix and numeric uniqueness suffix; it never
 the URL from a newer title. Extracted tester notes may remove a trailing `tester`, but
 `tester` retained in the cleaned name stays. Repeated instructions, unknown suffix wording,
 and instructions still present in the cleaned name remain unchanged for review.
+If stripping a tester offer would collide with a retail product, the planner tries
+the descriptive `-tester` suffix, still refusing the change if that URL is also taken.
 `slug-apply` (also `--ids`, `--limit`, `--csv=<file>`) saves the new slug and adds a 301 from the
 old URL to the new one in the Redirection plugin. The helper uses group "Retailer notes slugs",
 but Redirection's URL monitor can create the rule first in its default group. WordPress's own

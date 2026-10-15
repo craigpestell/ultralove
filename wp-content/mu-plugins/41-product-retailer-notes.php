@@ -222,6 +222,11 @@ function ultralove_rn_plan_slug( int $product_id ): array {
 		return $plan;
 	}
 	$unique = wp_unique_post_slug( $new, $product_id, $post->post_status, $post->post_type, $post->post_parent );
+	if ( $unique !== $new && str_contains( $plan['old'], 'tester' ) && ! str_contains( $new, 'tester' ) ) {
+		// Tester units can share a name with the retail product; keep that meaningful distinction.
+		$new .= '-tester';
+		$unique = wp_unique_post_slug( $new, $product_id, $post->post_status, $post->post_type, $post->post_parent );
+	}
 	$plan['new'] = $new;
 	if ( $unique !== $new ) {
 		$plan['status'] = 'collision';
