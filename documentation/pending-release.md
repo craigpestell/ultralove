@@ -317,9 +317,11 @@ slug-preview` shows, for every migrated product, the slug with only the removed 
 taken out (the SKU and brand the slug carries are kept); products whose slug can't be matched
 safely (`no-match`) or whose new slug is taken (`collision`) are listed and left alone.
 `slug-apply` (also `--ids`, `--limit`, `--csv=<file>`) saves the new slug and adds a 301 from the
-old URL to the new one in the Redirection plugin, group "Retailer notes slugs". WordPress's own
+old URL to the new one in the Redirection plugin. The helper uses group "Retailer notes slugs",
+but Redirection's URL monitor can create the rule first in its default group. WordPress's own
 old-slug redirect also covers the old URL. `slug-restore` puts the previous slugs back and deletes
-those redirects (the old URL must not keep redirecting away). Run `tidy-titles --apply` first on any
+dedicated-group redirects; default-group monitored rules require separate removal or disabling
+(the restored old URL must not keep redirecting away). Run `tidy-titles --apply` first on any
 environment migrated before 2026-10-15: it adds the space after `<br>` in names that lack it.
 
 Order: deploy code, `tidy-titles --apply`, `slug-preview`, try `slug-apply --ids=...`, check the old
@@ -347,3 +349,40 @@ Dev execution (2026-10-15, code `5bfc05b`):
 - Dev sitemap checks did not expose a usable sitemap; `/product-sitemap.xml`
   returned 404. No Search Console submission or Cloudflare configuration change
   was made. Production code and data were not changed by this execution.
+
+Production execution (2026-10-15, merged PR #198, code `e27c4e8`):
+- Merged-main CI and automatic dev deployment passed before the standard production
+  deployment. Live drift checks and server PHP lint passed; the deployment smoke
+  tests returned 200. Code recovery archive:
+  `/var/lib/ultralove-deploy/backups/20261015T190915Z-4e1a22c325.tgz`.
+- Exported and verified the pre-migration database in the root-only directory
+  `/root/ultralove-slug-migration-20261015T1910Z/` (`before-slugs.sql`,
+  947,247,557 bytes, mode 600, completed-dump marker verified). Production's
+  MariaDB client used `--single-transaction`; it does not accept the MySQL-only
+  `--set-gtid-purged=OFF` option used on dev.
+- Tidied 1,331 names. Changed 812 slugs (one sample, then 811 remaining), with
+  zero reported problems. Final preview: 812 `done`, 516 `no-match`, 3 `same`,
+  zero eligible changes. A repeated title preview reported zero remaining.
+  Ambiguous `no-match` slugs were deliberately preserved.
+- Independently verified all 812 current permalinks, saved previous slugs, and
+  enabled exact-target 301 rules: zero mismatches or conflicting rules. All CSV
+  redirect results were `exists` because Redirection's URL monitor created the
+  rules first. The default-group recovery caveat above also applies to production.
+  Prefer targeted recovery using the saved CSVs; restoring the entire database
+  could overwrite orders or content created after the backup.
+- Cleared the scoped Nginx page cache. Using the installed Cloudflare client's
+  configured credentials without exposing them, confirmed a scoped purge of
+  1,631 URLs: both paths for every changed product, home, shop, sitemap index,
+  and four product sitemap pages. No DNS, WAF, or cache configuration changed.
+- Origin and independent public GET checks of products 17188, 65842, 97219, and
+  20594 each returned 301 to the exact cleaned path, then 200 without PHP fatal
+  text. Home, shop, account, login, sitemap index, and all four product sitemaps
+  returned 200. All 812 published changed URLs appeared in the origin product
+  sitemaps, with no old changed URLs; public sample sitemap entries also matched.
+  Server-origin checks used loopback routing with the Cloudflare Origin CA
+  certificate; independent public checks used normal TLS verification.
+- Nginx, PHP-FPM, and Redis remained active. Parser regressions passed locally.
+  Private CSVs, command logs, verification scripts/results, and cache-purge
+  confirmation are retained beside the database backup. No Search Console
+  submission was performed; the working sitemap index is
+  `https://ultralove.ca/wp-sitemap.xml`.
