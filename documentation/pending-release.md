@@ -326,3 +326,24 @@ Order: deploy code, `tidy-titles --apply`, `slug-preview`, try `slug-apply --ids
 URL answers 301 to the new one (`curl -sI https://<host>/product/<old-slug>/`), then the full
 `slug-apply`, then clear the page caches and purge Cloudflare for `/shop/`, product pages and the
 sitemaps. Resubmit the product sitemap in Search Console. Back up the database first.
+
+Dev execution (2026-10-15, code `5bfc05b`):
+- Backed up the database outside the webroot in the root-only directory
+  `/root/ultralove-slug-migration-20261015/` (`before-slugs.sql`, 900,247,631 bytes).
+  Export used `--single-transaction --set-gtid-purged=OFF`; the completed dump and
+  per-command logs/CSV evidence are retained there.
+- Tidied 1,348 names; changed 826 slugs (one sample, then 825 remaining), with
+  zero reported migration problems. Final preview: 826 `done`, 519 `no-match`,
+  3 `same`, zero eligible changes. Repeating the title preview reports zero.
+- Verified every changed permalink, saved previous slug, and enabled exact-target
+  301 rule. Redirection's URL monitor created all 826 rules in its default group
+  (ID 1) before the migration helper ran, so the CSV results say `exists`, not
+  `created`. **Recovery caveat:** `slug-restore` only removes rules in the
+  "Retailer notes slugs" group; these monitored rules must also be removed or
+  disabled when restoring, or use the pre-migration database backup with care.
+- Cleared dev Nginx page cache. Origin checks of products 17188, 65829, 96703,
+  and 20594 each returned 301 to the exact cleaned path, then 200 without a PHP
+  error; `/shop/` returned 200. Nginx, PHP-FPM, and Redis remained active.
+- Dev sitemap checks did not expose a usable sitemap; `/product-sitemap.xml`
+  returned 404. No Search Console submission or Cloudflare configuration change
+  was made. Production code and data were not changed by this execution.
