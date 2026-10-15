@@ -662,9 +662,10 @@ Retailer conditions still belong in the existing retailer-specific fields.
 Dev deployed commit `53f7580` on 2026-10-15 (#204). Deployment smoke tests,
 the deployed WordPress metabox renderer, product-editor stylesheet enqueue and
 product-list exclusion checks passed. Local regression and browser computed-style
-checks passed for all three examples. The authenticated admin browser check stopped
-at Cloudflare Access; no access settings were changed. No descriptions were migrated,
-no products were opted into cleanup, and production remains unchanged.
+checks passed for all three examples. After the user authenticated the dev browser,
+the admin examples were also verified against their source snippets and computed
+styles. No access settings were changed. The initial code deployment migrated no
+descriptions; the subsequent authorized dev migration is recorded below.
 
 The accompanying conservative cleanup recognizes only reviewed standalone
 phrases/whole retailer instructions. Mixed paragraphs, unknown red wording,
@@ -679,6 +680,7 @@ plan path outside the webroot and optional comma-separated IDs for preview.
 Plans include original fields and notes, site/version, product name and slug.
 Review the plan and take a database backup before applying on dev. This phase
 does not authorize any production migration.
+
 ### Dev description migration and retailer-note placement
 
 - Dev description migration applied to 219 products; verify mode confirmed exact
@@ -691,5 +693,13 @@ does not authorize any production migration.
   Important retailer info first, rather than above the price. Existing card and
   Quick View output and wp-admin fields remain unchanged. Notes-only products
   retain a Description tab so their instructions are not lost.
+- Dev code `4920da3` deployed successfully. Browser checks confirmed both notes
+  appear once, Important first, before the Nova 2 Retail Kit description, with no
+  notes remaining above its price. Desktop and 390px mobile checks passed without
+  description overflow; logged-out origin HTML confirmed the same placement.
+- Marilyn Monroe's migrated marketing callout rendered with the shared accent
+  style and no legacy red font elements in the main description. Runtime,
+  description and title-parser regressions and PHP lint passed, including
+  notes-only and notes-free product cases.
 - Production description migration remains pending approval. Follow the critical
   CSS release gate before production since the first-screen markup has changed.
