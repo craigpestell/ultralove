@@ -815,6 +815,10 @@ does not authorize any production migration.
   one note block in the original summary location and one above Description,
   each matching stored notes exactly; canonicals unchanged. Authenticated
   browser checks also passed for Liberty and Backwall.
+- Follow-up display rule: hide only the duplicate note block above Description
+  below the product page's two-column breakpoint (992px). Original summary
+  notes remain visible at every width; Description notes remain visible at
+  992px and above. Both fields follow the same rule.
 - Both Liberty examples now show only Important retailer info:
   `LIMIT 1 PER STORE ONLY | FREE WITH 2 UNITS BOUGHT`. The equivalent regular
   note is absent; each condition appears once per intended placement.
@@ -839,6 +843,9 @@ does not authorize any production migration.
   disabled, not converted into a loop. No intermediate redirects or new aliases
   are created; automatic WordPress/Redirection slug tracking is suppressed
   only during the scoped writes and restored afterward.
+- Existing older-SKU redirect chains feeding those original redirects are also
+  flattened to the final URL. Every affected ancestor must pass the same exact
+  enabled URL/301 safety checks; no new rules or aliases are added.
 - Private, site-bound plans retain global slug/redirect/alias snapshots and
   scoped name/content/note snapshots. Full preflight rejects unrelated edits.
   Apply and restore accept whole planned records in either before/after state

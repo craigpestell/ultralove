@@ -103,6 +103,21 @@ if ( 'preview' === $mode ) {
 	unset( $entry );
 	$redirects = array();
 	$final_paths = array_values( $changes );
+	$targets = $changes;
+	do {
+		$expanded = false;
+		foreach ( $before['redirects'] as $rule ) {
+			$target = $rule['action_data'];
+			if ( str_starts_with( $target, home_url() . '/' ) ) {
+				$target = substr( $target, strlen( home_url() ) );
+			}
+			if ( 'enabled' === $rule['status'] && isset( $targets[ $target ] )
+				&& ! isset( $targets[ $rule['url'] ] ) && ! in_array( $rule['url'], $final_paths, true ) ) {
+				$targets[ $rule['url'] ] = $targets[ $target ];
+				$expanded = true;
+			}
+		}
+	} while ( $expanded );
 	foreach ( $before['redirects'] as $key => $rule ) {
 		if ( 'enabled' !== $rule['status'] ) {
 			continue;
@@ -111,7 +126,7 @@ if ( 'preview' === $mode ) {
 		if ( str_starts_with( $target, home_url() . '/' ) ) {
 			$target = substr( $target, strlen( home_url() ) );
 		}
-		$incoming = isset( $changes[ $target ] );
+		$incoming = isset( $targets[ $target ] );
 		$final_source = in_array( $rule['url'], $final_paths, true );
 		if ( ! $incoming && ! $final_source ) {
 			continue;
@@ -122,12 +137,12 @@ if ( 'preview' === $mode ) {
 		}
 		$new = $rule;
 		if ( $final_source ) {
-			if ( $rule['url'] !== $changes[ $target ] ) {
+			if ( $rule['url'] !== $targets[ $target ] ) {
 				WP_CLI::error( 'Redirect source belongs to another final product: ' . $rule['id'] );
 			}
 			$new['status'] = 'disabled';
 		} else {
-			$new['action_data'] = $changes[ $target ];
+			$new['action_data'] = $targets[ $target ];
 		}
 		$after['redirects'][ $key ] = $new;
 		$redirects[] = array( 'before' => $rule, 'after' => $new );

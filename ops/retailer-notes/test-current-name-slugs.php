@@ -109,6 +109,15 @@ foreach ( array( 'A0339T<br>Lelo Ina Thrust<br>Purple TESTER', 'W637718<br/>Woma
 	}
 }
 $state['redirects'][2]['url'] = '/product/sku-display-for-tester/';
+$ancestor = $state['redirects'][0];
+$ancestor['id'] = '4';
+$ancestor['url'] = '/product/oldest-sku/';
+$ancestor['action_data'] = home_url() . '/product/older-sku/';
+$state['redirects'][] = $ancestor;
+$ancestor['id'] = '5';
+$ancestor['url'] = '/product/older-sku/';
+$ancestor['action_data'] = $state['redirects'][0]['url'];
+$state['redirects'][] = $ancestor;
 $initial = $state;
 $collision = false;
 $writes = $flushes = 0;
@@ -142,7 +151,7 @@ try {
 	$plan = json_decode( file_get_contents( $path ), true, 512, JSON_THROW_ON_ERROR );
 	if ( $plan['rows'][0]['new'] !== 'a0339t-lelo-ina-thrust-purple-tester'
 		|| $plan['rows'][1]['new'] !== 'w637718-womanizer-liberty-leopard-tester'
-		|| count( $plan['rows'] ) !== 4 || count( $plan['redirects'] ) !== 3
+		|| count( $plan['rows'] ) !== 4 || count( $plan['redirects'] ) !== 5
 		|| $state !== $initial || ( fileperms( $path ) & 0777 ) !== 0600 ) {
 		throw new RuntimeException( 'Preview did not preserve name, scope or privacy.' );
 	}
@@ -159,9 +168,11 @@ try {
 	$run( 'apply', $path );
 	$run( 'verify', $path );
 	$run( 'apply', $path );
-	if ( $writes !== 4 || $flushes !== 3 || $old_slug_hook !== 12 || null !== $no_redirect
+	if ( $writes !== 4 || $flushes !== 5 || $old_slug_hook !== 12 || null !== $no_redirect
 		|| 'disabled' !== $state['redirects'][2]['status']
 		|| '/product/w637718-womanizer-liberty-leopard-tester/' !== $state['redirects'][1]['action_data']
+		|| '/product/a0339t-lelo-ina-thrust-purple-tester/' !== $state['redirects'][3]['action_data']
+		|| '/product/a0339t-lelo-ina-thrust-purple-tester/' !== $state['redirects'][4]['action_data']
 		|| $state['aliases'] !== $initial['aliases'] || $state['notes'] !== $initial['notes'] ) {
 		throw new RuntimeException( 'Apply/idempotence/alias preservation failed.' );
 	}
@@ -217,11 +228,14 @@ try {
 	$state['redirects'][0]['action_data'] = '/somewhere-else/';
 	$expect_error( static fn() => $run( 'preview', $dir . '/conflict.json' ), 'conflicting redirect' );
 	$state = $initial;
+	$state['redirects'][3]['action_code'] = '302';
+	$expect_error( static fn() => $run( 'preview', $dir . '/unsafe-ancestor.json' ), 'Unsafe or conflicting redirect' );
+	$state = $initial;
 	$state['redirects'][0]['url'] = '/product/a0339t-lelo-ina-thrust-purple/';
 	$expect_error( static fn() => $run( 'preview', $dir . '/intermediate.json' ), 'intermediate URL' );
 	echo "PASS: name-derived URLs, markup, collisions, stale state, direct redirects, self-rule disabling, no new aliases, interrupted apply/restore recovery, exact restore and idempotence.\n";
 } finally {
-	foreach ( array( 'ids.json', 'plan.json', 'repeat.json', 'collision.json', 'conflict.json', 'intermediate.json' ) as $file ) {
+	foreach ( array( 'ids.json', 'plan.json', 'repeat.json', 'collision.json', 'conflict.json', 'unsafe-ancestor.json', 'intermediate.json' ) as $file ) {
 		if ( file_exists( $dir . '/' . $file ) ) {
 			unlink( $dir . '/' . $file );
 		}
