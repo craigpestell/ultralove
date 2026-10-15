@@ -1,7 +1,7 @@
 <?php
 /**
  * Plugin Name: Product Retailer Notes
- * Description: Two product fields - "Retailer info" and "Important retailer info" - filled from the <b>/<font> notes that used to sit inside product names. Shown on product cards and product pages. Includes the WP-CLI migration (wp ul-retailer-notes preview|apply|restore).
+ * Description: Two product fields - "Retailer info" and "Important retailer info" - filled from the <b>/<font> notes that used to sit inside product names. Shown on product cards and product pages. Includes the WP-CLI migration (wp ul-retailer-notes preview|apply|restore|slug-preview|slug-apply|slug-restore|tidy-titles).
  * Version: 1.0.0
  */
 
@@ -164,7 +164,142 @@ function ultralove_rn_after_import( $post_id ) {
 }
 
 /* ---------------------------------------------------------------------------------------------
- * WP-CLI:  wp ul-retailer-notes preview|apply|restore
+ * New URLs: take the removed notes out of the product's slug and redirect the old URL
+ * ------------------------------------------------------------------------------------------ */
+
+const ULTRALOVE_RN_PREV_SLUG      = '_ul_previous_slug';      // the slug before slug-apply (for slug-restore)
+const ULTRALOVE_RN_REDIRECT_GROUP = 'Retailer notes slugs';   // Redirection plugin group holding the redirects
+
+/**
+ * Work out a migrated product's new slug without changing anything.
+ *
+ * Old slugs are not just the name (they carry the SKU and brand too), so the new slug is the old one with
+ * only the part that came from the removed notes taken out - see ultralove_rn_slug_remove().
+ *
+ * @return array{status:string,old:string,new:string,detail:string}
+ *   status: ok | same | done (already changed) | no-original | no-match (couldn't find the notes in the slug)
+ *           | collision (another product has the new slug)
+ */
+function ultralove_rn_plan_slug( int $product_id ): array {
+	$post = get_post( $product_id );
+	$plan = array( 'status' => 'no-original', 'old' => $post ? (string) $post->post_name : '', 'new' => '', 'detail' => '' );
+	if ( ! $post || 'product' !== $post->post_type ) {
+		return $plan;
+	}
+	if ( '' !== (string) get_post_meta( $product_id, ULTRALOVE_RN_PREV_SLUG, true ) ) {
+		$plan['status'] = 'done';
+		return $plan;
+	}
+	$original = (string) get_post_meta( $product_id, ULTRALOVE_RN_ORIGINAL, true );
+	if ( '' === $original || '' === $plan['old'] ) {
+		return $plan;
+	}
+	$split = ultralove_rn_split_title( $original );
+	if ( ! $split['changed'] || $split['malformed'] ) {
+		return $plan;
+	}
+	// The old slug was made by sanitize_title() over the markup-carrying title, so do the same to both versions.
+	$was = sanitize_title( $original );
+	$now = sanitize_title( $split['residual'] );
+	if ( $was === $now ) { // only tags came out (e.g. a bold "Travel Size" that stays in the name): the words in the slug are unchanged
+		$plan['status'] = 'same';
+		return $plan;
+	}
+	$new = ultralove_rn_slug_remove( $plan['old'], $was, $now );
+	if ( null === $new ) {
+		$plan['status'] = 'no-match';
+		return $plan;
+	}
+	if ( $new === $plan['old'] ) {
+		$plan['status'] = 'same';
+		return $plan;
+	}
+	$unique = wp_unique_post_slug( $new, $product_id, $post->post_status, $post->post_type, $post->post_parent );
+	$plan['new'] = $new;
+	if ( $unique !== $new ) {
+		$plan['status'] = 'collision';
+		$plan['detail'] = "taken, WordPress would use $unique";
+		return $plan;
+	}
+	$plan['status'] = 'ok';
+	return $plan;
+}
+
+/** Id of the Redirection plugin group that holds our redirects (made if missing); 0 when the plugin isn't usable. */
+function ultralove_rn_redirect_group(): int {
+	global $wpdb;
+	if ( ! class_exists( 'Red_Item' ) ) {
+		return 0;
+	}
+	$table = $wpdb->prefix . 'redirection_groups';
+	$wpdb->suppress_errors( true );
+	$id = (int) $wpdb->get_var( $wpdb->prepare( "SELECT id FROM `$table` WHERE name = %s", ULTRALOVE_RN_REDIRECT_GROUP ) );
+	$wpdb->suppress_errors( false );
+	if ( $id ) {
+		return $id;
+	}
+	if ( class_exists( 'Red_Group' ) ) {
+		$group = Red_Group::create( ULTRALOVE_RN_REDIRECT_GROUP, 1 ); // module 1 = WordPress
+		if ( $group && ! is_wp_error( $group ) && method_exists( $group, 'get_id' ) ) {
+			return (int) $group->get_id();
+		}
+	}
+	return 0;
+}
+
+/** Add a 301 from $from to $to (paths) to the Redirection plugin. Returns created | exists | error text. */
+function ultralove_rn_add_redirect( string $from, string $to, int $group_id ): string {
+	global $wpdb;
+	if ( ! $group_id ) {
+		return 'Redirection plugin not available';
+	}
+	$table = $wpdb->prefix . 'redirection_items';
+	if ( (int) $wpdb->get_var( $wpdb->prepare( "SELECT COUNT(*) FROM `$table` WHERE url = %s", $from ) ) > 0 ) {
+		return 'exists';
+	}
+	$item = Red_Item::create( array(
+		'url'         => $from,
+		'match_type'  => 'url',
+		'action_type' => 'url',
+		'action_code' => 301,
+		'action_data' => array( 'url' => $to ),
+		'group_id'    => $group_id,
+		'regex'       => false,
+	) );
+	return is_wp_error( $item ) ? $item->get_error_message() : 'created';
+}
+
+/**
+ * Give one product its new slug and redirect the old URL. WordPress itself also remembers the old slug
+ * (_wp_old_slug) and redirects it, so the URL keeps working even where the Redirection plugin isn't available.
+ *
+ * @return array{ok:bool,from:string,to:string,redirect:string}
+ */
+function ultralove_rn_apply_slug( int $product_id, array $plan, int $group_id ): array {
+	$out      = array( 'ok' => false, 'from' => '', 'to' => '', 'redirect' => '' );
+	$old_path = (string) wp_parse_url( get_permalink( $product_id ), PHP_URL_PATH );
+	update_post_meta( $product_id, ULTRALOVE_RN_PREV_SLUG, $plan['old'] );
+	$saved = wp_update_post( array( 'ID' => $product_id, 'post_name' => $plan['new'] ), true );
+	clean_post_cache( $product_id );
+	if ( is_wp_error( $saved ) || get_post_field( 'post_name', $product_id ) !== $plan['new'] ) {
+		delete_post_meta( $product_id, ULTRALOVE_RN_PREV_SLUG );
+		$out['redirect'] = is_wp_error( $saved ) ? $saved->get_error_message() : 'WordPress changed the slug to ' . get_post_field( 'post_name', $product_id );
+		return $out;
+	}
+	$out['ok']       = true;
+	$out['from']     = $old_path;
+	$out['to']       = (string) wp_parse_url( get_permalink( $product_id ), PHP_URL_PATH );
+	$out['redirect'] = ultralove_rn_add_redirect( $out['from'], $out['to'], $group_id );
+	return $out;
+}
+
+/** Whether the Redirection plugin's classes are loaded. */
+function ultralove_rn_plugin_ready(): bool {
+	return class_exists( 'Red_Item' ) && class_exists( 'Red_Group' );
+}
+
+/* ---------------------------------------------------------------------------------------------
+ * WP-CLI:  wp ul-retailer-notes preview|apply|restore|slug-preview|slug-apply|slug-restore|tidy-titles
  * ------------------------------------------------------------------------------------------ */
 
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
@@ -293,6 +428,160 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 				$n++;
 			}
 			WP_CLI::success( "Restored $n products." );
+		}
+
+		/** Products that have been through the migration (they have a saved original title). */
+		private function migrated( array $assoc ): array {
+			global $wpdb;
+			$ids = array_map( 'intval', $wpdb->get_col( $wpdb->prepare( "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s ORDER BY post_id", ULTRALOVE_RN_ORIGINAL ) ) );
+			if ( ! empty( $assoc['ids'] ) ) {
+				$ids = array_values( array_intersect( $ids, array_map( 'intval', explode( ',', $assoc['ids'] ) ) ) );
+			}
+			return ! empty( $assoc['limit'] ) ? array_slice( $ids, 0, (int) $assoc['limit'] ) : $ids;
+		}
+
+		/**
+		 * Dry run for new URLs: show each migrated product's old and new slug. Changes nothing.
+		 *
+		 * @subcommand slug-preview
+		 *
+		 * ## OPTIONS
+		 * [--ids=<ids>]  Comma-separated product IDs only.
+		 * [--limit=<n>]  First n products only.
+		 */
+		public function slug_preview( $args, $assoc ) {
+			$counts = array();
+			$ok     = array();
+			$other  = array();
+			foreach ( $this->migrated( $assoc ) as $id ) {
+				$plan = ultralove_rn_plan_slug( $id );
+				$counts[ $plan['status'] ] = ( $counts[ $plan['status'] ] ?? 0 ) + 1;
+				$row = array( 'ID' => $id, 'status' => $plan['status'], 'old_slug' => $plan['old'], 'new_slug' => $plan['new'], 'detail' => $plan['detail'] );
+				if ( 'ok' === $plan['status'] ) {
+					$ok[] = $row;
+				} elseif ( in_array( $plan['status'], array( 'no-match', 'collision' ), true ) ) {
+					$other[] = $row;
+				}
+			}
+			WP_CLI::log( '== Summary ==' );
+			foreach ( $counts as $status => $n ) {
+				WP_CLI::log( sprintf( '%-12s %d', $status, $n ) );
+			}
+			WP_CLI::log( "\n== Will change (first 40 of " . count( $ok ) . ') ==' );
+			WP_CLI\Utils\format_items( 'table', array_slice( $ok, 0, 40 ), array( 'ID', 'old_slug', 'new_slug' ) );
+			if ( $other ) {
+				WP_CLI::log( "\n== Left alone - need a look (first 60 of " . count( $other ) . ') ==' );
+				WP_CLI\Utils\format_items( 'table', array_slice( $other, 0, 60 ), array( 'ID', 'status', 'old_slug', 'new_slug', 'detail' ) );
+			}
+			WP_CLI::log( "\nRedirection plugin: " . ( ultralove_rn_plugin_ready() ? 'found - redirects will be added to the group "' . ULTRALOVE_RN_REDIRECT_GROUP . '"' : 'NOT found - only WordPress\'s own old-slug redirect would apply' ) );
+			WP_CLI::success( 'Dry run only - nothing was changed.' );
+		}
+
+		/**
+		 * Give migrated products their new slugs and redirect each old URL to the new one.
+		 *
+		 * @subcommand slug-apply
+		 *
+		 * ## OPTIONS
+		 * [--ids=<ids>]   Comma-separated product IDs only.
+		 * [--limit=<n>]   First n products only.
+		 * [--csv=<file>]  Also write old and new paths, and the redirect result, to this CSV file.
+		 */
+		public function slug_apply( $args, $assoc ) {
+			$group = ultralove_rn_redirect_group();
+			if ( ! $group ) {
+				WP_CLI::warning( 'The Redirection plugin is not usable here: only WordPress\'s own old-slug redirect will cover the old URLs.' );
+			}
+			$csv = ! empty( $assoc['csv'] ) ? fopen( $assoc['csv'], 'w' ) : null;
+			$csv && fputcsv( $csv, array( 'id', 'old_path', 'new_path', 'redirect' ) );
+			$changed = $skipped = $problems = 0;
+			foreach ( $this->migrated( $assoc ) as $id ) {
+				$plan = ultralove_rn_plan_slug( $id );
+				if ( 'ok' !== $plan['status'] ) {
+					$skipped++;
+					continue;
+				}
+				$r = ultralove_rn_apply_slug( $id, $plan, $group );
+				if ( ! $r['ok'] ) {
+					WP_CLI::warning( "Product $id: slug not changed - " . $r['redirect'] );
+					$problems++;
+					continue;
+				}
+				if ( ! in_array( $r['redirect'], array( 'created', 'exists' ), true ) ) {
+					WP_CLI::warning( "Product $id: new slug saved, redirect not added by Redirection ({$r['redirect']}); WordPress's own old-slug redirect still applies." );
+					$problems++;
+				}
+				$csv && fputcsv( $csv, array( $id, $r['from'], $r['to'], $r['redirect'] ) );
+				$changed++;
+			}
+			$csv && fclose( $csv );
+			WP_CLI::success( "Changed $changed slugs; left $skipped alone (see slug-preview); $problems problems. Clear the page caches (and Cloudflare for /shop/ and the sitemaps)." );
+		}
+
+		/**
+		 * Undo slug-apply: put the previous slugs back and delete the redirects made for them.
+		 *
+		 * @subcommand slug-restore
+		 *
+		 * ## OPTIONS
+		 * [--ids=<ids>]  Comma-separated product IDs only.
+		 */
+		public function slug_restore( $args, $assoc ) {
+			global $wpdb;
+			$group = ultralove_rn_redirect_group();
+			$n     = 0;
+			foreach ( $this->migrated( $assoc ) as $id ) {
+				$prev = (string) get_post_meta( $id, ULTRALOVE_RN_PREV_SLUG, true );
+				if ( '' === $prev ) {
+					continue;
+				}
+				$new_path = (string) wp_parse_url( get_permalink( $id ), PHP_URL_PATH );
+				wp_update_post( array( 'ID' => $id, 'post_name' => $prev ) );
+				clean_post_cache( $id );
+				delete_post_meta( $id, ULTRALOVE_RN_PREV_SLUG );
+				// The redirect from the old URL to the new one must go, or the restored URL would redirect away.
+				$old_path = (string) wp_parse_url( get_permalink( $id ), PHP_URL_PATH );
+				if ( $group ) {
+					$rule = (int) $wpdb->get_var( $wpdb->prepare( "SELECT id FROM `{$wpdb->prefix}redirection_items` WHERE url = %s AND group_id = %d", $old_path, $group ) );
+					$item = $rule && method_exists( 'Red_Item', 'get_by_id' ) ? Red_Item::get_by_id( $rule ) : false;
+					if ( $item && ! is_wp_error( $item ) && method_exists( $item, 'delete' ) ) {
+						$item->delete();
+					} elseif ( $rule ) {
+						WP_CLI::warning( "Redirect $old_path -> $new_path could not be deleted automatically: delete it (or the group \"" . ULTRALOVE_RN_REDIRECT_GROUP . '") in Tools > Redirection.' );
+					}
+				}
+				$n++;
+			}
+			WP_CLI::success( "Restored $n slugs." );
+		}
+
+		/**
+		 * Put a space after every <br> in the names of migrated products ("SKU<br>Name" -> "SKU<br> Name"), so SKU and
+		 * name don't run together where tags are stripped (page titles, search, order emails). Safe to repeat.
+		 *
+		 * @subcommand tidy-titles
+		 *
+		 * ## OPTIONS
+		 * [--apply]  Do it. Without this only reports.
+		 */
+		public function tidy_titles( $args, $assoc ) {
+			$todo = 0;
+			foreach ( $this->migrated( $assoc ) as $id ) {
+				$title = (string) get_post_field( 'post_title', $id, 'raw' );
+				$fixed = preg_replace( '/(<br\s*\/?>)(?=[^\s<])/i', '$1 ', $title );
+				if ( $fixed === $title ) {
+					continue;
+				}
+				$todo++;
+				if ( isset( $assoc['apply'] ) ) {
+					$product = wc_get_product( $id );
+					if ( $product ) {
+						$product->set_name( $fixed );
+						$product->save();
+					}
+				}
+			}
+			WP_CLI::success( isset( $assoc['apply'] ) ? "Tidied $todo names." : "$todo names need tidying. Run again with --apply." );
 		}
 	}
 	WP_CLI::add_command( 'ul-retailer-notes', 'Ultralove_Retailer_Notes_CLI' );

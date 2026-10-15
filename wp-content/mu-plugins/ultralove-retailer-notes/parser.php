@@ -31,8 +31,9 @@ if ( ! function_exists( 'ultralove_rn_clean_text' ) ) {
 	}
 
 	/**
-	 * @return array{title:string,info:string[],important:string[],segments:string[],changed:bool,malformed:bool,other_tags:bool}
-	 *   title      the title with every <b>/<font> element removed (lines still joined with <br>)
+	 * @return array{residual:string,title:string,info:string[],important:string[],segments:string[],changed:bool,malformed:bool,other_tags:bool}
+	 *   title      the title with every <b>/<font> element removed (lines joined with "<br> ")
+	 *   residual   the original title with only the extracted elements cut out, no padding (for slug work)
 	 *   segments   the text of each removed element, in order
 	 *   changed    false when the title had no <b>/<font> markup (title is then returned untouched)
 	 *   malformed  an unclosed <b>/<font>, or a closing tag with no opening one, was found: where the note starts is
@@ -53,9 +54,9 @@ if ( ! function_exists( 'ultralove_rn_clean_text' ) ) {
 			$text = ultralove_rn_clean_text( $m[1] );
 			if ( in_array( mb_strtoupper( $text ), $keep, true ) ) {
 				$unwrapped = true; // part of the name: drop the tags, keep the words
-				return ' ' . $text . ' ';
+				return "\x03" . $text . "\x03";
 			}
-			return ' ' . $token( $text ) . ' ';
+			return "\x03" . $token( $text ) . "\x03";
 		}, $title );
 
 		// Then <font>, innermost first, until none are left. A font that only wraps already-extracted
@@ -64,24 +65,29 @@ if ( ! function_exists( 'ultralove_rn_clean_text' ) ) {
 		for ( $i = 0; $i < 50 && preg_match( $font, $work ); $i++ ) {
 			$work = preg_replace_callback( $font, static function ( array $m ) use ( $token, $keep, &$unwrapped ): string {
 				preg_match_all( '/\x01\d+\x02/', $m[1], $inner );
-				$own = ultralove_rn_clean_text( preg_replace( '/\x01\d+\x02/', ' ', $m[1] ) );
+				$own = ultralove_rn_clean_text( preg_replace( '/\x01\d+\x02|\x03/', ' ', $m[1] ) );
 				if ( in_array( mb_strtoupper( $own ), $keep, true ) ) {
 					$unwrapped = true;
-					return ' ' . $own . ' ' . implode( ' ', $inner[0] ) . ' ';
+					return "\x03" . $own . "\x03" . implode( "\x03", $inner[0] ) . "\x03";
 				}
-				return ' ' . ( '' !== $own ? $token( $own ) : '' ) . ' ' . implode( ' ', $inner[0] ) . ' ';
+				return "\x03" . ( '' !== $own ? $token( $own ) : '' ) . "\x03" . implode( "\x03", $inner[0] ) . "\x03";
 			}, $work );
 		}
 
 		// A closing tag straight after an extracted element is a harmless duplicate (<b>X</b></b>).
-		$work      = preg_replace( '/(\x02)(?:\s*<\/(?:b|font)\s*>)+/i', '$1', $work );
+		$work      = preg_replace( '/(\x02)(?:[\s\x03]*<\/(?:b|font)\s*>)+/i', '$1', $work );
 		$malformed = (bool) preg_match( '/<\/?(?:b|font)\b[^>]*>/i', $work );
-		$work      = preg_replace( '/<\/?(?:b|font)\b[^>]*>/i', ' ', $work );
+		$work      = preg_replace( '/<\/?(?:b|font)\b[^>]*>/i', "\x03", $work );
 		$changed   = $segments || $malformed || $unwrapped;
 
 		if ( ! $changed ) {
-			return array( 'title' => $title, 'info' => array(), 'important' => array(), 'segments' => array(), 'changed' => false, 'malformed' => false, 'other_tags' => false );
+			return array( 'residual' => $title, 'title' => $title, 'info' => array(), 'important' => array(), 'segments' => array(), 'changed' => false, 'malformed' => false, 'other_tags' => false );
 		}
+
+		// What the title would read as with the extracted elements cut out and nothing added in their place:
+		// this is what the product's old URL slug was made from, so the slug tool needs it exactly.
+		$residual = preg_replace( '/\x01\d+\x02|\x03/', '', $work );
+		$work     = str_replace( "\x03", ' ', $work );
 
 		// Classify the segments in the order they appear. A segment is "important" when it mentions TESTER
 		// (or the source's typo ESTER), or when it directly follows an important one and continues the same
@@ -116,7 +122,7 @@ if ( ! function_exists( 'ultralove_rn_clean_text' ) ) {
 				$lines[] = $line;
 			}
 		}
-		$clean = implode( '<br>', $lines );
+		$clean = implode( '<br> ', $lines ); // "<br> " keeps SKU and name apart wherever tags are stripped (SEO titles, search, emails)
 
 		$dedupe = static function ( array $list ): array {
 			$seen = array();
@@ -129,6 +135,7 @@ if ( ! function_exists( 'ultralove_rn_clean_text' ) ) {
 		$info      = array_values( array_filter( $dedupe( $info ), static fn( $t ) => ! in_array( mb_strtoupper( $t ), array_map( 'mb_strtoupper', $important ), true ) ) );
 
 		return array(
+			'residual'   => $residual,
 			'title'      => $clean,
 			'info'       => $info,
 			'important'  => $important,
@@ -137,5 +144,46 @@ if ( ! function_exists( 'ultralove_rn_clean_text' ) ) {
 			'malformed'  => $malformed,
 			'other_tags' => (bool) preg_match( '/<(?!br\b)[a-z\/]/i', $clean ),
 		);
+	}
+}
+
+if ( ! function_exists( 'ultralove_rn_slug_remove' ) ) {
+
+	/**
+	 * Take the part of a product's old URL slug that came from the removed notes out of it, leaving the rest
+	 * (SKU, brand and so on, which the slug has but the name may not) as it is.
+	 *
+	 * $removed is the slug of the original title, $kept the slug of the same title with the notes cut out (both
+	 * from sanitize_title( strip_tags( ... ) ), so they read the way the old slug was made: "...Book<br><b>SALE"
+	 * becomes "...booksale", with no hyphen between the kept word and the note). What $removed has and $kept
+	 * hasn't is looked up in $old_slug; it must be there exactly once and every word of $kept must still be in
+	 * what remains, in order. Anything else returns null: the caller leaves that product's URL alone and reports it.
+	 */
+	function ultralove_rn_slug_remove( string $old_slug, string $removed, string $kept ): ?string {
+		$limit = min( strlen( $removed ), strlen( $kept ) );
+		$p     = 0;
+		while ( $p < $limit && $removed[ $p ] === $kept[ $p ] ) {
+			$p++;
+		}
+		$s = 0;
+		while ( $s < $limit - $p && $removed[ strlen( $removed ) - 1 - $s ] === $kept[ strlen( $kept ) - 1 - $s ] ) {
+			$s++;
+		}
+		$mid = substr( $removed, $p, strlen( $removed ) - $p - $s );
+		if ( '' === $mid || 1 !== substr_count( $old_slug, $mid ) ) {
+			return null;
+		}
+		$new = trim( (string) preg_replace( '/-+/', '-', str_replace( $mid, '-', $old_slug ) ), '-' );
+
+		// Every word of $kept must still be there, in order.
+		$have = explode( '-', $new );
+		$want = '' === $kept ? array() : explode( '-', $kept );
+		$j    = 0;
+		foreach ( $have as $word ) {
+			if ( $j < count( $want ) && $word === $want[ $j ] ) {
+				$j++;
+			}
+		}
+		return '' !== $new && $j === count( $want ) ? $new : null;
 	}
 }

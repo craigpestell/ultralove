@@ -308,3 +308,42 @@ Code deployment alone does not migrate existing products. Production deployment
 and migration require separate approval after dev testing. Regenerate critical
 CSS before production because product-card styling changes. Offline checks:
 `php ops/retailer-notes/test-parser.php` (also run by CI).
+
+### New URLs for migrated products (slug-preview / slug-apply)
+
+After a product's notes are cut out of its name its old slug still contains them
+(`…-black-testerone-color-per-store-only-free-with-2-units-bought`). `wp ul-retailer-notes
+slug-preview` shows, for every migrated product, the slug with only the removed notes' words
+taken out (the SKU and brand the slug carries are kept); products whose slug can't be matched
+safely (`no-match`) or whose new slug is taken (`collision`) are listed and left alone.
+`slug-apply` (also `--ids`, `--limit`, `--csv=<file>`) saves the new slug and adds a 301 from the
+old URL to the new one in the Redirection plugin, group "Retailer notes slugs". WordPress's own
+old-slug redirect also covers the old URL. `slug-restore` puts the previous slugs back and deletes
+those redirects (the old URL must not keep redirecting away). Run `tidy-titles --apply` first on any
+environment migrated before 2026-10-15: it adds the space after `<br>` in names that lack it.
+
+Order: deploy code, `tidy-titles --apply`, `slug-preview`, try `slug-apply --ids=...`, check the old
+URL answers 301 to the new one (`curl -sI https://<host>/product/<old-slug>/`), then the full
+`slug-apply`, then clear the page caches and purge Cloudflare for `/shop/`, product pages and the
+sitemaps. Resubmit the product sitemap in Search Console. Back up the database first.
+
+Dev execution (2026-10-15, code `5bfc05b`):
+- Backed up the database outside the webroot in the root-only directory
+  `/root/ultralove-slug-migration-20261015/` (`before-slugs.sql`, 900,247,631 bytes).
+  Export used `--single-transaction --set-gtid-purged=OFF`; the completed dump and
+  per-command logs/CSV evidence are retained there.
+- Tidied 1,348 names; changed 826 slugs (one sample, then 825 remaining), with
+  zero reported migration problems. Final preview: 826 `done`, 519 `no-match`,
+  3 `same`, zero eligible changes. Repeating the title preview reports zero.
+- Verified every changed permalink, saved previous slug, and enabled exact-target
+  301 rule. Redirection's URL monitor created all 826 rules in its default group
+  (ID 1) before the migration helper ran, so the CSV results say `exists`, not
+  `created`. **Recovery caveat:** `slug-restore` only removes rules in the
+  "Retailer notes slugs" group; these monitored rules must also be removed or
+  disabled when restoring, or use the pre-migration database backup with care.
+- Cleared dev Nginx page cache. Origin checks of products 17188, 65829, 96703,
+  and 20594 each returned 301 to the exact cleaned path, then 200 without a PHP
+  error; `/shop/` returned 200. Nginx, PHP-FPM, and Redis remained active.
+- Dev sitemap checks did not expose a usable sitemap; `/product-sitemap.xml`
+  returned 404. No Search Console submission or Cloudflare configuration change
+  was made. Production code and data were not changed by this execution.
