@@ -207,6 +207,13 @@ function ultralove_rn_plan_slug( int $product_id ): array {
 	}
 	$new = ultralove_rn_slug_remove( $plan['old'], $was, $now );
 	if ( null === $new ) {
+		$new = ultralove_rn_slug_remove_note_suffix(
+			$plan['old'],
+			sanitize_title( $split['title'] ),
+			sanitize_title( implode( ' ', $split['segments'] ) )
+		);
+	}
+	if ( null === $new ) {
 		$plan['status'] = 'no-match';
 		return $plan;
 	}

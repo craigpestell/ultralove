@@ -316,6 +316,13 @@ After a product's notes are cut out of its name its old slug still contains them
 slug-preview` shows, for every migrated product, the slug with only the removed notes' words
 taken out (the SKU and brand the slug carries are kept); products whose slug can't be matched
 safely (`no-match`) or whose new slug is taken (`collision`) are listed and left alone.
+Historical URLs may differ from the saved original title. If exact removal fails, the
+planner recognizes a bounded set of retailer-instruction suffixes (discount restrictions,
+store/tester offers, special orders, stock/seasonal notices and sale pricing). This fallback
+preserves the historical SKU/name prefix and numeric uniqueness suffix; it never rebuilds
+the URL from a newer title. Extracted tester notes may remove a trailing `tester`, but
+`tester` retained in the cleaned name stays. Repeated instructions, unknown suffix wording,
+and instructions still present in the cleaned name remain unchanged for review.
 `slug-apply` (also `--ids`, `--limit`, `--csv=<file>`) saves the new slug and adds a 301 from the
 old URL to the new one in the Redirection plugin. The helper uses group "Retailer notes slugs",
 but Redirection's URL monitor can create the rule first in its default group. WordPress's own
@@ -351,6 +358,10 @@ Dev execution (2026-10-15, code `5bfc05b`):
   was made. Production code and data were not changed by this execution.
 
 Production execution (2026-10-15, merged PR #198, code `e27c4e8`):
+- Follow-up audit: the first pass was incomplete. In particular, product 97245 retained
+  its old URL because the saved title omitted `ONLY` but the historical URL included it.
+  Audit all `no-match` rows, not just rows containing `tester`: historical wording such
+  as `no-further-discounts-apply` also needs the suffix fallback.
 - Merged-main CI and automatic dev deployment passed before the standard production
   deployment. Live drift checks and server PHP lint passed; the deployment smoke
   tests returned 200. Code recovery archive:
