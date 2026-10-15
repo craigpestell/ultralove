@@ -378,7 +378,8 @@ Production execution (2026-10-15, merged PR #198, code `e27c4e8`):
   20594 each returned 301 to the exact cleaned path, then 200 without PHP fatal
   text. Home, shop, account, login, sitemap index, and all four product sitemaps
   returned 200. All 812 published changed URLs appeared in the origin product
-  sitemaps, with no old changed URLs; public sample sitemap entries also matched.
+  sitemaps, with no old changed URLs; the same complete 812-URL check passed
+  against all four public product sitemaps.
   Server-origin checks used loopback routing with the Cloudflare Origin CA
   certificate; independent public checks used normal TLS verification.
 - Nginx, PHP-FPM, and Redis remained active. Parser regressions passed locally.
