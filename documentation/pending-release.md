@@ -630,7 +630,8 @@ Conversely, 65257/65265 have genuine terminal store/free-unit instructions insid
 long marketing paragraphs, so extracting the entire matched paragraph is unsafe.
 Plain-bold instructions also occur; colour alone cannot classify retailer text.
 
-Proposed small semantic system, not implemented:
+Small semantic system (implemented on the description-callout branch; dev review
+required before production):
 
 - `ul-product-callout`: normal-sized, bold accent text for marketing emphasis.
   Marilyn's paragraph would contain one such span, with the nested fonts removed.
@@ -648,3 +649,26 @@ and media. Any future migration needs reviewed before/after previews, guarded
 field writes, regression fixtures for mixed/malformed blocks, importer parity,
 and dev visual verification before production. This inventory does not authorize
 description or CSS mutation.
+
+#### Product editor examples and guarded pilot
+
+The product edit screen has a **Product description style examples** panel below
+the editors, showing escaped HTML and a rendered preview for the callout, lead
+callout and product notice. The lead example includes both the base and modifier
+classes. Preview and storefront use the same child-theme stylesheet,
+`css/product-descriptions.css`; no example is inserted into saved content.
+Retailer conditions still belong in the existing retailer-specific fields.
+
+The accompanying conservative cleanup recognizes only reviewed standalone
+phrases/whole retailer instructions. Mixed paragraphs, unknown red wording,
+colour labels, links, layout, media and malformed fields remain for review.
+Lead treatment is available to editors but is never inferred from old font sizes.
+Importer normalization is disabled until a product is explicitly opted in by the
+guarded migration; deploying the code alone changes no description data.
+
+`ops/retailer-notes/clean-descriptions.php` provides `preview`, `apply`, `verify`
+and guarded `restore` modes via `wp eval-file`, using a private absolute JSON
+plan path outside the webroot and optional comma-separated IDs for preview.
+Plans include original fields and notes, site/version, product name and slug.
+Review the plan and take a database backup before applying on dev. This phase
+does not authorize any production migration.

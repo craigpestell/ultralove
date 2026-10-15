@@ -1,0 +1,19 @@
+/* Shared by storefront descriptions, Quick View and the product editor examples. */
+:is(#page, #mf-quick-view-modal, #ul-product-description-examples) :is(.woocommerce-product-details__short-description, .woocommerce-Tabs-panel--description, .ul-description-example-preview) .ul-product-callout {
+    color: #b3094b;
+    font-size: inherit;
+    font-weight: 700;
+}
+
+:is(#page, #mf-quick-view-modal, #ul-product-description-examples) :is(.woocommerce-product-details__short-description, .woocommerce-Tabs-panel--description, .ul-description-example-preview) .ul-product-callout--lead {
+    font-size: 1.25em;
+    line-height: 1.35;
+}
+
+:is(#page, #mf-quick-view-modal, #ul-product-description-examples) :is(.woocommerce-product-details__short-description, .woocommerce-Tabs-panel--description, .ul-description-example-preview) .ul-product-notice {
+    color: #7a0634;
+    font-size: inherit;
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+}

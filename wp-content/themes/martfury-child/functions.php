@@ -1,6 +1,7 @@
 <?php
 
 require_once get_stylesheet_directory() . '/inc/product-card-wishlist.php';
+require_once get_stylesheet_directory() . '/inc/product-description-examples.php';
 
 // WooCommerce caches where each template was found (the object cache is persistent here - Redis) and
 // only clears that on a theme switch, so a newly added (or removed) template override in this theme's
