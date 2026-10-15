@@ -8,9 +8,16 @@ function esc_html( $text ) { return htmlspecialchars( $text, ENT_QUOTES ); }
 function esc_html__( $text, $domain ) { return esc_html( $text ); }
 function add_filter( ...$args ) { $GLOBALS['filters'][] = $args; }
 function wp_slash( $value ) { return addslashes( $value ); }
+function wp_unslash( $value ) { return stripslashes( $value ); }
+function sanitize_textarea_field( $value ) { return trim( strip_tags( $value ) ); }
+class WC_Admin_Meta_Boxes {
+	public static array $errors = array();
+	public static function add_error( $message ) { self::$errors[] = $message; }
+}
 function get_post_field( $field, $id, $context ) { return $GLOBALS['title']; }
 function get_post_meta( $id, $key, $single ) { return $GLOBALS['meta'][ $key ] ?? ''; }
 function update_post_meta( $id, $key, $value ) { $GLOBALS['meta'][ $key ] = stripslashes( $value ); }
+function delete_post_meta( $id, $key ) { unset( $GLOBALS['meta'][ $key ] ); }
 function wc_get_product( $id ) {
 	return new class {
 		private string $name;
@@ -21,6 +28,7 @@ function wc_get_product( $id ) {
 require __DIR__ . '/../../wp-content/mu-plugins/41-product-retailer-notes.php';
 
 $offer = 'ONE PER STORE ONLY FREE WITH 2 UNITS BOUGHT';
+$normalized_offer = "LIMIT 1 PER STORE ONLY\nFREE WITH 2 UNITS BOUGHT";
 $supplier = 'WE3125<br> Sync Lite<br> Tester Kit<br><b>' . $offer . '</b>';
 $title = $supplier;
 class WC_Product {
@@ -36,7 +44,7 @@ $meta = array(
 if ( ! ultralove_rn_apply_to_product( 1 )
 	|| $title !== 'WE3125<br> Sync Lite<br> Tester Kit'
 	|| $meta[ ULTRALOVE_RN_INFO ] !== 'Manual note'
-	|| $meta[ ULTRALOVE_RN_IMPORTANT ] !== "Existing important note\n" . $offer
+	|| $meta[ ULTRALOVE_RN_IMPORTANT ] !== "Existing important note\n" . $normalized_offer
 	|| $meta[ ULTRALOVE_RN_ORIGINAL ] !== 'Preserved original' ) {
 	throw new RuntimeException( 'Importer classification lost identity, duplicated an offer, or changed existing content.' );
 }
@@ -49,7 +57,7 @@ if ( $meta !== $expected || ultralove_rn_apply_to_product( 1 ) ) {
 $title = $supplier;
 $meta = array( ULTRALOVE_RN_INFO => $offer );
 ultralove_rn_apply_to_product( 1 );
-if ( '' !== $meta[ ULTRALOVE_RN_INFO ] || $meta[ ULTRALOVE_RN_IMPORTANT ] !== $offer || $meta[ ULTRALOVE_RN_ORIGINAL ] !== $supplier ) {
+if ( '' !== $meta[ ULTRALOVE_RN_INFO ] || $meta[ ULTRALOVE_RN_IMPORTANT ] !== $normalized_offer || $meta[ ULTRALOVE_RN_ORIGINAL ] !== $supplier ) {
 	throw new RuntimeException( 'Last regular note was not cleared or original was not saved.' );
 }
 $supplier = 'W637718<br> Womanizer Liberty <b> Leopard Tester<br>' . $offer . '</b>';
@@ -57,7 +65,7 @@ $title = $supplier;
 $meta = array( ULTRALOVE_RN_INFO => 'Manual retailer note' );
 ultralove_rn_apply_to_product( 1 );
 if ( 'W637718<br> Womanizer Liberty Leopard Tester' !== $title
-	|| $offer !== $meta[ ULTRALOVE_RN_IMPORTANT ]
+	|| $normalized_offer !== $meta[ ULTRALOVE_RN_IMPORTANT ]
 	|| 'Manual retailer note' !== $meta[ ULTRALOVE_RN_INFO ]
 	|| $supplier !== $meta[ ULTRALOVE_RN_ORIGINAL ] ) {
 	throw new RuntimeException( 'Importer lost the tester variant or existing retailer notes.' );
@@ -73,6 +81,35 @@ $before_ambiguous = $title;
 if ( ultralove_rn_apply_to_product( 1 ) || $title !== $before_ambiguous || $meta !== $expected ) {
 	throw new RuntimeException( 'Importer must skip ambiguous tester wording without modifying data.' );
 }
+$title = 'Already clean product';
+$meta = array( ULTRALOVE_RN_INFO => 'ONE PER STORE ONLY', ULTRALOVE_RN_IMPORTANT => $offer );
+ultralove_rn_apply_to_product( 1 );
+if ( $title !== 'Already clean product' || isset( $meta[ ULTRALOVE_RN_ORIGINAL ] ) || $meta[ ULTRALOVE_RN_IMPORTANT ] !== $normalized_offer || $meta[ ULTRALOVE_RN_INFO ] !== '' ) {
+	throw new RuntimeException( 'Clean-title imports must normalize both fields without saving the name' );
+}
+$_POST = array( ULTRALOVE_RN_INFO => 'ONE PER STORE ONLY' );
+ultralove_rn_admin_save( 1 );
+if ( ( $meta[ ULTRALOVE_RN_INFO ] ?? '' ) !== '' || $meta[ ULTRALOVE_RN_IMPORTANT ] !== $normalized_offer ) {
+	throw new RuntimeException( 'Admin save did not preserve and deduplicate the unposted Important field' );
+}
+$_POST = array( ULTRALOVE_RN_INFO => addslashes( "Supplier's note \\ keep" ) );
+ultralove_rn_admin_save( 1 );
+if ( $meta[ ULTRALOVE_RN_INFO ] !== "Supplier's note \\ keep" || $meta[ ULTRALOVE_RN_IMPORTANT ] !== $normalized_offer ) {
+	throw new RuntimeException( 'Admin save altered slashes or the unposted field' );
+}
+$_POST = array( ULTRALOVE_RN_IMPORTANT => 'FREE WITH MYSTERY OFFER' );
+ultralove_rn_admin_save( 1 );
+if ( ! WC_Admin_Meta_Boxes::$errors || $meta[ ULTRALOVE_RN_IMPORTANT ] !== 'FREE WITH MYSTERY OFFER' ) {
+	throw new RuntimeException( 'Ambiguous admin notes must be preserved and reported' );
+}
+$_POST = array( ULTRALOVE_RN_INFO => 'no discounts apply', ULTRALOVE_RN_IMPORTANT => 'One Per Store Only' );
+ultralove_rn_admin_save( 1 );
+$before = $meta;
+ultralove_rn_admin_save( 1 );
+if ( $meta !== $before || $meta[ ULTRALOVE_RN_INFO ] !== 'DISCOUNTS DO NOT APPLY' || $meta[ ULTRALOVE_RN_IMPORTANT ] !== 'LIMIT 1 PER STORE ONLY' ) {
+	throw new RuntimeException( 'Admin field classification or repeat safety failed' );
+}
+$_POST = array();
 $meta = array(
 	ULTRALOVE_RN_INFO => "Manual <note>\nSecond line",
 	ULTRALOVE_RN_IMPORTANT => 'Limit "one" & only',

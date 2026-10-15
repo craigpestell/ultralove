@@ -55,7 +55,10 @@ function ultralove_description_after_import( $post_id ): void {
 		return;
 	}
 	$before = ultralove_description_snapshot( $id );
-	$after = ultralove_rn_description_after( $before );
+	$after = ultralove_rn_description_after( $before, $review );
+	foreach ( $review as $reason ) {
+		error_log( 'Description cleanup product ' . $id . ': ' . $reason );
+	}
 	if ( $before !== $after ) {
 		ultralove_description_write( $id, $before, $after );
 	}

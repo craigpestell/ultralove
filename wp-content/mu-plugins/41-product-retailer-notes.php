@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-require_once __DIR__ . '/ultralove-retailer-notes/parser.php';
+require_once __DIR__ . '/ultralove-retailer-notes/notes.php';
 
 const ULTRALOVE_RN_INFO      = '_ul_retailer_info';
 const ULTRALOVE_RN_IMPORTANT = '_ul_retailer_important';
@@ -108,7 +108,7 @@ function ultralove_rn_admin_fields() {
 	woocommerce_wp_textarea_input( array(
 		'id'          => ULTRALOVE_RN_IMPORTANT,
 		'label'       => __( 'Important retailer info', 'ultralove' ),
-		'description' => __( 'Shown highlighted on product cards and the product page, e.g. TESTER ONE PER STORE ONLY. One note per line.', 'ultralove' ),
+		'description' => __( 'Shown highlighted on product cards and the product page. One condition per line, e.g. LIMIT 1 PER STORE ONLY or FREE WITH 2 UNITS BOUGHT. Equivalent conditions are merged.', 'ultralove' ),
 		'desc_tip'    => true,
 		'rows'        => 2,
 	) );
@@ -125,11 +125,25 @@ function ultralove_rn_admin_fields() {
 add_action( 'woocommerce_process_product_meta', 'ultralove_rn_admin_save' );
 function ultralove_rn_admin_save( $post_id ) {
 	// WooCommerce has already checked the nonce and the user's capability before this action.
-	foreach ( array( ULTRALOVE_RN_INFO, ULTRALOVE_RN_IMPORTANT ) as $key ) {
+	$notes = ultralove_rn_get( (int) $post_id );
+	$submitted = false;
+	foreach ( array( ULTRALOVE_RN_INFO => 'info', ULTRALOVE_RN_IMPORTANT => 'important' ) as $key => $field ) {
 		if ( ! isset( $_POST[ $key ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
 			continue;
 		}
+		$submitted = true;
 		$value = trim( sanitize_textarea_field( wp_unslash( $_POST[ $key ] ) ) ); // phpcs:ignore WordPress.Security.NonceVerification
+		$notes[ $field ] = preg_split( '/\R/', $value );
+	}
+	if ( ! $submitted ) {
+		return;
+	}
+	$notes = ultralove_rn_merge_notes( $notes );
+	foreach ( $notes['review'] as $reason ) {
+		WC_Admin_Meta_Boxes::add_error( __( 'Retailer conditions need review: ', 'ultralove' ) . $reason );
+	}
+	foreach ( array( ULTRALOVE_RN_INFO => 'info', ULTRALOVE_RN_IMPORTANT => 'important' ) as $key => $field ) {
+		$value = implode( "\n", $notes[ $field ] );
 		if ( '' === $value ) {
 			delete_post_meta( $post_id, $key );
 		} else {
@@ -153,31 +167,30 @@ function ultralove_rn_apply_to_product( int $product_id ): bool {
 	}
 	$title  = (string) get_post_field( 'post_title', $product_id, 'raw' );
 	$result = ultralove_rn_split_title( $title );
-	if ( ! $result['changed'] || $result['malformed'] || $result['review'] || '' === $result['title'] ) {
+	if ( $result['malformed'] || $result['review'] || '' === $result['title'] ) {
 		return false;
 	}
-	if ( '' === (string) get_post_meta( $product_id, ULTRALOVE_RN_ORIGINAL, true ) ) {
-		update_post_meta( $product_id, ULTRALOVE_RN_ORIGINAL, wp_slash( $title ) );
-	}
 	$have = ultralove_rn_get( $product_id );
+	$notes = ultralove_rn_merge_notes( $have, $result );
+	foreach ( $notes['review'] as $reason ) {
+		error_log( 'Retailer notes product ' . $product_id . ': ' . $reason );
+	}
+	$changed = $result['changed'];
 	foreach ( array( ULTRALOVE_RN_INFO => 'info', ULTRALOVE_RN_IMPORTANT => 'important' ) as $key => $field ) {
-		$merged = $have[ $field ];
-		foreach ( $result[ $field ] as $text ) {
-			if ( ! in_array( mb_strtoupper( $text ), array_map( 'mb_strtoupper', $merged ), true ) ) {
-				$merged[] = $text;
-			}
-		}
-		if ( 'info' === $field ) {
-			$promoted = array_map( 'mb_strtoupper', $result['important'] );
-			$merged = array_values( array_filter( $merged, static fn( $text ) => ! in_array( mb_strtoupper( $text ), $promoted, true ) ) );
-		}
+		$merged = $notes[ $field ];
 		if ( $merged !== $have[ $field ] ) {
+			$changed = true;
 			update_post_meta( $product_id, $key, wp_slash( implode( "\n", $merged ) ) );
 		}
 	}
-	$product->set_name( $result['title'] );
-	$product->save();
-	return true;
+	if ( $result['changed'] ) {
+		if ( '' === (string) get_post_meta( $product_id, ULTRALOVE_RN_ORIGINAL, true ) ) {
+			update_post_meta( $product_id, ULTRALOVE_RN_ORIGINAL, wp_slash( $title ) );
+		}
+		$product->set_name( $result['title'] );
+		$product->save();
+	}
+	return $changed;
 }
 
 // WP All Import rewrites titles from the supplier file, markup included; clean each product as it is saved.

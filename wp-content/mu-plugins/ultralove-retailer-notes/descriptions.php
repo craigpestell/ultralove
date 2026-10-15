@@ -1,18 +1,16 @@
 <?php
 /** Conservative, byte-preserving cleanup of reviewed description blocks. */
-require_once __DIR__ . '/parser.php';
+require_once __DIR__ . '/notes.php';
 
 /**
  * Only whole, unambiguous instructions qualify. Mixed paragraphs stay untouched.
  * @return string|null Destination retailer field, or null for unreviewed text.
  */
 function ultralove_rn_description_note_field( string $text ): ?string {
-	if ( preg_match( '/^(?:DISCOUNTS DO NOT APPLY|NO (?:FURTHER )?DISCOUNTS APPLY|SPECIAL ORDER ONLY|WHILE STOCK LASTS|SALE PRICED)$/i', $text ) ) {
+	if ( null !== ultralove_rn_regular_note( $text ) ) {
 		return 'info';
 	}
-	$store = '(?:(?:LIMIT )?(?:ONE|1)(?: COLOU?R)? PER STORE(?: ONLY)?)';
-	$free = 'FREE WITH [0-9]+ UNITS BOUGHT';
-	if ( preg_match( '/^(?:' . $store . ')(?: ' . $free . ')?$/i', $text ) ) {
+	if ( null !== ultralove_rn_note_clauses( $text ) ) {
 		return 'important';
 	}
 	return null;
@@ -116,26 +114,27 @@ function ultralove_rn_clean_description( string $html ): array {
 }
 
 /** @return array{post_content:string,post_excerpt:string,info:string,important:string} */
-function ultralove_rn_description_after( array $before ): array {
+function ultralove_rn_description_after( array $before, ?array &$review = null ): array {
 	$after = $before;
+	$review = array();
 	$notes = array();
 	foreach ( array( 'info', 'important' ) as $field ) {
 		$notes[ $field ] = array_values( array_filter( array_map( 'trim', preg_split( '/\R/', $before[ $field ] ) ), 'strlen' ) );
 	}
 	foreach ( array( 'post_content', 'post_excerpt' ) as $field ) {
 		$clean = ultralove_rn_clean_description( $before[ $field ] );
+		foreach ( $clean['review'] as $reason ) {
+			$review[] = $field . ': ' . $reason;
+		}
 		$after[ $field ] = $clean['html'];
 		foreach ( array( 'info', 'important' ) as $destination ) {
 			foreach ( $clean[ $destination ] as $note ) {
-				if ( ! in_array( mb_strtoupper( $note ), array_map( 'mb_strtoupper', $notes[ $destination ] ), true ) ) {
-					$notes[ $destination ][] = $note;
-				}
-				if ( 'important' === $destination ) {
-					$notes['info'] = array_values( array_filter( $notes['info'], static fn( string $info ): bool => mb_strtoupper( $info ) !== mb_strtoupper( $note ) ) );
-				}
+				$notes[ $destination ][] = $note;
 			}
 		}
 	}
+	$notes = ultralove_rn_merge_notes( $notes );
+	$review = array_merge( $review, $notes['review'] );
 	foreach ( array( 'info', 'important' ) as $field ) {
 		$original = array_values( array_filter( array_map( 'trim', preg_split( '/\R/', $before[ $field ] ) ), 'strlen' ) );
 		if ( $original !== $notes[ $field ] ) {

@@ -21,6 +21,7 @@ expect_description(
 );
 expect_description( '<p><b><font color="red">SMART PHONE NOT INCLUDED</font></b></p>', '<p><span class="ul-product-notice">SMART PHONE NOT INCLUDED</span></p>' );
 $offer = 'LIMIT 1 PER STORE ONLY FREE WITH 2 UNITS BOUGHT';
+$normalized_offer = "LIMIT 1 PER STORE ONLY\nFREE WITH 2 UNITS BOUGHT";
 $offer_html = '<b><b><font color=red><font size="4">LIMIT 1 PER STORE ONLY<br> FREE WITH 2 UNITS BOUGHT</font></FONT></b></b><p>';
 expect_description( $offer_html, '<p>', array( $offer ) );
 expect_description( '<p><b>DISCOUNTS DO NOT APPLY</b></p>', '<p></p>', array(), array( 'DISCOUNTS DO NOT APPLY' ) );
@@ -50,8 +51,12 @@ $structured = $untouched . '<p><b><font color="red">Sensual Comfort!</font></b><
 expect_description( $structured, $structured );
 $before = array( 'post_content' => $offer_html, 'post_excerpt' => '', 'info' => "Manual note\n" . strtolower( $offer ), 'important' => 'Existing important' );
 $after = ultralove_rn_description_after( $before );
-if ( $after['info'] !== 'Manual note' || $after['important'] !== "Existing important\n" . $offer || ultralove_rn_description_after( $after ) !== $after ) {
+if ( $after['info'] !== 'Manual note' || $after['important'] !== "Existing important\n" . $normalized_offer || ultralove_rn_description_after( $after ) !== $after ) {
 	throw new RuntimeException( 'Note merge/promotion/idempotence failed.' );
+}
+$conflict = array( 'post_content' => '', 'post_excerpt' => '', 'info' => 'FREE WITH 2 UNITS BOUGHT', 'important' => 'FREE WITH 3 UNITS BOUGHT' );
+if ( ultralove_rn_description_after( $conflict, $review ) !== $conflict || ! $review ) {
+	throw new RuntimeException( 'Description merger must preserve and report conflicting purchase conditions.' );
 }
 try {
 	ultralove_rn_clean_description( "\xB1" );
@@ -89,7 +94,7 @@ if ( $post !== $original || $meta ) {
 }
 $meta[ ULTRALOVE_DESCRIPTION_CLEANUP_META ] = ULTRALOVE_DESCRIPTION_CLEANUP_VERSION;
 ultralove_description_after_import( 1 );
-if ( $post['post_content'] !== '<p>' || ! str_contains( $post['post_excerpt'], 'ul-product-callout' ) || $meta[ ULTRALOVE_RN_IMPORTANT ] !== $offer
+if ( $post['post_content'] !== '<p>' || ! str_contains( $post['post_excerpt'], 'ul-product-callout' ) || $meta[ ULTRALOVE_RN_IMPORTANT ] !== $normalized_offer
 	|| $post['post_title'] !== 'Unchanged' || $post['post_name'] !== 'unchanged' ) {
 	throw new RuntimeException( 'Opted-in import did not persist expected data.' );
 }

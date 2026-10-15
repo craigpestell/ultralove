@@ -36,7 +36,7 @@ if ( 'preview' === $mode ) {
 	foreach ( $ids as $id ) {
 		$id = (int) $id;
 		$before = ultralove_description_snapshot( $id );
-		$after = ultralove_rn_description_after( $before );
+		$after = ultralove_rn_description_after( $before, $reasons );
 		if ( $after !== $before ) {
 			$rows[] = array(
 				'id' => $id,
@@ -47,11 +47,8 @@ if ( 'preview' === $mode ) {
 				'after' => $after,
 			);
 		}
-		foreach ( array( 'post_content', 'post_excerpt' ) as $field ) {
-			$clean = ultralove_rn_clean_description( $before[ $field ] );
-			if ( $clean['review'] ) {
-				$review[] = array( 'id' => $id, 'field' => $field, 'reasons' => $clean['review'] );
-			}
+		if ( $reasons ) {
+			$review[] = array( 'id' => $id, 'reasons' => $reasons );
 		}
 	}
 	$plan = array( 'site' => home_url(), 'version' => ULTRALOVE_DESCRIPTION_CLEANUP_VERSION, 'rows' => $rows, 'review' => $review );

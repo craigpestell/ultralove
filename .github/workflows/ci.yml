@@ -55,9 +55,12 @@ jobs:
           php ops/retailer-notes/test-parser.php
           php ops/retailer-notes/test-runtime.php
           php ops/retailer-notes/test-descriptions.php
+          php ops/retailer-notes/test-notes.php
+          php ops/retailer-notes/test-normalize-notes.php
           php ops/retailer-notes/test-repairs.php
           php -l ops/retailer-notes/repair-products.php
           php -l ops/retailer-notes/clean-descriptions.php
+          php -l ops/retailer-notes/normalize-notes.php
 
       - name: No DB dumps, invoices, archives, backups or oversized files
         run: |

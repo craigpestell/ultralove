@@ -762,3 +762,31 @@ does not authorize any production migration.
   - Deployment smoke passed; Nginx, PHP-FPM and Redis were active. No production
     writes or deployment. Returning tester wording to URLs is outside this repair;
     any later approved URL work must follow the direct-retarget policy above.
+
+### Retailer-condition consistency follow-up (dev first)
+
+- Store-limit synonyms, including `ONE PER STORE ONLY` and `LIMIT 1 PER STORE
+  ONLY`, consolidate into **Important retailer info** as `LIMIT 1 PER STORE ONLY`.
+  Remove the equivalent condition from regular Retailer info. Keep separate
+  purchase requirements on their own lines; never merge different quantities,
+  scopes, product qualifiers or conflicting purchase offers.
+- Shared normalization applies to admin saves, title imports (including already
+  clean titles), and opted-in description cleanup. Unknown prose remains in its
+  original field. Ambiguous conditions are reported; bulk normalization excludes
+  the entire affected product for manual review.
+- `ops/retailer-notes/normalize-notes.php` provides preview/apply/verify/restore
+  through `wp eval-file`. Plans must be new private absolute paths outside the
+  webroot, bound to this site and a catalog/redirect/provenance fingerprint.
+  Optional preview scope is comma-separated positive product IDs. The runner
+  writes only `_ul_retailer_info` and `_ul_retailer_important`; it preserves
+  absent versus empty metadata for exact restoration and supports recovery
+  after a partial apply. Review the full plan and take a database backup first.
+- Run final note normalization **after** historical tester-identity repairs:
+  those repairs intentionally match raw source notes for provenance. Do not
+  reuse older description or URL plans after normalization.
+- Offline regressions cover the Liberty/Backwall conditions, cross-field
+  promotion/deduplication, admin partial submissions and slashes, clean-title
+  imports, ambiguous/conflicting offers, stale-state rejection, failed-write
+  recovery, exact metadata restoration and repeat safety.
+- No production changes in this follow-up. Current-name URL work is still
+  paused; no additional redirects or aliases have been written.
