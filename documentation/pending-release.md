@@ -659,6 +659,13 @@ classes. Preview and storefront use the same child-theme stylesheet,
 `css/product-descriptions.css`; no example is inserted into saved content.
 Retailer conditions still belong in the existing retailer-specific fields.
 
+Dev deployed commit `53f7580` on 2026-10-15 (#204). Deployment smoke tests,
+the deployed WordPress metabox renderer, product-editor stylesheet enqueue and
+product-list exclusion checks passed. Local regression and browser computed-style
+checks passed for all three examples. The authenticated admin browser check stopped
+at Cloudflare Access; no access settings were changed. No descriptions were migrated,
+no products were opted into cleanup, and production remains unchanged.
+
 The accompanying conservative cleanup recognizes only reviewed standalone
 phrases/whole retailer instructions. Mixed paragraphs, unknown red wording,
 colour labels, links, layout, media and malformed fields remain for review.
