@@ -7,6 +7,7 @@
  * Titles look like "SKU<br> Name<br> Variant<br> <b><font color=red><font size="3">SALE PRICED</font></FONT></b>".
  * Every <b>...</b> and <font>...</font> element is cut out of the title, whole, and its text is returned
  * instead: text containing TESTER goes to "important", everything else to "info".
+ * Recognized terminal retailer instructions also work without wrappers.
  */
 
 if ( ! function_exists( 'ultralove_rn_clean_text' ) ) {
@@ -57,7 +58,18 @@ if ( ! function_exists( 'ultralove_rn_clean_text' ) ) {
 	 * are removed but the words stay in the name. Whole-text match, case-insensitive.
 	 */
 	function ultralove_rn_keep_in_name(): array {
-		return array( 'ELECTRIC', 'RECHARGEABLE', 'STANDARD', 'EACH', 'WITH APP', 'TRAVEL SIZE', 'PRIDE EDITION' );
+		return array( 'ELECTRIC', 'RECHARGEABLE', 'STANDARD', 'EACH', 'WITH APP', 'TRAVEL SIZE', 'PRIDE EDITION', 'WITH TESTER', 'WITH TESTERS', 'DISPLAY FOR TESTER' );
+	}
+
+	/** Only whole store/purchase instructions qualify; unrelated notes on tester products stay regular. */
+	function ultralove_rn_is_tester_offer( string $title, string $note ): bool {
+		if ( ! preg_match( '/\bTESTERS?\b/i', ultralove_rn_clean_text( $title ) ) ) {
+			return false;
+		}
+		$store = '(?:ONE|1)(?: (?:COLOU?R|BOTTLE))? PER STORE(?: ONLY)?';
+		$free  = 'FREE WITH (?:[0-9]+ UNITS BOUGHT(?: PER FLAVOR)?|[0-9]+(?: \([0-9]+ EACH\))? PRODUCTS BOUGHT|[0-9]+ EACH OF THE [A-Z0-9]+ LINE PURCHASED|PURCHASE OF [0-9]+ ESSENTIAL BULLETS)';
+		$part  = '(?:' . $store . '|' . $free . ')';
+		return (bool) preg_match( '/^' . $part . '(?: ' . $part . ')*$/i', ultralove_rn_clean_text( $note ) );
 	}
 
 	/**
@@ -65,7 +77,7 @@ if ( ! function_exists( 'ultralove_rn_clean_text' ) ) {
 	 *   title      the title with every <b>/<font> element removed (lines joined with "<br> ")
 	 *   residual   the original title with only the extracted elements cut out, no padding (for slug work)
 	 *   segments   the text of each removed element, in order
-	 *   changed    false when the title had no <b>/<font> markup (title is then returned untouched)
+	 *   changed    false when no notes, name wrappers or duplicate markup were found
 	 *   malformed  an unclosed <b>/<font>, or a closing tag with no opening one, was found: where the note starts is
 	 *              unknown, so its text stays in the title and apply skips the product
 	 *   other_tags the cleaned title still has tags other than <br> (e.g. <strong>)
@@ -73,10 +85,17 @@ if ( ! function_exists( 'ultralove_rn_clean_text' ) ) {
 	function ultralove_rn_split_title( string $title ): array {
 		$segments  = array();
 		$unwrapped = false;
+		$source    = preg_replace( '/<+(?=<br\s*\/?>)/i', '', $title );
+		$repaired  = $source !== $title;
 		$keep      = ultralove_rn_keep_in_name();
 		$token    = static function ( string $text ) use ( &$segments ): string {
+			$identity = '';
+			if ( preg_match( '/^(Display For Tester)\s+(.+)$/i', $text, $match ) && ultralove_rn_is_tester_offer( $match[1], $match[2] ) ) {
+				$identity = $match[1] . ' ';
+				$text = $match[2];
+			}
 			$segments[] = $text;
-			return "\x01" . ( count( $segments ) - 1 ) . "\x02";
+			return $identity . "\x01" . ( count( $segments ) - 1 ) . "\x02";
 		};
 
 		// <b> first (the usual wrapper), whole element, any attributes.
@@ -87,7 +106,7 @@ if ( ! function_exists( 'ultralove_rn_clean_text' ) ) {
 				return "\x03" . $text . "\x03";
 			}
 			return "\x03" . $token( $text ) . "\x03";
-		}, $title );
+		}, $source );
 
 		// Then <font>, innermost first, until none are left. A font that only wraps already-extracted
 		// elements is unwrapped; one with text of its own becomes a segment beside them.
@@ -106,9 +125,17 @@ if ( ! function_exists( 'ultralove_rn_clean_text' ) ) {
 
 		// A closing tag straight after an extracted element is a harmless duplicate (<b>X</b></b>).
 		$work      = preg_replace( '/(\x02)(?:[\s\x03]*<\/(?:b|font)\s*>)+/i', '$1', $work );
+		// Only a known terminal instruction proves where an unwrapped note starts.
+		$instruction = '(?:DISCOUNTS DO NOT APPLY|NO (?:FURTHER )?DISCOUNTS APPLY|SPECIAL ORDER ONLY|WHILE STOCK LASTS|SALE PRICED|SEASONAL LIMITED SUPPLY|(?:ONE|1)(?: (?:COLOU?R|BOTTLE))? PER STORE(?: ONLY)?|FREE WITH (?:[0-9]+ UNITS BOUGHT|PURCHASE OF [0-9]+ ESSENTIAL BULLETS))';
+		$instruction = str_replace( ' ', '\s+', $instruction );
+		$separator   = '(?:\s|<br\s*\/?>)+';
+		$plain_note  = '/(' . $separator . ')((?:TESTERS?(?:\s+ONLY)?' . $separator . ')?' . $instruction . '(?:' . $separator . $instruction . ')*)(?:\s*<\/(?:b|font)\s*>)*\s*$/i';
+		$work = preg_replace_callback( $plain_note, static function ( array $m ) use ( $token ): string {
+			return $m[1] . "\x03" . $token( ultralove_rn_clean_text( $m[2] ) ) . "\x03";
+		}, $work );
 		$malformed = (bool) preg_match( '/<\/?(?:b|font)\b[^>]*>/i', $work );
 		$work      = preg_replace( '/<\/?(?:b|font)\b[^>]*>/i', "\x03", $work );
-		$changed   = $segments || $malformed || $unwrapped;
+		$changed   = $segments || $malformed || $unwrapped || $repaired;
 
 		if ( ! $changed ) {
 			return array( 'residual' => $title, 'title' => $title, 'info' => array(), 'important' => array(), 'segments' => array(), 'changed' => false, 'malformed' => false, 'other_tags' => false );
@@ -135,6 +162,7 @@ if ( ! function_exists( 'ultralove_rn_clean_text' ) ) {
 				continue;
 			}
 			$is_important = (bool) preg_match( '/\b(?:TESTERS?|ESTER)\b/i', $text )
+				|| ultralove_rn_is_tester_offer( $residual, $text )
 				|| ( $prev_important && '' === $gap && preg_match( '/\b(?:PER (?:STORE|COLOU?R)|FREE WITH)\b/i', $text ) );
 			$prev_important = $is_important;
 			if ( $is_important ) {

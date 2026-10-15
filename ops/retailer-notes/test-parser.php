@@ -73,9 +73,78 @@ $r = $s( 'W623102<br> Liberty 2<br> Purple<br> <b>DISCOUNTS DO NOT APPLY</b></b>
 $check( 'duplicate closing tag is harmless', array( $r['malformed'], $r['title'], $r['info'] ), array( false, 'W623102<br> Liberty 2<br> Purple', array( 'DISCOUNTS DO NOT APPLY' ) ) );
 
 $r = $s( 'N3333TE<br> Magic Massager<br> TESTER<br> ONE PER STORE ONLY<br> FREE WITH 3 UNITS BOUGHT</b>' );
-$check( 'closing tag with no opening one is flagged', array( $r['malformed'], $r['important'] ), array( true, array() ) );
+$check( 'recognized unwrapped tester run', array( $r['malformed'], $r['title'], $r['important'] ), array( false, 'N3333TE<br> Magic Massager', array( 'TESTER ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT' ) ) );
+
+$r = $s( 'N3328TE<br> Mini Tickler Bullet TESTER<br> ONE PER STORE ONLY<br> FREE WITH 3 UNITS BOUGHT</b>' );
+$check( 'real inline tester without opening tag', array( $r['title'], $r['important'], $r['malformed'] ), array( 'N3328TE<br> Mini Tickler Bullet', array( 'TESTER ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT' ), false ) );
+$check( 'unwrapped cleanup is idempotent', $s( $r['title'] )['changed'], false );
+
+$r = $s( 'J50051<br> Magic Wand Mini<br> Demo and Display<br>ONE  PER STORE ONLY<br> FREE WITH 3 UNITS BOUGHT</b>' );
+$check( 'demo identity stays, whitespace collapsed', array( $r['title'], $r['info'], $r['malformed'] ), array( 'J50051<br> Magic Wand Mini<br> Demo and Display', array( 'ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT' ), false ) );
+
+$r = $s( 'J50091<br> Magic Wand Power Adapter HV265<br> NO FURTHER DISCOUNTS APPLY' );
+$check( 'no wrappers at all', array( $r['title'], $r['info'], $r['changed'] ), array( 'J50091<br> Magic Wand Power Adapter HV265', array( 'NO FURTHER DISCOUNTS APPLY' ), true ) );
+
+$r = $s( 'L9035T<br> Lelo Dot Cruise<br> Peach Please TESTER<br>FREE WITH 2 UNITS BOUGHT</b>' );
+$check( 'variant retained before tester', array( $r['title'], $r['important'], $r['malformed'] ), array( 'L9035T<br> Lelo Dot Cruise<br> Peach Please', array( 'TESTER FREE WITH 2 UNITS BOUGHT' ), false ) );
+
+$r = $s( 'R2096<BR> Romp Pleasure Air Lipstick<br> Tester Only<br>ONE PER STORE ONLY<br> FREE WITH 3 UNITS BOUGHT</b>' );
+$check( 'tester-only note with mixed-case breaks', array( $r['title'], $r['important'], $r['malformed'] ), array( 'R2096<br> Romp Pleasure Air Lipstick', array( 'Tester Only ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT' ), false ) );
+
+$r = $s( 'SKU<br> Product<br> <b>WHILE STOCK LASTS</b><br> NO FURTHER DISCOUNTS APPLY' );
+$check( 'mixed wrapped and unwrapped notes', array( $r['title'], $r['info'], $r['malformed'] ), array( 'SKU<br> Product', array( 'WHILE STOCK LASTS', 'NO FURTHER DISCOUNTS APPLY' ), false ) );
+
+$r = $s( 'W602003<br> Marilyn Monroe Special Edition<br> Classic 2<br> Vivid Red<<br> <b>DISCOUNTS DO NOT APPLY</b>' );
+$check( 'real duplicate opening angle', array( $r['title'], $r['info'], $r['malformed'] ), array( 'W602003<br> Marilyn Monroe Special Edition<br> Classic 2<br> Vivid Red', array( 'DISCOUNTS DO NOT APPLY' ), false ) );
+$check( 'duplicate opening angle absent in residual', str_contains( $r['residual'], '<<' ), false );
+
+foreach ( array(
+	'SKU<br> Product</b>',
+	'SKU<br> Product<br> UNKNOWN INSTRUCTION</b>',
+	'SKU<br> Product<br><b>TESTER ONE PER STORE ONLY',
+) as $title ) {
+	$check( 'unknown malformed tags still flagged: ' . $title, $s( $title )['malformed'], true );
+}
+foreach ( array(
+	'SKU<br> Product Tester',
+	'SKU<br> Product Tester Edition',
+	'SKU<br> Per Store Display Stand',
+	'SKU<br> FREE WITH 3 UNITS BOUGHT Collectors Edition',
+	'SKU<br> Size 2 < 3',
+	'SKU<br> Size 2 &lt; 3',
+	'SKU<br> Product<br> FREE WITH PURCHASE OF<br> 2 EACH (8 TOTAL) of E-Stimulator Products',
+) as $title ) {
+	$check( 'ambiguous or literal title untouched: ' . $title, array( $s( $title )['changed'], $s( $title )['title'] ), array( false, $title ) );
+}
 
 // residual: the title with only the extracted notes cut out, nothing added, as the old slug saw it
+foreach ( array(
+	'WE3125<br> Sync Lite<br> Tester Kit',
+	'JDISP-00-16-1<br> Starstruck Display with Testers',
+	'SKU<br> Display w/Testers',
+) as $name ) {
+	$r = $s( $name . '<br><b>ONE PER STORE ONLY<br> FREE WITH 2 UNITS BOUGHT</b><br><b>DISCOUNTS DO NOT APPLY</b>' );
+	$check( 'retained tester identity: ' . $name, array( $r['title'], $r['important'], $r['info'] ), array( $name, array( 'ONE PER STORE ONLY FREE WITH 2 UNITS BOUGHT' ), array( 'DISCOUNTS DO NOT APPLY' ) ) );
+}
+foreach ( array( 'with Testers', 'Display For Tester' ) as $identity ) {
+	$r = $s( 'SKU<br> Product<br><b>' . $identity . '</b><br><b>ONE PER STORE ONLY FREE WITH 2 UNITS BOUGHT</b>' );
+	$check( 'wrapped tester identity: ' . $identity, array( $r['title'], $r['important'] ), array( 'SKU<br> Product<br> ' . $identity, array( 'ONE PER STORE ONLY FREE WITH 2 UNITS BOUGHT' ) ) );
+}
+foreach ( array(
+	'ONE PER STORE ONLY FREE WITH 9 (3 each) PRODUCTS BOUGHT',
+	'ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT PER FLAVOR',
+	'ONE PER STORE ONLY FREE WITH 2 EACH OF THE JO8015 LINE PURCHASED',
+	'FREE WITH PURCHASE OF 12 ESSENTIAL BULLETS 1 Per Store Only',
+) as $offer ) {
+	$check( 'recognized tester offer: ' . $offer, ultralove_rn_is_tester_offer( 'Product Tester Kit', $offer ), true );
+}
+foreach ( array( 'DISCOUNTS DO NOT APPLY', 'FREE WITH MYSTERY OFFER', 'ONE PER STORE ONLY DISCOUNTS DO NOT APPLY' ) as $note ) {
+	$check( 'unrelated or unknown tester note: ' . $note, ultralove_rn_is_tester_offer( 'Product Tester Kit', $note ), false );
+}
+$check( 'tester substring is not identity', ultralove_rn_is_tester_offer( 'Protester Edition', 'ONE PER STORE ONLY' ), false );
+$r = $s( 'W600160<br> Womanizer Duo 2<br><b>Display For Tester ONE PER STORE ONLY<br> FREE WITH 2 UNITS BOUGHT</b>' );
+$check( 'display identity beside offer in one wrapper', array( $r['title'], $r['important'] ), array( 'W600160<br> Womanizer Duo 2<br> Display For Tester', array( 'ONE PER STORE ONLY FREE WITH 2 UNITS BOUGHT' ) ) );
+
 $r = $s( 'J50075<br> The Original Magic Wand<br><b>Electric</b><br> <b> DISCOUNTS DO NOT APPLY</b>' );
 $check( 'residual', $r['residual'], "J50075<br> The Original Magic Wand<br>Electric<br> " );
 $r = $s( 'SKU Name' );

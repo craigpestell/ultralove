@@ -294,7 +294,8 @@ on the previous production droplet (now in its snapshot, above).
 WooCommerce General-tab fields "Retailer info" (`_ul_retailer_info`) and
 "Important retailer info" (`_ul_retailer_important`). Notes appear on product
 cards, product pages and quick view. WP All Import saves extract `<b>` / `<font>`
-notes automatically; existing products require a separate migration.
+notes and recognized terminal retailer instructions automatically; existing products
+require a separate migration.
 
 On each environment, first run `wp ul-retailer-notes preview` from the
 WordPress root and review the extracted notes and flagged titles. Only after
@@ -400,3 +401,115 @@ Production execution (2026-10-15, merged PR #198, code `e27c4e8`):
   confirmation are retained beside the database backup. No Search Console
   submission was performed; the working sitemap index is
   `https://ultralove.ca/wp-sitemap.xml`.
+
+### Historical-slug follow-up (2026-10-15, merged PR #201, code `00256ae`)
+
+- Dev and production each migrated another 287 URLs, with zero reported problems.
+  Both had fresh, verified root-only database backups in
+  `/root/ultralove-slug-followup-20261015/`: dev 900,929,578 bytes and production
+  947,783,098 bytes. Production code recovery archive:
+  `/var/lib/ultralove-deploy/backups/20261015T203117Z-e27c4e8d9c.tgz`.
+- Merged-main CI and automatic dev deployment passed before production deployment.
+  Production applied four samples, then the remaining 283. All 287 permalinks,
+  saved previous slugs, enabled exact-target 301s and repeat-run behavior passed
+  independent checks. Final production counts at this stage: 1,099 `done`,
+  229 `no-match`, 3 `same`, zero eligible or colliding changes.
+- Product 97245 now uses
+  `/product/l9486t-lelo-enigma-double-sonic-black/`; its reported historical
+  tester-offer URL redirects directly to that path.
+- Cleared the scoped Nginx page cache and confirmed a scoped Cloudflare purge
+  of 581 URLs. Origin and public HTTP checks passed, including all 287 new
+  published URLs in the four product sitemaps and no affected old URLs.
+  Live inlined critical CSS matched the source after ignoring its exact
+  generated leading attribution comment, which HTML optimization removes.
+  Nginx, PHP-FPM and Redis remained active. No Search Console submission.
+- The default-group Redirection recovery caveat above still applies. Private
+  plans, CSVs and independent verification/purge/HTTP evidence accompany the
+  backups. Audit all planner categories and unmigrated titles in future:
+  `no-match` alone does not expose malformed or unwrapped title notes.
+
+### Unwrapped and malformed title notes
+
+The supplier sometimes supplies terminal instructions without an opening
+`<b>` tag, or without any wrapper. The parser now recognizes only the explicit
+terminal discount, store/free-unit, special-order, stock/seasonal and sale-price
+phrases used by the migration. An immediately preceding `TESTER` / `TESTER ONLY`
+joins that note; product names, variants, and "Demo and Display" remain intact.
+An orphan closing `</b>` / `</font>` is accepted only after that recognized run.
+Unknown malformed markup remains flagged and skipped; unfamiliar offer wording
+requires review, not guessed removal. Standalone tester names are not reclassified.
+
+Duplicate opening angles before a valid `<br>` are repaired (`<<br>` becomes
+`<br>`); literal comparisons and escaped angles are preserved. The slug planner
+still tries historical suffix removal when malformed original markup makes
+WordPress sanitize the original and residual to the same string.
+
+After deployment, run title `preview` (which now includes unwrapped instructions),
+review, back up, apply approved IDs, then `slug-preview` / `slug-apply` for those
+IDs. Product 47748 was already cleaned with a trailing `<`; do not blindly replay
+saved originals over current names. Its one-time repair must require that the
+current name exactly equals the corrected parser result plus the stray `<`,
+preserving `_ul_original_title` and both note fields. Then migrate its slug with
+the standard command. Verify titles, preserved notes, exact 301 targets, canonical
+URLs and sitemap membership after scoped cache purges.
+
+### Tester-name audit (read-only, 2026-10-15)
+
+Production has 64 published products with `tester` anywhere in their current
+names, including plural and case variants:
+
+- 34 have store-limit or purchase offers in Retailer info.
+- 21 still have offer text in their names: 20 use the terminal phrases covered
+  by the pending parser fix; product 26625's multi-line purchase offer still
+  requires review.
+- 3 already have these offers in Important retailer info.
+- 6 have no store/purchase offer in their current names or note fields. Preserve
+  meaningful qualifiers such as "Tester Not Included", "Tester Holder",
+  "Display For Tester", "PLUS Testers" and "w/Testers"; unrelated discount notes
+  should not move merely because the product name mentions testers.
+
+Another 490 products mention testers only in saved original titles. Of these,
+489 have store/purchase offers in Important retailer info; product 24256 instead
+has the descriptive phrase "with Testers" moved there. Product 51896 also lost
+"Display For Tester" along with its offer. Review those two titles separately;
+do not replay saved originals over subsequent product edits. No production data
+changed during this audit.
+
+Retained tester names now classify whole recognized store/purchase instructions
+as Important, including the Starstruck line-specific offer and Sync Lite Tester
+Kit. Unrelated discounts and unknown/manual mixed notes stay regular. Wrapped
+"with Testers" and "Display For Tester" remain product identity, including the
+latter followed by a recognized offer inside the same wrapper. Future imports
+remove exact copies of newly Important notes from regular info.
+
+`ops/retailer-notes/repair-products.php` provides `preview`, `apply`, and `verify`
+modes through `wp eval-file`, taking an absolute root-private JSON plan path.
+Preview refuses to overwrite a plan. Review every before/after record and take a
+fresh database backup before applying. Apply checks the site and every field
+before any write, rechecks each record immediately before saving, and verifies
+the persisted result. Keep the plan for scoped recovery; do not restore a whole
+production database over new orders.
+
+The migration cleans recognized current title notes, moves only whole known
+tester offers also found in saved supplier-title segments, and guards the
+one-time title repairs for 47748, 24256 and 51896 against current content.
+Unchanged note fields retain their exact stored formatting. Unknown malformed
+titles are excluded and counted for review. It does not touch descriptions or
+slugs: follow with scoped `slug-preview` / `slug-apply`, then verify every
+redirect and idempotence. Descriptive-name repairs preserve current URLs.
+
+### Deferred: retailer instructions in descriptions
+
+After title cleanup, audit both long and short product descriptions for retailer
+instructions, including the reported nested markup:
+
+```html
+<b><font color="red"><font size="4">LIMIT 1 PER STORE ONLY<br> FREE WITH 2 UNITS BOUGHT</font></font></b>
+```
+
+Preview matches before extracting only clearly identified instructions into
+retailer fields, preserving surrounding description content and meaningful
+tester wording. Include `LIMIT 1 PER STORE ONLY`, nested wrappers and line
+breaks in regression coverage; deduplicate against existing notes and ensure
+future imports do not reintroduce the instructions. This is a separate,
+not-yet-implemented migration requiring dev verification before production.
