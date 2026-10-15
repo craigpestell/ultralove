@@ -821,3 +821,29 @@ does not authorize any production migration.
 - nginx, PHP 8.5 FPM and Redis remained active. Existing WP-CLI/vendor
   deprecations were captured separately from successful migration output.
 - **Production remains untouched. URL corrections remain pending.**
+
+### Current-name tester URL correction (dev first)
+
+- `ops/retailer-notes/current-name-slugs.php` derives slugs from the current
+  product name, stripping presentation markup rather than tester identity.
+  It requires an explicit JSON array of product IDs:
+  ```sh
+  wp eval-file /private/current-name-slugs.php preview /private/urls.json /private/ids.json
+  wp eval-file /private/current-name-slugs.php apply /private/urls.json
+  wp eval-file /private/current-name-slugs.php verify /private/urls.json
+  wp eval-file /private/current-name-slugs.php restore /private/urls.json
+  ```
+- Preview rejects collisions, unexpected permalink structures and conflicting
+  redirects. Existing original redirects are retargeted directly to the final
+  name-derived URL. A redirect whose source becomes the canonical URL is
+  disabled, not converted into a loop. No intermediate redirects or new aliases
+  are created; automatic WordPress/Redirection slug tracking is suppressed
+  only during the scoped writes and restored afterward.
+- Private, site-bound plans retain global slug/redirect/alias snapshots and
+  scoped name/content/note snapshots. Full preflight rejects unrelated edits.
+  Apply and restore accept whole planned records in either before/after state
+  so interrupted writes can be resumed or restored. Final exact readback is
+  mandatory. Back up the database and rehearse scoped restore before full apply.
+- Offline coverage includes the requested LELO tester and Liberty Leopard
+  Tester names, markup, missing original rules, self-rules, collisions, stale
+  edits, interrupted product/redirect writes, recovery and repeat safety.
