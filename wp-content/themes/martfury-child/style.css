@@ -4396,6 +4396,12 @@ body .cwginstock-subscribe-form :is(.row, [class*="col-"]) {
     line-height: 1.4
 }
 
+@media (max-width: 991px) {
+    .single-product #tab-description > .ul-retailer-notes--single {
+        display: none
+    }
+}
+
 .ul-retailer-notes--single .ul-retailer-notes__important,
 .ul-retailer-notes--quickview .ul-retailer-notes__important {
     padding: 8px 12px;

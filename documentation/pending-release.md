@@ -528,10 +528,35 @@ and the apply/verification logs. Keep these root-private and outside the webroot
   originals, and repeat-import idempotence; CI runs both test scripts and lints
   the repair script.
 
-Production has not received this repair. Wait for user verification on dev before
-merging/deploying and creating a fresh production-specific backup and repair plan.
+### Production repair verification (2026-10-15, PR #202)
+
+After explicit dev approval, merged #202 as
+`2d1be24991b3779766a85b1df45df87fcc04f9fe`. Main CI (38807559755) and the
+automatic dev deployment (38807559700) passed. Standard production deployment
+passed the dev gate, found no drift, linted changed PHP, restarted PHP-FPM and
+passed all four smoke paths.
+
+Created a fresh 947,944,008-byte, mode-0600 database backup at
+`/root/ultralove-retailer-repair-20261015/before-repairs.sql` on production.
+Retain that directory's private before/after plans, CSV and verification logs
+for scoped recovery, never a full database restore over subsequent orders.
+
+- All 63 production repair records exactly matched the tested dev before/after
+  records. Applied and independently verified all 63; repeat preview proposed zero.
+- Reviewed all 27 old/new slug pairs against dev, with no collisions or conflicting
+  redirects. `wp ul-retailer-notes slug-apply --ids=... --csv=...` changed 27,
+  skipped zero and reported zero problems. Independent verification confirmed
+  saved slugs, previous-slug metadata, exact enabled 301 rules and idempotence.
+- Purged Nginx page cache and 97 scoped Cloudflare URLs.
+- Origin and public HTTP verification passed all 27 exact redirects, new 200
+  responses, canonicals and guest titles; all 63 guest retailer fields; all four
+  public product sitemaps; and home/shop/account/login smoke paths.
+  Public requests from the production host received 403, so public verification
+  was completed from the local machine against exported expected values.
+  No WAF rules were changed. Nginx, PHP-FPM and Redis remained active.
+
 Product 26625's unsupported multi-line offer remains unchanged for manual review.
-Description cleanup remains separate and deferred.
+Descriptions and description styling were not changed.
 
 ### Deferred: retailer instructions in descriptions
 
@@ -548,3 +573,316 @@ tester wording. Include `LIMIT 1 PER STORE ONLY`, nested wrappers and line
 breaks in regression coverage; deduplicate against existing notes and ensure
 future imports do not reintroduce the instructions. This is a separate,
 not-yet-implemented migration requiring dev verification before production.
+
+### Description-format inventory and class proposal (read-only, 2026-10-15)
+
+Audited both raw description fields on all non-trash/non-auto-draft parent
+products: all 6,528 were published, with 6,493 nonempty long descriptions and
+4,141 nonempty short descriptions. Variations, revisions and encoded HTML
+alternatives are outside this inventory. No description writes were performed.
+Detailed JSON, bounded examples and the read-only audit script are retained in
+the private production repair evidence directory (`description-audit-expanded.json`
+and `audit-description-styles.php`).
+
+Found 47 normalized tag/attribute signatures and 85 ancestor structures.
+911 products contain `font`; 123 contain inline styles; 2,436 contain bold;
+74 contain underlining. Counts below are element occurrences, not independent
+callouts, and overlap across nested wrappers and products.
+
+| Formatting family | Observed values and element counts |
+| --- | --- |
+| Bold / underline | `b`: 5,719; `u`: 80 |
+| Red colour | `font[color=red]`: 996 on 885 products; red inline spans: 125 on 95 products |
+| Legacy font size | `1`: 3; `2`: 121; `2.5`: 17; `3`: 356; `3.5`: 1; `4`: 298; `4.5`: 146; `5`: 84; `6`: 13; `8`: 2; `10`: 3 |
+| Span font size | `small`: 94; `medium`: 9; `large`: 6; `x-large`: 14; `xx-large`: 4 |
+| Other named font colours | `black`: 9; `dark`: 3; `fuchsia`: 3; `orange`: 3; `darkturquoise`: 2; `blue`: 2; `hotpink`: 2; `slate`, `fuscia`, `purple`, `turquoise`: 1 each |
+| Hex-like font colours | `fe39bc`: 7; `71349c`: 6; `#df0101`, `#5b8dee`, `#ea2181`, `#bae5d2`, `#ff8d33`, `#c9daee`, `#74457b`: 1 each |
+| Other inline text colour | `span[style="color: dark;"]`: 2 |
+| Layout / media, not callouts | Left-aligned table cells: 54; float-left/padding-12px divs: 50; clear-both divs: 25; three distinct Wistia positioning/sizing div signatures: 1 each |
+
+No additional strong/italic/strike/big/small/center or font-face signatures were
+observed by the audit. Decimal sizes and sizes 8/10 are not valid legacy font
+sizes; `dark`, `slate`, `fuscia` and hashless hex values need explicit review,
+not blind copying into CSS.
+
+Wrapper variations include paragraph-wrapped and bare bold/font chains, nested
+size fonts, equivalent colour/size spans, duplicate bold wrappers, list-item
+nesting, non-bold notices, and malformed source (`pthe` on product 88021).
+The most common structures are `p > b > font[color=red]` (830 occurrences),
+its inner size-3 font (276), inner size-4 font (274), and the bare
+`b > font[color=red]` (161). These counts overlap, not separate blocks.
+DOM parsing produced structural diagnostics on 92 fields; these are review
+signals from a repairing parser, not 92 proven independent source defects.
+
+Marilyn Monroe (47748) contains the reported red/size-3 marketing phrase in
+`post_excerpt`, not the long description. It must remain product content.
+Other distinct uses include marketing headlines, "SMART PHONE NOT INCLUDED"
+(23550), missing-charger notices (88021), and product-colour/scent labels
+(35223, 35227, 35231, 35235, 35239, 36421 and 97180-97183).
+
+Expanded retailer-phrase discovery flagged 521 fields across 464 products:
+463 long and 58 short descriptions. These are candidates, not approved removals.
+The initial narrower search found 475 fields on 441 products. Broader discovery
+adds minimum-quantity, limit, no-exceptions and limited-supply wording.
+Marketing phrases such as "creativity run free with" (54170) and
+"worry-free with ingredients" (72413/72415) are false positives.
+Conversely, 65257/65265 have genuine terminal store/free-unit instructions inside
+long marketing paragraphs, so extracting the entire matched paragraph is unsafe.
+Plain-bold instructions also occur; colour alone cannot classify retailer text.
+
+Small semantic system (implemented on the description-callout branch; dev review
+required before production):
+
+- `ul-product-callout`: normal-sized, bold accent text for marketing emphasis.
+  Marilyn's paragraph would contain one such span, with the nested fonts removed.
+- `ul-product-callout--lead`: optional larger introductory headline treatment,
+  selected by content role rather than mechanically mapping every old size.
+- `ul-product-notice`: product caveats such as excluded accessories, remaining
+  in the description and visually distinct from retailer purchase conditions.
+- Preserve colour-identity/brand cues for separate review; do not flatten them
+  into the accent style or create a class for every historical colour.
+- Recognized retailer instructions go to the existing regular/Important fields,
+  deduplicated against saved notes, not a new description warning class.
+
+Preserve surrounding paragraphs, line breaks, lists, links, tables, ordinary bold
+and media. Any future migration needs reviewed before/after previews, guarded
+field writes, regression fixtures for mixed/malformed blocks, importer parity,
+and dev visual verification before production. This inventory does not authorize
+description or CSS mutation.
+
+#### Product editor examples and guarded pilot
+
+The product edit screen has a **Product description style examples** panel below
+the editors, showing escaped HTML and a rendered preview for the callout, lead
+callout and product notice. The lead example includes both the base and modifier
+classes. Preview and storefront use the same child-theme stylesheet,
+`css/product-descriptions.css`; no example is inserted into saved content.
+Retailer conditions still belong in the existing retailer-specific fields.
+
+Dev deployed commit `53f7580` on 2026-10-15 (#204). Deployment smoke tests,
+the deployed WordPress metabox renderer, product-editor stylesheet enqueue and
+product-list exclusion checks passed. Local regression and browser computed-style
+checks passed for all three examples. After the user authenticated the dev browser,
+the admin examples were also verified against their source snippets and computed
+styles. No access settings were changed. The initial code deployment migrated no
+descriptions; the subsequent authorized dev migration is recorded below.
+
+The accompanying conservative cleanup recognizes only reviewed standalone
+phrases/whole retailer instructions. Mixed paragraphs, unknown red wording,
+colour labels, links, layout, media and malformed fields remain for review.
+Lead treatment is available to editors but is never inferred from old font sizes.
+Importer normalization is disabled until a product is explicitly opted in by the
+guarded migration; deploying the code alone changes no description data.
+
+`ops/retailer-notes/clean-descriptions.php` provides `preview`, `apply`, `verify`
+and guarded `restore` modes via `wp eval-file`, using a private absolute JSON
+plan path outside the webroot and optional comma-separated IDs for preview.
+Plans include original fields and notes, site/version, product name and slug.
+Review the plan and take a database backup before applying on dev. This phase
+does not authorize any production migration.
+
+### Dev description migration and retailer-note placement
+
+- Dev description migration applied to 219 products; verify mode confirmed exact
+  descriptions, notes, import opt-in, unchanged titles and unchanged slugs.
+- Repeat preview proposed zero changes. The 1,276 flagged fields remain for review.
+- A fresh private dev database backup and the complete before/after plan are retained
+  under `/var/lib/ultralove-deploy/description-cleanup-20261015/`. A three-product
+  apply/verify/restore rehearsal passed before the full apply.
+- Storefront retailer notes appear both in their original product-summary position
+  and above the main Description tab content, Important retailer info first.
+  The original position was restored following user review. Existing card and
+  Quick View output and wp-admin fields remain unchanged. Notes-only products
+  retain a Description tab so their instructions are not lost.
+- Initial dev code `4920da3` deployed successfully. Browser checks confirmed both notes
+  appear once, Important first, before the Nova 2 Retail Kit description, with no
+  notes remaining above its price. Desktop and 390px mobile checks passed without
+  description overflow; logged-out origin HTML confirmed the same placement.
+- Follow-up dev code `49f0c99` restored the original summary hook at priority 11,
+  while retaining notes above Description. Browser checks on Marilyn Monroe
+  confirmed one identical regular note in each location. The theme renders the
+  summary notes after its price/status block and before the short description.
+- Marilyn Monroe's migrated marketing callout rendered with the shared accent
+  style and no legacy red font elements in the main description. Runtime,
+  description and title-parser regressions and PHP lint passed, including
+  notes-only and notes-free product cases.
+- Production description migration remains pending approval. Follow the critical
+  CSS release gate before production since the first-screen markup has changed.
+
+### Preserving tester product identities
+
+- Keep tester identities in product names, including Leopard Tester, Tester Only,
+  Tester Kit, RETAIL TESTER and display kits marked NO TESTER. Extract only whole
+  recognized store/purchase instructions into Important retailer info. Ambiguous
+  mixed tester instructions are retained and flagged for review, not auto-applied.
+- Quantity instructions such as `1 PER TESTER ONLY` are retailer conditions, not
+  tester identities; retain them in Important retailer info. Regression coverage
+  includes the Shameless Display Tester Holder case, wrapped and unwrapped notes.
+- The importer shares this parser, retains unrelated retailer notes and the saved
+  original supplier name, and is repeat-safe.
+- `ops/retailer-notes/repair-products.php` supports private `preview`, `apply` and
+  `verify` plans via `wp eval-file`. Generic restoration requires a matching old
+  note in the saved supplier title and exactly one identity whose removal explains
+  the current title. Substantive manual title edits and unmatched notes are skipped.
+- Fresh plans snapshot titles, original supplier titles, both retailer fields and
+  slugs. Apply preflights every snapshot, rechecks before each write and verifies
+  readback. Retain the reviewed plan and take a fresh DB backup before dev writes.
+  Existing slugs and redirects must remain unchanged; do not run slug migration.
+  Do not create redirects from intermediate cleaned URLs. If a later approved
+  repair changes URLs, retarget existing original retailer-info redirects directly
+  to the final URL and suppress automatic intermediate redirects.
+- Offline coverage: `test-parser.php`, `test-runtime.php`, `test-descriptions.php`
+  and `test-repairs.php` under `ops/retailer-notes/`. The repair suite covers exact
+  restoration, unrelated notes, manual-edit/provenance guards, stale slug rejection
+  before any writes, readback and repeat safety; it also runs in CI.
+- Tester restoration is a dev-only follow-up. Production remains unchanged pending
+  explicit approval.
+- Dev execution verified on 2026-10-15 at `ca4113b52e`:
+  - Reviewed the fresh 507-product plan; zero flags. The earlier 508-product preview
+    was superseded, not applied: product 29768's `1 PER TESTER ONLY` is a quantity
+    instruction and its title/notes were verified unchanged.
+  - Fresh private backup:
+    `/var/lib/ultralove-deploy/tester-identities-ca4113b/before-complete.sql.gz`
+    (125,312,432 bytes, mode 600, gzip integrity checked). Export used
+    `--single-transaction --set-gtid-purged=OFF`. SHA-256:
+    `6fe9a5f66259f01ed7b01b1e9e3d3f574256550e4989c9be1d37749bc972b4ca`.
+  - Applied and readback-verified all 507 title/Important-note repairs against
+    `/var/lib/ultralove-deploy/tester-identities-ca4113b/plan.json`; saved originals,
+    regular retailer notes and slugs stayed unchanged. Repeat preview returned
+    zero repairs and zero flags.
+  - Before/after fingerprints matched for all 6,464 product slugs, all 6,516
+    Redirection rule definitions and all 2,391 previous/core old-slug metadata rows.
+    No redirects were created or retargeted, and no intermediate aliases appeared.
+  - Verified guest origin PDPs 96703 (Leopard Tester), 96694 (Tester), 27513
+    (RETAIL TESTER), 51885 (Tester Only), 51887 (NO TESTER display kit) and 29768
+    (Tester Holder). Titles and canonicals matched saved data; retailer notes
+    appeared identically once in the original summary position and once in
+    Description. Authenticated browser also verified Liberty at its existing URL.
+    Its original retailer-info URL still returned one 301 directly to that URL.
+  - Deployment smoke passed; Nginx, PHP-FPM and Redis were active. No production
+    writes or deployment. Returning tester wording to URLs is outside this repair;
+    any later approved URL work must follow the direct-retarget policy above.
+
+### Retailer-condition consistency follow-up (dev first)
+
+- Store-limit synonyms, including `ONE PER STORE ONLY` and `LIMIT 1 PER STORE
+  ONLY`, consolidate into **Important retailer info** as `LIMIT 1 PER STORE ONLY`.
+  Remove the equivalent condition from regular Retailer info. Keep separate
+  purchase requirements on their own lines; never merge different quantities,
+  scopes, product qualifiers or conflicting purchase offers.
+- Shared normalization applies to admin saves, title imports (including already
+  clean titles), and opted-in description cleanup. Unknown prose remains in its
+  original field. Ambiguous conditions are reported; bulk normalization excludes
+  the entire affected product for manual review.
+- `ops/retailer-notes/normalize-notes.php` provides preview/apply/verify/restore
+  through `wp eval-file`. Plans must be new private absolute paths outside the
+  webroot, bound to this site and a catalog/redirect/provenance fingerprint.
+  Optional preview scope is comma-separated positive product IDs. The runner
+  writes only `_ul_retailer_info` and `_ul_retailer_important`; it preserves
+  absent versus empty metadata for exact restoration and supports recovery
+  after a partial apply. Review the full plan and take a database backup first.
+- Run final note normalization **after** historical tester-identity repairs:
+  those repairs intentionally match raw source notes for provenance. Do not
+  reuse older description or URL plans after normalization.
+- Offline regressions cover the Liberty/Backwall conditions, cross-field
+  promotion/deduplication, admin partial submissions and slashes, clean-title
+  imports, ambiguous/conflicting offers, stale-state rejection, failed-write
+  recovery, exact metadata restoration and repeat safety.
+- No production changes in this follow-up at this stage. Subsequent approved
+  current-name URL execution is recorded below.
+
+#### Dev execution verified (2026-10-15, `9ef490c`)
+
+- Committed/pushed and standard-deployed `9ef490c11368e47873067d3f88ba624fe55fbba3`;
+  dev smoke test and CI run `38819061392` passed. Six targeted offline suites,
+  changed runtime/runner PHP lint and editor diagnostics passed.
+- Reviewed all 44 distinct before/after transformations in the full catalog
+  preview: **534 safe product changes**, **4 excluded review products**.
+  Exclusions: 27463/30692 (`FREE WITH TESTER & 3 UNITS BOUGHT`), 59459
+  (`DISPLAY KIT ONLY` mixed with the condition), 62594 (`Color May Vary`
+  mixed with the condition). No guessed normalization of these fields.
+- Fresh private backup:
+  `/var/lib/ultralove-deploy/note-consistency-9ef490c/before.sql.gz`,
+  mode 0600, 125,331,434 bytes; gzip verified. SHA256:
+  `4a851c7e8f87750286c2b778cdbbe05c14dfede337885aea2cac26d96cc8a575`.
+- Four-product apply/verify/restore rehearsal passed for 96699, 96703, 26788,
+  29768. Then applied and readback-verified all 534 planned changes using
+  `catalog-plan.json` in that private directory. Non-note fingerprint unchanged:
+  names, descriptions, slugs, provenance, old aliases and redirects preserved.
+- Repeat preview: **0 safe changes**, same 4 review exclusions. Separate
+  readback confirmed all excluded note metadata remained exactly unchanged.
+- Six guest origin PDPs (96699, 96703, 20115, 26788, 29768, 33252) verified:
+  one note block in the original summary location and one above Description,
+  each matching stored notes exactly; canonicals unchanged. Authenticated
+  browser checks also passed for Liberty and Backwall.
+- Follow-up display rule: hide only the duplicate note block above Description
+  below the product page's two-column breakpoint (992px). Original summary
+  notes remain visible at every width; Description notes remain visible at
+  992px and above. Both fields follow the same rule.
+- Both Liberty examples now show only Important retailer info:
+  `LIMIT 1 PER STORE ONLY | FREE WITH 2 UNITS BOUGHT`. The equivalent regular
+  note is absent; each condition appears once per intended placement.
+- nginx, PHP 8.5 FPM and Redis remained active. Existing WP-CLI/vendor
+  deprecations were captured separately from successful migration output.
+- **Production remains untouched. Dev URL corrections are verified below.**
+
+### Current-name tester URL correction (dev first)
+
+- `ops/retailer-notes/current-name-slugs.php` derives slugs from the current
+  product name, stripping presentation markup rather than tester identity.
+  It requires an explicit JSON array of product IDs:
+  ```sh
+  wp eval-file /private/current-name-slugs.php preview /private/urls.json /private/ids.json
+  wp eval-file /private/current-name-slugs.php apply /private/urls.json
+  wp eval-file /private/current-name-slugs.php verify /private/urls.json
+  wp eval-file /private/current-name-slugs.php restore /private/urls.json
+  ```
+- Preview rejects collisions, unexpected permalink structures and conflicting
+  redirects. Existing original redirects are retargeted directly to the final
+  name-derived URL. A redirect whose source becomes the canonical URL is
+  disabled, not converted into a loop. No intermediate redirects or new aliases
+  are created; automatic WordPress/Redirection slug tracking is suppressed
+  only during the scoped writes and restored afterward.
+- Existing older-SKU redirect chains feeding those original redirects are also
+  flattened to the final URL. Every affected ancestor must pass the same exact
+  enabled URL/301 safety checks; no new rules or aliases are added.
+- Private, site-bound plans retain global slug/redirect/alias snapshots and
+  scoped name/content/note snapshots. Full preflight rejects unrelated edits.
+  Apply and restore accept whole planned records in either before/after state
+  so interrupted writes can be resumed or restored. Final exact readback is
+  mandatory. Back up the database and rehearse scoped restore before full apply.
+- Offline coverage includes the requested LELO tester and Liberty Leopard
+  Tester names, markup, missing original rules, self-rules, collisions, stale
+  edits, interrupted product/redirect writes, recovery and repeat safety.
+
+#### Final dev execution verified (2026-10-15, `c0ae8c7`)
+
+- Standard dev deployment and CI `38821070887` passed. URL/runtime regressions,
+  PHP syntax checks and editor diagnostics passed before deployment.
+- Initial `49a3046` execution corrected 509 slugs and 508 existing rules.
+  HTTP checks exposed eight additional pre-existing ancestor rules; the enhanced
+  runner discovers and flattens those, including two-level historical chains.
+- Fresh private backup of the initial applied state:
+  `/var/lib/ultralove-deploy/tester-name-urls-c0ae8c7/before.sql.gz`,
+  125,358,096 bytes, mode 0600, gzip verified. SHA256:
+  `1e1b7c8f91dbb87359b09f80d4783fca705cf94d96a5c006c78fdf0212fe322c`.
+- Restored only the original scoped URL plan, not the database. Fresh enhanced
+  preview matched its exact baseline and all 509 reviewed slug transformations;
+  reviewed the eight additional ancestor changes separately.
+- Six-product apply/verify/restore rehearsal passed. Full apply and exact readback
+  passed for **509 slugs and 516 existing rules**: 515 enabled direct redirects
+  and one disabled canonical self-rule. Repeat preview returned zero changes.
+  No new redirects or previous/core old-slug aliases were created.
+- All **515 enabled changed redirects** returned one 301 directly to their final
+  destinations over origin HTTP. Nine representative final PDPs returned 200
+  with the correct product and canonical, including LELO Purple Tester,
+  Liberty Leopard Tester and the oldest Venice Beach SKU ancestor.
+- Rechecked six guest PDPs: exact notes in both markup placements, correct
+  canonicals and four unchanged review exclusions. Nginx, PHP-FPM and Redis active.
+- Authenticated computed-style/layout checks at 390/767/768/991/992/1200px
+  confirmed the actual product-column boundary: summary notes visible at all
+  widths; Description duplicates hidden through 991px and visible from 992px.
+- User approved dev and explicitly authorized the same changes on production.
+  Production execution must use fresh site-bound plans, in order: descriptions,
+  historical tester identity, final note normalization, current-name URLs.
+  Merge/dev deployment and generated critical-CSS gates remain mandatory.
