@@ -788,8 +788,8 @@ does not authorize any production migration.
   promotion/deduplication, admin partial submissions and slashes, clean-title
   imports, ambiguous/conflicting offers, stale-state rejection, failed-write
   recovery, exact metadata restoration and repeat safety.
-- No production changes in this follow-up. Current-name URL work is still
-  paused; no additional redirects or aliases have been written.
+- No production changes in this follow-up at this stage. Subsequent approved
+  current-name URL execution is recorded below.
 
 #### Dev execution verified (2026-10-15, `9ef490c`)
 
@@ -824,7 +824,7 @@ does not authorize any production migration.
   note is absent; each condition appears once per intended placement.
 - nginx, PHP 8.5 FPM and Redis remained active. Existing WP-CLI/vendor
   deprecations were captured separately from successful migration output.
-- **Production remains untouched. URL corrections remain pending.**
+- **Production remains untouched. Dev URL corrections are verified below.**
 
 ### Current-name tester URL correction (dev first)
 
@@ -854,3 +854,35 @@ does not authorize any production migration.
 - Offline coverage includes the requested LELO tester and Liberty Leopard
   Tester names, markup, missing original rules, self-rules, collisions, stale
   edits, interrupted product/redirect writes, recovery and repeat safety.
+
+#### Final dev execution verified (2026-10-15, `c0ae8c7`)
+
+- Standard dev deployment and CI `38821070887` passed. URL/runtime regressions,
+  PHP syntax checks and editor diagnostics passed before deployment.
+- Initial `49a3046` execution corrected 509 slugs and 508 existing rules.
+  HTTP checks exposed eight additional pre-existing ancestor rules; the enhanced
+  runner discovers and flattens those, including two-level historical chains.
+- Fresh private backup of the initial applied state:
+  `/var/lib/ultralove-deploy/tester-name-urls-c0ae8c7/before.sql.gz`,
+  125,358,096 bytes, mode 0600, gzip verified. SHA256:
+  `1e1b7c8f91dbb87359b09f80d4783fca705cf94d96a5c006c78fdf0212fe322c`.
+- Restored only the original scoped URL plan, not the database. Fresh enhanced
+  preview matched its exact baseline and all 509 reviewed slug transformations;
+  reviewed the eight additional ancestor changes separately.
+- Six-product apply/verify/restore rehearsal passed. Full apply and exact readback
+  passed for **509 slugs and 516 existing rules**: 515 enabled direct redirects
+  and one disabled canonical self-rule. Repeat preview returned zero changes.
+  No new redirects or previous/core old-slug aliases were created.
+- All **515 enabled changed redirects** returned one 301 directly to their final
+  destinations over origin HTTP. Nine representative final PDPs returned 200
+  with the correct product and canonical, including LELO Purple Tester,
+  Liberty Leopard Tester and the oldest Venice Beach SKU ancestor.
+- Rechecked six guest PDPs: exact notes in both markup placements, correct
+  canonicals and four unchanged review exclusions. Nginx, PHP-FPM and Redis active.
+- Authenticated computed-style/layout checks at 390/767/768/991/992/1200px
+  confirmed the actual product-column boundary: summary notes visible at all
+  widths; Description duplicates hidden through 991px and visible from 992px.
+- User approved dev and explicitly authorized the same changes on production.
+  Production execution must use fresh site-bound plans, in order: descriptions,
+  historical tester identity, final note normalization, current-name URLs.
+  Merge/dev deployment and generated critical-CSS gates remain mandatory.
