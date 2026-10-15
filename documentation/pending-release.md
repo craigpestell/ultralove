@@ -528,10 +528,35 @@ and the apply/verification logs. Keep these root-private and outside the webroot
   originals, and repeat-import idempotence; CI runs both test scripts and lints
   the repair script.
 
-Production has not received this repair. Wait for user verification on dev before
-merging/deploying and creating a fresh production-specific backup and repair plan.
+### Production repair verification (2026-10-15, PR #202)
+
+After explicit dev approval, merged #202 as
+`2d1be24991b3779766a85b1df45df87fcc04f9fe`. Main CI (38807559755) and the
+automatic dev deployment (38807559700) passed. Standard production deployment
+passed the dev gate, found no drift, linted changed PHP, restarted PHP-FPM and
+passed all four smoke paths.
+
+Created a fresh 947,944,008-byte, mode-0600 database backup at
+`/root/ultralove-retailer-repair-20261015/before-repairs.sql` on production.
+Retain that directory's private before/after plans, CSV and verification logs
+for scoped recovery, never a full database restore over subsequent orders.
+
+- All 63 production repair records exactly matched the tested dev before/after
+  records. Applied and independently verified all 63; repeat preview proposed zero.
+- Reviewed all 27 old/new slug pairs against dev, with no collisions or conflicting
+  redirects. `wp ul-retailer-notes slug-apply --ids=... --csv=...` changed 27,
+  skipped zero and reported zero problems. Independent verification confirmed
+  saved slugs, previous-slug metadata, exact enabled 301 rules and idempotence.
+- Purged Nginx page cache and 97 scoped Cloudflare URLs.
+- Origin and public HTTP verification passed all 27 exact redirects, new 200
+  responses, canonicals and guest titles; all 63 guest retailer fields; all four
+  public product sitemaps; and home/shop/account/login smoke paths.
+  Public requests from the production host received 403, so public verification
+  was completed from the local machine against exported expected values.
+  No WAF rules were changed. Nginx, PHP-FPM and Redis remained active.
+
 Product 26625's unsupported multi-line offer remains unchanged for manual review.
-Description cleanup remains separate and deferred.
+Descriptions and description styling were not changed.
 
 ### Deferred: retailer instructions in descriptions
 
@@ -548,3 +573,78 @@ tester wording. Include `LIMIT 1 PER STORE ONLY`, nested wrappers and line
 breaks in regression coverage; deduplicate against existing notes and ensure
 future imports do not reintroduce the instructions. This is a separate,
 not-yet-implemented migration requiring dev verification before production.
+
+### Description-format inventory and class proposal (read-only, 2026-10-15)
+
+Audited both raw description fields on all non-trash/non-auto-draft parent
+products: all 6,528 were published, with 6,493 nonempty long descriptions and
+4,141 nonempty short descriptions. Variations, revisions and encoded HTML
+alternatives are outside this inventory. No description writes were performed.
+Detailed JSON, bounded examples and the read-only audit script are retained in
+the private production repair evidence directory (`description-audit-expanded.json`
+and `audit-description-styles.php`).
+
+Found 47 normalized tag/attribute signatures and 85 ancestor structures.
+911 products contain `font`; 123 contain inline styles; 2,436 contain bold;
+74 contain underlining. Counts below are element occurrences, not independent
+callouts, and overlap across nested wrappers and products.
+
+| Formatting family | Observed values and element counts |
+| --- | --- |
+| Bold / underline | `b`: 5,719; `u`: 80 |
+| Red colour | `font[color=red]`: 996 on 885 products; red inline spans: 125 on 95 products |
+| Legacy font size | `1`: 3; `2`: 121; `2.5`: 17; `3`: 356; `3.5`: 1; `4`: 298; `4.5`: 146; `5`: 84; `6`: 13; `8`: 2; `10`: 3 |
+| Span font size | `small`: 94; `medium`: 9; `large`: 6; `x-large`: 14; `xx-large`: 4 |
+| Other named font colours | `black`: 9; `dark`: 3; `fuchsia`: 3; `orange`: 3; `darkturquoise`: 2; `blue`: 2; `hotpink`: 2; `slate`, `fuscia`, `purple`, `turquoise`: 1 each |
+| Hex-like font colours | `fe39bc`: 7; `71349c`: 6; `#df0101`, `#5b8dee`, `#ea2181`, `#bae5d2`, `#ff8d33`, `#c9daee`, `#74457b`: 1 each |
+| Other inline text colour | `span[style="color: dark;"]`: 2 |
+| Layout / media, not callouts | Left-aligned table cells: 54; float-left/padding-12px divs: 50; clear-both divs: 25; three distinct Wistia positioning/sizing div signatures: 1 each |
+
+No additional strong/italic/strike/big/small/center or font-face signatures were
+observed by the audit. Decimal sizes and sizes 8/10 are not valid legacy font
+sizes; `dark`, `slate`, `fuscia` and hashless hex values need explicit review,
+not blind copying into CSS.
+
+Wrapper variations include paragraph-wrapped and bare bold/font chains, nested
+size fonts, equivalent colour/size spans, duplicate bold wrappers, list-item
+nesting, non-bold notices, and malformed source (`pthe` on product 88021).
+The most common structures are `p > b > font[color=red]` (830 occurrences),
+its inner size-3 font (276), inner size-4 font (274), and the bare
+`b > font[color=red]` (161). These counts overlap, not separate blocks.
+DOM parsing produced structural diagnostics on 92 fields; these are review
+signals from a repairing parser, not 92 proven independent source defects.
+
+Marilyn Monroe (47748) contains the reported red/size-3 marketing phrase in
+`post_excerpt`, not the long description. It must remain product content.
+Other distinct uses include marketing headlines, "SMART PHONE NOT INCLUDED"
+(23550), missing-charger notices (88021), and product-colour/scent labels
+(35223, 35227, 35231, 35235, 35239, 36421 and 97180-97183).
+
+Expanded retailer-phrase discovery flagged 521 fields across 464 products:
+463 long and 58 short descriptions. These are candidates, not approved removals.
+The initial narrower search found 475 fields on 441 products. Broader discovery
+adds minimum-quantity, limit, no-exceptions and limited-supply wording.
+Marketing phrases such as "creativity run free with" (54170) and
+"worry-free with ingredients" (72413/72415) are false positives.
+Conversely, 65257/65265 have genuine terminal store/free-unit instructions inside
+long marketing paragraphs, so extracting the entire matched paragraph is unsafe.
+Plain-bold instructions also occur; colour alone cannot classify retailer text.
+
+Proposed small semantic system, not implemented:
+
+- `ul-product-callout`: normal-sized, bold accent text for marketing emphasis.
+  Marilyn's paragraph would contain one such span, with the nested fonts removed.
+- `ul-product-callout--lead`: optional larger introductory headline treatment,
+  selected by content role rather than mechanically mapping every old size.
+- `ul-product-notice`: product caveats such as excluded accessories, remaining
+  in the description and visually distinct from retailer purchase conditions.
+- Preserve colour-identity/brand cues for separate review; do not flatten them
+  into the accent style or create a class for every historical colour.
+- Recognized retailer instructions go to the existing regular/Important fields,
+  deduplicated against saved notes, not a new description warning class.
+
+Preserve surrounding paragraphs, line breaks, lists, links, tables, ordinary bold
+and media. Any future migration needs reviewed before/after previews, guarded
+field writes, regression fixtures for mixed/malformed blocks, importer parity,
+and dev visual verification before production. This inventory does not authorize
+description or CSS mutation.
