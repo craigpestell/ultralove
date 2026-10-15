@@ -66,6 +66,13 @@ $products[15][ ULTRALOVE_RN_IMPORTANT ] = 'Tester';
 $products[16] = $products[1];
 $products[16][ ULTRALOVE_RN_INFO ] = $products[16][ ULTRALOVE_RN_IMPORTANT ];
 $products[16][ ULTRALOVE_RN_IMPORTANT ] = 'Manual important note';
+$products[17] = array(
+	'title' => 'DISP-00-65<br> Shameless Display Tester Holder',
+	'slug' => 'disp-00-65-shameless-display-tester-holder',
+	ULTRALOVE_RN_ORIGINAL => 'DISP-00-65<br> Shameless Display Tester Holder<br><b>1 PER TESTER ONLY</b>',
+	ULTRALOVE_RN_INFO => '',
+	ULTRALOVE_RN_IMPORTANT => '1 PER TESTER ONLY',
+);
 $wpdb = new class {
 	public string $posts = 'posts';
 	public function get_col( string $query ): array { return array_keys( $GLOBALS['products'] ); }
@@ -116,6 +123,9 @@ try {
 	require __DIR__ . '/repair-products.php';
 	$args = array( 'verify', $path );
 	require __DIR__ . '/repair-products.php';
+	if ( $products[17] !== $before_apply[17] ) {
+		throw new RuntimeException( 'Per-tester quantity instruction was restored as a product identity.' );
+	}
 	if ( ! unlink( $path ) ) {
 		throw new RuntimeException( 'Cannot remove first test plan.' );
 	}

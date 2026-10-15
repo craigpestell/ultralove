@@ -62,7 +62,7 @@ if ( ! function_exists( 'ultralove_rn_clean_text' ) ) {
 		if ( ! preg_match( '/\bTESTERS?\b/i', ultralove_rn_clean_text( $title ) ) ) {
 			return false;
 		}
-		$store = '(?:LIMIT )?(?:ONE|1)(?: (?:COLOU?R|BOTTLE))? PER STORE(?: ONLY)?';
+		$store = '(?:LIMIT )?(?:ONE|1)(?: (?:COLOU?R|BOTTLE))? PER (?:STORE|TESTER)(?: ONLY)?';
 		$free  = 'FREE WITH (?:[0-9]+ UNITS BOUGHT(?: PER FLAVOR)?|[0-9]+(?: \([0-9]+ EACH\))? PRODUCTS BOUGHT|[0-9]+ EACH OF THE [A-Z0-9]+ LINE PURCHASED|PURCHASE OF [0-9]+ ESSENTIAL BULLETS)';
 		$part  = '(?:' . $store . '|' . $free . ')';
 		return (bool) preg_match( '/^' . $part . '(?: ' . $part . ')*$/i', ultralove_rn_clean_text( $note ) );
@@ -82,11 +82,11 @@ if ( ! function_exists( 'ultralove_rn_clean_text' ) ) {
 		if ( ! preg_match( '/\bTESTERS?\b/i', $text ) ) {
 			return null;
 		}
-		if ( preg_match( '/^(.*?)\s*:?\s*\b((?:LIMIT )?(?:ONE|1)(?: (?:COLOU?R|BOTTLE))? PER STORE\b.*|FREE WITH\b.*)$/i', $text, $match )
+		if ( preg_match( '/^(.*?)\s*:?\s*\b((?:LIMIT )?(?:ONE|1)(?: (?:COLOU?R|BOTTLE))? PER (?:STORE|TESTER)\b.*|FREE WITH\b.*)$/i', $text, $match )
 			&& ultralove_rn_is_tester_offer( $match[1], $match[2] ) ) {
 			return array( 'identity' => rtrim( $match[1], ' :' ), 'note' => $match[2] );
 		}
-		if ( preg_match( '/\b(?:PER STORE|FREE WITH|DISCOUNTS|SPECIAL ORDER|WHILE STOCK|SALE PRICED|LIMITED SUPPLY)\b/i', $text ) ) {
+		if ( preg_match( '/\b(?:PER (?:STORE|TESTERS?)|FREE WITH|DISCOUNTS|SPECIAL ORDER|WHILE STOCK|SALE PRICED|LIMITED SUPPLY)\b/i', $text ) ) {
 			return null;
 		}
 		return array( 'identity' => $text, 'note' => '' );
@@ -122,7 +122,7 @@ if ( ! function_exists( 'ultralove_rn_clean_text' ) ) {
 				}
 				$identity .= ' ';
 			} elseif ( preg_match( '/\b(?:TESTERS?|ESTER)\b/i', $text, $tester_word, PREG_OFFSET_CAPTURE )
-				&& preg_match( '/\b(?:PER STORE|FREE WITH|DISCOUNTS|SPECIAL ORDER|WHILE STOCK|SALE PRICED|LIMITED SUPPLY)\b/i', $text, $instruction_word, PREG_OFFSET_CAPTURE )
+				&& preg_match( '/\b(?:PER (?:STORE|TESTERS?)|FREE WITH|DISCOUNTS|SPECIAL ORDER|WHILE STOCK|SALE PRICED|LIMITED SUPPLY)\b/i', $text, $instruction_word, PREG_OFFSET_CAPTURE )
 				&& $tester_word[0][1] < $instruction_word[0][1] ) {
 				$review = $unwrapped = true;
 				return $text;
@@ -159,7 +159,7 @@ if ( ! function_exists( 'ultralove_rn_clean_text' ) ) {
 		// A closing tag straight after an extracted element is a harmless duplicate (<b>X</b></b>).
 		$work      = preg_replace( '/(\x02)(?:[\s\x03]*<\/(?:b|font)\s*>)+/i', '$1', $work );
 		// Only a known terminal instruction proves where an unwrapped note starts.
-		$instruction = '(?:DISCOUNTS DO NOT APPLY|NO (?:FURTHER )?DISCOUNTS APPLY|SPECIAL ORDER ONLY|WHILE STOCK LASTS|SALE PRICED|SEASONAL LIMITED SUPPLY|(?:LIMIT )?(?:ONE|1)(?: (?:COLOU?R|BOTTLE))? PER STORE(?: ONLY)?|FREE WITH (?:[0-9]+ UNITS BOUGHT|PURCHASE OF [0-9]+ ESSENTIAL BULLETS))';
+		$instruction = '(?:DISCOUNTS DO NOT APPLY|NO (?:FURTHER )?DISCOUNTS APPLY|SPECIAL ORDER ONLY|WHILE STOCK LASTS|SALE PRICED|SEASONAL LIMITED SUPPLY|(?:LIMIT )?(?:ONE|1)(?: (?:COLOU?R|BOTTLE))? PER (?:STORE|TESTER)(?: ONLY)?|FREE WITH (?:[0-9]+ UNITS BOUGHT|PURCHASE OF [0-9]+ ESSENTIAL BULLETS))';
 		$instruction = str_replace( ' ', '\s+', $instruction );
 		$separator   = '(?:\s|<br\s*\/?>)+';
 		$plain_note  = '/(' . $separator . ')(' . $instruction . '(?:' . $separator . $instruction . ')*)(?:\s*<\/(?:b|font)\s*>)*\s*$/i';

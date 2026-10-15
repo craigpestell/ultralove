@@ -174,6 +174,15 @@ $r = $s( 'SKU<br> Product Tester<br>LIMIT 1 PER STORE ONLY' );
 $check( 'unwrapped LIMIT offer retains tester', array( $r['title'], $r['important'] ), array( 'SKU<br> Product Tester', array( 'LIMIT 1 PER STORE ONLY' ) ) );
 $r = $s( 'SKU<br> Product TESTER: 1 PER STORE ONLY FREE WITH 3 UNITS BOUGHT' );
 $check( 'unwrapped colon preserves tester identity', array( $r['title'], $r['important'] ), array( 'SKU<br> Product TESTER:', array( '1 PER STORE ONLY FREE WITH 3 UNITS BOUGHT' ) ) );
+foreach ( array( '1 PER TESTER ONLY', 'ONE PER TESTER ONLY' ) as $instruction ) {
+	$check( 'per-tester quantity is not identity: ' . $instruction, ultralove_rn_split_tester_identity( $instruction ), null );
+	foreach ( array( '<b>%s</b>', '%s' ) as $wrapper ) {
+		$r = $s( 'DISP-00-65<br> Shameless Display Tester Holder<br>' . sprintf( $wrapper, $instruction ) );
+		$check( 'per-tester quantity stays a note: ' . $wrapper . $instruction, array( $r['title'], $r['important'], $r['review'] ), array( 'DISP-00-65<br> Shameless Display Tester Holder', array( $instruction ), false ) );
+	}
+}
+$r = $s( 'SKU<br> Product<br><b>TESTER 1 PER TESTER ONLY</b>' );
+$check( 'identity preceding per-tester limit', array( $r['title'], $r['important'], $r['review'] ), array( 'SKU<br> Product<br> TESTER', array( '1 PER TESTER ONLY' ), false ) );
 
 $r = $s( 'J50075<br> The Original Magic Wand<br><b>Electric</b><br> <b> DISCOUNTS DO NOT APPLY</b>' );
 $check( 'residual', $r['residual'], "J50075<br> The Original Magic Wand<br>Electric<br> " );

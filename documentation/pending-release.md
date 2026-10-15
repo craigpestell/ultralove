@@ -715,6 +715,9 @@ does not authorize any production migration.
   Tester Kit, RETAIL TESTER and display kits marked NO TESTER. Extract only whole
   recognized store/purchase instructions into Important retailer info. Ambiguous
   mixed tester instructions are retained and flagged for review, not auto-applied.
+- Quantity instructions such as `1 PER TESTER ONLY` are retailer conditions, not
+  tester identities; retain them in Important retailer info. Regression coverage
+  includes the Shameless Display Tester Holder case, wrapped and unwrapped notes.
 - The importer shares this parser, retains unrelated retailer notes and the saved
   original supplier name, and is repeat-safe.
 - `ops/retailer-notes/repair-products.php` supports private `preview`, `apply` and
@@ -725,6 +728,9 @@ does not authorize any production migration.
   slugs. Apply preflights every snapshot, rechecks before each write and verifies
   readback. Retain the reviewed plan and take a fresh DB backup before dev writes.
   Existing slugs and redirects must remain unchanged; do not run slug migration.
+  Do not create redirects from intermediate cleaned URLs. If a later approved
+  repair changes URLs, retarget existing original retailer-info redirects directly
+  to the final URL and suppress automatic intermediate redirects.
 - Offline coverage: `test-parser.php`, `test-runtime.php`, `test-descriptions.php`
   and `test-repairs.php` under `ops/retailer-notes/`. The repair suite covers exact
   restoration, unrelated notes, manual-edit/provenance guards, stale slug rejection
