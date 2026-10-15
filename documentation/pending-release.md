@@ -308,3 +308,21 @@ Code deployment alone does not migrate existing products. Production deployment
 and migration require separate approval after dev testing. Regenerate critical
 CSS before production because product-card styling changes. Offline checks:
 `php ops/retailer-notes/test-parser.php` (also run by CI).
+
+### New URLs for migrated products (slug-preview / slug-apply)
+
+After a product's notes are cut out of its name its old slug still contains them
+(`…-black-testerone-color-per-store-only-free-with-2-units-bought`). `wp ul-retailer-notes
+slug-preview` shows, for every migrated product, the slug with only the removed notes' words
+taken out (the SKU and brand the slug carries are kept); products whose slug can't be matched
+safely (`no-match`) or whose new slug is taken (`collision`) are listed and left alone.
+`slug-apply` (also `--ids`, `--limit`, `--csv=<file>`) saves the new slug and adds a 301 from the
+old URL to the new one in the Redirection plugin, group "Retailer notes slugs". WordPress's own
+old-slug redirect also covers the old URL. `slug-restore` puts the previous slugs back and deletes
+those redirects (the old URL must not keep redirecting away). Run `tidy-titles --apply` first on any
+environment migrated before 2026-10-15: it adds the space after `<br>` in names that lack it.
+
+Order: deploy code, `tidy-titles --apply`, `slug-preview`, try `slug-apply --ids=...`, check the old
+URL answers 301 to the new one (`curl -sI https://<host>/product/<old-slug>/`), then the full
+`slug-apply`, then clear the page caches and purge Cloudflare for `/shop/`, product pages and the
+sitemaps. Resubmit the product sitemap in Search Console. Back up the database first.
