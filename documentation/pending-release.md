@@ -790,3 +790,34 @@ does not authorize any production migration.
   recovery, exact metadata restoration and repeat safety.
 - No production changes in this follow-up. Current-name URL work is still
   paused; no additional redirects or aliases have been written.
+
+#### Dev execution verified (2026-10-15, `9ef490c`)
+
+- Committed/pushed and standard-deployed `9ef490c11368e47873067d3f88ba624fe55fbba3`;
+  dev smoke test and CI run `38819061392` passed. Six targeted offline suites,
+  changed runtime/runner PHP lint and editor diagnostics passed.
+- Reviewed all 44 distinct before/after transformations in the full catalog
+  preview: **534 safe product changes**, **4 excluded review products**.
+  Exclusions: 27463/30692 (`FREE WITH TESTER & 3 UNITS BOUGHT`), 59459
+  (`DISPLAY KIT ONLY` mixed with the condition), 62594 (`Color May Vary`
+  mixed with the condition). No guessed normalization of these fields.
+- Fresh private backup:
+  `/var/lib/ultralove-deploy/note-consistency-9ef490c/before.sql.gz`,
+  mode 0600, 125,331,434 bytes; gzip verified. SHA256:
+  `4a851c7e8f87750286c2b778cdbbe05c14dfede337885aea2cac26d96cc8a575`.
+- Four-product apply/verify/restore rehearsal passed for 96699, 96703, 26788,
+  29768. Then applied and readback-verified all 534 planned changes using
+  `catalog-plan.json` in that private directory. Non-note fingerprint unchanged:
+  names, descriptions, slugs, provenance, old aliases and redirects preserved.
+- Repeat preview: **0 safe changes**, same 4 review exclusions. Separate
+  readback confirmed all excluded note metadata remained exactly unchanged.
+- Six guest origin PDPs (96699, 96703, 20115, 26788, 29768, 33252) verified:
+  one note block in the original summary location and one above Description,
+  each matching stored notes exactly; canonicals unchanged. Authenticated
+  browser checks also passed for Liberty and Backwall.
+- Both Liberty examples now show only Important retailer info:
+  `LIMIT 1 PER STORE ONLY | FREE WITH 2 UNITS BOUGHT`. The equivalent regular
+  note is absent; each condition appears once per intended placement.
+- nginx, PHP 8.5 FPM and Redis remained active. Existing WP-CLI/vendor
+  deprecations were captured separately from successful migration output.
+- **Production remains untouched. URL corrections remain pending.**
