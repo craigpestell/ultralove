@@ -58,8 +58,29 @@ function ultralove_rn_show_card() {
 	}
 }
 
-// Product page: right under the header block (name, brand, SKU, stock), before the price.
-add_action( 'woocommerce_single_product_summary', 'ultralove_rn_show_single', 11 );
+// Product page: above the main description in its tab.
+add_filter( 'woocommerce_product_tabs', 'ultralove_rn_description_tab', 98 );
+function ultralove_rn_description_tab( array $tabs ): array {
+	global $product;
+	if ( ! $product instanceof WC_Product || '' === ultralove_rn_markup( $product->get_id(), 'single' ) ) {
+		return $tabs;
+	}
+	if ( ! isset( $tabs['description'] ) ) {
+		$tabs['description'] = array(
+			'title' => __( 'Description', 'woocommerce' ),
+			'priority' => 10,
+			'callback' => 'woocommerce_product_description_tab',
+		);
+	}
+	$callback = $tabs['description']['callback'] ?? null;
+	if ( is_callable( $callback ) ) {
+		$tabs['description']['callback'] = static function ( $key, $tab ) use ( $callback ) {
+			ultralove_rn_show_single();
+			call_user_func( $callback, $key, $tab );
+		};
+	}
+	return $tabs;
+}
 function ultralove_rn_show_single() {
 	global $product;
 	if ( $product instanceof WC_Product ) {

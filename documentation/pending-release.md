@@ -679,3 +679,17 @@ plan path outside the webroot and optional comma-separated IDs for preview.
 Plans include original fields and notes, site/version, product name and slug.
 Review the plan and take a database backup before applying on dev. This phase
 does not authorize any production migration.
+### Dev description migration and retailer-note placement
+
+- Dev description migration applied to 219 products; verify mode confirmed exact
+  descriptions, notes, import opt-in, unchanged titles and unchanged slugs.
+- Repeat preview proposed zero changes. The 1,276 flagged fields remain for review.
+- A fresh private dev database backup and the complete before/after plan are retained
+  under `/var/lib/ultralove-deploy/description-cleanup-20261015/`. A three-product
+  apply/verify/restore rehearsal passed before the full apply.
+- Storefront retailer notes now belong above the main Description tab content,
+  Important retailer info first, rather than above the price. Existing card and
+  Quick View output and wp-admin fields remain unchanged. Notes-only products
+  retain a Description tab so their instructions are not lost.
+- Production description migration remains pending approval. Follow the critical
+  CSS release gate before production since the first-screen markup has changed.
