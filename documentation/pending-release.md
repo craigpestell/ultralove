@@ -737,3 +737,28 @@ does not authorize any production migration.
   before any writes, readback and repeat safety; it also runs in CI.
 - Tester restoration is a dev-only follow-up. Production remains unchanged pending
   explicit approval.
+- Dev execution verified on 2026-10-15 at `ca4113b52e`:
+  - Reviewed the fresh 507-product plan; zero flags. The earlier 508-product preview
+    was superseded, not applied: product 29768's `1 PER TESTER ONLY` is a quantity
+    instruction and its title/notes were verified unchanged.
+  - Fresh private backup:
+    `/var/lib/ultralove-deploy/tester-identities-ca4113b/before-complete.sql.gz`
+    (125,312,432 bytes, mode 600, gzip integrity checked). Export used
+    `--single-transaction --set-gtid-purged=OFF`. SHA-256:
+    `6fe9a5f66259f01ed7b01b1e9e3d3f574256550e4989c9be1d37749bc972b4ca`.
+  - Applied and readback-verified all 507 title/Important-note repairs against
+    `/var/lib/ultralove-deploy/tester-identities-ca4113b/plan.json`; saved originals,
+    regular retailer notes and slugs stayed unchanged. Repeat preview returned
+    zero repairs and zero flags.
+  - Before/after fingerprints matched for all 6,464 product slugs, all 6,516
+    Redirection rule definitions and all 2,391 previous/core old-slug metadata rows.
+    No redirects were created or retargeted, and no intermediate aliases appeared.
+  - Verified guest origin PDPs 96703 (Leopard Tester), 96694 (Tester), 27513
+    (RETAIL TESTER), 51885 (Tester Only), 51887 (NO TESTER display kit) and 29768
+    (Tester Holder). Titles and canonicals matched saved data; retailer notes
+    appeared identically once in the original summary position and once in
+    Description. Authenticated browser also verified Liberty at its existing URL.
+    Its original retailer-info URL still returned one 301 directly to that URL.
+  - Deployment smoke passed; Nginx, PHP-FPM and Redis were active. No production
+    writes or deployment. Returning tester wording to URLs is outside this repair;
+    any later approved URL work must follow the direct-retarget policy above.
