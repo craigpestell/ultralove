@@ -977,3 +977,27 @@ does not authorize any production migration.
   title/slug, repeat cleanup, opted-in reimport and unsafe-prefix exclusions.
 - This new runtime change requires separate dev verification and user approval
   before production; do not widen the already applied 62-product scope.
+
+#### List-prefix dev verification (2026-10-16, PR #209)
+
+- Deployed `14eea561ac` through the standard branch deployment; PHP lint,
+  smoke checks, all seven retailer regression suites and CI passed.
+- Validated a fresh mode-0600, transaction-consistent, GTID-free backup:
+  `/var/lib/ultralove-deploy/wonderlust-description-14eea56/dev-consistent-before.sql.gz`,
+  125,385,532 bytes; SHA256
+  `f5b7e8ac7e2e45eeef5ec9e2e25c50825a2addeacea7abc474275ae4011ddc15`.
+  An initial export lacking the GTID flag failed before data writes; its partial
+  output is not a backup.
+- Reviewed and applied only 25556 / one description field. Exact removal was
+  `ONE PER STORE ONLY - FREE WITH 9 (3 each) PRODUCTS BOUGHT`; the equivalent
+  existing Important clauses remained unchanged. All other bytes, including
+  logo, marketing and malformed feature list, were preserved.
+- Guarded exact readback passed, including import opt-in/title/slug. Scoped repeat
+  preview returned zero changes, with the preserved list tail explicitly flagged.
+- Guest origin and authenticated browser checks passed for the exact product.
+  No embedded instruction remained outside the structured notes; logo, marketing
+  and feature text remained present. Responsive checks at 390/991/992/1280px
+  confirmed summary notes always visible and Description duplicates only from
+  992px. Nginx, PHP-FPM and Redis remained active.
+- Production has not received this list-prefix runtime change or the 25556 data
+  correction. Await user review of dev before merging/deploying production.
