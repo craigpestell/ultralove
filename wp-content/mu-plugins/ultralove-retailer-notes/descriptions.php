@@ -25,7 +25,7 @@ function ultralove_rn_description_note_field( string $text ): ?string {
 }
 
 /**
- * Preserve unreviewed text/attributes, malformed fields and layout/media verbatim.
+ * Preserve unreviewed text/attributes and layout/media, including untouched list tails.
  * @return array{html:string,info:string[],important:string[],changes:int,review:string[]}
  */
 function ultralove_rn_clean_description( string $html ): array {
@@ -45,6 +45,33 @@ function ultralove_rn_clean_description( string $html ): array {
 	$errors = libxml_get_errors();
 	libxml_clear_errors();
 	libxml_use_internal_errors( $previous );
+	if ( $loaded && ! preg_match( '/<(?:script|style|textarea|table|div)\b/i', $html )
+		&& preg_match( '/<\/?(?:ul|ol)\b/i', $html, $list, PREG_OFFSET_CAPTURE ) ) {
+		$prefix = substr( $html, 0, $list[0][1] );
+		$first_list = ( new DOMXPath( $document ) )->query( '//ul | //ol' )->item( 0 );
+		$stack = array();
+		$standalone = true;
+		preg_match_all( '/<(\/?)(p|b|font|span)\b[^>]*>/i', $prefix, $prefix_tags, PREG_SET_ORDER );
+		foreach ( $prefix_tags as $tag ) {
+			$name = strtolower( $tag[2] );
+			if ( 'p' === $name ) {
+				$standalone = $standalone && ! $stack;
+			} elseif ( '/' === $tag[1] ) {
+				$standalone = $standalone && array_pop( $stack ) === $name;
+			} else {
+				$stack[] = $name;
+			}
+		}
+		if ( 'body' === $first_list?->parentNode?->nodeName
+			&& $standalone && ! $stack
+			&& ! preg_match( '/<\/?(?!(?:p|img|br|b|font|span)\b)[a-z][a-z0-9]*\b/i', $prefix ) ) {
+			// Validate only the standalone prefix; never parse or rewrite the list tail.
+			$clean = ultralove_rn_clean_description( $prefix );
+			$clean['html'] .= substr( $html, $list[0][1] );
+			$clean['review'][] = 'Structured list tail: left unchanged.';
+			return $clean;
+		}
+	}
 	if ( ! $loaded || $errors || preg_match( '/<(?:script|style|textarea|ul|ol|table|div)\b/i', $html ) ) {
 		$result['review'][] = 'Malformed, active-content or structured-layout field: left unchanged.';
 		return $result;
