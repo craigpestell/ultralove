@@ -886,3 +886,25 @@ does not authorize any production migration.
   Production execution must use fresh site-bound plans, in order: descriptions,
   historical tester identity, final note normalization, current-name URLs.
   Merge/dev deployment and generated critical-CSS gates remain mandatory.
+
+### Follow-up: residual description instructions
+
+- The earlier description migration was an approved subset, not a catalog-wide
+  guarantee. A subsequent read-only production audit found instruction-like text
+  in 172 fields across 166 products, including Romp Lemon Crush Tester Only (96467).
+- Recognize standalone known conditions with `TESTER`, `TESTER -`, or
+  `Display Stand -` labels and dash-separated quantity/offer clauses. Extract
+  canonical clauses into Important so existing equivalents deduplicate.
+- Tolerate the legacy `<imgsrc=` typo in the DOM validation copy only. Preserve
+  the original media bytes; retain the existing malformed/active/structured
+  field guards and whole-block-only extraction.
+- Regression coverage includes the Lemon Crush markup, bottle limits, display
+  labels, separated offers, existing-note deduplication, repeat safety, and
+  negative mixed-marketing/ambiguous-offer examples.
+- Use fresh private site-bound plans, restricted to audited products whose
+  description bytes actually change. Do not include metadata-only proposals,
+  previously excluded ambiguous products, names, slugs, or redirects.
+- Review exact removals and remaining notes before apply. Leave minimum-purchase
+  wording, mixed marketing paragraphs, and structured/malformed cases outside
+  the recognized grammar unchanged for a separate reviewed pass. Dev first;
+  production requires confirmation and its own fresh guarded plan.
