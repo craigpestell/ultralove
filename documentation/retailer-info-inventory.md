@@ -75,18 +75,26 @@ This is an exact inventory, not another normalization pass. Unusual, ambiguous
 and repeated wording is intentionally reported as stored; no additional product
 data was changed to produce this report.
 
-## Product editor presets
+## Product editor (retailer terms)
 
-The product editor's **Product data > General** tab provides a preset dropdown
-above each existing retailer-info textarea. Choices are the complete values in
-this snapshot used by at least **5 products**, listed alphabetically: 3 Retailer
-info choices and 12 Important retailer info choices. These are code-owned presets,
-not a live database query; rare values remain available through manual entry.
+This inventory describes the two free-text fields as they were on 2026-10-16. They are being
+replaced by structured **retailer terms** (`_ul_retailer_terms`, JSON): a Limit select, a Free
+with select (plus "per flavor"), a "Discounts do not apply" checkbox, one "Other terms" box for
+wording that fits nothing else, and a set of status tags (shown on the product page only). The
+product editor's preset dropdowns are gone, because the selects replace them.
 
-Selecting a choice appends its text on a new line without replacing existing
-content, then resets the dropdown and focuses the textarea. Dropdown labels use
-` / ` for readability; inserted combinations use real newlines. Text remains
-editable and is not saved until the product is saved. Existing save-time
-classification, equivalent-condition merging and conflicting-offer warnings
-remain unchanged. No existing product values are migrated or rewritten by
-adding these controls.
+Every value in the two tables above converts as follows (`ops/retailer-notes/test-terms.php` checks
+each one):
+
+- 605 of the 622 Important values are a limit and/or a free offer of 2, 3 or 5 units and become
+  selections, whatever their wording or order. The other 17 products keep their unusual wording
+  in "Other terms" (per-flavor offers, "9 (3 each)", free displays, the cock-ring offer, tester
+  offers and the pasted duplicate), with any limit still in the Limit select.
+- "DISCOUNTS DO NOT APPLY" and "NO FURTHER DISCOUNTS APPLY" become the one discounts checkbox
+  (725 products, including the glued "Ships in Non-Retail Packaging DISCOUNTS DO NOT APPLY").
+- The other Retailer info values become status tags: seasonal, limited edition, special order only,
+  while stock lasts, sale priced, non-retail packaging, retail demo. The display-kit note goes to
+  "Other terms".
+
+Migration: `wp ul-retailer-notes terms-preview` (dry run), `terms-apply`, `terms-restore`,
+`terms-drop-legacy`. See `pending-release.md`.
