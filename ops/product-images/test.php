@@ -175,6 +175,9 @@ try {
 		$assert( str_contains( $responsive, 'sizes="(min-width: 768px) 50vw, 100vw"' ),
 			'Banner candidate changes must preserve the layout hint used by responsive preloads.' );
 	}
+	$lazy = ub_apply_cloudflare( '<img class="ub-banner-img" src="old.jpg" width="1536" height="640" loading="lazy" sizes="auto, (min-width: 768px) 50vw, 85vw">', 1, null, 1536, 640 );
+	$assert( str_contains( $lazy, 'sizes="(min-width: 768px) 50vw, 85vw"' ) && ! str_contains( $lazy, 'sizes="auto' ),
+		'Lazy banners must drop the leading auto in sizes so the layout hint, not the rendered width, picks the candidate.' );
 	preg_match( '/\ssrcset="([^"]*)"/', $banner, $crop_sources );
 	preg_match_all( '/ (\d+)w/', $crop_sources[1] ?? '', $crop_widths );
 	$assert( array_map( 'intval', $crop_widths[1] ) === array( 320, 480, 640, 768, 800 ),
