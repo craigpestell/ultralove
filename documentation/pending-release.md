@@ -1,6 +1,6 @@
 # Pending production release
 
-## Catalog description conditions (applied on production; public cache verification pending)
+## Catalog description conditions (live and verified on dev and production)
 
 The read-only follow-up inventory scans minimum-purchase wording as well as
 store/tester limits, free offers and discount instructions. Candidate matches
@@ -46,12 +46,13 @@ selection. Exact database readback passed; a repeat preview proposes zero change
 Names, URLs and redirects are unchanged.
 
 All 116 guest-origin product pages pass. Three initially cached origin failures
-resolved after the short-lived Nginx cache expired. The public check passes 114
-pages; ordinary URLs for products `20157` (Lyla 2 Design Edition Cerise TESTER)
-and `44448` (Enigma Cruise Deep Rose TESTER) still serve stale Cloudflare HIT HTML
-and require a dashboard URL purge followed by a public recheck. No Cloudflare
-purge was performed for this release. The ordinary public Hockey Player page
-passed content, canonical and responsive checks at 390/991/992/1280px.
+resolved after the short-lived Nginx cache expired. Two public URLs initially
+served stale Cloudflare HTML: products `20157` (Lyla 2 Design Edition Cerise
+TESTER) and `44448` (Enigma Cruise Deep Rose TESTER). After the user confirmed a
+Cloudflare cache purge, a fresh check of all 116 ordinary public URLs passed
+with zero failures: HTTP 200, expected structured notes, no recognized embedded
+restrictions, unchanged titles and canonicals. The ordinary public Hockey Player
+page also passed responsive checks at 390/991/992/1280px.
 
 Private production evidence is under
 `/var/lib/ultralove-deploy/catalog-description-e12cbcc/`, including
