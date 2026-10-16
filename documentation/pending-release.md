@@ -886,3 +886,88 @@ does not authorize any production migration.
   Production execution must use fresh site-bound plans, in order: descriptions,
   historical tester identity, final note normalization, current-name URLs.
   Merge/dev deployment and generated critical-CSS gates remain mandatory.
+
+#### Production execution (2026-10-15, `3675aac412`)
+
+- User approved dev and explicitly authorized production. Release #204 and the
+  generated critical-CSS #205 were merged before standard production deployment
+  of `3675aac4126bfcf88f5dd2ed594106327c8bf98e`. Main CI `38822687816`,
+  dev deployment `38822687799` and critical-CSS follow-up `38822722786` passed.
+  Critical-CSS run `38822076352` passed all 60 comparisons with 0.00%
+  first-screen differences. Production drift/dev gates, PHP lint and four
+  deployment smoke endpoints passed.
+- Private code recovery archive:
+  `/var/lib/ultralove-deploy/backups/20261015T231903Z-2d1be24991.tgz`.
+  Private full database backup:
+  `/var/lib/ultralove-deploy/product-cleanup-20261015/before-complete.sql.gz`,
+  155,972,230 bytes, mode 0600, gzip verified. SHA256:
+  `9d11558d3ba4a8595cd2d2c8987f5f053bba178ca69dfb32a7cf1da47dccd119`.
+  The initial export rejected MariaDB's unsupported `--set-gtid-purged=OFF`;
+  the successful retry used `--single-transaction`. Recovery must use guarded
+  scoped plans, never restore the whole database over live orders.
+- All site-bound plans and execution logs are root-private outside the webroot
+  in `/var/lib/ultralove-deploy/product-cleanup-20261015/`.
+  Applied the approved phases in order:
+  1. **218 description products**, after a four-product apply/verify/restore
+     rehearsal. Every resulting content/excerpt matched the dev-approved output
+     after asset-host substitution. Importer opt-ins were verified.
+     The fresh full preview had 315 products; unapproved extra/different HTML
+     candidates 27463, 29768, 65231, 82920, 97245 and 97247 were deferred.
+  2. **506 tester-identity repairs**, after all-row original-title provenance
+     review. Exact names/notes readback passed; repeat returned zero repairs
+     and zero unsafe/unmatched titles. Slugs and redirect definitions were
+     unchanged during this phase.
+  3. **438 note-only normalizations**, after four-product apply/verify/restore
+     rehearsal (96703, 26788, 29768, 97245). All 435 overlapping outputs matched
+     dev; the three additional outputs belonged to proven production-only
+     tester products. Exact readback preserved names, descriptions, URLs,
+     provenance, aliases and redirect definitions. Repeat: zero safe changes.
+- Seven ambiguous normalization exclusions retained their exact pre-phase
+  metadata: 27463, 30692, 59459, 62594, 97578, 97586 and 97588.
+  The last three contain `TESTER: 1 PER STORE ONLY FREE WITH 3 UNITS BOUGHT`;
+  their ambiguous strings were not guessed or normalized. Product 26625 and
+  other unreviewed description fields remain deferred.
+- Identity repair temporarily reconstructed original combined offer strings.
+  A description repeat then showed 116 Important-note-only changes and no
+  content/excerpt changes. That repeat plan was **not applied**; the dedicated
+  note normalization resolved these deltas. Final scoped description repeat:
+  **zero planned products**, with 11 conservative review entries retained.
+- Production catalog differences were reviewed rather than copied from dev:
+  dev IDs 20467, 21945, 22745 and 27438 do not exist on production.
+  Production-only IDs 97219, 97245 and 97247 have proven original tester
+  identities. Product 96694 retains its production **Shared Touch Pro Tester**
+  name and derives its URL from that name, preserving `Pro`.
+- Current-name URL migration completed after a six-product
+  apply/verify/restore rehearsal: **508 slugs and 515 existing rules**.
+  Retargeted 514 enabled historical rules directly to final URLs; disabled
+  canonical self-rule 22356. Exact global slug/redirect/alias/content
+  verification passed. Repeat preview returned **zero slug/rule changes**.
+  No new redirects or WordPress old-slug aliases were created.
+- Final persistent readback verified all 218 description content/excerpt pairs
+  and importer opt-ins, 506 identities and original-title provenance, and
+  438 normalized note pairs after the URL migration.
+- Full origin verification found a stale cached historical redirect to an
+  intermediate URL. Removed **456 exact affected-product Nginx cache entries**,
+  matching their stored cache keys against reviewed historical and old/final
+  product paths. Unrelated Nginx entries, Redis and Cloudflare were untouched.
+  Production's port 80 deliberately returns 404; final origin checks used
+  HTTPS resolved to loopback with the configured public origin certificate
+  as the trust anchor, without disabling TLS verification.
+- After the scoped purge, **all 514 changed enabled historical URLs** returned
+  a single 301 directly to their planned final URL at both origin and public
+  Cloudflare endpoints. Thirteen representative final product pages returned
+  200 with the correct product ID and canonical at both endpoints.
+  Four public product sitemaps included **all 508 final URLs** and none of the
+  508 replaced URLs. No Cloudflare purge was required.
+- Six guest product pages passed exact note rendering at both locations and
+  canonical checks. All seven review exclusions retained their exact metadata.
+  The final Liberty page shows **Womanizer Liberty Leopard Tester** and
+  `LIMIT 1 PER STORE ONLY | FREE WITH 2 UNITS BOUGHT` in Important only.
+  Guest browser computed-style checks at 390/767/768/991/992/1200px passed:
+  summary notes remain visible; Description duplicates appear only from 992px.
+  Authenticated responsive checks had passed on dev; no authenticated
+  production browser session was available for a final logged-in recheck.
+- Final production services `nginx`, `php8.5-fpm` and `redis-server` were active.
+  HTTPS origin smoke checks for `/`, `/shop/`, `/my-account/` and
+  `/wp-login.php` all returned 200. No runtime code changes were needed during
+  execution; this section records the applied production data and validation.
