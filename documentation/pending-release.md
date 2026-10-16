@@ -908,3 +908,30 @@ does not authorize any production migration.
   wording, mixed marketing paragraphs, and structured/malformed cases outside
   the recognized grammar unchanged for a separate reviewed pass. Dev first;
   production requires confirmation and its own fresh guarded plan.
+
+#### Follow-up dev verification (2026-10-16, PR #207)
+
+- Deployed `6c2eba6eed4f4fc942d467ac7db1465112ec15b3` after CI passed.
+  The audited production subset has 62 eligible products; dev lacks 97219,
+  97245 and 97247, leaving 59. Prior ambiguous exclusions remain excluded.
+- Reviewed every removal: 63 description fields changed across 59 products,
+  with all other source bytes preserved and every removed clause retained in
+  Important. Titles, slugs and redirects were not changed.
+- Took a transaction-consistent, GTID-free, mode-0600 database backup:
+  `/var/lib/ultralove-deploy/residual-description-cleanup/dev-consistent-before.sql.gz`
+  (125,379,975 bytes; gzip integrity passed; SHA256
+  `17f6cb0ac9266c8f311f0b1ff3f19481d6dba5c145a1b9db59c83394335873e3`).
+  Keep the site-bound plan beside it for scoped restore, not a full database
+  restore over later orders.
+- Guarded apply and exact readback passed for all 59 products. Scoped repeat
+  preview returned zero changes; three unrelated marketing headings remain
+  flagged and preserved.
+- All 59 guest origin PDPs passed exact structured-note, title and canonical
+  checks, with no matched instructions remaining in Description. Authenticated
+  browser checks passed for Lemon Crush, Hydra bottle tester, Jimmy Jane holder,
+  We-Vibe display kit and California Dreaming. Lemon Crush summary notes stay
+  visible at 390/991/992/1280px; Description duplicates appear only from 992px.
+- Nginx, PHP-FPM and Redis remained active. No manual cache purge was needed.
+  Production has not received this follow-up; dev approval and production
+  confirmation remain required. The wider audit's unrecognized cases are not
+  covered by these results.
