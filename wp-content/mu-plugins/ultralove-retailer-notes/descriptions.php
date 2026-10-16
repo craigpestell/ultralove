@@ -2,6 +2,14 @@
 /** Conservative, byte-preserving cleanup of reviewed description blocks. */
 require_once __DIR__ . '/notes.php';
 
+/** Normalize labels/separators only when the remainder is a whole known condition. */
+function ultralove_rn_description_condition( string $text ): ?array {
+	$text = ultralove_rn_clean_text( $text );
+	$text = preg_replace( '/^(?:TESTER(?: -)?|Display Stand -) /i', '', $text );
+	$text = str_replace( ' - ', ' ', $text );
+	return ultralove_rn_note_clauses( $text );
+}
+
 /**
  * Only whole, unambiguous instructions qualify. Mixed paragraphs stay untouched.
  * @return string|null Destination retailer field, or null for unreviewed text.
@@ -10,7 +18,7 @@ function ultralove_rn_description_note_field( string $text ): ?string {
 	if ( null !== ultralove_rn_regular_note( $text ) ) {
 		return 'info';
 	}
-	if ( null !== ultralove_rn_note_clauses( $text ) ) {
+	if ( null !== ultralove_rn_description_condition( $text ) ) {
 		return 'important';
 	}
 	return null;
@@ -31,7 +39,9 @@ function ultralove_rn_clean_description( string $html ): array {
 	$previous = libxml_use_internal_errors( true );
 	libxml_clear_errors();
 	$document = new DOMDocument();
-	$loaded = $document->loadHTML( '<?xml encoding="utf-8" ?><html><body>' . $html . '</body></html>', LIBXML_NONET );
+	// Legacy imgsrc typos vary by libxml version; tolerate them only in the validation copy.
+	$validation_html = preg_replace( '/<imgsrc\s*=/i', '<img src=', $html );
+	$loaded = $document->loadHTML( '<?xml encoding="utf-8" ?><html><body>' . $validation_html . '</body></html>', LIBXML_NONET );
 	$errors = libxml_get_errors();
 	libxml_clear_errors();
 	libxml_use_internal_errors( $previous );
@@ -85,7 +95,9 @@ function ultralove_rn_clean_description( string $html ): array {
 			return null;
 		}
 		if ( null !== $field ) {
-			$result[ $field ][] = $text;
+			foreach ( 'important' === $field ? ultralove_rn_description_condition( $text ) : array( $text ) as $note ) {
+				$result[ $field ][] = $note;
+			}
 			$result['changes']++;
 			return '';
 		}

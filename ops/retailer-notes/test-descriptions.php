@@ -23,12 +23,44 @@ expect_description( '<p><b><font color="red">SMART PHONE NOT INCLUDED</font></b>
 $offer = 'LIMIT 1 PER STORE ONLY FREE WITH 2 UNITS BOUGHT';
 $normalized_offer = "LIMIT 1 PER STORE ONLY\nFREE WITH 2 UNITS BOUGHT";
 $offer_html = '<b><b><font color=red><font size="4">LIMIT 1 PER STORE ONLY<br> FREE WITH 2 UNITS BOUGHT</font></FONT></b></b><p>';
-expect_description( $offer_html, '<p>', array( $offer ) );
+expect_description( $offer_html, '<p>', array( 'LIMIT 1 PER STORE ONLY', 'FREE WITH 2 UNITS BOUGHT' ) );
+foreach ( array(
+	'TESTER - ONE PER STORE ONLY<br> FREE WITH 3 UNITS BOUGHT',
+	'ONE PER STORE ONLY - FREE WITH 3 UNITS BOUGHT',
+	'Display Stand - ONE PER STORE ONLY<br> FREE WITH 3 UNITS BOUGHT',
+) as $condition ) {
+	expect_description(
+		'<p><b><font color=red><font size="3">' . $condition . '</font></FONT></b><p>Marketing copy.',
+		'<p><p>Marketing copy.',
+		array( 'LIMIT 1 PER STORE ONLY', 'FREE WITH 3 UNITS BOUGHT' )
+	);
+}
+expect_description(
+	'<p><b>TESTER<br>ONE BOTTLE PER STORE ONLY<br>FREE WITH 3 UNITS BOUGHT</b></p>',
+	'<p></p>',
+	array( 'LIMIT 1 BOTTLE PER STORE ONLY', 'FREE WITH 3 UNITS BOUGHT' )
+);
+$lemon_media = '<imgsrc="https://ultralove.ca/wp-content/uploads/RMP_Logo_withoutTM_Black_eps.jpg" alt="" width="147" height="150" class="alignnone size-full wp-image-39803" /><p><p>';
+$lemon_offer = '<br><b><font color=red><font size="3"> TESTER - ONE PER STORE ONLY<br> FREE WITH 3 UNITS BOUGHT</font></FONT></b>';
+expect_description(
+	$lemon_media . $lemon_offer . "<p>\n\nROMP Lemon Crush marketing.",
+	$lemon_media . "<p>\n\nROMP Lemon Crush marketing.",
+	array( 'LIMIT 1 PER STORE ONLY', 'FREE WITH 3 UNITS BOUGHT' )
+);
+$lemon_before = array( 'post_content' => $lemon_media . $lemon_offer . '<p>Marketing.', 'post_excerpt' => 'Unchanged excerpt.', 'info' => '', 'important' => "LIMIT 1 PER STORE ONLY\nFREE WITH 3 UNITS BOUGHT" );
+$lemon_after = ultralove_rn_description_after( $lemon_before, $lemon_review );
+if ( $lemon_after['important'] !== $lemon_before['important'] || $lemon_review || ultralove_rn_description_after( $lemon_after ) !== $lemon_after ) {
+	throw new RuntimeException( 'Existing tester offer must deduplicate without review or repeat changes.' );
+}
 expect_description( '<p><b>DISCOUNTS DO NOT APPLY</b></p>', '<p></p>', array(), array( 'DISCOUNTS DO NOT APPLY' ) );
 foreach ( array(
 	'<p><b>Meaningful features. ' . $offer . '</b></p>',
 	'<p>Let your creativity run free with the new Satisfyer Connect app!</p>',
 	'<p>Play worry-free with ingredients you love.</p>',
+	'<p><b>TESTER - ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT. Product details.</b></p>',
+	'<p><b>TESTER - rechargeable and waterproof.</b></p>',
+	'<p><b>Display Stand - dimensions 20 x 30 cm.</b></p>',
+	'<p><b>ONE PER STORE ONLY - FREE WITH 12 PRODUCTS BOUGHT (4 each type of lube &amp; Testers)</b></p>',
 	'<b>Ordinary bold</b>',
 	'<p><font color="#5b8dee">California Sky</font></p>',
 	'<p><font color="orange">Glows Orange</font></p>',
@@ -105,6 +137,21 @@ ultralove_description_after_import( 1 );
 ultralove_description_after_import( 1 );
 if ( $post !== $expected_post || $meta !== $expected_meta ) {
 	throw new RuntimeException( 'Repeat import was not idempotent.' );
+}
+$post = array( 'post_content' => $lemon_before['post_content'], 'post_excerpt' => $lemon_before['post_excerpt'], 'post_title' => 'R3276 Romp Lemon Crush Tester Only', 'post_name' => 'r3276-romp-lemon-crush-tester-only' );
+$meta = array( ULTRALOVE_DESCRIPTION_CLEANUP_META => ULTRALOVE_DESCRIPTION_CLEANUP_VERSION, ULTRALOVE_RN_IMPORTANT => $lemon_before['important'] );
+$tester_import = $post;
+ultralove_description_after_import( 1 );
+if ( $post['post_content'] !== $lemon_after['post_content'] || $meta[ ULTRALOVE_RN_IMPORTANT ] !== $lemon_before['important']
+	|| $post['post_title'] !== $tester_import['post_title'] || $post['post_name'] !== $tester_import['post_name'] ) {
+	throw new RuntimeException( 'Tester import did not remove the duplicate while preserving notes and identity.' );
+}
+$tester_expected = $post;
+$post = $tester_import;
+ultralove_description_after_import( 1 );
+ultralove_description_after_import( 1 );
+if ( $post !== $tester_expected || $meta[ ULTRALOVE_RN_IMPORTANT ] !== $lemon_before['important'] ) {
+	throw new RuntimeException( 'Tester reimport must remain clean and deduplicated.' );
 }
 try {
 	ultralove_description_write( 1, array_replace( ultralove_description_snapshot( 1 ), array( 'post_excerpt' => 'stale' ) ), ultralove_description_snapshot( 1 ) );
