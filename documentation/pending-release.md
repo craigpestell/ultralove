@@ -1,6 +1,6 @@
 # Pending production release
 
-## Retailer-info editor presets (dev preview; production pending)
+## Retailer-info editor presets (live on dev and production)
 
 Two preset dropdowns in Product data > General append common text to the existing
 editable retailer-info fields. The [inventory](retailer-info-inventory.md)
@@ -10,6 +10,13 @@ existing content is retained. Normal save-time normalization and review warnings
 are unchanged. Code-only release; no database migration or activation required.
 Offline PHP and JavaScript preset checks, parser, runtime/save and condition
 normalization regression tests pass. Both new preset runners are included in CI.
+
+PR #213 merged as `4919da630b`; its automatic dev deployment passed. The
+production deployment passed the dev gate, drift check, PHP lint, backup
+(`/var/lib/ultralove-deploy/backups/20261016T021205Z-e12cbcc555.tgz`), PHP-FPM
+restart and all four smoke checks. A read-only check with WooCommerce's own field
+renderer on production confirmed 3 and 12 alphabetical presets above their
+textareas; the served script hash matches the repository.
 
 ## Catalog description conditions (live and verified on dev and production)
 
