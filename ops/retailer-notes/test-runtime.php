@@ -28,7 +28,7 @@ function wc_get_product( $id ) {
 require __DIR__ . '/../../wp-content/mu-plugins/41-product-retailer-notes.php';
 
 $offer = 'ONE PER STORE ONLY FREE WITH 2 UNITS BOUGHT';
-$normalized_offer = "LIMIT 1 PER STORE ONLY\nFREE WITH 2 UNITS BOUGHT";
+$normalized_offer = "LIMIT 1 PER STORE\nFREE WITH 2 UNITS BOUGHT";
 $supplier = 'WE3125<br> Sync Lite<br> Tester Kit<br><b>' . $offer . '</b>';
 $title = $supplier;
 class WC_Product {
@@ -106,7 +106,7 @@ $_POST = array( ULTRALOVE_RN_INFO => 'no discounts apply', ULTRALOVE_RN_IMPORTAN
 ultralove_rn_admin_save( 1 );
 $before = $meta;
 ultralove_rn_admin_save( 1 );
-if ( $meta !== $before || $meta[ ULTRALOVE_RN_INFO ] !== 'DISCOUNTS DO NOT APPLY' || $meta[ ULTRALOVE_RN_IMPORTANT ] !== 'LIMIT 1 PER STORE ONLY' ) {
+if ( $meta !== $before || $meta[ ULTRALOVE_RN_INFO ] !== 'DISCOUNTS DO NOT APPLY' || $meta[ ULTRALOVE_RN_IMPORTANT ] !== 'LIMIT 1 PER STORE' ) {
 	throw new RuntimeException( 'Admin field classification or repeat safety failed' );
 }
 $_POST = array();

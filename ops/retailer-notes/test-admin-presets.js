@@ -37,7 +37,7 @@ for (const key of Object.keys(fields)) {
 		field.focused = false;
 		const otherValue = fields[otherKey].value;
 		const select = {
-			value: 'LIMIT 1 PER STORE ONLY\nFREE WITH 3 UNITS BOUGHT',
+			value: 'LIMIT 1 PER STORE\nFREE WITH 3 UNITS BOUGHT',
 			dataset: { retailerField: key },
 			matches(selector) { assert.equal(selector, 'select.ultralove-rn-preset'); return true; }
 		};

@@ -35,16 +35,19 @@ function ultralove_rn_markup( int $product_id, string $context ): string {
 		return '';
 	}
 	$labels = 'card' !== $context; // cards are compact: no labels
+	$join   = static function ( array $lines ) use ( $labels ): string { // cards: one note per line; other contexts: inline
+		return $labels ? esc_html( implode( ' | ', $lines ) ) : implode( '<br>', array_map( 'esc_html', $lines ) );
+	};
 	$html   = '<div class="ul-retailer-notes ul-retailer-notes--' . esc_attr( $context ) . '">';
 	if ( $notes['important'] ) {
 		$html .= '<p class="ul-retailer-notes__important">';
 		$html .= $labels ? '<strong class="ul-retailer-notes__label">' . esc_html__( 'Important retailer info:', 'ultralove' ) . '</strong> ' : '';
-		$html .= esc_html( implode( ' | ', $notes['important'] ) ) . '</p>';
+		$html .= $join( $notes['important'] ) . '</p>';
 	}
 	if ( $notes['info'] ) {
 		$html .= '<p class="ul-retailer-notes__info">';
 		$html .= $labels ? '<strong class="ul-retailer-notes__label">' . esc_html__( 'Retailer info:', 'ultralove' ) . '</strong> ' : '';
-		$html .= esc_html( implode( ' | ', $notes['info'] ) ) . '</p>';
+		$html .= $join( $notes['info'] ) . '</p>';
 	}
 	return $html . '</div>';
 }
@@ -111,18 +114,18 @@ function ultralove_rn_admin_presets(): array {
 			'Ships in Non-Retail Packaging DISCOUNTS DO NOT APPLY',
 		),
 		ULTRALOVE_RN_IMPORTANT => array(
-			"LIMIT 1 PER STORE ONLY\nFREE WITH 3 UNITS BOUGHT",
-			"LIMIT 1 COLOR PER STORE ONLY\nFREE WITH 2 UNITS BOUGHT",
-			"LIMIT 1 PER STORE ONLY\nFREE WITH 2 UNITS BOUGHT",
-			"LIMIT 1 COLOR PER STORE ONLY\nFREE WITH 3 UNITS BOUGHT",
-			"FREE WITH 2 UNITS BOUGHT\nLIMIT 1 COLOR PER STORE ONLY",
-			'LIMIT 1 PER STORE ONLY',
+			"LIMIT 1 PER STORE\nFREE WITH 3 UNITS BOUGHT",
+			"LIMIT 1 COLOR PER STORE\nFREE WITH 2 UNITS BOUGHT",
+			"LIMIT 1 PER STORE\nFREE WITH 2 UNITS BOUGHT",
+			"LIMIT 1 COLOR PER STORE\nFREE WITH 3 UNITS BOUGHT",
+			"FREE WITH 2 UNITS BOUGHT\nLIMIT 1 COLOR PER STORE",
+			'LIMIT 1 PER STORE',
 			'FREE WITH 3 UNITS BOUGHT',
-			"LIMIT 1 BOTTLE PER STORE ONLY\nFREE WITH 3 UNITS BOUGHT",
+			"LIMIT 1 BOTTLE PER STORE\nFREE WITH 3 UNITS BOUGHT",
 			'FREE WITH 2 UNITS BOUGHT',
-			"FREE WITH 3 UNITS BOUGHT\nLIMIT 1 PER STORE ONLY",
-			"FREE WITH 2 UNITS BOUGHT\nLIMIT 1 PER STORE ONLY",
-			"LIMIT 1 PER STORE ONLY\nFREE WITH 3 UNITS BOUGHT PER FLAVOR",
+			"FREE WITH 3 UNITS BOUGHT\nLIMIT 1 PER STORE",
+			"FREE WITH 2 UNITS BOUGHT\nLIMIT 1 PER STORE",
+			"LIMIT 1 PER STORE\nFREE WITH 3 UNITS BOUGHT PER FLAVOR",
 		),
 	);
 }
@@ -169,7 +172,7 @@ function ultralove_rn_admin_fields() {
 	woocommerce_wp_textarea_input( array(
 		'id'          => ULTRALOVE_RN_IMPORTANT,
 		'label'       => __( 'Important retailer info', 'ultralove' ),
-		'description' => __( 'Shown highlighted on product cards and the product page. One condition per line, e.g. LIMIT 1 PER STORE ONLY or FREE WITH 2 UNITS BOUGHT. Equivalent conditions are merged.', 'ultralove' ),
+		'description' => __( 'Shown highlighted on product cards and the product page. One condition per line, e.g. LIMIT 1 PER STORE or FREE WITH 2 UNITS BOUGHT. Equivalent conditions are merged.', 'ultralove' ),
 		'desc_tip'    => true,
 		'rows'        => 2,
 	) );

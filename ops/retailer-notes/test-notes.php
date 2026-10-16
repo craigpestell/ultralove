@@ -8,7 +8,7 @@ function expect_notes( array $before, array $expected, array $add = array() ): v
 		throw new RuntimeException( 'Note normalization or idempotence failed: ' . json_encode( array( $before, $after ), JSON_THROW_ON_ERROR ) );
 	}
 }
-$liberty = array( 'info' => array(), 'important' => array( 'LIMIT 1 PER STORE ONLY', 'FREE WITH 2 UNITS BOUGHT' ), 'review' => array() );
+$liberty = array( 'info' => array(), 'important' => array( 'LIMIT 1 PER STORE', 'FREE WITH 2 UNITS BOUGHT' ), 'review' => array() );
 foreach ( array( 'NO EXCEPTIONS', "  no\t exceptions.  ", 'No Exceptions;' ) as $note ) {
 	if ( null !== ultralove_rn_note_clauses( $note ) ) {
 		throw new RuntimeException( 'A standalone qualification must not trigger removal.' );
@@ -22,7 +22,7 @@ foreach ( array( '', '  ', 'NO EXCEPTIONS for custom orders' ) as $note ) {
 expect_notes( array( 'important' => array(
 	'TESTER: 1 PER STORE ONLY FREE WITH 3 UNITS BOUGHT',
 	'A MINIMUM OF 3 UNITS MUST BE PURCHASED TO RECEIVE A FREE TESTER - NO EXCEPTIONS',
-) ), array( 'info' => array(), 'important' => array( 'LIMIT 1 PER STORE ONLY', 'FREE WITH 3 UNITS BOUGHT' ), 'review' => array() ) );
+) ), array( 'info' => array(), 'important' => array( 'LIMIT 1 PER STORE', 'FREE WITH 3 UNITS BOUGHT' ), 'review' => array() ) );
 expect_notes( array( 'info' => array( 'No exceptions.' ), 'important' => array( 'NO EXCEPTIONS' ) ), array(
 	'info' => array( 'No exceptions.' ), 'important' => array( 'NO EXCEPTIONS' ), 'review' => array(),
 ) );
@@ -36,13 +36,13 @@ expect_notes( array( 'important' => array(
 expect_notes( array(
 	'info' => array( 'one per store only' ),
 	'important' => array( 'limit 1 per store only' ),
-), array( 'info' => array(), 'important' => array( 'LIMIT 1 PER STORE ONLY' ), 'review' => array() ) );
+), array( 'info' => array(), 'important' => array( 'LIMIT 1 PER STORE' ), 'review' => array() ) );
 expect_notes( array(
 	'important' => array( 'LIMIT 1 PER STORE ONLY FREE WITH 2 UNITS BOUGHT', 'ONE PER STORE ONLY FREE WITH 2 UNITS BOUGHT' ),
 ), $liberty );
 expect_notes( array(
 	'info' => array( 'ONE PER STORE ONLY' ),
-	'important' => array( 'LIMIT 1 PER STORE ONLY FREE WITH 2 UNITS BOUGHT' ),
+	'important' => array( 'LIMIT 1 PER STORE FREE WITH 2 UNITS BOUGHT' ),
 ), $liberty );
 expect_notes( array(
 	'info' => array( 'one per store', 'Free with 2 units bought.', 'Manual note' ),
@@ -58,8 +58,8 @@ expect_notes( array( 'important' => array(
 	'ONE COLOR PER STORE ONLY', 'limit 1 colour per store', 'ONE BOTTLE PER STORE',
 	'1 PER TESTER ONLY', 'ONE STAND PER STORE', 'ONE PER STORE',
 ) ), array( 'info' => array(), 'important' => array(
-	'LIMIT 1 COLOR PER STORE ONLY', 'LIMIT 1 BOTTLE PER STORE ONLY',
-	'LIMIT 1 PER TESTER ONLY', 'LIMIT 1 STAND PER STORE ONLY', 'LIMIT 1 PER STORE ONLY',
+	'LIMIT 1 COLOR PER STORE', 'LIMIT 1 BOTTLE PER STORE',
+	'LIMIT 1 PER TESTER', 'LIMIT 1 STAND PER STORE', 'LIMIT 1 PER STORE',
 ), 'review' => array() ) );
 foreach ( array(
 	'FREE WITH 3 UNITS BOUGHT PER FLAVOR',
@@ -68,7 +68,7 @@ foreach ( array(
 	'FREE WITH PURCHASE OF 12 ESSENTIAL BULLETS',
 ) as $offer ) {
 	expect_notes( array( 'important' => array( $offer . ' 1 Per Store Only' ) ), array(
-		'info' => array(), 'important' => array( $offer, 'LIMIT 1 PER STORE ONLY' ), 'review' => array(),
+		'info' => array(), 'important' => array( $offer, 'LIMIT 1 PER STORE' ), 'review' => array(),
 	) );
 }
 $conflict = array( 'ONE PER STORE ONLY FREE WITH 2 UNITS BOUGHT', 'LIMIT 1 PER STORE ONLY FREE WITH 3 UNITS BOUGHT' );
