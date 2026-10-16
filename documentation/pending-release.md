@@ -1,6 +1,6 @@
 # Pending production release
 
-## Catalog description conditions (pending dev verification)
+## Catalog description conditions (verified on dev; pending production approval)
 
 The read-only follow-up inventory scans minimum-purchase wording as well as
 store/tester limits, free offers and discount instructions. Candidate matches
@@ -29,17 +29,46 @@ and embedded fallback markup must not become extraction candidates.
 Free-retail-kit/demo wording and distinct purchase conditions require review,
 not silent conversion into tester offers. Names, slugs and redirects are unchanged.
 
-Deploy to dev first, take a fresh validated backup, and review the combined
-per-product guarded plan before applying it. Production requires fresh approval
-and its own site-bound plan and backup. No current catalog-wide changes have
-been applied on either environment.
+PR #211 runtime revision `04d6fe69bb` was deployed to dev through the standard
+drift-checked deployment, with all four smoke checks passing. The guarded cleanup
+then updated 113 dev products / 133 description fields after a fresh validated
+private database backup. Exact readback verified descriptions, notes, import
+opt-in, titles and slugs. A scoped repeat preview proposes zero changes; its
+24 review entries concern retained markup, not additional approved changes.
+Production remains unchanged and requires fresh approval, its own site-bound
+plan and a fresh backup.
 
 The production read-only inventory examined 6,528 products and identified 297
 candidate fields across 254 products. Combined local proposals change 138 products;
 independent source-byte/clause-preservation checks select 116 products / 136 fields
-for dev rehearsal. The other 22 proposals retain ambiguous restrictions or
+for production consideration. Dev contains 113 of those products; production
+IDs `97578`, `97586` and `97588` (including the Working Stiff Hockey Player
+example) are absent. No database refresh or product import was needed for the
+dev rehearsal. The other 22 proposals retain ambiguous restrictions or
 unrecognized residual instructions and remain excluded. The inventory also has
 116 candidate products without a proposed change; these are not claimed as cleaned.
+
+The independent verifier ran against dev's deployed PHP runtime and checked all
+113 exact plans for source-byte preservation, retained clauses and idempotence.
+Local libxml 2.9.13 and dev libxml 2.15.2 handle an adjacent empty line break
+differently in legacy malformed HTML; identical deployed source hashes were
+confirmed, and the actual server-generated plan was verified on dev rather than
+assuming local DOM output was identical.
+
+Guest-origin checks passed on all 113 ordinary product URLs: expected structured
+notes, no recognized embedded restrictions, unchanged titles and canonicals.
+Browser checks covered Mona Wave, malformed-paragraph Doxy, earlier-marketing-bold
+Shared Touch and Swan Mini display/list/image cases. Summary notes remain visible
+at 390/991/992/1280px; duplicate description notes are hidden below 992px and
+visible at 992px and above.
+
+Private dev evidence is under
+`/var/lib/ultralove-deploy/catalog-description-04d6fe6/`, including `dev-plan.json`,
+`dev-repeat.json`, the independent verifier and `dev-before.sql.gz` (mode 0600,
+125,388,989 bytes; gzip integrity checked; SHA-256
+`5a0d6bc90fe5a5d877e08f386da33a84438bd6b7b8653f9139cab86e2b010792`).
+Use only scoped product restoration if needed; do not restore the whole database
+over newer orders.
 
 ## Responsive hosted-image selection (live on dev and production)
 
