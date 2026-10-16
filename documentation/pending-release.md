@@ -1,5 +1,16 @@
 # Pending production release
 
+## Retailer-info editor presets (dev preview; production pending)
+
+Two preset dropdowns in Product data > General append common text to the existing
+editable retailer-info fields. The [inventory](retailer-info-inventory.md)
+defines the cutoff: at least 5 products, giving 3 Retailer info and 12 Important
+retailer info choices, most-used first. Multi-line choices insert real newlines;
+existing content is retained. Normal save-time normalization and review warnings
+are unchanged. Code-only release; no database migration or activation required.
+Offline PHP and JavaScript preset checks, parser, runtime/save and condition
+normalization regression tests pass. Both new preset runners are included in CI.
+
 ## Catalog description conditions (live and verified on dev and production)
 
 The read-only follow-up inventory scans minimum-purchase wording as well as

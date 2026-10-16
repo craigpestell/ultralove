@@ -74,3 +74,19 @@ Metadata key: `_ul_retailer_important`.
 This is an exact inventory, not another normalization pass. Unusual, ambiguous
 and repeated wording is intentionally reported as stored; no additional product
 data was changed to produce this report.
+
+## Product editor presets
+
+The product editor's **Product data > General** tab provides a preset dropdown
+above each existing retailer-info textarea. Choices are the complete values in
+this snapshot used by at least **5 products**, in descending frequency: 3 Retailer
+info choices and 12 Important retailer info choices. These are code-owned presets,
+not a live database query; rare values remain available through manual entry.
+
+Selecting a choice appends its text on a new line without replacing existing
+content, then resets the dropdown and focuses the textarea. Dropdown labels use
+` / ` for readability; inserted combinations use real newlines. Text remains
+editable and is not saved until the product is saved. Existing save-time
+classification, equivalent-condition merging and conflicting-offer warnings
+remain unchanged. No existing product values are migrated or rewritten by
+adding these controls.

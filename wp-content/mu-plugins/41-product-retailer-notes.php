@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Product Retailer Notes
  * Description: Two product fields - "Retailer info" and "Important retailer info" - filled from the <b>/<font> notes that used to sit inside product names. Shown on product cards and product pages. Includes the WP-CLI migration (wp ul-retailer-notes preview|apply|restore|slug-preview|slug-apply|slug-restore|tidy-titles).
- * Version: 1.0.0
+ * Version: 1.1.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -102,9 +102,68 @@ function ultralove_rn_show_quickview() {
  * Editing in the product screen (General tab)
  * ------------------------------------------------------------------------------------------ */
 
+/** Complete values used by at least five products in the 2026-10-16 inventory, most-used first. */
+function ultralove_rn_admin_presets(): array {
+	return array(
+		ULTRALOVE_RN_INFO => array(
+			'DISCOUNTS DO NOT APPLY',
+			'(SEASONAL - LIMITED SUPPLY)',
+			'Ships in Non-Retail Packaging DISCOUNTS DO NOT APPLY',
+		),
+		ULTRALOVE_RN_IMPORTANT => array(
+			"LIMIT 1 PER STORE ONLY\nFREE WITH 3 UNITS BOUGHT",
+			"LIMIT 1 COLOR PER STORE ONLY\nFREE WITH 2 UNITS BOUGHT",
+			"LIMIT 1 PER STORE ONLY\nFREE WITH 2 UNITS BOUGHT",
+			"LIMIT 1 COLOR PER STORE ONLY\nFREE WITH 3 UNITS BOUGHT",
+			"FREE WITH 2 UNITS BOUGHT\nLIMIT 1 COLOR PER STORE ONLY",
+			'LIMIT 1 PER STORE ONLY',
+			'FREE WITH 3 UNITS BOUGHT',
+			"LIMIT 1 BOTTLE PER STORE ONLY\nFREE WITH 3 UNITS BOUGHT",
+			'FREE WITH 2 UNITS BOUGHT',
+			"FREE WITH 3 UNITS BOUGHT\nLIMIT 1 PER STORE ONLY",
+			"FREE WITH 2 UNITS BOUGHT\nLIMIT 1 PER STORE ONLY",
+			"LIMIT 1 PER STORE ONLY\nFREE WITH 3 UNITS BOUGHT PER FLAVOR",
+		),
+	);
+}
+
+function ultralove_rn_admin_preset_field( string $field, string $label ): void {
+	$options = array( '' => __( 'Choose text to append...', 'ultralove' ) );
+	foreach ( ultralove_rn_admin_presets()[ $field ] as $text ) {
+		$options[ $text ] = str_replace( "\n", ' / ', $text );
+	}
+	woocommerce_wp_select( array(
+		'id'                => $field . '_preset',
+		'label'             => $label,
+		'value'             => '',
+		'options'           => $options,
+		'class'             => 'select ultralove-rn-preset',
+		'custom_attributes' => array( 'data-retailer-field' => $field ),
+		'description'       => __( 'Appends to the field below without replacing existing text. You can edit it before saving. Multi-line choices are shown with / separators.', 'ultralove' ),
+		'desc_tip'          => true,
+	) );
+}
+
+add_action( 'admin_enqueue_scripts', 'ultralove_rn_admin_scripts' );
+function ultralove_rn_admin_scripts(): void {
+	$screen = get_current_screen();
+	if ( ! $screen || 'post' !== $screen->base || 'product' !== $screen->post_type ) {
+		return;
+	}
+	$file = '/ultralove-retailer-notes/admin-presets.js';
+	wp_enqueue_script(
+		'ultralove-retailer-note-presets',
+		plugins_url( $file, __FILE__ ),
+		array(),
+		(string) filemtime( __DIR__ . $file ),
+		true
+	);
+}
+
 add_action( 'woocommerce_product_options_general_product_data', 'ultralove_rn_admin_fields' );
 function ultralove_rn_admin_fields() {
 	echo '<div class="options_group">';
+	ultralove_rn_admin_preset_field( ULTRALOVE_RN_IMPORTANT, __( 'Important info presets', 'ultralove' ) );
 	woocommerce_wp_textarea_input( array(
 		'id'          => ULTRALOVE_RN_IMPORTANT,
 		'label'       => __( 'Important retailer info', 'ultralove' ),
@@ -112,6 +171,7 @@ function ultralove_rn_admin_fields() {
 		'desc_tip'    => true,
 		'rows'        => 2,
 	) );
+	ultralove_rn_admin_preset_field( ULTRALOVE_RN_INFO, __( 'Retailer info presets', 'ultralove' ) );
 	woocommerce_wp_textarea_input( array(
 		'id'          => ULTRALOVE_RN_INFO,
 		'label'       => __( 'Retailer info', 'ultralove' ),
