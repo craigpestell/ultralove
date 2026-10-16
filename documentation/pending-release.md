@@ -1001,3 +1001,27 @@ does not authorize any production migration.
   992px. Nginx, PHP-FPM and Redis remained active.
 - Production has not received this list-prefix runtime change or the 25556 data
   correction. Await user review of dev before merging/deploying production.
+
+#### List-prefix production execution (2026-10-16)
+
+- After user approval, merged #209 as
+  `c322913ae6be7174d97a2167b789b589fad2b21b`. Main CI `38831523971`
+  and automatic dev deployment `38831523331` passed.
+- Standard production dry run found no drift and one changed runtime PHP file.
+  Deployment passed the dev gate, server PHP lint, PHP-FPM restart and all four
+  smoke endpoints. Code recovery archive:
+  `/var/lib/ultralove-deploy/backups/20261016T004831Z-fe22adb51d.tgz`.
+- Fresh transaction-consistent database backup validated with gzip integrity,
+  mode 0600, 156,009,504 bytes:
+  `/var/lib/ultralove-deploy/wonderlust-description-c322913/prod-before.sql.gz`;
+  SHA256 `475ef2608923853bcea9a6e87a5f3e914fde1fa5b9b2f58eb86619524d01e83b`.
+- Reviewed and applied only product 25556 / one description field. Exact
+  non-instruction bytes, both note fields, excerpt, title and slug were preserved.
+  Guarded readback passed; scoped repeat preview returned zero changes and one
+  expected review for the unchanged malformed list tail. Private plan and logs
+  remain in `/var/lib/ultralove-deploy/wonderlust-description-c322913/`.
+- Origin and ordinary public guest checks passed. Production browser confirmed
+  both canonical Important clauses, no embedded duplicate, original logo,
+  marketing and all seven features. Responsive checks at 390/991/992/1280px
+  passed; Nginx, PHP-FPM and Redis were active. No manual cache purge was needed
+  for this product. The earlier 71834 Cloudflare cache caveat is separate.
