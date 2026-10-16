@@ -9,9 +9,10 @@ remain unchanged.
 
 Normalize exact minimum purchases of a free tester to `FREE WITH N UNITS BOUGHT`,
 including the catalog's `PURHCASED` typo, and normalize the `TESTER:` label.
-Deduplicate equivalent existing Important retailer info. Per user direction,
-omit `NO EXCEPTIONS` from recognized instruction blocks and structured notes;
-do not strip the phrase from unrelated or unrecognized prose.
+Deduplicate equivalent existing Important retailer info. Normalized purchase
+conditions may omit the redundant `NO EXCEPTIONS` qualification; this is not a
+separate instruction to remove the phrase everywhere. Standalone qualifications,
+unrelated prose and unrecognized instructions are preserved.
 Conflicting offers retain their whole original notes for manual review, including
 any `NO EXCEPTIONS` qualification.
 

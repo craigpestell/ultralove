@@ -36,7 +36,7 @@ $list = '<ul><li>Feature A<li>Feature B</ul>';
 expect_description( 'Marketing.' . $list . '<p>' . $tail_offer . '<p>', 'Marketing.' . $list . '<p><p>', array( 'FREE WITH 3 UNITS BOUGHT PER FLAVOR', 'LIMIT 1 PER STORE ONLY' ) );
 expect_description( "Marketing &amp; features.\r\n\r\n" . $minimum . '<p>', "Marketing &amp; features.\r\n\r\n<p>", array( 'FREE WITH 3 UNITS BOUGHT' ) );
 expect_description( '<p>' . $minimum . '<br><b>1 COLOR PER STORE ONLY</b><p>Marketing.', '<p><p>Marketing.', array( 'FREE WITH 3 UNITS BOUGHT', 'LIMIT 1 COLOR PER STORE ONLY' ) );
-expect_description( '<p><b>NO EXCEPTIONS</b></p>', '<p></p>' );
+expect_description( '<p><b>NO EXCEPTIONS</b></p>', '<p><b>NO EXCEPTIONS</b></p>' );
 expect_description( '<p>Marketing with NO EXCEPTIONS for this edition.</p>', '<p>Marketing with NO EXCEPTIONS for this edition.</p>' );
 expect_description( '<p><b>Shared Touch</b> &mdash; marketing.' . "\n\n" . $minimum . '<p>', '<p><b>Shared Touch</b> &mdash; marketing.' . "\n\n<p>", array( 'FREE WITH 3 UNITS BOUGHT' ) );
 expect_description( '<p>' . str_replace( "\nNO EXCEPTIONS", '<br>NO EXCEPTIONS<P>1 PER STORE ONLY', $minimum ) . '<p>Marketing.', '<p><p>Marketing.', array( 'FREE WITH 3 UNITS BOUGHT', 'LIMIT 1 PER STORE ONLY' ) );

@@ -10,8 +10,8 @@ function expect_notes( array $before, array $expected, array $add = array() ): v
 }
 $liberty = array( 'info' => array(), 'important' => array( 'LIMIT 1 PER STORE ONLY', 'FREE WITH 2 UNITS BOUGHT' ), 'review' => array() );
 foreach ( array( 'NO EXCEPTIONS', "  no\t exceptions.  ", 'No Exceptions;' ) as $note ) {
-	if ( array() !== ultralove_rn_note_clauses( $note ) ) {
-		throw new RuntimeException( 'Recognized omission must return an empty clause list.' );
+	if ( null !== ultralove_rn_note_clauses( $note ) ) {
+		throw new RuntimeException( 'A standalone qualification must not trigger removal.' );
 	}
 }
 foreach ( array( '', '  ', 'NO EXCEPTIONS for custom orders' ) as $note ) {
@@ -24,7 +24,7 @@ expect_notes( array( 'important' => array(
 	'A MINIMUM OF 3 UNITS MUST BE PURCHASED TO RECEIVE A FREE TESTER - NO EXCEPTIONS',
 ) ), array( 'info' => array(), 'important' => array( 'LIMIT 1 PER STORE ONLY', 'FREE WITH 3 UNITS BOUGHT' ), 'review' => array() ) );
 expect_notes( array( 'info' => array( 'No exceptions.' ), 'important' => array( 'NO EXCEPTIONS' ) ), array(
-	'info' => array(), 'important' => array(), 'review' => array(),
+	'info' => array( 'No exceptions.' ), 'important' => array( 'NO EXCEPTIONS' ), 'review' => array(),
 ) );
 expect_notes( array( 'info' => array( 'Custom purchase terms - NO EXCEPTIONS' ) ), array(
 	'info' => array( 'Custom purchase terms - NO EXCEPTIONS' ), 'important' => array(), 'review' => array(),

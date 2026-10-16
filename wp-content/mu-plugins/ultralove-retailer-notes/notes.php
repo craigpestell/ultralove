@@ -33,7 +33,7 @@ function ultralove_rn_note_clauses( string $note ): ?array {
 		}
 		$offset += strlen( $match[0] );
 	}
-	return $clauses;
+	return $clauses ?: null;
 }
 
 function ultralove_rn_regular_note( string $note ): ?string {
