@@ -26,7 +26,7 @@ function ultralove_rn_note_clauses( string $note ): ?array {
 		if ( preg_match( '/^(?:LIMIT )?(?:ONE|1)(?: (COLOU?R|BOTTLE|STAND))? PER (STORE|TESTER)(?: ONLY)?$/', $part, $limit ) ) {
 			$unit = $limit[1] ?? '';
 			$unit = 'COLOUR' === $unit ? 'COLOR' : $unit;
-			$part = 'LIMIT 1' . ( '' !== $unit ? ' ' . $unit : '' ) . ' PER ' . $limit[2] . ' ONLY';
+			$part = 'LIMIT 1' . ( '' !== $unit ? ' ' . $unit : '' ) . ' PER ' . $limit[2];
 		}
 		if ( 'NO EXCEPTIONS' !== $part ) {
 			$clauses[] = $part;
