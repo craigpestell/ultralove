@@ -86,9 +86,9 @@ product editor's preset dropdowns are gone, because the selects replace them.
 Every value in the two tables above converts as follows (`ops/retailer-notes/test-terms.php` checks
 each one):
 
-- 605 of the 622 Important values are a limit and/or a free offer of 2, 3 or 5 units and become
-  selections, whatever their wording or order. The other 17 products keep their unusual wording
-  in "Other terms" (per-flavor offers, "9 (3 each)", free displays, the cock-ring offer, tester
+- 610 of the 622 Important values are a limit and/or a free offer of 2, 3 or 5 units (5 of them
+  "per flavor") and become selections, whatever their wording or order. The other 12 products keep
+  their unusual wording in "Other terms" ("9 (3 each)", free displays, the cock-ring offer, tester
   offers and the pasted duplicate), with any limit still in the Limit select.
 - "DISCOUNTS DO NOT APPLY" and "NO FURTHER DISCOUNTS APPLY" become the one discounts checkbox
   (725 products, including the glued "Ships in Non-Retail Packaging DISCOUNTS DO NOT APPLY").
