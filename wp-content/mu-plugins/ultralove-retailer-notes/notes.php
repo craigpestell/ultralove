@@ -5,6 +5,12 @@ require_once __DIR__ . '/parser.php';
 /** @return string[]|null Whole recognized conditions only; never strip a partial instruction. */
 function ultralove_rn_note_clauses( string $note ): ?array {
 	$text = rtrim( ultralove_rn_clean_text( $note ), ' .;' );
+	$text = preg_replace( '/^TESTER:\s*/i', '', $text );
+	$text = preg_replace( '/\bA MINIMUM OF ([1-9][0-9]*) UNITS MUST BE (?:PURCHASED|PURHCASED) TO RECEIVE A FREE TESTER\b/i', 'FREE WITH $1 UNITS BOUGHT', $text );
+	$text = str_replace( ' - ', ' ', $text );
+	if ( '' === $text ) {
+		return null;
+	}
 	if ( preg_match( '/^(?:MUST ORDER [1-9][0-9]* (?:OF EACH COLOR|ASSORTED COLORS) IN ORDER TO RECEIVE A FREE DISPLAY|FREE COCK RING WITH PURCHASE)$/i', $text ) ) {
 		return array( mb_strtoupper( $text ) );
 	}
@@ -13,7 +19,7 @@ function ultralove_rn_note_clauses( string $note ): ?array {
 	$clauses = array();
 	$offset = 0;
 	while ( $offset < strlen( $text ) ) {
-		if ( ! preg_match( '/\G(?:' . $store . '|' . $free . ')(?= |$) */i', $text, $match, 0, $offset ) ) {
+		if ( ! preg_match( '/\G(?:' . $store . '|' . $free . '|NO EXCEPTIONS)(?= |$) */i', $text, $match, 0, $offset ) ) {
 			return null;
 		}
 		$part = mb_strtoupper( trim( $match[0] ) );
@@ -22,10 +28,12 @@ function ultralove_rn_note_clauses( string $note ): ?array {
 			$unit = 'COLOUR' === $unit ? 'COLOR' : $unit;
 			$part = 'LIMIT 1' . ( '' !== $unit ? ' ' . $unit : '' ) . ' PER ' . $limit[2] . ' ONLY';
 		}
-		$clauses[] = $part;
+		if ( 'NO EXCEPTIONS' !== $part ) {
+			$clauses[] = $part;
+		}
 		$offset += strlen( $match[0] );
 	}
-	return $clauses ?: null;
+	return $clauses;
 }
 
 function ultralove_rn_regular_note( string $note ): ?string {

@@ -1,5 +1,45 @@
 # Pending production release
 
+## Catalog description conditions (pending dev verification)
+
+The read-only follow-up inventory scans minimum-purchase wording as well as
+store/tester limits, free offers and discount instructions. Candidate matches
+are not an approved migration scope; ordinary marketing and ambiguous offers
+remain unchanged.
+
+Normalize exact minimum purchases of a free tester to `FREE WITH N UNITS BOUGHT`,
+including the catalog's `PURHCASED` typo, and normalize the `TESTER:` label.
+Deduplicate equivalent existing Important retailer info. Per user direction,
+omit `NO EXCEPTIONS` from recognized instruction blocks and structured notes;
+do not strip the phrase from unrelated or unrecognized prose.
+Conflicting offers retain their whole original notes for manual review, including
+any `NO EXCEPTIONS` qualification.
+
+Independently bounded, balanced bold instruction blocks can be extracted before
+or after feature lists and between newline-separated marketing. Only known
+clauses and allowlisted inline wrappers qualify. Bare opening paragraph tags
+within a complete instruction block act as line breaks in the validation copy.
+Source replacements preserve all other bytes, including images, video embeds,
+marketing and legacy list tails. Instructions nested in lists/formatting,
+active content, layout wrappers and ambiguous mixed prose remain excluded.
+Complete iframe embeds are masked during instruction discovery; unclosed iframe
+content is protected through the end of the field. Quoted attribute delimiters
+and embedded fallback markup must not become extraction candidates.
+Free-retail-kit/demo wording and distinct purchase conditions require review,
+not silent conversion into tester offers. Names, slugs and redirects are unchanged.
+
+Deploy to dev first, take a fresh validated backup, and review the combined
+per-product guarded plan before applying it. Production requires fresh approval
+and its own site-bound plan and backup. No current catalog-wide changes have
+been applied on either environment.
+
+The production read-only inventory examined 6,528 products and identified 297
+candidate fields across 254 products. Combined local proposals change 138 products;
+independent source-byte/clause-preservation checks select 116 products / 136 fields
+for dev rehearsal. The other 22 proposals retain ambiguous restrictions or
+unrecognized residual instructions and remain excluded. The inventory also has
+116 candidate products without a proposed change; these are not claimed as cleaned.
+
 ## Responsive hosted-image selection (live on dev and production)
 
 Lazy product cards now receive `sizes="auto, ..."` based on their actual loading

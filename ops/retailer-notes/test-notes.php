@@ -9,6 +9,30 @@ function expect_notes( array $before, array $expected, array $add = array() ): v
 	}
 }
 $liberty = array( 'info' => array(), 'important' => array( 'LIMIT 1 PER STORE ONLY', 'FREE WITH 2 UNITS BOUGHT' ), 'review' => array() );
+foreach ( array( 'NO EXCEPTIONS', "  no\t exceptions.  ", 'No Exceptions;' ) as $note ) {
+	if ( array() !== ultralove_rn_note_clauses( $note ) ) {
+		throw new RuntimeException( 'Recognized omission must return an empty clause list.' );
+	}
+}
+foreach ( array( '', '  ', 'NO EXCEPTIONS for custom orders' ) as $note ) {
+	if ( null !== ultralove_rn_note_clauses( $note ) ) {
+		throw new RuntimeException( 'Empty or unknown prose must not be treated as recognized instructions.' );
+	}
+}
+expect_notes( array( 'important' => array(
+	'TESTER: 1 PER STORE ONLY FREE WITH 3 UNITS BOUGHT',
+	'A MINIMUM OF 3 UNITS MUST BE PURCHASED TO RECEIVE A FREE TESTER - NO EXCEPTIONS',
+) ), array( 'info' => array(), 'important' => array( 'LIMIT 1 PER STORE ONLY', 'FREE WITH 3 UNITS BOUGHT' ), 'review' => array() ) );
+expect_notes( array( 'info' => array( 'No exceptions.' ), 'important' => array( 'NO EXCEPTIONS' ) ), array(
+	'info' => array(), 'important' => array(), 'review' => array(),
+) );
+expect_notes( array( 'info' => array( 'Custom purchase terms - NO EXCEPTIONS' ) ), array(
+	'info' => array( 'Custom purchase terms - NO EXCEPTIONS' ), 'important' => array(), 'review' => array(),
+) );
+expect_notes( array( 'important' => array(
+	'FREE WITH 2 UNITS BOUGHT',
+	'A MINIMUM OF 2 UNITS MUST BE PURHCASED TO RECEIVE A FREE TESTER',
+) ), array( 'info' => array(), 'important' => array( 'FREE WITH 2 UNITS BOUGHT' ), 'review' => array() ) );
 expect_notes( array(
 	'info' => array( 'one per store only' ),
 	'important' => array( 'limit 1 per store only' ),
@@ -50,6 +74,11 @@ foreach ( array(
 $conflict = array( 'ONE PER STORE ONLY FREE WITH 2 UNITS BOUGHT', 'LIMIT 1 PER STORE ONLY FREE WITH 3 UNITS BOUGHT' );
 expect_notes( array( 'important' => $conflict ), array(
 	'info' => array(), 'important' => $conflict,
+	'review' => array( 'Different purchase conditions: preserve whole offers for manual review.' ),
+) );
+$qualified_conflict = array( 'FREE WITH 2 UNITS BOUGHT NO EXCEPTIONS', 'FREE WITH 3 UNITS BOUGHT' );
+expect_notes( array( 'important' => $qualified_conflict ), array(
+	'info' => array(), 'important' => $qualified_conflict,
 	'review' => array( 'Different purchase conditions: preserve whole offers for manual review.' ),
 ) );
 $display_conflict = array( 'MUST ORDER 2 OF EACH COLOR IN ORDER TO RECEIVE A FREE DISPLAY', 'MUST ORDER 4 ASSORTED COLORS IN ORDER TO RECEIVE A FREE DISPLAY' );
