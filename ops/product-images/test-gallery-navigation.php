@@ -51,8 +51,8 @@ foreach ( array( 'cloudflare', 'cloudflare-images' ) as $delivery_mode ) {
 		$attributes = $hooks['wp_get_attachment_image_attributes'][20][0](
 			array( 'src' => $src[0], 'sizes' => 'auto, 100vw', 'loading' => 'lazy' ), (object) array( 'ID' => 1 ), $size
 		);
-		$expected_srcset = $candidates[200]['url'] . ' 200w, ' . $candidates[400]['url'] . ' 400w';
-		$assert( $attributes['srcset'] === $expected_srcset, 'Rendered card srcset must contain exactly the 200w and 400w variants.' );
+		$expected_srcset = $candidates[200]['url'] . ' 200w, ' . $candidates[300]['url'] . ' 300w, ' . $candidates[400]['url'] . ' 400w';
+		$assert( $attributes['srcset'] === $expected_srcset, 'Rendered card srcset must contain exactly the 200w, 300w and 400w variants.' );
 		$assert( $attributes['sizes'] === 'auto, (max-width: 575px) min(200px, calc(50vw - 50px)), 200px'
 				&& $attributes['loading'] === 'lazy', 'Lazy cards must use their rendered width and retain the older-browser layout hint.' );
 		foreach ( array( 'lazy', 'eager', '' ) as $loading ) {
@@ -77,7 +77,7 @@ foreach ( array( 'cloudflare', 'cloudflare-images' ) as $delivery_mode ) {
 		) ), 1 );
 		$assert( $tag['atts']['srcset'] === $expected_srcset && $tag['atts']['src'] === $src[0]
 			&& $tag['atts']['width'] === 200 && $tag['atts']['height'] === 200,
-			'Cloudinary safety-net markup must use the same 200/400-pixel card variants.' );
+			'Cloudinary safety-net markup must use the same 200/300/400-pixel card variants.' );
 	}
 	$assert( ul_pcdn_profile_for_size( 'woocommerce_single' )['widths'] === array( 600, 900, 1200 )
 		&& ul_pcdn_profile_for_size( 'woocommerce_gallery_thumbnail' )['widths'] === array( 100, 200 )
