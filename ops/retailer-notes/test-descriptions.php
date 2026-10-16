@@ -23,6 +23,26 @@ expect_description( '<p><b><font color="red">SMART PHONE NOT INCLUDED</font></b>
 $offer = 'LIMIT 1 PER STORE ONLY FREE WITH 2 UNITS BOUGHT';
 $normalized_offer = "LIMIT 1 PER STORE ONLY\nFREE WITH 2 UNITS BOUGHT";
 $offer_html = '<b><b><font color=red><font size="4">LIMIT 1 PER STORE ONLY<br> FREE WITH 2 UNITS BOUGHT</font></FONT></b></b><p>';
+$minimum = '<b><span style="color: red;"><span style="font-size: small;">A MINIMUM OF 3 UNITS MUST BE PURCHASED TO RECEIVE A FREE TESTER' . "\nNO EXCEPTIONS</span></span></b>";
+$media = '<img src="/CalEx-300x71.png" alt="" width="300" height="71" />';
+expect_description( $media . '<p>' . $minimum . '<p>Hockey Player marketing.', $media . '<p><p>Hockey Player marketing.', array( 'FREE WITH 3 UNITS BOUGHT' ) );
+$hockey = array( 'post_content' => $media . '<p>' . $minimum . '<p>Marketing.', 'post_excerpt' => '', 'info' => '', 'important' => 'TESTER: 1 PER STORE ONLY FREE WITH 3 UNITS BOUGHT' );
+$hockey_after = ultralove_rn_description_after( $hockey, $hockey_review );
+if ( $hockey_after['important'] !== "LIMIT 1 PER STORE ONLY\nFREE WITH 3 UNITS BOUGHT" || $hockey_review || ultralove_rn_description_after( $hockey_after ) !== $hockey_after ) {
+	throw new RuntimeException( 'Minimum purchase must deduplicate and omit NO EXCEPTIONS.' );
+}
+$tail_offer = '<b><font color=red><font size="2">FREE WITH 3 UNITS BOUGHT <u>PER FLAVOR</u><br>1 PER STORE ONLY</font></FONT></b>';
+$list = '<ul><li>Feature A<li>Feature B</ul>';
+expect_description( 'Marketing.' . $list . '<p>' . $tail_offer . '<p>', 'Marketing.' . $list . '<p><p>', array( 'FREE WITH 3 UNITS BOUGHT PER FLAVOR', 'LIMIT 1 PER STORE ONLY' ) );
+expect_description( "Marketing &amp; features.\r\n\r\n" . $minimum . '<p>', "Marketing &amp; features.\r\n\r\n<p>", array( 'FREE WITH 3 UNITS BOUGHT' ) );
+expect_description( '<p>' . $minimum . '<br><b>1 COLOR PER STORE ONLY</b><p>Marketing.', '<p><p>Marketing.', array( 'FREE WITH 3 UNITS BOUGHT', 'LIMIT 1 COLOR PER STORE ONLY' ) );
+expect_description( '<p><b>NO EXCEPTIONS</b></p>', '<p><b>NO EXCEPTIONS</b></p>' );
+expect_description( '<p>Marketing with NO EXCEPTIONS for this edition.</p>', '<p>Marketing with NO EXCEPTIONS for this edition.</p>' );
+expect_description( '<p><b>Shared Touch</b> &mdash; marketing.' . "\n\n" . $minimum . '<p>', '<p><b>Shared Touch</b> &mdash; marketing.' . "\n\n<p>", array( 'FREE WITH 3 UNITS BOUGHT' ) );
+expect_description( '<p>' . str_replace( "\nNO EXCEPTIONS", '<br>NO EXCEPTIONS<P>1 PER STORE ONLY', $minimum ) . '<p>Marketing.', '<p><p>Marketing.', array( 'FREE WITH 3 UNITS BOUGHT', 'LIMIT 1 PER STORE ONLY' ) );
+expect_description( '<p>' . $minimum . "\n\nMarketing.", '<p>' . "\n\nMarketing.", array( 'FREE WITH 3 UNITS BOUGHT' ) );
+expect_description( '<iframe src="/video"></iframe><p>' . $minimum . '<p>Marketing.', '<iframe src="/video"></iframe><p><p>Marketing.', array( 'FREE WITH 3 UNITS BOUGHT' ) );
+expect_description( '<p><b>A MINIMUM OF 2 UNITS MUST BE PURHCASED TO RECEIVE A FREE TESTER</b><p>', '<p><p>', array( 'FREE WITH 2 UNITS BOUGHT' ) );
 expect_description( $offer_html, '<p>', array( 'LIMIT 1 PER STORE ONLY', 'FREE WITH 2 UNITS BOUGHT' ) );
 foreach ( array(
 	'TESTER - ONE PER STORE ONLY<br> FREE WITH 3 UNITS BOUGHT',
@@ -69,6 +89,16 @@ foreach ( array(
 	expect_description( $offer_html . $list_tail, '<p>' . $list_tail, array( 'LIMIT 1 PER STORE ONLY', 'FREE WITH 2 UNITS BOUGHT' ) );
 }
 foreach ( array(
+	'<p>Marketing. ' . $minimum . '</p>',
+	'<p><b>Marketing. A MINIMUM OF 3 UNITS MUST BE PURCHASED TO RECEIVE A FREE TESTER</b></p>',
+	'<p><b>A MINIMUM OF 3 UNITS MUST BE PURCHASED TO RECEIVE A FREE TESTER IN EACH COLOR</b></p>',
+	'<ul><li><p>' . $minimum . '</p></li></ul>',
+	'<!--' . "\n" . $minimum . "\n--><p>Keep comment.</p>",
+	'<img alt="' . "\n" . $minimum . "\n" . '" /><p>Keep attribute.</p>',
+	'<iframe title=">"><b>1 PER STORE ONLY</b></iframe>',
+	'<iframe><p><b>1 PER STORE ONLY</b></p>',
+	'<iframe src="/video" title="<b>1 PER STORE ONLY</b>"></iframe>',
+	'<p><b><u>FREE WITH 3 UNITS BOUGHT</b></p>',
 	$offer_html . '<script>alert("keep");</script><ul><li>Feature</li></ul>',
 	$offer_html . '<style>p{color:red}</style><ul><li>Feature</li></ul>',
 	$offer_html . '<textarea>Keep</textarea><ul><li>Feature</li></ul>',
