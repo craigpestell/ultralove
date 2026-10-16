@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Product Retailer Notes
- * Description: Two product fields - "Retailer info" and "Important retailer info" - filled from the <b>/<font> notes that used to sit inside product names. Shown on product cards and product pages. Includes the WP-CLI migration (wp ul-retailer-notes preview|apply|restore|slug-preview|slug-apply|slug-restore|tidy-titles).
- * Version: 1.1.0
+ * Description: Structured retailer terms on every product (limit per store, free with N units, discounts do not apply, status tags), filled from the <b>/<font> notes that used to sit inside product names. Shown on product cards and product pages. Includes the WP-CLI migrations (wp ul-retailer-notes preview|apply|restore|slug-preview|slug-apply|slug-restore|tidy-titles|terms-preview|terms-apply|terms-restore|terms-drop-legacy).
+ * Version: 2.0.0
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -10,55 +10,80 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 require_once __DIR__ . '/ultralove-retailer-notes/notes.php';
+require_once __DIR__ . '/ultralove-retailer-notes/terms-store.php';
 
-const ULTRALOVE_RN_INFO      = '_ul_retailer_info';
-const ULTRALOVE_RN_IMPORTANT = '_ul_retailer_important';
-const ULTRALOVE_RN_ORIGINAL  = '_ul_original_title'; // the title as it was before the notes were cut out (for restore)
+const ULTRALOVE_RN_ORIGINAL = '_ul_original_title'; // the title as it was before the notes were cut out (for restore)
 
 /* ---------------------------------------------------------------------------------------------
- * Reading and showing the fields
+ * Showing the terms
  * ------------------------------------------------------------------------------------------ */
 
-/** @return array{info:string[],important:string[]} one entry per line of each field */
-function ultralove_rn_get( int $product_id ): array {
-	$lines = static function ( string $key ) use ( $product_id ): array {
-		$raw = (string) get_post_meta( $product_id, $key, true );
-		return array_values( array_filter( array_map( 'trim', preg_split( '/\R/', $raw ) ) ) );
-	};
-	return array( 'info' => $lines( ULTRALOVE_RN_INFO ), 'important' => $lines( ULTRALOVE_RN_IMPORTANT ) );
-}
-
-/** Markup for a product's notes; '' when it has none. $context: card | single | quickview. */
+/**
+ * Markup for a product's terms; '' when it has nothing to show. $context: card | single | quickview.
+ * Cards show the terms only (short wording); the product page and quick view add the status tags.
+ */
 function ultralove_rn_markup( int $product_id, string $context ): string {
-	$notes = ultralove_rn_get( $product_id );
-	if ( ! $notes['info'] && ! $notes['important'] ) {
+	$terms = ultralove_rn_get_terms( $product_id );
+	$card  = 'card' === $context;
+	$lines = ultralove_rn_terms_lines( $terms, $card ? 'card' : 'page' );
+	$tags  = $card ? array() : ultralove_rn_terms_tag_labels( $terms );
+	if ( ! $lines && ! $tags ) {
 		return '';
 	}
-	$labels = 'card' !== $context; // cards are compact: no labels
-	$join   = static function ( array $lines ) use ( $labels ): string { // cards: one note per line; other contexts: inline
-		return $labels ? esc_html( implode( ' | ', $lines ) ) : implode( '<br>', array_map( 'esc_html', $lines ) );
-	};
-	$html   = '<div class="ul-retailer-notes ul-retailer-notes--' . esc_attr( $context ) . '">';
-	if ( $notes['important'] ) {
-		$html .= '<p class="ul-retailer-notes__important">';
-		$html .= $labels ? '<strong class="ul-retailer-notes__label">' . esc_html__( 'Important retailer info:', 'ultralove' ) . '</strong> ' : '';
-		$html .= $join( $notes['important'] ) . '</p>';
+	$html = '<div class="ul-retailer-notes ul-retailer-notes--' . esc_attr( $context ) . '">';
+	if ( $lines ) {
+		$html .= '<p class="ul-retailer-notes__terms">';
+		$html .= $card ? '' : '<strong class="ul-retailer-notes__label">' . esc_html__( 'Retailer terms:', 'ultralove' ) . '</strong>';
+		foreach ( $lines as $line ) {
+			$html .= '<span class="ul-retailer-notes__line">' . esc_html( $line ) . '</span>';
+		}
+		$html .= '</p>';
 	}
-	if ( $notes['info'] ) {
-		$html .= '<p class="ul-retailer-notes__info">';
-		$html .= $labels ? '<strong class="ul-retailer-notes__label">' . esc_html__( 'Retailer info:', 'ultralove' ) . '</strong> ' : '';
-		$html .= $join( $notes['info'] ) . '</p>';
+	if ( $tags ) {
+		$html .= '<p class="ul-retailer-notes__tags">';
+		foreach ( $tags as $tag ) {
+			$html .= '<span class="ul-retailer-notes__tag">' . esc_html( $tag ) . '</span>';
+		}
+		$html .= '</p>';
 	}
 	return $html . '</div>';
 }
 
-// Product cards (grids, carousels): inside the card's details, under the name and brand.
-add_action( 'woocommerce_shop_loop_item_title', 'ultralove_rn_show_card', 20 );
+/**
+ * Product cards (grids, carousels). A card that has terms wraps its name and the terms in one box that is
+ * exactly as tall as the name's fixed title box, so the terms take lines from the name instead of making the
+ * card taller. The class says how many title lines the terms need on desktop (d) and on phones (m); the
+ * stylesheet turns that into the name's line clamp. Cards without terms are unchanged.
+ */
+add_action( 'woocommerce_shop_loop_item_title', 'ultralove_rn_card_open', 9 );
+add_action( 'woocommerce_shop_loop_item_title', 'ultralove_rn_show_card', 12 );
+add_action( 'woocommerce_shop_loop_item_title', 'ultralove_rn_card_close', 13 );
+function ultralove_rn_card_lines(): array {
+	global $product;
+	return $product instanceof WC_Product ? ultralove_rn_terms_lines( ultralove_rn_get_terms( $product->get_id() ), 'card' ) : array();
+}
+function ultralove_rn_card_open() {
+	$lines = ultralove_rn_card_lines();
+	$GLOBALS['ultralove_rn_card_box'] = (bool) $lines;
+	if ( $lines ) {
+		printf(
+			'<div class="ul-rn-box ul-rn-d%d ul-rn-m%d">',
+			ultralove_rn_terms_reserved_lines( $lines, 24, 18 ),
+			ultralove_rn_terms_reserved_lines( $lines, 17, 13 )
+		);
+	}
+}
 function ultralove_rn_show_card() {
 	global $product;
 	if ( $product instanceof WC_Product ) {
 		echo ultralove_rn_markup( $product->get_id(), 'card' ); // phpcs:ignore WordPress.Security.EscapeOutput -- escaped in ultralove_rn_markup()
 	}
+}
+function ultralove_rn_card_close() {
+	if ( ! empty( $GLOBALS['ultralove_rn_card_box'] ) ) {
+		echo '</div>';
+	}
+	$GLOBALS['ultralove_rn_card_box'] = false;
 }
 
 // Product page: original summary position and above the main description in its tab.
@@ -105,59 +130,15 @@ function ultralove_rn_show_quickview() {
  * Editing in the product screen (General tab)
  * ------------------------------------------------------------------------------------------ */
 
-/** Complete values used by at least five products in the 2026-10-16 inventory, most-used first. */
-function ultralove_rn_admin_presets(): array {
-	return array(
-		ULTRALOVE_RN_INFO => array(
-			'DISCOUNTS DO NOT APPLY',
-			'(SEASONAL - LIMITED SUPPLY)',
-			'Ships in Non-Retail Packaging DISCOUNTS DO NOT APPLY',
-		),
-		ULTRALOVE_RN_IMPORTANT => array(
-			"LIMIT 1 PER STORE\nFREE WITH 3 UNITS BOUGHT",
-			"LIMIT 1 COLOR PER STORE\nFREE WITH 2 UNITS BOUGHT",
-			"LIMIT 1 PER STORE\nFREE WITH 2 UNITS BOUGHT",
-			"LIMIT 1 COLOR PER STORE\nFREE WITH 3 UNITS BOUGHT",
-			"FREE WITH 2 UNITS BOUGHT\nLIMIT 1 COLOR PER STORE",
-			'LIMIT 1 PER STORE',
-			'FREE WITH 3 UNITS BOUGHT',
-			"LIMIT 1 BOTTLE PER STORE\nFREE WITH 3 UNITS BOUGHT",
-			'FREE WITH 2 UNITS BOUGHT',
-			"FREE WITH 3 UNITS BOUGHT\nLIMIT 1 PER STORE",
-			"FREE WITH 2 UNITS BOUGHT\nLIMIT 1 PER STORE",
-			"LIMIT 1 PER STORE\nFREE WITH 3 UNITS BOUGHT PER FLAVOR",
-		),
-	);
-}
-
-function ultralove_rn_admin_preset_field( string $field, string $label ): void {
-	$options = array( '' => __( 'Choose text to append...', 'ultralove' ) );
-	$presets = ultralove_rn_admin_presets()[ $field ];
-	usort( $presets, 'strcasecmp' );
-	foreach ( $presets as $text ) {
-		$options[ $text ] = str_replace( "\n", ' / ', $text );
-	}
-	woocommerce_wp_select( array(
-		'id'                => $field . '_preset',
-		'label'             => $label,
-		'value'             => '',
-		'options'           => $options,
-		'class'             => 'select ultralove-rn-preset',
-		'custom_attributes' => array( 'data-retailer-field' => $field ),
-		'description'       => __( 'Appends to the field below without replacing existing text. You can edit it before saving. Multi-line choices are shown with / separators.', 'ultralove' ),
-		'desc_tip'          => true,
-	) );
-}
-
 add_action( 'admin_enqueue_scripts', 'ultralove_rn_admin_scripts' );
 function ultralove_rn_admin_scripts(): void {
 	$screen = get_current_screen();
 	if ( ! $screen || 'post' !== $screen->base || 'product' !== $screen->post_type ) {
 		return;
 	}
-	$file = '/ultralove-retailer-notes/admin-presets.js';
+	$file = '/ultralove-retailer-notes/admin-terms.js';
 	wp_enqueue_script(
-		'ultralove-retailer-note-presets',
+		'ultralove-retailer-terms',
 		plugins_url( $file, __FILE__ ),
 		array(),
 		(string) filemtime( __DIR__ . $file ),
@@ -165,56 +146,94 @@ function ultralove_rn_admin_scripts(): void {
 	);
 }
 
+/** <option> list; $current is kept as an option even when it is not one of the usual choices. */
+function ultralove_rn_admin_options( array $choices, string $current ): string {
+	if ( '' !== $current && ! isset( $choices[ $current ] ) ) {
+		$choices[ $current ] = $current;
+	}
+	$html = '';
+	foreach ( $choices as $value => $label ) {
+		$html .= '<option value="' . esc_attr( (string) $value ) . '"' . ( (string) $value === $current ? ' selected' : '' ) . '>' . esc_html( $label ) . '</option>';
+	}
+	return $html;
+}
+
 add_action( 'woocommerce_product_options_general_product_data', 'ultralove_rn_admin_fields' );
 function ultralove_rn_admin_fields() {
-	echo '<div class="options_group">';
-	ultralove_rn_admin_preset_field( ULTRALOVE_RN_IMPORTANT, __( 'Important info presets', 'ultralove' ) );
-	woocommerce_wp_textarea_input( array(
-		'id'          => ULTRALOVE_RN_IMPORTANT,
-		'label'       => __( 'Important retailer info', 'ultralove' ),
-		'description' => __( 'Shown highlighted on product cards and the product page. One condition per line, e.g. LIMIT 1 PER STORE or FREE WITH 2 UNITS BOUGHT. Equivalent conditions are merged.', 'ultralove' ),
-		'desc_tip'    => true,
-		'rows'        => 2,
-	) );
-	ultralove_rn_admin_preset_field( ULTRALOVE_RN_INFO, __( 'Retailer info presets', 'ultralove' ) );
-	woocommerce_wp_textarea_input( array(
-		'id'          => ULTRALOVE_RN_INFO,
-		'label'       => __( 'Retailer info', 'ultralove' ),
-		'description' => __( 'Other notes for retailers, e.g. DISCOUNTS DO NOT APPLY, WHILE STOCK LASTS. One note per line.', 'ultralove' ),
-		'desc_tip'    => true,
-		'rows'        => 2,
-	) );
+	global $post;
+	$terms = ultralove_rn_get_terms( $post ? (int) $post->ID : 0 );
+	$limits = array( '' => __( 'No limit', 'ultralove' ) );
+	foreach ( ultralove_rn_limit_options() as $slug => $option ) {
+		$limits[ $slug ] = substr( $option['label'], strlen( 'Limit ' ) ); // "1 color per store"
+	}
+	$free = array( '0' => __( 'No free offer', 'ultralove' ) );
+	foreach ( ultralove_rn_free_with_options() as $units ) {
+		$free[ (string) $units ] = sprintf( /* translators: %d: number of units */ __( '%d units bought', 'ultralove' ), $units );
+	}
+	if ( $terms['free_with'] && ! isset( $free[ (string) $terms['free_with'] ] ) ) {
+		$free[ (string) $terms['free_with'] ] = sprintf( __( '%d units bought', 'ultralove' ), $terms['free_with'] );
+	}
+	echo '<div class="options_group ul-rn-admin" data-ul-rn-admin>';
+	echo '<input type="hidden" name="ul_rn_present" value="1">';
+	echo '<p class="form-field"><strong>' . esc_html__( 'Retailer terms', 'ultralove' ) . '</strong><br><span class="description">' . esc_html__( 'Shown on product cards and the product page.', 'ultralove' ) . '</span></p>';
+
+	echo '<p class="form-field ul_rn_limit_field"><label for="ul_rn_limit">' . esc_html__( 'Limit', 'ultralove' ) . '</label>';
+	echo '<select id="ul_rn_limit" name="ul_rn_limit" class="select short">';
+	foreach ( $limits as $slug => $label ) {
+		$card = '' === $slug ? '' : ultralove_rn_limit_options()[ $slug ]['label'];
+		echo '<option value="' . esc_attr( (string) $slug ) . '" data-card="' . esc_attr( $card ) . '"' . ( $slug === $terms['limit'] ? ' selected' : '' ) . '>' . esc_html( $label ) . '</option>';
+	}
+	echo '</select></p>';
+
+	echo '<p class="form-field ul_rn_free_with_field"><label for="ul_rn_free_with">' . esc_html__( 'Free with', 'ultralove' ) . '</label>';
+	echo '<select id="ul_rn_free_with" name="ul_rn_free_with" class="select short">' . ultralove_rn_admin_options( $free, (string) $terms['free_with'] ) . '</select> ';
+	echo '<label class="ul-rn-inline"><input type="checkbox" class="checkbox" name="ul_rn_free_per" value="flavor"' . ( 'flavor' === $terms['free_per'] ? ' checked' : '' ) . '> ' . esc_html__( 'per flavor', 'ultralove' ) . '</label></p>';
+
+	echo '<p class="form-field ul_rn_no_discounts_field"><label for="ul_rn_no_discounts">' . esc_html__( 'Discounts', 'ultralove' ) . '</label>';
+	echo '<input type="checkbox" class="checkbox" id="ul_rn_no_discounts" name="ul_rn_no_discounts" value="1"' . ( $terms['no_discounts'] ? ' checked' : '' ) . '> ';
+	echo '<span class="description">' . esc_html( ULTRALOVE_RN_DISCOUNTS_LABEL ) . '</span></p>';
+
+	echo '<p class="form-field ul_rn_other_field"><label for="ul_rn_other">' . esc_html__( 'Other terms', 'ultralove' ) . '</label>';
+	echo '<textarea id="ul_rn_other" name="ul_rn_other" rows="2" class="short" placeholder="' . esc_attr__( 'Rare wording only, one per line', 'ultralove' ) . '">' . esc_textarea( implode( "\n", $terms['other'] ) ) . '</textarea></p>';
+
+	echo '<p class="form-field"><strong>' . esc_html__( 'Status tags', 'ultralove' ) . '</strong><br><span class="description">' . esc_html__( 'Shown on the product page only.', 'ultralove' ) . '</span></p>';
+	echo '<p class="form-field ul_rn_tags_field"><label>&nbsp;</label><span class="ul-rn-tags">';
+	foreach ( ultralove_rn_tag_options() as $slug => $option ) {
+		echo '<label><input type="checkbox" class="checkbox" name="ul_rn_tags[]" value="' . esc_attr( $slug ) . '"' . ( in_array( $slug, $terms['tags'], true ) ? ' checked' : '' ) . '> ' . esc_html( $option['label'] ) . '</label>';
+	}
+	echo '</span></p>';
+
+	echo '<p class="form-field"><label>' . esc_html__( 'Card preview', 'ultralove' ) . '</label><span class="ul-rn-preview" data-ul-rn-preview>';
+	foreach ( ultralove_rn_terms_lines( $terms, 'card' ) as $line ) {
+		echo '<span>' . esc_html( $line ) . '</span>';
+	}
+	echo '</span></p>';
+	echo '<style>.ul-rn-admin .ul-rn-tags{display:inline-grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 20px;float:left;width:50%}.ul-rn-admin .ul-rn-tags label,.ul-rn-admin .ul-rn-inline{float:none;width:auto;margin:0}.ul-rn-admin .ul-rn-tags input{margin:0 6px 0 0}.ul-rn-admin .ul-rn-preview{display:inline-block;min-width:185px;max-width:230px;padding:2px 7px;border-radius:4px;background:#fbe8ef;color:#b3094b;font-size:12px;line-height:14px;font-weight:700}.ul-rn-admin .ul-rn-preview:empty::before{content:"None";font-weight:400}.ul-rn-admin .ul-rn-preview span{display:block}</style>';
 	echo '</div>';
 }
 
 add_action( 'woocommerce_process_product_meta', 'ultralove_rn_admin_save' );
 function ultralove_rn_admin_save( $post_id ) {
 	// WooCommerce has already checked the nonce and the user's capability before this action.
-	$notes = ultralove_rn_get( (int) $post_id );
-	$submitted = false;
-	foreach ( array( ULTRALOVE_RN_INFO => 'info', ULTRALOVE_RN_IMPORTANT => 'important' ) as $key => $field ) {
-		if ( ! isset( $_POST[ $key ] ) ) { // phpcs:ignore WordPress.Security.NonceVerification
-			continue;
-		}
-		$submitted = true;
-		$value = trim( sanitize_textarea_field( wp_unslash( $_POST[ $key ] ) ) ); // phpcs:ignore WordPress.Security.NonceVerification
-		$notes[ $field ] = preg_split( '/\R/', $value );
-	}
-	if ( ! $submitted ) {
+	if ( ! isset( $_POST['ul_rn_present'] ) ) { // phpcs:ignore WordPress.Security.NonceVerification -- other saves (quick edit, import) never touch the terms
 		return;
 	}
-	$notes = ultralove_rn_merge_notes( $notes );
-	foreach ( $notes['review'] as $reason ) {
-		WC_Admin_Meta_Boxes::add_error( __( 'Retailer conditions need review: ', 'ultralove' ) . $reason );
+	$post = static fn( string $key ) => isset( $_POST[ $key ] ) ? wp_unslash( $_POST[ $key ] ) : ''; // phpcs:ignore WordPress.Security.NonceVerification,WordPress.Security.ValidatedSanitizedInput
+	$terms = ultralove_rn_terms_blank();
+	$terms['limit']        = sanitize_key( (string) $post( 'ul_rn_limit' ) );
+	$terms['free_with']    = absint( $post( 'ul_rn_free_with' ) );
+	$terms['free_per']     = sanitize_key( (string) $post( 'ul_rn_free_per' ) );
+	$terms['no_discounts'] = '' !== (string) $post( 'ul_rn_no_discounts' );
+	$terms['tags']         = array_map( 'sanitize_key', (array) $post( 'ul_rn_tags' ) );
+	// Typed "other" lines that are really a limit or a free offer go to the matching control.
+	$review = array();
+	foreach ( preg_split( '/\R/', trim( sanitize_textarea_field( (string) $post( 'ul_rn_other' ) ) ) ) as $line ) {
+		ultralove_rn_terms_add_line( $terms, $line, $review );
 	}
-	foreach ( array( ULTRALOVE_RN_INFO => 'info', ULTRALOVE_RN_IMPORTANT => 'important' ) as $key => $field ) {
-		$value = implode( "\n", $notes[ $field ] );
-		if ( '' === $value ) {
-			delete_post_meta( $post_id, $key );
-		} else {
-			update_post_meta( $post_id, $key, wp_slash( $value ) );
-		}
+	foreach ( $review as $reason ) {
+		WC_Admin_Meta_Boxes::add_error( __( 'Retailer terms need review: ', 'ultralove' ) . $reason );
 	}
+	ultralove_rn_save_terms( (int) $post_id, $terms );
 }
 
 /* ---------------------------------------------------------------------------------------------
@@ -222,8 +241,8 @@ function ultralove_rn_admin_save( $post_id ) {
  * ------------------------------------------------------------------------------------------ */
 
 /**
- * Cut the notes out of one product's name and store them in the two fields. Existing field text is kept
- * (new notes are added to it). Returns false when no safe cleanup is available or the name would end up empty.
+ * Cut the notes out of one product's name and store them in the product's retailer terms. Existing terms are kept
+ * (new notes are added to them). Returns false when no safe cleanup is available or the name would end up empty.
  */
 function ultralove_rn_apply_to_product( int $product_id ): bool {
 	$product = wc_get_product( $product_id );
@@ -235,18 +254,17 @@ function ultralove_rn_apply_to_product( int $product_id ): bool {
 	if ( $result['malformed'] || $result['review'] || '' === $result['title'] ) {
 		return false;
 	}
-	$have = ultralove_rn_get( $product_id );
-	$notes = ultralove_rn_merge_notes( $have, $result );
+	$have_terms = ultralove_rn_get_terms( $product_id );
+	$notes = ultralove_rn_merge_notes( ultralove_rn_terms_to_legacy( $have_terms ), $result );
 	foreach ( $notes['review'] as $reason ) {
 		error_log( 'Retailer notes product ' . $product_id . ': ' . $reason );
 	}
 	$changed = $result['changed'];
-	foreach ( array( ULTRALOVE_RN_INFO => 'info', ULTRALOVE_RN_IMPORTANT => 'important' ) as $key => $field ) {
-		$merged = $notes[ $field ];
-		if ( $merged !== $have[ $field ] ) {
-			$changed = true;
-			update_post_meta( $product_id, $key, wp_slash( implode( "\n", $merged ) ) );
-		}
+	$merged  = ultralove_rn_terms_from_legacy( $notes['info'], $notes['important'] );
+	// A product still on the old fields moves to the terms field the first time it is imported.
+	if ( $merged !== $have_terms || ( ! ultralove_rn_has_terms_meta( $product_id ) && ! ultralove_rn_terms_empty( $merged ) ) ) {
+		$changed = true;
+		ultralove_rn_save_terms( $product_id, $merged );
 	}
 	if ( $result['changed'] ) {
 		if ( '' === (string) get_post_meta( $product_id, ULTRALOVE_RN_ORIGINAL, true ) ) {
@@ -415,7 +433,7 @@ function ultralove_rn_plugin_ready(): bool {
 }
 
 /* ---------------------------------------------------------------------------------------------
- * WP-CLI:  wp ul-retailer-notes preview|apply|restore|slug-preview|slug-apply|slug-restore|tidy-titles
+ * WP-CLI:  wp ul-retailer-notes preview|apply|restore|slug-preview|slug-apply|slug-restore|tidy-titles|terms-preview|terms-apply|terms-restore|terms-drop-legacy
  * ------------------------------------------------------------------------------------------ */
 
 if ( defined( 'WP_CLI' ) && WP_CLI ) {
@@ -519,7 +537,7 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 		}
 
 		/**
-		 * Undo: put back the original names and clear both fields on every product that has a saved original.
+		 * Undo: put back the original names and clear the retailer terms on every product that has a saved original.
 		 *
 		 * ## OPTIONS
 		 * [--ids=<ids>]  Comma-separated product IDs only.
@@ -541,9 +559,163 @@ if ( defined( 'WP_CLI' ) && WP_CLI ) {
 				delete_post_meta( $id, ULTRALOVE_RN_ORIGINAL );
 				delete_post_meta( $id, ULTRALOVE_RN_INFO );
 				delete_post_meta( $id, ULTRALOVE_RN_IMPORTANT );
+				delete_post_meta( $id, ULTRALOVE_RN_TERMS );
 				$n++;
 			}
 			WP_CLI::success( "Restored $n products." );
+		}
+
+		/** Ids of products with a value in either old field, optionally only those without terms yet. */
+		private function legacy_products( array $assoc, bool $only_unmigrated ): array {
+			global $wpdb;
+			$ids = array_map( 'intval', $wpdb->get_col( $wpdb->prepare(
+				"SELECT DISTINCT post_id FROM {$wpdb->postmeta} WHERE meta_key IN (%s, %s) AND meta_value <> '' ORDER BY post_id",
+				ULTRALOVE_RN_INFO, ULTRALOVE_RN_IMPORTANT
+			) ) );
+			if ( $only_unmigrated ) {
+				$ids = array_values( array_filter( $ids, static fn( $id ) => ! ultralove_rn_has_terms_meta( $id ) ) );
+			}
+			if ( ! empty( $assoc['ids'] ) ) {
+				$ids = array_values( array_intersect( $ids, array_map( 'intval', explode( ',', $assoc['ids'] ) ) ) );
+			}
+			return ! empty( $assoc['limit'] ) ? array_slice( $ids, 0, (int) $assoc['limit'] ) : $ids;
+		}
+
+		/**
+		 * Dry run: show how the two old fields convert to retailer terms. Changes nothing.
+		 *
+		 * @subcommand terms-preview
+		 *
+		 * ## OPTIONS
+		 * [--ids=<ids>]  Comma-separated product IDs only.
+		 * [--limit=<n>]  First n products only.
+		 */
+		public function terms_preview( $args, $assoc ) {
+			$stats    = array( 'products' => 0, 'limit' => 0, 'free_with' => 0, 'no_discounts' => 0, 'tags' => 0, 'other' => 0, 'review' => 0 );
+			$mapping  = array();
+			$others   = array();
+			$reviews  = array();
+			foreach ( $this->legacy_products( $assoc, true ) as $id ) {
+				$info      = ultralove_rn_legacy_field_lines( $id, ULTRALOVE_RN_INFO );
+				$important = ultralove_rn_legacy_field_lines( $id, ULTRALOVE_RN_IMPORTANT );
+				$review    = array();
+				$terms     = ultralove_rn_terms_from_legacy( $info, $important, $review );
+				$stats['products']++;
+				$stats['limit']        += '' !== $terms['limit'] ? 1 : 0;
+				$stats['free_with']    += $terms['free_with'] ? 1 : 0;
+				$stats['no_discounts'] += $terms['no_discounts'] ? 1 : 0;
+				$stats['tags']         += $terms['tags'] ? 1 : 0;
+				$stats['other']        += $terms['other'] ? 1 : 0;
+				$stats['review']       += $review ? 1 : 0;
+				$from = implode( ' / ', array_merge( $important, $info ) );
+				$to   = implode( ' / ', ultralove_rn_terms_lines( $terms, 'card' ) ) . ( $terms['tags'] ? ' [tags: ' . implode( ', ', $terms['tags'] ) . ']' : '' );
+				$mapping[ $from . "\t" . $to ] = ( $mapping[ $from . "\t" . $to ] ?? 0 ) + 1;
+				foreach ( $terms['other'] as $line ) {
+					$others[ $line ][] = $id;
+				}
+				foreach ( $review as $reason ) {
+					$reviews[] = array( 'ID' => $id, 'reason' => $reason );
+				}
+			}
+			WP_CLI::log( '== Summary (products still on the old fields) ==' );
+			foreach ( $stats as $k => $v ) {
+				WP_CLI::log( sprintf( '%-14s %d', $k, $v ) );
+			}
+			arsort( $mapping );
+			$table = array();
+			foreach ( array_slice( $mapping, 0, 60, true ) as $key => $n ) {
+				list( $from, $to ) = explode( "\t", $key, 2 );
+				$table[] = array( 'products' => $n, 'old_text' => $from, 'becomes' => $to );
+			}
+			WP_CLI::log( "\n== Old text -> terms (top 60 of " . count( $mapping ) . ') ==' );
+			WP_CLI\Utils\format_items( 'table', $table, array( 'products', 'old_text', 'becomes' ) );
+			if ( $others ) {
+				$rows = array();
+				foreach ( $others as $line => $ids ) {
+					$rows[] = array( 'products' => count( $ids ), 'ids' => implode( ',', array_slice( $ids, 0, 5 ) ), 'kept as Other terms' => $line );
+				}
+				WP_CLI::log( "\n== Kept as Other terms (fits no control) ==" );
+				WP_CLI\Utils\format_items( 'table', $rows, array( 'products', 'ids', 'kept as Other terms' ) );
+			}
+			if ( $reviews ) {
+				WP_CLI::log( "\n== Needs a look ==" );
+				WP_CLI\Utils\format_items( 'table', array_slice( $reviews, 0, 50 ), array( 'ID', 'reason' ) );
+			}
+			WP_CLI::success( 'Dry run only - nothing was changed.' );
+		}
+
+		/**
+		 * Store retailer terms for every product that still has the old fields. The old fields are kept (as a
+		 * backup, and so terms-restore can put them back); the terms take over as soon as they exist.
+		 *
+		 * @subcommand terms-apply
+		 *
+		 * ## OPTIONS
+		 * [--ids=<ids>]  Comma-separated product IDs only.
+		 * [--limit=<n>]  First n products only.
+		 */
+		public function terms_apply( $args, $assoc ) {
+			$done = 0;
+			foreach ( $this->legacy_products( $assoc, true ) as $id ) {
+				$terms = ultralove_rn_terms_from_legacy(
+					ultralove_rn_legacy_field_lines( $id, ULTRALOVE_RN_INFO ),
+					ultralove_rn_legacy_field_lines( $id, ULTRALOVE_RN_IMPORTANT )
+				);
+				$json = ultralove_rn_terms_encode( $terms );
+				if ( '' === $json ) {
+					continue;
+				}
+				update_post_meta( $id, ULTRALOVE_RN_TERMS, wp_slash( $json ) );
+				$done++;
+			}
+			WP_CLI::success( "Stored retailer terms for $done products. The old fields are still there; run terms-drop-legacy once the result is checked. Clear the page caches." );
+		}
+
+		/**
+		 * Undo terms-apply: write the old two fields back from the terms and remove the terms.
+		 *
+		 * @subcommand terms-restore
+		 *
+		 * ## OPTIONS
+		 * [--ids=<ids>]  Comma-separated product IDs only.
+		 */
+		public function terms_restore( $args, $assoc ) {
+			global $wpdb;
+			$ids = array_map( 'intval', $wpdb->get_col( $wpdb->prepare( "SELECT post_id FROM {$wpdb->postmeta} WHERE meta_key = %s", ULTRALOVE_RN_TERMS ) ) );
+			if ( ! empty( $assoc['ids'] ) ) {
+				$ids = array_values( array_intersect( $ids, array_map( 'intval', explode( ',', $assoc['ids'] ) ) ) );
+			}
+			foreach ( $ids as $id ) {
+				$legacy = ultralove_rn_legacy_strings( $id );
+				foreach ( array( ULTRALOVE_RN_INFO => 'info', ULTRALOVE_RN_IMPORTANT => 'important' ) as $key => $field ) {
+					'' === $legacy[ $field ] ? delete_post_meta( $id, $key ) : update_post_meta( $id, $key, wp_slash( $legacy[ $field ] ) );
+				}
+				delete_post_meta( $id, ULTRALOVE_RN_TERMS );
+			}
+			WP_CLI::success( 'Restored the old fields on ' . count( $ids ) . ' products.' );
+		}
+
+		/**
+		 * Delete the old two fields from every product that has retailer terms. Not undoable except from a database backup.
+		 *
+		 * @subcommand terms-drop-legacy
+		 *
+		 * ## OPTIONS
+		 * [--yes]  Do it. Without this only reports how many products are affected.
+		 */
+		public function terms_drop_legacy( $args, $assoc ) {
+			$n = 0;
+			foreach ( $this->legacy_products( array(), false ) as $id ) {
+				if ( ! ultralove_rn_has_terms_meta( $id ) ) {
+					continue;
+				}
+				$n++;
+				if ( isset( $assoc['yes'] ) ) {
+					delete_post_meta( $id, ULTRALOVE_RN_INFO );
+					delete_post_meta( $id, ULTRALOVE_RN_IMPORTANT );
+				}
+			}
+			WP_CLI::success( isset( $assoc['yes'] ) ? "Deleted the old fields on $n products." : "$n products still carry the old fields next to their terms. Run again with --yes to delete them." );
 		}
 
 		/** Products that have been through the migration (they have a saved original title). */

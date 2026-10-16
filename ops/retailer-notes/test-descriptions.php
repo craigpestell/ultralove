@@ -159,6 +159,7 @@ function get_post_type( $id ) { return 'product'; }
 function get_post_field( $field, $id, $context ) { return $GLOBALS['post'][ $field ]; }
 function get_post_meta( $id, $key, $single ) { return $GLOBALS['meta'][ $key ] ?? ''; }
 function update_post_meta( $id, $key, $value ) { $GLOBALS['meta'][ $key ] = stripslashes( $value ); }
+function delete_post_meta( $id, $key ) { unset( $GLOBALS['meta'][ $key ] ); }
 function clean_post_cache( $id ) {}
 function wp_slash( $value ) { return is_array( $value ) ? array_map( 'wp_slash', $value ) : addslashes( $value ); }
 function wp_update_post( $values, $return_error ) {
@@ -171,6 +172,8 @@ function wp_update_post( $values, $return_error ) {
 }
 function is_wp_error( $value ) { return false; }
 require_once __DIR__ . '/../../wp-content/mu-plugins/42-product-description-cleanup.php';
+/** The important notes as the old string; terms are stored in a fixed form, so read them back like the cleanup does. */
+function current_important(): string { return ultralove_rn_legacy_strings( 1 )['important']; }
 $post = array( 'post_content' => $offer_html, 'post_excerpt' => $source, 'post_title' => 'Unchanged', 'post_name' => 'unchanged' );
 $meta = array();
 $original = $post;
@@ -180,7 +183,7 @@ if ( $post !== $original || $meta ) {
 }
 $meta[ ULTRALOVE_DESCRIPTION_CLEANUP_META ] = ULTRALOVE_DESCRIPTION_CLEANUP_VERSION;
 ultralove_description_after_import( 1 );
-if ( $post['post_content'] !== '<p>' || ! str_contains( $post['post_excerpt'], 'ul-product-callout' ) || $meta[ ULTRALOVE_RN_IMPORTANT ] !== $normalized_offer
+if ( $post['post_content'] !== '<p>' || ! str_contains( $post['post_excerpt'], 'ul-product-callout' ) || current_important() !== $normalized_offer
 	|| $post['post_title'] !== 'Unchanged' || $post['post_name'] !== 'unchanged' ) {
 	throw new RuntimeException( 'Opted-in import did not persist expected data.' );
 }
@@ -196,7 +199,7 @@ $post = array( 'post_content' => $lemon_before['post_content'], 'post_excerpt' =
 $meta = array( ULTRALOVE_DESCRIPTION_CLEANUP_META => ULTRALOVE_DESCRIPTION_CLEANUP_VERSION, ULTRALOVE_RN_IMPORTANT => $lemon_before['important'] );
 $tester_import = $post;
 ultralove_description_after_import( 1 );
-if ( $post['post_content'] !== $lemon_after['post_content'] || $meta[ ULTRALOVE_RN_IMPORTANT ] !== $lemon_before['important']
+if ( $post['post_content'] !== $lemon_after['post_content'] || current_important() !== $lemon_before['important']
 	|| $post['post_title'] !== $tester_import['post_title'] || $post['post_name'] !== $tester_import['post_name'] ) {
 	throw new RuntimeException( 'Tester import did not remove the duplicate while preserving notes and identity.' );
 }
@@ -204,7 +207,7 @@ $tester_expected = $post;
 $post = $tester_import;
 ultralove_description_after_import( 1 );
 ultralove_description_after_import( 1 );
-if ( $post !== $tester_expected || $meta[ ULTRALOVE_RN_IMPORTANT ] !== $lemon_before['important'] ) {
+if ( $post !== $tester_expected || current_important() !== $lemon_before['important'] ) {
 	throw new RuntimeException( 'Tester reimport must remain clean and deduplicated.' );
 }
 $post = array( 'post_content' => $wonderlust_source, 'post_excerpt' => '', 'post_title' => 'BM5-298<br> WonderLust Display with Testers', 'post_name' => 'bm5-298-bms-factory-wonderlust-display-with-testers' );
@@ -212,13 +215,13 @@ $meta = array( ULTRALOVE_DESCRIPTION_CLEANUP_META => ULTRALOVE_DESCRIPTION_CLEAN
 $wonderlust_import = $post;
 ultralove_description_after_import( 1 );
 $wonderlust_cleaned = $post;
-if ( $post !== array_replace( $wonderlust_import, array( 'post_content' => $wonderlust_expected ) ) || $meta[ ULTRALOVE_RN_IMPORTANT ] !== $wonderlust_notes ) {
+if ( $post !== array_replace( $wonderlust_import, array( 'post_content' => $wonderlust_expected ) ) || current_important() !== $wonderlust_notes ) {
 	throw new RuntimeException( 'WonderLust import must preserve list/media/marketing, notes and identity.' );
 }
 $post = $wonderlust_import;
 ultralove_description_after_import( 1 );
 ultralove_description_after_import( 1 );
-if ( $post !== $wonderlust_cleaned || $meta[ ULTRALOVE_RN_IMPORTANT ] !== $wonderlust_notes ) {
+if ( $post !== $wonderlust_cleaned || current_important() !== $wonderlust_notes ) {
 	throw new RuntimeException( 'WonderLust reimport must remain clean and deduplicated.' );
 }
 try {

@@ -1225,3 +1225,36 @@ does not authorize any production migration.
   marketing and all seven features. Responsive checks at 390/991/992/1280px
   passed; Nginx, PHP-FPM and Redis were active. No manual cache purge was needed
   for this product. The earlier 71834 Cloudflare cache caveat is separate.
+
+## Retailer terms: structured fields (dev code preview)
+
+Replaces the two free-text product fields ("Retailer info", "Important retailer info") with one
+structured set, `_ul_retailer_terms` (JSON). Why: the free text had 36 spellings of about 15 meanings
+and the notes made some product cards taller than their neighbours.
+
+- **Product editor (General tab):** Limit (1 per store / color / bottle / stand / tester), Free with
+  (2, 3 or 5 units bought, optionally per flavor), a "Discounts do not apply" checkbox, Other terms (rare
+  wording, one per line), Status tags (product page only) and a live card preview. The preset dropdowns
+  are removed.
+- **Cards:** the terms are one pink pill inside the product name's fixed title box, so the name gives up
+  the lines the pill needs and no card grows (`ul-rn-box`, `ul-rn-dN` / `ul-rn-mN` in `style.css`). Card
+  wording is short ("Free with 3 units"); the product page and quick view say "Free with 3 units bought"
+  and show the status tags. Cards without terms are unchanged.
+- **Deploying the code first is safe:** until a product has `_ul_retailer_terms`, its two old fields are
+  converted on the fly when read, so the same notes show. Saving a product in the editor, or an import,
+  stores terms and removes the old fields for that product.
+- **Critical CSS:** the retailer rules in `css/critical.css` were updated by hand to match; the "Critical CSS"
+  workflow regenerates the file after the dev deploy, so merge its pull request before deploying production.
+
+Migration, on each environment (take a database backup first on production):
+
+1. `wp ul-retailer-notes terms-preview` - dry run: summary, every old text and what it becomes, what stays
+   in Other terms, anything flagged.
+2. `wp ul-retailer-notes terms-apply` - stores terms; the old fields stay as a backup. Clear the page caches.
+3. Check cards, a product page and the editor. Undo: `wp ul-retailer-notes terms-restore` writes the old
+   fields back from the terms and removes the terms (wording is the canonical form, e.g. " ONLY" stays dropped).
+4. When satisfied: `wp ul-retailer-notes terms-drop-legacy --yes` deletes the old fields.
+
+Tests: `php ops/retailer-notes/test-terms.php`, `test-runtime.php`, `test-descriptions.php` and
+`node ops/retailer-notes/test-admin-terms.js` (all in CI).
+

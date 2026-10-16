@@ -7,16 +7,19 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 require_once __DIR__ . '/ultralove-retailer-notes/descriptions.php';
+require_once __DIR__ . '/ultralove-retailer-notes/terms-store.php';
 
 const ULTRALOVE_DESCRIPTION_CLEANUP_VERSION = '1';
 const ULTRALOVE_DESCRIPTION_CLEANUP_META = '_ul_description_cleanup_version';
 
+/** The retailer terms are read as the old two note strings (see terms-store.php), which this cleanup works on. */
 function ultralove_description_snapshot( int $id ): array {
+	$notes = ultralove_rn_legacy_strings( $id );
 	return array(
 		'post_content' => (string) get_post_field( 'post_content', $id, 'raw' ),
 		'post_excerpt' => (string) get_post_field( 'post_excerpt', $id, 'raw' ),
-		'info' => (string) get_post_meta( $id, ULTRALOVE_RN_INFO, true ),
-		'important' => (string) get_post_meta( $id, ULTRALOVE_RN_IMPORTANT, true ),
+		'info' => $notes['info'],
+		'important' => $notes['important'],
 	);
 }
 
@@ -37,13 +40,13 @@ function ultralove_description_write( int $id, array $before, array $after ): vo
 			throw new RuntimeException( $saved->get_error_message() );
 		}
 	}
-	foreach ( array( 'info' => ULTRALOVE_RN_INFO, 'important' => ULTRALOVE_RN_IMPORTANT ) as $field => $key ) {
-		if ( $before[ $field ] !== $after[ $field ] ) {
-			update_post_meta( $id, $key, wp_slash( $after[ $field ] ) );
-		}
+	if ( $before['info'] !== $after['info'] || $before['important'] !== $after['important'] ) {
+		ultralove_rn_save_legacy_strings( $id, $after['info'], $after['important'] );
 	}
 	clean_post_cache( $id );
-	if ( ultralove_description_snapshot( $id ) !== $after ) {
+	// The terms are stored in a fixed form, so compare with the notes as they read back.
+	$expected = array_merge( $after, ultralove_rn_canonical_legacy_strings( $after['info'], $after['important'] ) );
+	if ( ultralove_description_snapshot( $id ) !== $expected ) {
 		throw new RuntimeException( 'Description verification failed for product ' . $id . '; retain the private plan for recovery.' );
 	}
 }
