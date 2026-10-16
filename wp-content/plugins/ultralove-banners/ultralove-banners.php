@@ -167,9 +167,14 @@ function ub_apply_cloudflare( $html, $attachment_id, $crop, $out_w, $out_h ) {
 	} else {
 		$html = preg_replace( '/<img/', '<img srcset="' . esc_attr( implode( ', ', $srcset ) ) . '"', $html, 1 );
 	}
+	// WordPress prepends `auto` to the sizes of lazy-loaded images, which makes the browser use the
+	// image's rendered width and ignore the layout hint after it - so a lazy banner on a 412px phone
+	// at 1.75x asks for ~720px and gets 768w, however low the hint says. A banner's slot is known, so
+	// drop `auto` and let the hint decide.
+	$html = preg_replace( '/(\ssizes=")auto,\s*/', '$1', $html, 1 );
 	$html = preg_replace( '/\swidth="\d+"/', ' width="' . $max_w . '"', $html, 1 );
 	$html = preg_replace( '/\sheight="\d+"/', ' height="' . round( $max_w * $out_h / $out_w ) . '"', $html, 1 );
-	// Marks the tag as done, so the output pass below leaves it alone.
+	// Marks the tag as processed.
 	return preg_replace( '/<img/', '<img data-ub-cdn="cloudflare"', $html, 1 );
 }
 
