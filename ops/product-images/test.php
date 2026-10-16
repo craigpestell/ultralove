@@ -146,8 +146,8 @@ try {
 	$assert( ! ul_pcdn_is_product_image( 13 ), 'Current product context does not rewrite unrelated full-size images.' );
 	$product = null;
 	$card = ul_pcdn_candidates( 1, ul_pcdn_profile_for_size( 'woocommerce_thumbnail' ) );
-	$assert( array_keys( $card ) === array( 200, 400, 'src' ) && $card['src']['w'] === 200 && $card['src']['h'] === 200, 'Hosted cards offer exactly 200/400-pixel square variants with a 200-pixel default.' );
-	foreach ( array( 200, 400 ) as $width ) {
+	$assert( array_keys( $card ) === array( 200, 300, 400, 'src' ) && $card['src']['w'] === 200 && $card['src']['h'] === 200, 'Hosted cards offer exactly 200/300/400-pixel square variants with a 200-pixel default.' );
+	foreach ( array( 200, 300, 400 ) as $width ) {
 		$assert( $card[$width]['w'] === $width && $card[$width]['h'] === $width
 			&& str_contains( $card[$width]['url'], 'width=' . $width . ',' )
 			&& str_ends_with( $card[$width]['url'], 'height=' . $width ),
@@ -164,21 +164,20 @@ try {
 		array( 'x' => 0, 'y' => 12, 'w' => 800, 'h' => 200 ), 1000, 800 );
 	$assert( str_contains( $banner, 'imagedelivery.net' ) && str_contains( $banner, 'width="800" height="200"' )
 		&& str_contains( $banner, 'data-ub-cdn="cloudflare"' ) && str_contains( $banner, 'srcset=' ), 'Banner markup, output-pass marker, geometry and responsive sources survive hosted delivery.' );
-	foreach ( array( 'cloudflare-images', 'cloudflare', 'cloudinary' ) as $banner_mode ) {
+	foreach ( array( 'cloudflare-images', 'cloudflare' ) as $banner_mode ) {
 		$options['ub_banner_cdn'] = $banner_mode;
-		$html = '<img src="https://res.cloudinary.com/fixture/images/v1/banner.jpg" width="1536" height="640" sizes="(min-width: 768px) 50vw, 100vw">';
-		$responsive = $banner_mode === 'cloudinary' ? ub_apply_transform( $html, '', 1536, 640 )
-			: ub_apply_cloudflare( $html, 1, null, 1536, 640 );
+		$html = '<img src="https://example.test/wp-content/uploads/banner.jpg" width="1536" height="640" sizes="(min-width: 768px) 50vw, 100vw">';
+		$responsive = ub_apply_cloudflare( $html, 1, null, 1536, 640 );
 		preg_match( '/\ssrcset="([^"]*)"/', $responsive, $sources );
 		preg_match_all( '/ (\d+)w/', $sources[1] ?? '', $widths );
-		$assert( array_map( 'intval', $widths[1] ) === array( 370, 400, 600, 768, 1024, 1200, 1536 ),
+		$assert( array_map( 'intval', $widths[1] ) === array( 320, 480, 640, 768, 1024, 1200, 1536 ),
 			'Every banner delivery mode must offer close mobile and retina candidates without exceeding the source.' );
 		$assert( str_contains( $responsive, 'sizes="(min-width: 768px) 50vw, 100vw"' ),
 			'Banner candidate changes must preserve the layout hint used by responsive preloads.' );
 	}
 	preg_match( '/\ssrcset="([^"]*)"/', $banner, $crop_sources );
 	preg_match_all( '/ (\d+)w/', $crop_sources[1] ?? '', $crop_widths );
-	$assert( array_map( 'intval', $crop_widths[1] ) === array( 370, 400, 600, 768, 800 ),
+	$assert( array_map( 'intval', $crop_widths[1] ) === array( 320, 480, 640, 768, 800 ),
 		'Cropped banner candidates remain capped to the saved crop without upscaling.' );
 	$options['ul_product_cdn'] = 'cloudflare';
 	$options['ub_banner_cdn'] = 'cloudflare';

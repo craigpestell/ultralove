@@ -372,7 +372,6 @@ add_action(
 			if ( $image && (int) get_post_thumbnail_id( $id ) !== $image ) {
 				set_post_thumbnail( $id, $image ); // A saved crop belongs to the old image, so it stops applying.
 			}
-			ub_queue_cloudinary_sync( $image );
 		}
 
 		$parts = array();

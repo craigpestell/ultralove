@@ -79,7 +79,7 @@ function ul_pcdn_profiles() {
 		array(
 			'card'   => array(
 				'sizes'  => array( 'shop_catalog', 'woocommerce_thumbnail' ),
-				'widths' => array( 200, 400 ),
+				'widths' => array( 200, 300, 400 ),
 				'src'    => 200,
 				'square' => true,
 				'srcset' => true,

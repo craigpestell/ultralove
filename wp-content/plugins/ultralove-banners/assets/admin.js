@@ -19,7 +19,7 @@
 	}
 
 	// Cropper reports coordinates in the loaded image's pixels; the server stores them in the
-	// original attachment's pixels (Cloudinary crops the original).
+	// original attachment's pixels.
 	function scale() {
 		return origW / img.naturalWidth;
 	}

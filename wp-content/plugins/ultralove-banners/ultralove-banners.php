@@ -3,10 +3,9 @@
  * Plugin Name: UltraLove Banners
  * Description: Lightweight in-house replacement for RevSlider's homepage/header rotating banners.
  *              Manages banner slides as a custom post type (image, link, group, order) and renders
- *              them with a small CSS/JS carousel. Uses standard wp_get_attachment_image() calls so
- *              the existing Cloudinary plugin's own responsive image handling (srcset generation
- *              per registered image size) applies automatically - no custom width-measuring JS
- *              needed, unlike the RevSlider integration this replaces. The carousel is a sliding
+ *              them with a small CSS/JS carousel. Banner images are delivered through Cloudflare
+ *              (see ub_apply_cloudflare()) with a srcset built server-side - no custom
+ *              width-measuring JS needed, unlike the RevSlider integration this replaces. The carousel is a sliding
  *              track (transform: translateX), not an opacity crossfade, so the active slide can be
  *              "attached" to the pointer during a drag/swipe - matching RevSlider's own click-drag
  *              and touch-swipe navigation. A clone of the last slide is prepended and a clone of the
@@ -53,31 +52,6 @@ function ub_home_bg_style() {
  * Saved crop for a slide as array( x, y, w, h ) in original-image pixels, or null. Stored as
  * "attachment_id,x,y,w,h" and ignored if the featured image has since changed.
  */
-/**
- * Factor from the attachment's WordPress pixels to its original upload's pixels. Crops are saved in
- * WordPress's pixels (the admin cropper shows the 'full' image), but WordPress shrinks uploads wider
- * than 2560px to a "-scaled" copy while Cloudinary holds - and crops - the original, so a saved crop
- * has to be scaled up by this before it goes into a Cloudinary c_crop. 1 when the image wasn't
- * scaled or the original's size can't be read (dev has no uploads); cached per file in post meta.
- */
-function ub_original_scale( $thumb_id, $meta ) {
-	if ( empty( $meta['original_image'] ) || empty( $meta['width'] ) ) {
-		return 1;
-	}
-	$cached = get_post_meta( $thumb_id, '_ub_original_size', true );
-	if ( is_array( $cached ) && isset( $cached['file'], $cached['width'] ) && $cached['file'] === $meta['original_image'] ) {
-		$orig_w = (int) $cached['width'];
-	} else {
-		$path   = wp_get_original_image_path( $thumb_id );
-		$size   = $path && is_readable( $path ) ? wp_getimagesize( $path ) : false;
-		$orig_w = $size ? (int) $size[0] : 0;
-		if ( $orig_w ) {
-			update_post_meta( $thumb_id, '_ub_original_size', array( 'file' => $meta['original_image'], 'width' => $orig_w, 'height' => (int) $size[1] ) );
-		}
-	}
-	return $orig_w > $meta['width'] ? $orig_w / $meta['width'] : 1;
-}
-
 function ub_get_crop( $post_id, $thumb_id ) {
 	$raw = get_post_meta( $post_id, '_ub_crop', true );
 	if ( empty( $raw ) ) {
@@ -96,80 +70,25 @@ function ub_get_crop( $post_id, $thumb_id ) {
 }
 
 /**
- * Applies a Cloudinary transform (a crop, a white pad, or a plain scale-to-fit) to a
- * Cloudinary-served <img>, always leading with f_auto,q_80 so every banner image is compressed
- * and served in the browser's best format - not just the ones with a saved crop. The Cloudinary
- * plugin only swaps local URLs for res.cloudinary.com URLs when the page is output, and for a
- * slide with no local WP intermediate generated for the requested size, falls back to serving the
- * full, unresized original with no transform at all - so this runs on the final HTML rather than
- * at render time. $seg is an optional geometry transform segment (e.g. a crop or pad; '' for a
- * plain slide) and $out_w x $out_h the size it produces. Not-yet-synced (non-Cloudinary) images,
- * and tags with no usable dimensions, are left untouched.
- */
-function ub_apply_transform( $html, $seg, $out_w, $out_h ) {
-	if ( ! $out_w || ! $out_h || ! preg_match( '#(https://res\.cloudinary\.com/[^/]+/images/)(?:[^/?"\s]+/)*?(v\d+/[^?"\s]+)(\?[^"\s]*)?#', $html, $m ) ) {
-		return $html;
-	}
-	$base  = $m[1];
-	$path  = $m[2];
-	$query = isset( $m[3] ) ? $m[3] : '';
-	$pre   = $seg ? $seg . '/' : '';
-
-	// q_80 rather than q_auto: with q_auto, Cloudinary's f_auto served some banners at some widths as
-	// JPEG even to browsers that take WebP/AVIF (15 of the home page's 87 banner URLs); at q_80 every
-	// one is WebP/AVIF, and the set is ~14% smaller.
-	$url_for = function ( $n ) use ( $base, $path, $query, $pre, $out_w, $out_h ) {
-		return sprintf( '%sf_auto,q_80/%sc_scale,w_%d,h_%d/%s%s', $base, $pre, $n, round( $n * $out_h / $out_w ), $path, $query );
-	};
-
-	// Capped at 1920 (the 'ub_banner' size, the widest a banner is ever shown): a crop scaled up to a
-	// large original (see ub_original_scale()) would otherwise offer, say, a 4164w candidate.
-	$max_w  = min( $out_w, 1920 );
-	$widths = array();
-	foreach ( array( 370, 400, 600, 768, 1024, 1200, 1536 ) as $n ) {
-		if ( $n < $max_w ) {
-			$widths[] = $n;
-		}
-	}
-	$widths[] = $max_w;
-
-	$srcset = array();
-	foreach ( $widths as $n ) {
-		$srcset[] = $url_for( $n ) . ' ' . $n . 'w';
-	}
-	$src_w = $max_w;
-
-	$html = preg_replace( '/\ssrc="[^"]*"/', ' src="' . esc_url( $url_for( $src_w ) ) . '"', $html, 1 );
-	if ( preg_match( '/\ssrcset="/', $html ) ) {
-		$html = preg_replace( '/\ssrcset="[^"]*"/', ' srcset="' . esc_attr( implode( ', ', $srcset ) ) . '"', $html, 1 );
-	} else {
-		$html = preg_replace( '/<img/', '<img srcset="' . esc_attr( implode( ', ', $srcset ) ) . '"', $html, 1 );
-	}
-	$html = preg_replace( '/\swidth="\d+"/', ' width="' . $src_w . '"', $html, 1 );
-	$html = preg_replace( '/\sheight="\d+"/', ' height="' . round( $src_w * $out_h / $out_w ) . '"', $html, 1 );
-	return $html;
-}
-
-/**
- * Banner delivery: 'cloudinary' (default), 'cloudflare' (/cdn-cgi/image/ on the local upload),
- * or 'cloudflare-images' (verified hosted copies). Set with the
- * ub_banner_cdn option. A logged-in editor can preview the other one on any page with
- * ?ub_cdn=cloudflare-images (or =cloudflare / =cloudinary); logged-in pages aren't cached.
+ * Banner delivery: 'cloudflare' (default; /cdn-cgi/image/ on the local upload) or
+ * 'cloudflare-images' (verified hosted copies). Set with the ub_banner_cdn option. A logged-in
+ * editor can preview the other one on any page with ?ub_cdn=cloudflare-images (or =cloudflare);
+ * logged-in pages aren't cached.
  */
 function ub_banner_cdn() {
 	if ( isset( $_GET['ub_cdn'] ) && is_user_logged_in() && current_user_can( 'edit_others_posts' ) ) { // phpcs:ignore WordPress.Security.NonceVerification
 		$preview = sanitize_key( wp_unslash( $_GET['ub_cdn'] ) ); // phpcs:ignore WordPress.Security.NonceVerification
-		if ( in_array( $preview, array( 'cloudinary', 'cloudflare', 'cloudflare-images' ), true ) ) {
+		if ( in_array( $preview, array( 'cloudflare', 'cloudflare-images' ), true ) ) {
 			return $preview;
 		}
 	}
-	$mode = get_option( 'ub_banner_cdn', 'cloudinary' );
-	return in_array( $mode, array( 'cloudflare', 'cloudflare-images' ), true ) ? $mode : 'cloudinary';
+	$mode = get_option( 'ub_banner_cdn', 'cloudflare' );
+	return 'cloudflare-images' === $mode ? $mode : 'cloudflare';
 }
 
 /**
  * Hosted-copy URL, or a transformation URL for the local file as a path on this site (no host: the
- * Cloudinary plugin only rewrites full local upload URLs, so a /cdn-cgi/ path is left alone).
+ * site-relative so it never depends on the upload host).
  * $trim is array( x, y, w, h ) in the file's pixels (a saved crop) or null. onerror=redirect serves the
  * original file if a transformation fails (for example once the monthly free quota is used up).
  */
@@ -206,12 +125,12 @@ function ub_cf_image_url( $attachment_id, $width, $height = 0, $trim = null, $qu
 }
 
 /**
- * Cloudflare version of ub_apply_transform(): points a banner <img> at /cdn-cgi/image/ URLs for the
+ * Points a banner <img> at /cdn-cgi/image/ URLs for the
  * attachment's local file. $crop is a saved crop array( x, y, w, h ) in that file's pixels (the
  * pixels the admin cropper shows, so no scaling to an original upload is needed) or null; for a plain
- * slide $out_w x $out_h is the size WordPress wrote on the tag. Same widths and aspect handling as
- * the Cloudinary path, except candidates are never wider than the source region (fit=scale-down does
- * not upscale, and the declared width and height must match what is served).
+ * slide $out_w x $out_h is the size WordPress wrote on the tag. Candidates are never wider than the
+ * source region (fit=scale-down does not upscale, and the declared width and height must match what
+ * is served).
  */
 function ub_apply_cloudflare( $html, $attachment_id, $crop, $out_w, $out_h ) {
 	if ( $crop ) {
@@ -224,7 +143,7 @@ function ub_apply_cloudflare( $html, $attachment_id, $crop, $out_w, $out_h ) {
 	$trim   = $crop ? array( $crop['x'], $crop['y'], $crop['w'], $crop['h'] ) : null;
 	$max_w  = min( $out_w, 1920 );
 	$widths = array();
-	foreach ( array( 370, 400, 600, 768, 1024, 1200, 1536 ) as $n ) {
+	foreach ( array( 320, 480, 640, 768, 1024, 1200, 1536 ) as $n ) {
 		if ( $n < $max_w ) {
 			$widths[] = $n;
 		}
@@ -255,48 +174,8 @@ function ub_apply_cloudflare( $html, $attachment_id, $crop, $out_w, $out_h ) {
 }
 
 /**
- * CSS version of a saved crop, for a slide image Cloudinary can't crop (dev has no Cloudinary; on
- * prod, an image not synced yet). Wraps the local <img> in a .ub-crop box of the crop's shape,
- * fitted into the $slot_ratio slide the way object-fit: contain fits a Cloudinary-cropped image,
- * and sizes and offsets the whole image inside it so only the crop area shows. The image stays in
- * normal flow (negative margins, not absolute positioning) so it still gives the banner its
- * natural width - the header strip is sized by its content. $crop is array( x, y, w, h ) in the
- * pixels of the $full_w x $full_h original. `sizes` is scaled by the same factors so the browser
- * still picks a sharp srcset candidate for the larger, partly hidden image.
- */
-function ub_css_crop( $html, $crop, $full_w, $full_h, $slot_ratio ) {
-	list( $x, $y, $w, $h ) = $crop;
-	if ( $w < 1 || $h < 1 ) {
-		return $html;
-	}
-	$pct   = function ( $v ) {
-		return round( $v, 4 ) . '%';
-	};
-	$ratio = $w / $h;
-	// Box width as a share of the slide: full width unless the crop is taller than the slot.
-	$box   = $slot_ratio && $ratio < $slot_ratio ? $ratio / $slot_ratio : 1;
-	$scale = $full_w / $w * $box;
-	// Percentage margins are measured against the box's width in both directions, so the vertical
-	// offset is also y / w.
-	$style = sprintf( 'width:%s;margin-left:%s;margin-top:%s', $pct( $full_w / $w * 100 ), $pct( -$x / $w * 100 ), $pct( -$y / $w * 100 ) );
-	$html  = preg_replace( '/<img\b/', '<img style="' . esc_attr( $style ) . '"', $html, 1 );
-
-	if ( abs( $scale - 1 ) > 0.001 && preg_match( '/\ssizes="([^"]*)"/', $html, $sizes_match ) ) {
-		$parts = array();
-		foreach ( explode( ',', html_entity_decode( $sizes_match[1], ENT_QUOTES ) ) as $part ) {
-			$part    = trim( $part );
-			$parts[] = preg_match( '/^(.*?)(\S+)$/', $part, $p ) && 'auto' !== $p[2] ? $p[1] . 'calc(' . $p[2] . ' * ' . round( $scale, 4 ) . ')' : $part;
-		}
-		$html = str_replace( $sizes_match[0], ' sizes="' . esc_attr( implode( ', ', $parts ) ) . '"', $html );
-	}
-
-	return '<span class="ub-crop" style="aspect-ratio:' . round( $ratio, 5 ) . ';width:' . $pct( $box * 100 ) . '">' . $html . '</span>';
-}
-
-/**
- * Output pass for every banner slide image (cropped or not), plus a <head> preload for the
- * header's first (LCP) slide. Started at init priority 0 so it wraps (runs after) the Cloudinary
- * plugin's own output buffer.
+ * Output pass: a <head> preload for the header's first (LCP) slide and the home banner's visible
+ * slides, built from the banners' final srcset/sizes.
  */
 add_action(
 	'init',
@@ -309,53 +188,6 @@ add_action(
 				if ( false === strpos( $html, 'ub-banner-img' ) ) {
 					return $html;
 				}
-
-				$html = preg_replace_callback(
-					'/<img\b[^>]*\bub-banner-img\b[^>]*>/',
-					function ( $m ) {
-						$tag   = $m[0];
-						if ( false !== strpos( $tag, 'data-ub-cdn="cloudflare"' ) ) {
-							return $tag;
-						}
-						$out_w = null;
-						$out_h = null;
-						$seg   = '';
-
-						if ( preg_match( '/\sdata-ub-crop="(\d+),(\d+),(\d+),(\d+)"/', $tag, $crop_match ) ) {
-							$full = preg_match( '/\sdata-ub-full="(\d+),(\d+),([\d.]*)(?:,([\d.]+))?"/', $tag, $full_match ) ? array( (int) $full_match[1], (int) $full_match[2], (float) $full_match[3], isset( $full_match[4] ) ? (float) $full_match[4] : 1.0 ) : null;
-							$tag  = preg_replace( '/\sdata-ub-(crop|full)="[^"]*"/', '', $tag );
-							// Cloudinary crops the original upload, which can be larger than the image the
-							// crop was drawn on - scale the crop into its pixels.
-							$k    = $full && $full[3] > 0 ? $full[3] : 1;
-							$c    = array_map(
-								function ( $v ) use ( $k ) {
-									return (int) round( $v * $k );
-								},
-								array_slice( $crop_match, 1 )
-							);
-							$out  = ub_apply_transform( $tag, sprintf( 'c_crop,x_%d,y_%d,w_%d,h_%d', $c[0], $c[1], $c[2], $c[3] ), $c[2], $c[3] );
-							// Unchanged means the image isn't served by Cloudinary (dev, or not synced yet):
-							// show the crop with CSS on the local image instead.
-							if ( $out === $tag && $full ) {
-								$out = ub_css_crop( $tag, array_map( 'intval', array_slice( $crop_match, 1 ) ), $full[0], $full[1], $full[2] );
-							}
-							return $out;
-						} else {
-							// No saved crop: scale from the dimensions WordPress already wrote on the tag -
-							// accurate even when it fell back to the full original because no local
-							// intermediate exists for the requested size.
-							if ( preg_match( '/\swidth="(\d+)"/', $tag, $w_match ) ) {
-								$out_w = (int) $w_match[1];
-							}
-							if ( preg_match( '/\sheight="(\d+)"/', $tag, $h_match ) ) {
-								$out_h = (int) $h_match[1];
-							}
-						}
-
-						return ub_apply_transform( $tag, $seg, $out_w, $out_h );
-					},
-					$html
-				);
 
 				// Preload the slide images on screen from the start: each banner's first (marked
 				// fetchpriority=high - the header strip's, and on the home page the home banner's, which is
@@ -463,19 +295,6 @@ function ub_group_per_view_media() {
 }
 
 /**
- * Queue an attachment for upload to Cloudinary if it isn't there yet (the crop is applied by
- * Cloudinary, so until then the image would show uncropped).
- */
-function ub_queue_cloudinary_sync( $attachment_id ) {
-	if ( $attachment_id && function_exists( 'Cloudinary\\get_plugin_instance' ) ) {
-		$sync = \Cloudinary\get_plugin_instance()->get_component( 'sync' );
-		if ( $sync && ! $sync->is_synced( $attachment_id ) ) {
-			$sync->maybe_prepare_sync( $attachment_id );
-		}
-	}
-}
-
-/**
  * A slide's target post ID if it links to a published post, else 0.
  */
 function ub_slide_post( $slide_id ) {
@@ -559,8 +378,8 @@ add_action(
 		);
 
 		// Banner display size. Not hard-cropped (false height) so slides can keep their own aspect
-		// ratio; this just gives the Cloudinary plugin a size ceiling to generate a responsive
-		// srcset against, the same way it already does for WooCommerce product images.
+		// ratio; this just sets the size WordPress reports for the banner (the srcset itself is
+		// built in ub_apply_cloudflare()).
 		add_image_size( 'ub_banner', 1920, 0, false );
 	}
 );
@@ -715,7 +534,6 @@ add_action(
 				delete_post_meta( $post_id, '_ub_crop' );
 			}
 
-			ub_queue_cloudinary_sync( $thumb );
 	}
 );
 
@@ -853,7 +671,11 @@ add_shortcode(
 		// that mismatch for every slide, not just the ones with a genuinely small source image.
 		// The header strip sits in .sideslidertop - at most 45% of the header row above 992px (the
 		// theme's style.css), full width below that.
-		$img_sizes = $is_home ? '(min-width: 768px) 50vw, 100vw' : '(min-width: 993px) 45vw, 100vw';
+		// Below the side-by-side breakpoint the slot is the full viewport, but it is declared as 85vw: a
+		// banner is a wide, shallow photo at q_80, and sizing for the full 1.75x-3x phone density asked
+		// for ~720-1200px images where ~1.5x looks the same. 412px @1.75x now picks the 640w candidate
+		// rather than 768w; 390px @3x picks 1024w rather than 1200w.
+		$img_sizes = $is_home ? '(min-width: 768px) 50vw, 85vw' : '(min-width: 993px) 45vw, 85vw';
 
 		$group_id    = 'ub-banner-' . sanitize_html_class( $atts['group'] );
 		$group_class = ' ub-banner-' . sanitize_html_class( $atts['group'] );
@@ -884,9 +706,6 @@ add_shortcode(
 				$bg_html = wp_get_attachment_image( $thumb_id, 'medium_large' );
 				if ( preg_match( '/\ssrc="([^"]*)"/', $bg_html, $bg_match ) ) {
 					$bg_url = html_entity_decode( $bg_match[1], ENT_QUOTES );
-					// It's blurred by 22px and scaled up (banner.css), so a small, low-quality copy in the
-					// browser's best format looks the same: swap the Cloudinary transform for one.
-					$bg_url = preg_replace( '#^(https://res\.cloudinary\.com/[^/]+/images/)(?:[^/?]+/)*?(v\d+/)#', '$1q_auto:low,f_auto/c_scale,w_320/$2', $bg_url, 1 );
 				}
 			}
 			$crop = ub_get_crop( $slide->ID, $thumb_id );
@@ -909,17 +728,8 @@ add_shortcode(
 					$img_atts['data-ub-preload-media'] = $preload_media;
 				}
 				$full_meta = wp_get_attachment_metadata( $thumb_id );
-				if ( $crop && ! $use_cf ) {
-					$img_atts['data-ub-crop'] = implode( ',', $crop );
-					if ( ! empty( $full_meta['width'] ) && ! empty( $full_meta['height'] ) ) {
-						// The image's size and the slide's shape, for the CSS crop used when Cloudinary
-						// can't apply it, and the factor to the original upload's pixels for the
-						// Cloudinary crop (see ub_original_scale()).
-						$img_atts['data-ub-full'] = $full_meta['width'] . ',' . $full_meta['height'] . ',' . round( (float) ub_group_ratio( $atts['group'] ), 5 ) . ',' . round( ub_original_scale( $thumb_id, $full_meta ), 6 );
-					}
-				}
 				if ( is_admin() && $crop && ! empty( $full_meta['width'] ) && ! empty( $full_meta['height'] ) ) {
-					// Admin previews aren't rewritten by the Cloudinary plugin, so show the crop with CSS.
+					// Admin previews aren't served through Cloudflare, so show the crop with CSS.
 					$dx = $full_meta['width'] - $crop['w'];
 					$dy = $full_meta['height'] - $crop['h'];
 					printf(
