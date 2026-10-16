@@ -53,7 +53,31 @@ if ( $lemon_after['important'] !== $lemon_before['important'] || $lemon_review |
 	throw new RuntimeException( 'Existing tester offer must deduplicate without review or repeat changes.' );
 }
 expect_description( '<p><b>DISCOUNTS DO NOT APPLY</b></p>', '<p></p>', array(), array( 'DISCOUNTS DO NOT APPLY' ) );
+$wonderlust_media = '<img src="https://dev.ultralove.ca/wp-content/uploads/logo.png" alt="" width="161" height="100" class="alignnone size-full wp-image-40061" /><p>';
+$wonderlust_offer = "\n" . '<b><font color=red><font size="4.5"> ONE PER STORE ONLY - FREE WITH 9 (3 each) PRODUCTS BOUGHT</font></FONT></b>';
+$wonderlust_marketing = "<p>\r\nWonderlust is a new way to experience the sought after features of high-end luxury products in a more affordable way. With its superior engineering, Wonderlust is able to provide intense vibrations, water-resistant features, seductive shapes and beautiful colours opening the doors of pleasure for anyone.<p>\r\n\r\n<b>Features:</b><br>\r\n";
+$wonderlust_list = "<ul><li>20 Functions<br>\r\n<li>Travel Lock<br>\r\n<li>Water-Resistant <br>\r\n<li>Easy to Press Button<br>\r\n<li>Rechargeable<br>\r\n<li>Made with Soft-Touch Silicone<br>\r\n<li>Favourite Function Memory<ul><p>";
+$wonderlust_source = $wonderlust_media . $wonderlust_offer . $wonderlust_marketing . $wonderlust_list;
+$wonderlust_expected = $wonderlust_media . $wonderlust_marketing . $wonderlust_list;
+$wonderlust_notes = "LIMIT 1 PER STORE ONLY\nFREE WITH 9 (3 EACH) PRODUCTS BOUGHT";
+expect_description( $wonderlust_source, $wonderlust_expected, explode( "\n", $wonderlust_notes ) );
 foreach ( array(
+	'<ul><li>Features</li></ul>',
+	'<ol><li>Features</li></ol>',
+	'<ul><li><p><b>LIMIT 1 PER STORE ONLY</b></p></li></ul>',
+) as $list_tail ) {
+	expect_description( $offer_html . $list_tail, '<p>' . $list_tail, array( 'LIMIT 1 PER STORE ONLY', 'FREE WITH 2 UNITS BOUGHT' ) );
+}
+foreach ( array(
+	$offer_html . '<script>alert("keep");</script><ul><li>Feature</li></ul>',
+	$offer_html . '<style>p{color:red}</style><ul><li>Feature</li></ul>',
+	$offer_html . '<textarea>Keep</textarea><ul><li>Feature</li></ul>',
+	$offer_html . '<table><tr><td>Keep</td></tr></table><ul><li>Feature</li></ul>',
+	$offer_html . '<div>Keep</div><ul><li>Feature</li></ul>',
+	'<blockquote>' . $offer_html . '</blockquote><ul><li>Feature</li></ul>',
+	'<b><p>LIMIT 1 PER STORE ONLY</p><ul><li>Feature</li></ul></b>',
+	'<pthe>Malformed</pthe>' . $offer_html . '<ul><li>Feature</li></ul>',
+	'<p>Meaningful marketing. ' . $offer . '</p><ul><li>Feature</li></ul>',
 	'<p><b>Meaningful features. ' . $offer . '</b></p>',
 	'<p>Let your creativity run free with the new Satisfyer Connect app!</p>',
 	'<p>Play worry-free with ingredients you love.</p>',
@@ -152,6 +176,20 @@ ultralove_description_after_import( 1 );
 ultralove_description_after_import( 1 );
 if ( $post !== $tester_expected || $meta[ ULTRALOVE_RN_IMPORTANT ] !== $lemon_before['important'] ) {
 	throw new RuntimeException( 'Tester reimport must remain clean and deduplicated.' );
+}
+$post = array( 'post_content' => $wonderlust_source, 'post_excerpt' => '', 'post_title' => 'BM5-298<br> WonderLust Display with Testers', 'post_name' => 'bm5-298-bms-factory-wonderlust-display-with-testers' );
+$meta = array( ULTRALOVE_DESCRIPTION_CLEANUP_META => ULTRALOVE_DESCRIPTION_CLEANUP_VERSION, ULTRALOVE_RN_IMPORTANT => $wonderlust_notes );
+$wonderlust_import = $post;
+ultralove_description_after_import( 1 );
+$wonderlust_cleaned = $post;
+if ( $post !== array_replace( $wonderlust_import, array( 'post_content' => $wonderlust_expected ) ) || $meta[ ULTRALOVE_RN_IMPORTANT ] !== $wonderlust_notes ) {
+	throw new RuntimeException( 'WonderLust import must preserve list/media/marketing, notes and identity.' );
+}
+$post = $wonderlust_import;
+ultralove_description_after_import( 1 );
+ultralove_description_after_import( 1 );
+if ( $post !== $wonderlust_cleaned || $meta[ ULTRALOVE_RN_IMPORTANT ] !== $wonderlust_notes ) {
+	throw new RuntimeException( 'WonderLust reimport must remain clean and deduplicated.' );
 }
 try {
 	ultralove_description_write( 1, array_replace( ultralove_description_snapshot( 1 ), array( 'post_excerpt' => 'stale' ) ), ultralove_description_snapshot( 1 ) );

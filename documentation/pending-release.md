@@ -932,6 +932,48 @@ does not authorize any production migration.
   We-Vibe display kit and California Dreaming. Lemon Crush summary notes stay
   visible at 390/991/992/1280px; Description duplicates appear only from 992px.
 - Nginx, PHP-FPM and Redis remained active. No manual cache purge was needed.
-  Production has not received this follow-up; dev approval and production
-  confirmation remain required. The wider audit's unrecognized cases are not
-  covered by these results.
+  Production execution is recorded below. The wider audit's unrecognized cases
+  are not covered by these results.
+
+#### Follow-up production execution (2026-10-16, PR #207)
+
+- User approved dev and authorized production. Merged and deployed
+  `fe22adb51dcfaa5af1e9e6721cc9a35715259c48` after main CI and automatic dev
+  deployment passed. Standard production drift, PHP lint and smoke checks passed.
+- Fresh transaction-consistent backup:
+  `/var/lib/ultralove-deploy/residual-description-cleanup/prod-consistent-before.sql.gz`,
+  156,008,167 bytes, mode 0600, gzip verified; SHA256
+  `55511e7573623c176d35acfc7104418e9dda86adcefc6e4282a785de797fa44c`.
+  The initial MariaDB export rejected a MySQL-only option before writes; its
+  zero-byte output is not a backup. Retried successfully with supported options.
+- Reviewed and applied **62 products / 66 description fields**. All 59 shared
+  proposals matched dev after upload-hostname normalization; separately reviewed
+  production-only 97219, 97245 and 97247. All other source bytes were preserved
+  and all extracted clauses retained. Titles, URLs and redirects were unchanged.
+- Exact readback verified all 62 descriptions, notes, import opt-ins, titles and
+  slugs. Fresh scoped repeat preview returned zero changes; three unrelated
+  marketing headings remain flagged and preserved.
+- All 62 origin PDPs passed structured notes, title, canonical and residual
+  instruction checks after Nginx cache expiry. Public checks passed 61; product
+  71834 still had a stale Cloudflare APO copy. Its cache-busted public page was
+  clean. No manual cache purge was performed; public cache verification remains
+  outstanding for that URL. Nginx, PHP-FPM and Redis remained active.
+- Retain the private site-bound plan for scoped recovery, not a database restore
+  over later orders. Code recovery archive:
+  `/var/lib/ultralove-deploy/backups/20261016T003011Z-3675aac412.tgz`.
+
+#### Follow-up: instructions before structured lists
+
+- WonderLust display with testers (25556) was outside the preceding rollout.
+  Its standalone offer precedes a malformed feature list, causing whole-field
+  validation to conservatively skip it.
+- Permit cleanup only before the first top-level list, with an allowlisted,
+  independently validated prefix and balanced inline wrappers that do not cross
+  paragraph boundaries. Preserve the entire list tail byte for byte, including
+  malformed legacy markup. Continue rejecting fields with active content,
+  tables/divs, nested instructions and mixed marketing/condition paragraphs.
+- Reuse canonical Important-note extraction and deduplication. Regression tests
+  cover WonderLust media/marketing/list preservation, exact notes, unchanged
+  title/slug, repeat cleanup, opted-in reimport and unsafe-prefix exclusions.
+- This new runtime change requires separate dev verification and user approval
+  before production; do not widen the already applied 62-product scope.
