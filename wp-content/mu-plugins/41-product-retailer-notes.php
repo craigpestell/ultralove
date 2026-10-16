@@ -129,7 +129,9 @@ function ultralove_rn_admin_presets(): array {
 
 function ultralove_rn_admin_preset_field( string $field, string $label ): void {
 	$options = array( '' => __( 'Choose text to append...', 'ultralove' ) );
-	foreach ( ultralove_rn_admin_presets()[ $field ] as $text ) {
+	$presets = ultralove_rn_admin_presets()[ $field ];
+	usort( $presets, 'strcasecmp' );
+	foreach ( $presets as $text ) {
 		$options[ $text ] = str_replace( "\n", ' / ', $text );
 	}
 	woocommerce_wp_select( array(

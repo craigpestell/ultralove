@@ -79,7 +79,7 @@ data was changed to produce this report.
 
 The product editor's **Product data > General** tab provides a preset dropdown
 above each existing retailer-info textarea. Choices are the complete values in
-this snapshot used by at least **5 products**, in descending frequency: 3 Retailer
+this snapshot used by at least **5 products**, listed alphabetically: 3 Retailer
 info choices and 12 Important retailer info choices. These are code-owned presets,
 not a live database query; rare values remain available through manual entry.
 

@@ -34,7 +34,9 @@ foreach ( array( ULTRALOVE_RN_IMPORTANT, ULTRALOVE_RN_INFO ) as $index => $key )
 	$select = $fields[ $index * 2 ];
 	$textarea = $fields[ $index * 2 + 1 ];
 	$options = array( '' => 'Choose text to append...' );
-	foreach ( $expected[ $key ] as $text ) {
+	$sorted = $expected[ $key ];
+	usort( $sorted, 'strcasecmp' );
+	foreach ( $sorted as $text ) {
 		$options[ $text ] = str_replace( "\n", ' / ', $text );
 	}
 	if ( 'select' !== $select[0] || $key . '_preset' !== $select[1]['id']
