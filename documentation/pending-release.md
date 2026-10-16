@@ -1,5 +1,113 @@
 # Pending production release
 
+## Retailer-info editor presets (dev preview; production pending)
+
+Two preset dropdowns in Product data > General append common text to the existing
+editable retailer-info fields. The [inventory](retailer-info-inventory.md)
+defines the cutoff: at least 5 products, giving 3 Retailer info and 12 Important
+retailer info choices, sorted alphabetically. Multi-line choices insert real newlines;
+existing content is retained. Normal save-time normalization and review warnings
+are unchanged. Code-only release; no database migration or activation required.
+Offline PHP and JavaScript preset checks, parser, runtime/save and condition
+normalization regression tests pass. Both new preset runners are included in CI.
+
+## Catalog description conditions (live and verified on dev and production)
+
+The read-only follow-up inventory scans minimum-purchase wording as well as
+store/tester limits, free offers and discount instructions. Candidate matches
+are not an approved migration scope; ordinary marketing and ambiguous offers
+remain unchanged.
+
+Normalize exact minimum purchases of a free tester to `FREE WITH N UNITS BOUGHT`,
+including the catalog's `PURHCASED` typo, and normalize the `TESTER:` label.
+Deduplicate equivalent existing Important retailer info. Normalized purchase
+conditions may omit the redundant `NO EXCEPTIONS` qualification; this is not a
+separate instruction to remove the phrase everywhere. Standalone qualifications,
+unrelated prose and unrecognized instructions are preserved.
+Conflicting offers retain their whole original notes for manual review, including
+any `NO EXCEPTIONS` qualification.
+
+Independently bounded, balanced bold instruction blocks can be extracted before
+or after feature lists and between newline-separated marketing. Only known
+clauses and allowlisted inline wrappers qualify. Bare opening paragraph tags
+within a complete instruction block act as line breaks in the validation copy.
+Source replacements preserve all other bytes, including images, video embeds,
+marketing and legacy list tails. Instructions nested in lists/formatting,
+active content, layout wrappers and ambiguous mixed prose remain excluded.
+Complete iframe embeds are masked during instruction discovery; unclosed iframe
+content is protected through the end of the field. Quoted attribute delimiters
+and embedded fallback markup must not become extraction candidates.
+Free-retail-kit/demo wording and distinct purchase conditions require review,
+not silent conversion into tester offers. Names, slugs and redirects are unchanged.
+
+PR #211 runtime revision `04d6fe69bb` was deployed to dev through the standard
+drift-checked deployment, with all four smoke checks passing. The guarded cleanup
+then updated 113 dev products / 133 description fields after a fresh validated
+private database backup. Exact readback verified descriptions, notes, import
+opt-in, titles and slugs. A scoped repeat preview proposes zero changes; its
+24 review entries concern retained markup, not additional approved changes.
+After user approval, PR #211 merged as
+`e12cbcc55566dd04a7924d43ce79f63178eb8978`. Its automatic dev deployment passed,
+then the standard production deployment passed drift checks, PHP lint, backup,
+PHP-FPM restart and all four smoke checks. A fresh production site-bound plan
+updated 116 products / 136 description fields. Independent verification under
+production's PHP runtime passed source-byte preservation, retained clauses and
+idempotence with no exclusions or source/title/slug drift against the approved
+selection. Exact database readback passed; a repeat preview proposes zero changes.
+Names, URLs and redirects are unchanged.
+
+All 116 guest-origin product pages pass. Three initially cached origin failures
+resolved after the short-lived Nginx cache expired. Two public URLs initially
+served stale Cloudflare HTML: products `20157` (Lyla 2 Design Edition Cerise
+TESTER) and `44448` (Enigma Cruise Deep Rose TESTER). After the user confirmed a
+Cloudflare cache purge, a fresh check of all 116 ordinary public URLs passed
+with zero failures: HTTP 200, expected structured notes, no recognized embedded
+restrictions, unchanged titles and canonicals. The ordinary public Hockey Player
+page also passed responsive checks at 390/991/992/1280px.
+
+Private production evidence is under
+`/var/lib/ultralove-deploy/catalog-description-e12cbcc/`, including
+`prod-plan.json`, `prod-repeat.json`, independent verification scripts and
+`prod-before.sql.gz` (mode 0600, 156,017,521 bytes; gzip integrity checked;
+SHA-256 `5e1819abb897747e7e77d6ae8bed589965ae45106dcea481a89dfc0948b6dcf1`).
+The deployment code rollback archive is
+`/var/lib/ultralove-deploy/backups/20261016T013926Z-c322913ae6.tgz`.
+Use scoped product restoration only; never overwrite newer orders with a full
+database restore. A post-cleanup [retailer-info inventory](retailer-info-inventory.md)
+records every non-empty complete field value and its product count.
+
+The production read-only inventory examined 6,528 products and identified 297
+candidate fields across 254 products. Combined local proposals change 138 products;
+independent source-byte/clause-preservation checks select 116 products / 136 fields
+for the production migration. Dev contains 113 of those products; production
+IDs `97578`, `97586` and `97588` (including the Working Stiff Hockey Player
+example) are absent. No database refresh or product import was needed for the
+dev rehearsal. The other 22 proposals retain ambiguous restrictions or
+unrecognized residual instructions and remain excluded. The inventory also has
+116 candidate products without a proposed change; these are not claimed as cleaned.
+
+The independent verifier ran against dev's deployed PHP runtime and checked all
+113 exact plans for source-byte preservation, retained clauses and idempotence.
+Local libxml 2.9.13 and dev libxml 2.15.2 handle an adjacent empty line break
+differently in legacy malformed HTML; identical deployed source hashes were
+confirmed, and the actual server-generated plan was verified on dev rather than
+assuming local DOM output was identical.
+
+Guest-origin checks passed on all 113 ordinary product URLs: expected structured
+notes, no recognized embedded restrictions, unchanged titles and canonicals.
+Browser checks covered Mona Wave, malformed-paragraph Doxy, earlier-marketing-bold
+Shared Touch and Swan Mini display/list/image cases. Summary notes remain visible
+at 390/991/992/1280px; duplicate description notes are hidden below 992px and
+visible at 992px and above.
+
+Private dev evidence is under
+`/var/lib/ultralove-deploy/catalog-description-04d6fe6/`, including `dev-plan.json`,
+`dev-repeat.json`, the independent verifier and `dev-before.sql.gz` (mode 0600,
+125,388,989 bytes; gzip integrity checked; SHA-256
+`5a0d6bc90fe5a5d877e08f386da33a84438bd6b7b8653f9139cab86e2b010792`).
+Use only scoped product restoration if needed; do not restore the whole database
+over newer orders.
+
 ## Responsive hosted-image selection (live on dev and production)
 
 Lazy product cards now receive `sizes="auto, ..."` based on their actual loading
@@ -886,7 +994,7 @@ does not authorize any production migration.
   Production execution must use fresh site-bound plans, in order: descriptions,
   historical tester identity, final note normalization, current-name URLs.
   Merge/dev deployment and generated critical-CSS gates remain mandatory.
-
+  
 #### Production execution (2026-10-15, `3675aac412`)
 
 - User approved dev and explicitly authorized production. Release #204 and the
@@ -971,3 +1079,118 @@ does not authorize any production migration.
   HTTPS origin smoke checks for `/`, `/shop/`, `/my-account/` and
   `/wp-login.php` all returned 200. No runtime code changes were needed during
   execution; this section records the applied production data and validation.
+=======
+### Follow-up: residual description instructions
+
+- The earlier description migration was an approved subset, not a catalog-wide
+  guarantee. A subsequent read-only production audit found instruction-like text
+  in 172 fields across 166 products, including Romp Lemon Crush Tester Only (96467).
+- Recognize standalone known conditions with `TESTER`, `TESTER -`, or
+  `Display Stand -` labels and dash-separated quantity/offer clauses. Extract
+  canonical clauses into Important so existing equivalents deduplicate.
+- Tolerate the legacy `<imgsrc=` typo in the DOM validation copy only. Preserve
+  the original media bytes; retain the existing malformed/active/structured
+  field guards and whole-block-only extraction.
+- Regression coverage includes the Lemon Crush markup, bottle limits, display
+  labels, separated offers, existing-note deduplication, repeat safety, and
+  negative mixed-marketing/ambiguous-offer examples.
+- Use fresh private site-bound plans, restricted to audited products whose
+  description bytes actually change. Do not include metadata-only proposals,
+  previously excluded ambiguous products, names, slugs, or redirects.
+- Review exact removals and remaining notes before apply. Leave minimum-purchase
+  wording, mixed marketing paragraphs, and structured/malformed cases outside
+  the recognized grammar unchanged for a separate reviewed pass. Dev first;
+  production requires confirmation and its own fresh guarded plan.
+
+#### Follow-up dev verification (2026-10-16, PR #207)
+
+- Deployed `6c2eba6eed4f4fc942d467ac7db1465112ec15b3` after CI passed.
+  The audited production subset has 62 eligible products; dev lacks 97219,
+  97245 and 97247, leaving 59. Prior ambiguous exclusions remain excluded.
+- Reviewed every removal: 63 description fields changed across 59 products,
+  with all other source bytes preserved and every removed clause retained in
+  Important. Titles, slugs and redirects were not changed.
+- Took a transaction-consistent, GTID-free, mode-0600 database backup:
+  `/var/lib/ultralove-deploy/residual-description-cleanup/dev-consistent-before.sql.gz`
+  (125,379,975 bytes; gzip integrity passed; SHA256
+  `17f6cb0ac9266c8f311f0b1ff3f19481d6dba5c145a1b9db59c83394335873e3`).
+  Keep the site-bound plan beside it for scoped restore, not a full database
+  restore over later orders.
+- Guarded apply and exact readback passed for all 59 products. Scoped repeat
+  preview returned zero changes; three unrelated marketing headings remain
+  flagged and preserved.
+- All 59 guest origin PDPs passed exact structured-note, title and canonical
+  checks, with no matched instructions remaining in Description. Authenticated
+  browser checks passed for Lemon Crush, Hydra bottle tester, Jimmy Jane holder,
+  We-Vibe display kit and California Dreaming. Lemon Crush summary notes stay
+  visible at 390/991/992/1280px; Description duplicates appear only from 992px.
+- Nginx, PHP-FPM and Redis remained active. No manual cache purge was needed.
+  Production execution is recorded below. The wider audit's unrecognized cases
+  are not covered by these results.
+
+#### Follow-up production execution (2026-10-16, PR #207)
+
+- User approved dev and authorized production. Merged and deployed
+  `fe22adb51dcfaa5af1e9e6721cc9a35715259c48` after main CI and automatic dev
+  deployment passed. Standard production drift, PHP lint and smoke checks passed.
+- Fresh transaction-consistent backup:
+  `/var/lib/ultralove-deploy/residual-description-cleanup/prod-consistent-before.sql.gz`,
+  156,008,167 bytes, mode 0600, gzip verified; SHA256
+  `55511e7573623c176d35acfc7104418e9dda86adcefc6e4282a785de797fa44c`.
+  The initial MariaDB export rejected a MySQL-only option before writes; its
+  zero-byte output is not a backup. Retried successfully with supported options.
+- Reviewed and applied **62 products / 66 description fields**. All 59 shared
+  proposals matched dev after upload-hostname normalization; separately reviewed
+  production-only 97219, 97245 and 97247. All other source bytes were preserved
+  and all extracted clauses retained. Titles, URLs and redirects were unchanged.
+- Exact readback verified all 62 descriptions, notes, import opt-ins, titles and
+  slugs. Fresh scoped repeat preview returned zero changes; three unrelated
+  marketing headings remain flagged and preserved.
+- All 62 origin PDPs passed structured notes, title, canonical and residual
+  instruction checks after Nginx cache expiry. Public checks passed 61; product
+  71834 still had a stale Cloudflare APO copy. Its cache-busted public page was
+  clean. No manual cache purge was performed; public cache verification remains
+  outstanding for that URL. Nginx, PHP-FPM and Redis remained active.
+- Retain the private site-bound plan for scoped recovery, not a database restore
+  over later orders. Code recovery archive:
+  `/var/lib/ultralove-deploy/backups/20261016T003011Z-3675aac412.tgz`.
+
+#### Follow-up: instructions before structured lists
+
+- WonderLust display with testers (25556) was outside the preceding rollout.
+  Its standalone offer precedes a malformed feature list, causing whole-field
+  validation to conservatively skip it.
+- Permit cleanup only before the first top-level list, with an allowlisted,
+  independently validated prefix and balanced inline wrappers that do not cross
+  paragraph boundaries. Preserve the entire list tail byte for byte, including
+  malformed legacy markup. Continue rejecting fields with active content,
+  tables/divs, nested instructions and mixed marketing/condition paragraphs.
+- Reuse canonical Important-note extraction and deduplication. Regression tests
+  cover WonderLust media/marketing/list preservation, exact notes, unchanged
+  title/slug, repeat cleanup, opted-in reimport and unsafe-prefix exclusions.
+- This new runtime change requires separate dev verification and user approval
+  before production; do not widen the already applied 62-product scope.
+
+#### List-prefix dev verification (2026-10-16, PR #209)
+
+- Deployed `14eea561ac` through the standard branch deployment; PHP lint,
+  smoke checks, all seven retailer regression suites and CI passed.
+- Validated a fresh mode-0600, transaction-consistent, GTID-free backup:
+  `/var/lib/ultralove-deploy/wonderlust-description-14eea56/dev-consistent-before.sql.gz`,
+  125,385,532 bytes; SHA256
+  `f5b7e8ac7e2e45eeef5ec9e2e25c50825a2addeacea7abc474275ae4011ddc15`.
+  An initial export lacking the GTID flag failed before data writes; its partial
+  output is not a backup.
+- Reviewed and applied only 25556 / one description field. Exact removal was
+  `ONE PER STORE ONLY - FREE WITH 9 (3 each) PRODUCTS BOUGHT`; the equivalent
+  existing Important clauses remained unchanged. All other bytes, including
+  logo, marketing and malformed feature list, were preserved.
+- Guarded exact readback passed, including import opt-in/title/slug. Scoped repeat
+  preview returned zero changes, with the preserved list tail explicitly flagged.
+- Guest origin and authenticated browser checks passed for the exact product.
+  No embedded instruction remained outside the structured notes; logo, marketing
+  and feature text remained present. Responsive checks at 390/991/992/1280px
+  confirmed summary notes always visible and Description duplicates only from
+  992px. Nginx, PHP-FPM and Redis remained active.
+- Production has not received this list-prefix runtime change or the 25556 data
+  correction. Await user review of dev before merging/deploying production.

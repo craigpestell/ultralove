@@ -23,12 +23,98 @@ expect_description( '<p><b><font color="red">SMART PHONE NOT INCLUDED</font></b>
 $offer = 'LIMIT 1 PER STORE ONLY FREE WITH 2 UNITS BOUGHT';
 $normalized_offer = "LIMIT 1 PER STORE ONLY\nFREE WITH 2 UNITS BOUGHT";
 $offer_html = '<b><b><font color=red><font size="4">LIMIT 1 PER STORE ONLY<br> FREE WITH 2 UNITS BOUGHT</font></FONT></b></b><p>';
-expect_description( $offer_html, '<p>', array( $offer ) );
-expect_description( '<p><b>DISCOUNTS DO NOT APPLY</b></p>', '<p></p>', array(), array( 'DISCOUNTS DO NOT APPLY' ) );
+$minimum = '<b><span style="color: red;"><span style="font-size: small;">A MINIMUM OF 3 UNITS MUST BE PURCHASED TO RECEIVE A FREE TESTER' . "\nNO EXCEPTIONS</span></span></b>";
+$media = '<img src="/CalEx-300x71.png" alt="" width="300" height="71" />';
+expect_description( $media . '<p>' . $minimum . '<p>Hockey Player marketing.', $media . '<p><p>Hockey Player marketing.', array( 'FREE WITH 3 UNITS BOUGHT' ) );
+$hockey = array( 'post_content' => $media . '<p>' . $minimum . '<p>Marketing.', 'post_excerpt' => '', 'info' => '', 'important' => 'TESTER: 1 PER STORE ONLY FREE WITH 3 UNITS BOUGHT' );
+$hockey_after = ultralove_rn_description_after( $hockey, $hockey_review );
+if ( $hockey_after['important'] !== "LIMIT 1 PER STORE ONLY\nFREE WITH 3 UNITS BOUGHT" || $hockey_review || ultralove_rn_description_after( $hockey_after ) !== $hockey_after ) {
+	throw new RuntimeException( 'Minimum purchase must deduplicate and omit NO EXCEPTIONS.' );
+}
+$tail_offer = '<b><font color=red><font size="2">FREE WITH 3 UNITS BOUGHT <u>PER FLAVOR</u><br>1 PER STORE ONLY</font></FONT></b>';
+$list = '<ul><li>Feature A<li>Feature B</ul>';
+expect_description( 'Marketing.' . $list . '<p>' . $tail_offer . '<p>', 'Marketing.' . $list . '<p><p>', array( 'FREE WITH 3 UNITS BOUGHT PER FLAVOR', 'LIMIT 1 PER STORE ONLY' ) );
+expect_description( "Marketing &amp; features.\r\n\r\n" . $minimum . '<p>', "Marketing &amp; features.\r\n\r\n<p>", array( 'FREE WITH 3 UNITS BOUGHT' ) );
+expect_description( '<p>' . $minimum . '<br><b>1 COLOR PER STORE ONLY</b><p>Marketing.', '<p><p>Marketing.', array( 'FREE WITH 3 UNITS BOUGHT', 'LIMIT 1 COLOR PER STORE ONLY' ) );
+expect_description( '<p><b>NO EXCEPTIONS</b></p>', '<p><b>NO EXCEPTIONS</b></p>' );
+expect_description( '<p>Marketing with NO EXCEPTIONS for this edition.</p>', '<p>Marketing with NO EXCEPTIONS for this edition.</p>' );
+expect_description( '<p><b>Shared Touch</b> &mdash; marketing.' . "\n\n" . $minimum . '<p>', '<p><b>Shared Touch</b> &mdash; marketing.' . "\n\n<p>", array( 'FREE WITH 3 UNITS BOUGHT' ) );
+expect_description( '<p>' . str_replace( "\nNO EXCEPTIONS", '<br>NO EXCEPTIONS<P>1 PER STORE ONLY', $minimum ) . '<p>Marketing.', '<p><p>Marketing.', array( 'FREE WITH 3 UNITS BOUGHT', 'LIMIT 1 PER STORE ONLY' ) );
+expect_description( '<p>' . $minimum . "\n\nMarketing.", '<p>' . "\n\nMarketing.", array( 'FREE WITH 3 UNITS BOUGHT' ) );
+expect_description( '<iframe src="/video"></iframe><p>' . $minimum . '<p>Marketing.', '<iframe src="/video"></iframe><p><p>Marketing.', array( 'FREE WITH 3 UNITS BOUGHT' ) );
+expect_description( '<p><b>A MINIMUM OF 2 UNITS MUST BE PURHCASED TO RECEIVE A FREE TESTER</b><p>', '<p><p>', array( 'FREE WITH 2 UNITS BOUGHT' ) );
+expect_description( $offer_html, '<p>', array( 'LIMIT 1 PER STORE ONLY', 'FREE WITH 2 UNITS BOUGHT' ) );
 foreach ( array(
+	'TESTER - ONE PER STORE ONLY<br> FREE WITH 3 UNITS BOUGHT',
+	'ONE PER STORE ONLY - FREE WITH 3 UNITS BOUGHT',
+	'Display Stand - ONE PER STORE ONLY<br> FREE WITH 3 UNITS BOUGHT',
+) as $condition ) {
+	expect_description(
+		'<p><b><font color=red><font size="3">' . $condition . '</font></FONT></b><p>Marketing copy.',
+		'<p><p>Marketing copy.',
+		array( 'LIMIT 1 PER STORE ONLY', 'FREE WITH 3 UNITS BOUGHT' )
+	);
+}
+expect_description(
+	'<p><b>TESTER<br>ONE BOTTLE PER STORE ONLY<br>FREE WITH 3 UNITS BOUGHT</b></p>',
+	'<p></p>',
+	array( 'LIMIT 1 BOTTLE PER STORE ONLY', 'FREE WITH 3 UNITS BOUGHT' )
+);
+$lemon_media = '<imgsrc="https://ultralove.ca/wp-content/uploads/RMP_Logo_withoutTM_Black_eps.jpg" alt="" width="147" height="150" class="alignnone size-full wp-image-39803" /><p><p>';
+$lemon_offer = '<br><b><font color=red><font size="3"> TESTER - ONE PER STORE ONLY<br> FREE WITH 3 UNITS BOUGHT</font></FONT></b>';
+expect_description(
+	$lemon_media . $lemon_offer . "<p>\n\nROMP Lemon Crush marketing.",
+	$lemon_media . "<p>\n\nROMP Lemon Crush marketing.",
+	array( 'LIMIT 1 PER STORE ONLY', 'FREE WITH 3 UNITS BOUGHT' )
+);
+$lemon_before = array( 'post_content' => $lemon_media . $lemon_offer . '<p>Marketing.', 'post_excerpt' => 'Unchanged excerpt.', 'info' => '', 'important' => "LIMIT 1 PER STORE ONLY\nFREE WITH 3 UNITS BOUGHT" );
+$lemon_after = ultralove_rn_description_after( $lemon_before, $lemon_review );
+if ( $lemon_after['important'] !== $lemon_before['important'] || $lemon_review || ultralove_rn_description_after( $lemon_after ) !== $lemon_after ) {
+	throw new RuntimeException( 'Existing tester offer must deduplicate without review or repeat changes.' );
+}
+expect_description( '<p><b>DISCOUNTS DO NOT APPLY</b></p>', '<p></p>', array(), array( 'DISCOUNTS DO NOT APPLY' ) );
+$wonderlust_media = '<img src="https://dev.ultralove.ca/wp-content/uploads/logo.png" alt="" width="161" height="100" class="alignnone size-full wp-image-40061" /><p>';
+$wonderlust_offer = "\n" . '<b><font color=red><font size="4.5"> ONE PER STORE ONLY - FREE WITH 9 (3 each) PRODUCTS BOUGHT</font></FONT></b>';
+$wonderlust_marketing = "<p>\r\nWonderlust is a new way to experience the sought after features of high-end luxury products in a more affordable way. With its superior engineering, Wonderlust is able to provide intense vibrations, water-resistant features, seductive shapes and beautiful colours opening the doors of pleasure for anyone.<p>\r\n\r\n<b>Features:</b><br>\r\n";
+$wonderlust_list = "<ul><li>20 Functions<br>\r\n<li>Travel Lock<br>\r\n<li>Water-Resistant <br>\r\n<li>Easy to Press Button<br>\r\n<li>Rechargeable<br>\r\n<li>Made with Soft-Touch Silicone<br>\r\n<li>Favourite Function Memory<ul><p>";
+$wonderlust_source = $wonderlust_media . $wonderlust_offer . $wonderlust_marketing . $wonderlust_list;
+$wonderlust_expected = $wonderlust_media . $wonderlust_marketing . $wonderlust_list;
+$wonderlust_notes = "LIMIT 1 PER STORE ONLY\nFREE WITH 9 (3 EACH) PRODUCTS BOUGHT";
+expect_description( $wonderlust_source, $wonderlust_expected, explode( "\n", $wonderlust_notes ) );
+foreach ( array(
+	'<ul><li>Features</li></ul>',
+	'<ol><li>Features</li></ol>',
+	'<ul><li><p><b>LIMIT 1 PER STORE ONLY</b></p></li></ul>',
+) as $list_tail ) {
+	expect_description( $offer_html . $list_tail, '<p>' . $list_tail, array( 'LIMIT 1 PER STORE ONLY', 'FREE WITH 2 UNITS BOUGHT' ) );
+}
+foreach ( array(
+	'<p>Marketing. ' . $minimum . '</p>',
+	'<p><b>Marketing. A MINIMUM OF 3 UNITS MUST BE PURCHASED TO RECEIVE A FREE TESTER</b></p>',
+	'<p><b>A MINIMUM OF 3 UNITS MUST BE PURCHASED TO RECEIVE A FREE TESTER IN EACH COLOR</b></p>',
+	'<ul><li><p>' . $minimum . '</p></li></ul>',
+	'<!--' . "\n" . $minimum . "\n--><p>Keep comment.</p>",
+	'<img alt="' . "\n" . $minimum . "\n" . '" /><p>Keep attribute.</p>',
+	'<iframe title=">"><b>1 PER STORE ONLY</b></iframe>',
+	'<iframe><p><b>1 PER STORE ONLY</b></p>',
+	'<iframe src="/video" title="<b>1 PER STORE ONLY</b>"></iframe>',
+	'<p><b><u>FREE WITH 3 UNITS BOUGHT</b></p>',
+	$offer_html . '<script>alert("keep");</script><ul><li>Feature</li></ul>',
+	$offer_html . '<style>p{color:red}</style><ul><li>Feature</li></ul>',
+	$offer_html . '<textarea>Keep</textarea><ul><li>Feature</li></ul>',
+	$offer_html . '<table><tr><td>Keep</td></tr></table><ul><li>Feature</li></ul>',
+	$offer_html . '<div>Keep</div><ul><li>Feature</li></ul>',
+	'<blockquote>' . $offer_html . '</blockquote><ul><li>Feature</li></ul>',
+	'<b><p>LIMIT 1 PER STORE ONLY</p><ul><li>Feature</li></ul></b>',
+	'<pthe>Malformed</pthe>' . $offer_html . '<ul><li>Feature</li></ul>',
+	'<p>Meaningful marketing. ' . $offer . '</p><ul><li>Feature</li></ul>',
 	'<p><b>Meaningful features. ' . $offer . '</b></p>',
 	'<p>Let your creativity run free with the new Satisfyer Connect app!</p>',
 	'<p>Play worry-free with ingredients you love.</p>',
+	'<p><b>TESTER - ONE PER STORE ONLY FREE WITH 3 UNITS BOUGHT. Product details.</b></p>',
+	'<p><b>TESTER - rechargeable and waterproof.</b></p>',
+	'<p><b>Display Stand - dimensions 20 x 30 cm.</b></p>',
+	'<p><b>ONE PER STORE ONLY - FREE WITH 12 PRODUCTS BOUGHT (4 each type of lube &amp; Testers)</b></p>',
 	'<b>Ordinary bold</b>',
 	'<p><font color="#5b8dee">California Sky</font></p>',
 	'<p><font color="orange">Glows Orange</font></p>',
@@ -105,6 +191,35 @@ ultralove_description_after_import( 1 );
 ultralove_description_after_import( 1 );
 if ( $post !== $expected_post || $meta !== $expected_meta ) {
 	throw new RuntimeException( 'Repeat import was not idempotent.' );
+}
+$post = array( 'post_content' => $lemon_before['post_content'], 'post_excerpt' => $lemon_before['post_excerpt'], 'post_title' => 'R3276 Romp Lemon Crush Tester Only', 'post_name' => 'r3276-romp-lemon-crush-tester-only' );
+$meta = array( ULTRALOVE_DESCRIPTION_CLEANUP_META => ULTRALOVE_DESCRIPTION_CLEANUP_VERSION, ULTRALOVE_RN_IMPORTANT => $lemon_before['important'] );
+$tester_import = $post;
+ultralove_description_after_import( 1 );
+if ( $post['post_content'] !== $lemon_after['post_content'] || $meta[ ULTRALOVE_RN_IMPORTANT ] !== $lemon_before['important']
+	|| $post['post_title'] !== $tester_import['post_title'] || $post['post_name'] !== $tester_import['post_name'] ) {
+	throw new RuntimeException( 'Tester import did not remove the duplicate while preserving notes and identity.' );
+}
+$tester_expected = $post;
+$post = $tester_import;
+ultralove_description_after_import( 1 );
+ultralove_description_after_import( 1 );
+if ( $post !== $tester_expected || $meta[ ULTRALOVE_RN_IMPORTANT ] !== $lemon_before['important'] ) {
+	throw new RuntimeException( 'Tester reimport must remain clean and deduplicated.' );
+}
+$post = array( 'post_content' => $wonderlust_source, 'post_excerpt' => '', 'post_title' => 'BM5-298<br> WonderLust Display with Testers', 'post_name' => 'bm5-298-bms-factory-wonderlust-display-with-testers' );
+$meta = array( ULTRALOVE_DESCRIPTION_CLEANUP_META => ULTRALOVE_DESCRIPTION_CLEANUP_VERSION, ULTRALOVE_RN_IMPORTANT => $wonderlust_notes );
+$wonderlust_import = $post;
+ultralove_description_after_import( 1 );
+$wonderlust_cleaned = $post;
+if ( $post !== array_replace( $wonderlust_import, array( 'post_content' => $wonderlust_expected ) ) || $meta[ ULTRALOVE_RN_IMPORTANT ] !== $wonderlust_notes ) {
+	throw new RuntimeException( 'WonderLust import must preserve list/media/marketing, notes and identity.' );
+}
+$post = $wonderlust_import;
+ultralove_description_after_import( 1 );
+ultralove_description_after_import( 1 );
+if ( $post !== $wonderlust_cleaned || $meta[ ULTRALOVE_RN_IMPORTANT ] !== $wonderlust_notes ) {
+	throw new RuntimeException( 'WonderLust reimport must remain clean and deduplicated.' );
 }
 try {
 	ultralove_description_write( 1, array_replace( ultralove_description_snapshot( 1 ), array( 'post_excerpt' => 'stale' ) ), ultralove_description_snapshot( 1 ) );

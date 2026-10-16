@@ -54,6 +54,8 @@ jobs:
         run: |
           php ops/retailer-notes/test-parser.php
           php ops/retailer-notes/test-runtime.php
+          php ops/retailer-notes/test-admin-presets.php
+          node ops/retailer-notes/test-admin-presets.js
           php ops/retailer-notes/test-descriptions.php
           php ops/retailer-notes/test-notes.php
           php ops/retailer-notes/test-normalize-notes.php
