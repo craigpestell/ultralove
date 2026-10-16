@@ -1,6 +1,17 @@
 # Pending production release
 
-## Catalog description conditions (verified on dev; pending production approval)
+## Retailer-info editor presets (dev preview; production pending)
+
+Two preset dropdowns in Product data > General append common text to the existing
+editable retailer-info fields. The [inventory](retailer-info-inventory.md)
+defines the cutoff: at least 5 products, giving 3 Retailer info and 12 Important
+retailer info choices, sorted alphabetically. Multi-line choices insert real newlines;
+existing content is retained. Normal save-time normalization and review warnings
+are unchanged. Code-only release; no database migration or activation required.
+Offline PHP and JavaScript preset checks, parser, runtime/save and condition
+normalization regression tests pass. Both new preset runners are included in CI.
+
+## Catalog description conditions (live and verified on dev and production)
 
 The read-only follow-up inventory scans minimum-purchase wording as well as
 store/tester limits, free offers and discount instructions. Candidate matches
@@ -35,13 +46,40 @@ then updated 113 dev products / 133 description fields after a fresh validated
 private database backup. Exact readback verified descriptions, notes, import
 opt-in, titles and slugs. A scoped repeat preview proposes zero changes; its
 24 review entries concern retained markup, not additional approved changes.
-Production remains unchanged and requires fresh approval, its own site-bound
-plan and a fresh backup.
+After user approval, PR #211 merged as
+`e12cbcc55566dd04a7924d43ce79f63178eb8978`. Its automatic dev deployment passed,
+then the standard production deployment passed drift checks, PHP lint, backup,
+PHP-FPM restart and all four smoke checks. A fresh production site-bound plan
+updated 116 products / 136 description fields. Independent verification under
+production's PHP runtime passed source-byte preservation, retained clauses and
+idempotence with no exclusions or source/title/slug drift against the approved
+selection. Exact database readback passed; a repeat preview proposes zero changes.
+Names, URLs and redirects are unchanged.
+
+All 116 guest-origin product pages pass. Three initially cached origin failures
+resolved after the short-lived Nginx cache expired. Two public URLs initially
+served stale Cloudflare HTML: products `20157` (Lyla 2 Design Edition Cerise
+TESTER) and `44448` (Enigma Cruise Deep Rose TESTER). After the user confirmed a
+Cloudflare cache purge, a fresh check of all 116 ordinary public URLs passed
+with zero failures: HTTP 200, expected structured notes, no recognized embedded
+restrictions, unchanged titles and canonicals. The ordinary public Hockey Player
+page also passed responsive checks at 390/991/992/1280px.
+
+Private production evidence is under
+`/var/lib/ultralove-deploy/catalog-description-e12cbcc/`, including
+`prod-plan.json`, `prod-repeat.json`, independent verification scripts and
+`prod-before.sql.gz` (mode 0600, 156,017,521 bytes; gzip integrity checked;
+SHA-256 `5e1819abb897747e7e77d6ae8bed589965ae45106dcea481a89dfc0948b6dcf1`).
+The deployment code rollback archive is
+`/var/lib/ultralove-deploy/backups/20261016T013926Z-c322913ae6.tgz`.
+Use scoped product restoration only; never overwrite newer orders with a full
+database restore. A post-cleanup [retailer-info inventory](retailer-info-inventory.md)
+records every non-empty complete field value and its product count.
 
 The production read-only inventory examined 6,528 products and identified 297
 candidate fields across 254 products. Combined local proposals change 138 products;
 independent source-byte/clause-preservation checks select 116 products / 136 fields
-for production consideration. Dev contains 113 of those products; production
+for the production migration. Dev contains 113 of those products; production
 IDs `97578`, `97586` and `97588` (including the Working Stiff Hockey Player
 example) are absent. No database refresh or product import was needed for the
 dev rehearsal. The other 22 proposals retain ambiguous restrictions or
