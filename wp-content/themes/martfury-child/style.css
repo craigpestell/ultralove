@@ -4484,7 +4484,7 @@ body:not(.shop-view-list) ul.products li.product .ul-rn-box.ul-rn-d5 .woo-loop-p
     display: block
 }
 
-.ul-retailer-notes__tags {
+.ul-retailer-notes .ul-retailer-notes__tags {
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
