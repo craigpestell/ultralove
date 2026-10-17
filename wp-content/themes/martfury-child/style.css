@@ -583,6 +583,38 @@ h1,h2,h3,h4 {
     display: inherit
 }
 
+/* Product page / quick view: the "Status: Out of stock" line (logged-in users only, see .stock above) as a
+   brand-pink pill with a dot instead of WooCommerce's plain pure-red text. The selector matches WooCommerce's
+   ".woocommerce div.product p.stock.out-of-stock" and adds the summary meta box, so it outranks it. */
+.woocommerce div.product .mf-summary-meta p.stock.out-of-stock {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    margin: 0;
+    padding: 5px 14px;
+    border-radius: 999px;
+    background: rgba(179,9,75,.08);
+    color: var(--ul-btn-pink);
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.4
+}
+
+.woocommerce div.product .mf-summary-meta p.stock.out-of-stock::before {
+    content: "";
+    flex: none;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor
+}
+
+.woocommerce div.product .mf-summary-meta p.stock.out-of-stock label {
+    padding: 0;
+    color: #7a0634;
+    font-weight: 400
+}
+
 .ced_hpul_single_summary_wrapper {
     margin-bottom: 15px!important;
     margin-left: -10px!important
