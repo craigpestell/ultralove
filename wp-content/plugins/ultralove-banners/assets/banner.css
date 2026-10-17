@@ -150,3 +150,21 @@ body.ub-hero-combo #topcta {
 		aspect-ratio: 4.8;
 	}
 }
+
+/* Phones: no slider, just the first slide. Its image is the LCP element and is already painted from
+   this CSS, so banner.js doesn't need to run at all here (it skips init below the same width). The
+   other slides and the loop clones are hidden - lazy images in a display:none slide are never fetched
+   - and the baked-in clone offset on the looped track is cancelled so slide one sits at the left
+   edge. The markup is identical on every screen, so page caches need no device split. Keep the
+   767px in step with NARROW in banner.js. */
+@media (max-width: 767px) {
+	.ub-banner-slide:not(.ub-banner-slide--first) {
+		display: none;
+	}
+	.ub-banner-looped .ub-banner-track {
+		transform: none !important;
+	}
+	.ub-banner {
+		cursor: auto;
+	}
+}
