@@ -445,8 +445,8 @@ Template: martfury
 }
 
 /* Product names on product cards in the Product Categories sidebar's text style: plum, -.5px letter
-   spacing (same Work Sans 16px/400 and 1.3 line height already), brand pink while the name itself is
-   hovered. Hovering elsewhere on the card leaves it plum. The parent theme's hover selectors (grid, list
+   spacing (same Work Sans 16px/400 and 1.3 line height already), brand pink while the card is hovered
+   (anywhere on it, not just the name). The parent theme's hover selectors (grid, list
    view, products-of-category widget) are repeated so the same-specificity rules here win. Product names in
    the header's cart dropdown (.woocommerce-mini-cart), the cart page's table and the My Favourites (YITH
    wishlist) table get the same plum, and
@@ -463,7 +463,9 @@ Template: martfury
 }
 
 .woocommerce ul.products li.product .woo-loop-product__title:hover a,
+.woocommerce ul.products li.product .product-inner:hover .woo-loop-product__title a,
 .woocommerce ul.products li.product .woo-loop-product__title a:focus-visible,
+.mf-products-of-category .products-box ul.products li.product .product-inner:hover .mf-product-content h2 a,
 .mf-products-of-category .products-box ul.products li.product .mf-product-content h2 a:hover {
     color: #b3094b
 }
