@@ -1349,3 +1349,12 @@ function ultralove_form_page_body_class( $classes ) {
 	}
 	return $classes;
 }
+
+/**
+ * No Kirki-hosted Google fonts. The theme option "googlefont_kirki" (a database setting, so it can differ per
+ * server) makes Kirki download Work Sans 400/600/700 into wp-content/fonts and print @font-face rules for them.
+ * Those load after the child theme's self-hosted faces (top of style.css, where weight 400 deliberately uses the
+ * light 300 file) and replace them, so product names and all body text came out bolder on production than on dev,
+ * where the option is off. Returning nothing makes every server behave like dev whatever the option says.
+ */
+add_filter( 'kirki/enqueue_google_fonts', '__return_empty_array', 20 );
