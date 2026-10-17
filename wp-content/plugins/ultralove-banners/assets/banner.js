@@ -1,5 +1,7 @@
 ( function () {
 	var DRAG_THRESHOLD = 40;
+	// Phones show only the first slide (see banner.css); keep in step with its max-width.
+	var narrow = window.matchMedia( '(max-width: 767px)' );
 
 	function initBanner( el ) {
 		var track = el.querySelector( '.ub-banner-track' );
@@ -25,7 +27,7 @@
 
 		// With no more slides than fit on screen there is nothing to slide to.
 		function canSlide() {
-			return realCount > perView();
+			return ! narrow.matches && realCount > perView();
 		}
 
 		// A track position's translate, as a percent of the track (= banner) width.
@@ -217,7 +219,20 @@
 	}
 
 	function init() {
-		document.querySelectorAll( '.ub-banner' ).forEach( initBanner );
+		document.querySelectorAll( '.ub-banner' ).forEach( function ( el ) {
+			if ( ! narrow.matches ) {
+				initBanner( el );
+				return;
+			}
+			// Phone: leave the banner static, but start it if the screen becomes wide (rotation, resize).
+			function onChange() {
+				if ( ! narrow.matches ) {
+					narrow.removeEventListener( 'change', onChange );
+					initBanner( el );
+				}
+			}
+			narrow.addEventListener( 'change', onChange );
+		} );
 	}
 
 	if ( document.readyState === 'loading' ) {

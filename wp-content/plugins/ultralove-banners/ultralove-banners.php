@@ -23,7 +23,7 @@ define( 'UB_PLUGIN_PATH', plugin_dir_path( __FILE__ ) );
 if ( is_admin() ) {
 	require_once UB_PLUGIN_PATH . 'admin-pages.php';
 }
-define( 'UB_ASSET_VERSION', '2.0.12' );
+define( 'UB_ASSET_VERSION', '2.0.13' );
 
 /**
  * Banner slot aspect ratio (width / height) per group. Slides are cropped to this in the admin.
@@ -715,7 +715,7 @@ add_shortcode(
 			}
 			$crop = ub_get_crop( $slide->ID, $thumb_id );
 			?>
-			<a class="ub-banner-slide<?php echo $crop ? ' ub-banner-slide--cropped' : ''; ?>" href="<?php echo esc_url( $link ); ?>"<?php echo $bg_url ? ' style="' . esc_attr( "--ub-bg:url('" . esc_url_raw( $bg_url ) . "')" ) . '"' : ''; ?><?php echo $is_clone ? ' aria-hidden="true" tabindex="-1"' : ''; ?>>
+			<a class="ub-banner-slide<?php echo $crop ? ' ub-banner-slide--cropped' : ''; ?><?php echo $is_lcp ? ' ub-banner-slide--first' : ''; ?>" href="<?php echo esc_url( $link ); ?>"<?php echo $bg_url ? ' style="' . esc_attr( "--ub-bg:url('" . esc_url_raw( $bg_url ) . "')" ) . '"' : ''; ?><?php echo $is_clone ? ' aria-hidden="true" tabindex="-1"' : ''; ?>>
 				<?php
 				$img_atts = array(
 					'class'   => 'ub-banner-img',
