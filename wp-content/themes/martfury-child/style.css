@@ -4192,6 +4192,16 @@ body .cwginstock-subscribe-form :is(.panel, .panel-primary, .panel-heading, .pan
     color: #3b1d4a
 }
 
+/* Product page: the "Email Me When Stock Is Available" heading sits in the summary under the description. The
+   theme's "#page > ... :last-child { margin-bottom: 0 }" rule zeroes the margin above, so it ran into the form
+   and the text above it. Give it space and the weight of the page's other headings (the popup keeps the light
+   22px style above); the ID and .single-product are there to outrank that rule. */
+.single-product #page .summary .cwginstock-subscribe-form .panel-heading h4 {
+    margin: 28px 0 14px;
+    font-size: 20px;
+    font-weight: 500
+}
+
 body .cwginstock-subscribe-form :is(.row, [class*="col-"]) {
     margin: 0;
     padding: 0
